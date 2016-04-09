@@ -2639,7 +2639,7 @@ int mutt_index_menu (void)
 	break;
 
       case OP_SIDEBAR_TOGGLE:
-	toggle_sidebar(menu->menu);
+	sb_toggle_virtual();
 	break;
 #endif
       default:
