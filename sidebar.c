@@ -266,10 +266,7 @@ make_sidebar_entry (char *buf, unsigned int buflen, int width, char *box,
 		return;
 
 	sbe.buffy = b;
-	strncpy (sbe.box, box, sizeof (sbe.box) - 1);
-
-	int box_len = strlen (box);
-	sbe.box[box_len] = '\0';
+	strfcpy (sbe.box, box, sizeof (sbe.box));
 
 	/* Temporarily lie about the screen width */
 	int oc = COLS;
@@ -486,8 +483,6 @@ prepare_sidebar (int page_size)
 		count++;
 
 	BUFFY **arr = safe_malloc (count * sizeof (*arr));
-	if (!arr)
-		return 0;
 
 	int i = 0;
 	for (b = Incoming; b; b = b->next, i++) {
@@ -536,7 +531,7 @@ prepare_sidebar (int page_size)
 	Outgoing = arr[count - 1];
 
 	PreviousSort = SidebarSortMethod;
-	free (arr);
+	FREE (&arr);
 	return 1;
 }
 
@@ -628,10 +623,10 @@ draw_divider (int first_row, int num_rows)
 }
 
 /**
- * fill_empty_space - Wipe the remaining sidebar space
+ * fill_empty_space - Wipe the remaining Sidebar space
  * @first_row:  Screen line to start (0-based)
  * @num_rows:   Number of rows to fill
- * @width:      Width of the sidebar (minus the divider)
+ * @width:      Width of the Sidebar (minus the divider)
  *
  * Write spaces over the area the sidebar isn't using.
  */
@@ -767,7 +762,7 @@ draw_sidebar (int first_row, int num_rows, int div_width)
 		make_sidebar_entry (str, sizeof (str), w, sidebar_folder_name, b);
 		printw ("%s", str);
 		if (sidebar_folder_depth > 0)
-			free (sidebar_folder_name);
+			FREE (&sidebar_folder_name);
 		row++;
 	}
 
