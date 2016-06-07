@@ -47,7 +47,7 @@ static BUFFY *Outgoing;		/* Last mailbox in the linked list */
  * Used in the mutt_FormatString callback
  */
 struct sidebar_entry {
-	char         box[SHORT_STRING];
+	char         box[STRING];
 	BUFFY       *buffy;
 };
 
@@ -145,7 +145,7 @@ cb_format_str (char *dest, size_t destlen, size_t col, char op, const char *src,
 {
 	struct sidebar_entry *sbe = (struct sidebar_entry *) data;
 	unsigned int optional;
-	char fmt[SHORT_STRING], buf[SHORT_STRING];
+	char fmt[STRING];
 
 	if (!sbe || !dest)
 		return src;
@@ -227,8 +227,8 @@ cb_format_str (char *dest, size_t destlen, size_t col, char op, const char *src,
 			} else if (b->msg_flagged == 2) {
 				mutt_format_s (dest, destlen, prefix, "!!");
 			} else {
-				snprintf (buf, sizeof (buf), "%d!", b->msg_flagged);
-				mutt_format_s (dest, destlen, prefix, buf);
+				snprintf (fmt, sizeof (fmt), "%d!", b->msg_flagged);
+				mutt_format_s (dest, destlen, prefix, fmt);
 			}
 			break;
 	}
@@ -277,6 +277,7 @@ make_sidebar_entry (char *buf, unsigned int buflen, int width, char *box,
 	/* Force string to be exactly the right width */
 	int w = mutt_strwidth (buf);
 	int s = strlen (buf);
+	width = MIN(buflen, width);
 	if (w < width) {
 		/* Pad with spaces */
 		memset (buf + s, ' ', width - w);
@@ -758,7 +759,7 @@ draw_sidebar (int first_row, int num_rows, int div_width)
 				strncat (sidebar_folder_name, tmp_folder_name, strlen (tmp_folder_name));
 			}
 		}
-		char str[SHORT_STRING];
+		char str[STRING];
 		make_sidebar_entry (str, sizeof (str), w, sidebar_folder_name, b);
 		printw ("%s", str);
 		if (sidebar_folder_depth > 0)
