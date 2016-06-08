@@ -132,9 +132,10 @@ find_prev_new (int wrap)
  * @flags:       Format flags, e.g. M_FORMAT_OPTIONAL
  *
  * cb_format_str is a callback function for mutt_FormatString.  It understands
- * five operators. '%B' : Mailbox name, '%F' : Number of flagged messages,
+ * six operators. '%B' : Mailbox name, '%F' : Number of flagged messages,
  * '%N' : Number of new messages, '%S' : Size (total number of messages),
  * '%!' : Icon denoting number of flagged messages.
+ * '%n' : N if folder has new mail, blank otherwise.
  *
  * Returns: src (unchanged)
  */
@@ -199,6 +200,16 @@ cb_format_str (char *dest, size_t destlen, size_t col, char op, const char *src,
 			} else if (b->msg_unread == 0) {
 				optional = 0;
 			}
+			break;
+
+		case 'n':
+			if (!optional)
+			{
+				snprintf (fmt, sizeof (fmt), "%%%sc", prefix);
+				snprintf (dest, destlen, fmt, b->new ? 'N' : ' ');
+			}
+			else if (b->new == 0)
+				optional = 0;
 			break;
 
 		case 'S':
