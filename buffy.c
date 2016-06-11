@@ -413,7 +413,7 @@ int mutt_parse_virtual_mailboxes (BUFFER *path, BUFFER *s, unsigned long data, B
     {
       if (mutt_strcmp (buf, (*tmp)->path) == 0)
       {
-	dprint(3,(debugfile,"vistual mailbox '%s' already registered as '%s'\n", buf, (*tmp)->path));
+	dprint(3,(debugfile,"virtual mailbox '%s' already registered as '%s'\n", buf, (*tmp)->path));
 	break;
       }
     }
@@ -607,16 +607,6 @@ static void buffy_check(BUFFY *tmp, struct stat *contex_sb)
 
     sb.st_size=0;
 
-  /* check device ID and serial number instead of comparing paths */
-  if (!Context || Context->magic == M_IMAP || Context->magic == M_POP
-      || stat (Context->path, &contex_sb) != 0)
-  {
-    contex_sb.st_dev=0;
-    contex_sb.st_ino=0;
-  }
-  
-  for (tmp = Incoming; tmp; tmp = tmp->next)
-  {
     if (tmp->magic != M_IMAP)
     {
       tmp->new = 0;
