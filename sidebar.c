@@ -48,7 +48,7 @@ static BUFFY *Outgoing;		/* Last mailbox in the linked list */
  * Used in the mutt_FormatString callback
  */
 struct sidebar_entry {
-	char         box[SHORT_STRING];
+	char         box[STRING];
 	BUFFY       *buffy;
 };
 
@@ -178,7 +178,7 @@ cb_format_str (char *dest, size_t destlen, size_t col, char op, const char *src,
 {
 	struct sidebar_entry *sbe = (struct sidebar_entry *) data;
 	unsigned int optional;
-	char fmt[SHORT_STRING], buf[SHORT_STRING];
+	char fmt[STRING];
 
 	if (!sbe || !dest)
 		return src;
@@ -260,8 +260,8 @@ cb_format_str (char *dest, size_t destlen, size_t col, char op, const char *src,
 			} else if (b->msg_flagged == 2) {
 				mutt_format_s (dest, destlen, prefix, "!!");
 			} else {
-				snprintf (buf, sizeof (buf), "%d!", b->msg_flagged);
-				mutt_format_s (dest, destlen, prefix, buf);
+				snprintf (fmt, sizeof (fmt), "%d!", b->msg_flagged);
+				mutt_format_s (dest, destlen, prefix, fmt);
 			}
 			break;
 	}
@@ -299,10 +299,7 @@ make_sidebar_entry (char *buf, unsigned int buflen, int width, char *box,
 		return;
 
 	sbe.buffy = b;
-	strncpy (sbe.box, box, sizeof (sbe.box) - 1);
-
-	int box_len = strlen (box);
-	sbe.box[box_len] = '\0';
+	strfcpy (sbe.box, box, sizeof (sbe.box));
 
 	/* Temporarily lie about the screen width */
 	int oc = COLS;
@@ -313,6 +310,7 @@ make_sidebar_entry (char *buf, unsigned int buflen, int width, char *box,
 	/* Force string to be exactly the right width */
 	int w = mutt_strwidth (buf);
 	int s = strlen (buf);
+	width = MIN(buflen, width);
 	if (w < width) {
 		/* Pad with spaces */
 		memset (buf + s, ' ', width - w);
@@ -522,8 +520,6 @@ prepare_sidebar (int page_size)
 		count++;
 
 	BUFFY **arr = safe_malloc (count * sizeof (*arr));
-	if (!arr)
-		return 0;
 
 	int i = 0;
 	for (b = get_incoming(); b; b = b->next, i++) {
@@ -573,7 +569,7 @@ prepare_sidebar (int page_size)
 	Outgoing = arr[count - 1];
 
 	PreviousSort = SidebarSortMethod;
-	free (arr);
+	FREE (&arr);
 	return 1;
 }
 
@@ -665,10 +661,10 @@ draw_divider (int first_row, int num_rows)
 }
 
 /**
- * fill_empty_space - Wipe the remaining sidebar space
+ * fill_empty_space - Wipe the remaining Sidebar space
  * @first_row:  Screen line to start (0-based)
  * @num_rows:   Number of rows to fill
- * @width:      Width of the sidebar (minus the divider)
+ * @width:      Width of the Sidebar (minus the divider)
  *
  * Write spaces over the area the sidebar isn't using.
  */
@@ -805,11 +801,11 @@ draw_sidebar (int first_row, int num_rows, int div_width)
 			sidebar_folder_name = b->desc;
 		}
 #endif
-		char str[SHORT_STRING];
+		char str[STRING];
 		make_sidebar_entry (str, sizeof (str), w, sidebar_folder_name, b);
 		printw ("%s", str);
 		if (sidebar_folder_depth > 0)
-			free (sidebar_folder_name);
+			FREE (&sidebar_folder_name);
 		row++;
 	}
 

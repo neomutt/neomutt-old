@@ -607,6 +607,16 @@ static void buffy_check(BUFFY *tmp, struct stat *contex_sb)
 
     sb.st_size=0;
 
+  /* check device ID and serial number instead of comparing paths */
+  if (!Context || Context->magic == M_IMAP || Context->magic == M_POP
+      || stat (Context->path, &contex_sb) != 0)
+  {
+    contex_sb.st_dev=0;
+    contex_sb.st_ino=0;
+  }
+  
+  for (tmp = Incoming; tmp; tmp = tmp->next)
+  {
     if (tmp->magic != M_IMAP)
     {
       tmp->new = 0;
@@ -644,8 +654,7 @@ static void buffy_check(BUFFY *tmp, struct stat *contex_sb)
       case M_MBOX:
       case M_MMDF:
 #ifdef USE_SIDEBAR
-	if (option(OPTSIDEBAR))
-	  buffy_mbox_update (tmp, &sb);
+	buffy_mbox_update (tmp, &sb);
 #endif
 	if (buffy_mbox_hasnew (tmp, &sb) > 0)
 	  BuffyCount++;
@@ -653,8 +662,7 @@ static void buffy_check(BUFFY *tmp, struct stat *contex_sb)
 
       case M_MAILDIR:
 #ifdef USE_SIDEBAR
-	if (option(OPTSIDEBAR))
-	  buffy_maildir_update (tmp);
+	buffy_maildir_update (tmp);
 #endif
 	if (buffy_maildir_hasnew (tmp) > 0)
 	  BuffyCount++;
@@ -662,8 +670,7 @@ static void buffy_check(BUFFY *tmp, struct stat *contex_sb)
 
       case M_MH:
 #ifdef USE_SIDEBAR
-	if (option(OPTSIDEBAR))
-	  mh_buffy_update (tmp);
+	mh_buffy_update (tmp);
 #endif
 	mh_buffy(tmp);
 	if (tmp->new)
@@ -738,16 +745,8 @@ int mutt_buffy_check (int force)
     contex_sb.st_ino=0;
   }
 
-#ifdef USE_SIDEBAR
-  if (sb_should_refresh()) {
-    for (tmp = Incoming; tmp; tmp = tmp->next)
-      buffy_check(tmp, &contex_sb);
-    sb_set_update_time();
-  }
-#else
   for (tmp = Incoming; tmp; tmp = tmp->next)
     buffy_check(tmp, &contex_sb);
-#endif
 
 #ifdef USE_NOTMUCH
   for (tmp = VirtIncoming; tmp; tmp = tmp->next)
