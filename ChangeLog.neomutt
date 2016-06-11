@@ -1,3 +1,20 @@
+2016-06-11  Richard Russon  <rich@flatcap.org>
+* Change in behaviour
+  - Temporarily disable $sidebar_refresh_time
+    Unfortunately, this was causing too many problems.
+    It will be fixed and re-enabled as soon as possible.
+* Bug Fixes
+  - Reflow text now works as it should
+  - Lots of typos fixed
+  - Some minor bug-fixes from mutt/default
+  - Single quote at line beginning misinterpreted by groff
+  - Setting $sidebar_width to more than 128 would cause bad things to happen.
+  - Fix alignment in the compose menu.
+  - Fix sidebar buffy stats updating on mailbox close.
+* Build Changes
+  - Alter ChangeLog date format to simplify Makefiles
+  - Use the new notmuch functions that return a status
+
 2016-05-23  Richard Russon  <rich@flatcap.org>
 * Bug Fixes:
   - Separate mappings for <enter> and <return>
