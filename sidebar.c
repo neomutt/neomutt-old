@@ -804,6 +804,9 @@ sb_draw (void)
 	/* if (OldVisible == 0) */
 	/* 	mutt_buffy_check (1); we probably have bad or no numbers */
 
+	int x = getcurx (stdscr);
+	int y = getcury (stdscr);
+
 	int first_row = 0;
 	int num_rows  = LINES - 2;
 
@@ -827,6 +830,7 @@ sb_draw (void)
 		return;
 
 	draw_sidebar (first_row, num_rows, div_width);
+	move (y, x);
 }
 
 /**
