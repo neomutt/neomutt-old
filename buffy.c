@@ -619,19 +619,25 @@ int mutt_buffy_check (int force)
       {
       case M_MBOX:
       case M_MMDF:
+#ifdef USE_SIDEBAR
 	buffy_mbox_update (tmp, &sb);
+#endif
 	if (buffy_mbox_hasnew (tmp, &sb) > 0)
 	  BuffyCount++;
 	break;
 
       case M_MAILDIR:
+#ifdef USE_SIDEBAR
 	buffy_maildir_update (tmp);
+#endif
 	if (buffy_maildir_hasnew (tmp) > 0)
 	  BuffyCount++;
 	break;
 
       case M_MH:
+#ifdef USE_SIDEBAR
 	mh_buffy_update (tmp);
+#endif
 	mh_buffy(tmp);
 	if (tmp->new)
 	  BuffyCount++;
