@@ -28,17 +28,14 @@ addons:
 git:
   depth: 3
 
+install:
+  - git clone --depth 1 https://github.com/neomutt/travis-build.git ~/config
+
 before_script:
   - ccache --zero-stats
-  - autoreconf --install
 
 script:
-  # Clumsy way to forcibly disable FMEMOPEN
-  - ./configure --quiet && sed -i '/FMEMOPEN/d' config.h && make -s -j2
-  - ./configure --quiet && make -s -j2
-
-after_success:
-  - ./mutt -v
+  - ~/config/build
 
 after_script:
   - ccache --show-stats
