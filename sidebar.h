@@ -35,5 +35,6 @@ void mutt_sb_notify_mailbox(struct Buffy *b, int created);
 void mutt_sb_set_buffystats(const struct Context *ctx);
 void mutt_sb_set_open_buffy(void);
 void mutt_sb_toggle_virtual(void);
+struct Buffy *mutt_sb_start_search(void);
 
 #endif /* _MUTT_SIDEBAR_H */

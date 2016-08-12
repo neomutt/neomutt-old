@@ -237,7 +237,7 @@ static inline int is_shell_char(wchar_t ch)
  * well, because there is no active menu for the built-in editor.
  * Most callers should prefer mutt_get_field() instead.
  */
-int mutt_enter_string(char *buf, size_t buflen, int col, int flags)
+int mutt_string_matcher(char *buf, size_t buflen, int col, int flags, enter_string_t *callback)
 {
   int rv;
   struct EnterState *es = mutt_new_enter_state();
@@ -251,10 +251,15 @@ int mutt_enter_string(char *buf, size_t buflen, int col, int flags)
       clearok(stdscr, TRUE);
     }
 #endif
-    rv = _mutt_enter_string(buf, buflen, col, flags, 0, NULL, NULL, es);
+    rv = _mutt_enter_string(buf, buflen, col, flags, 0, NULL, NULL, es, callback);
   } while (rv == 1);
   mutt_free_enter_state(&es);
   return rv;
+}
+
+int mutt_enter_string(char *buf, size_t buflen, int col, int flags)
+{
+  return mutt_string_matcher(buf, buflen, col, flags, NULL);
 }
 
 /**
@@ -271,9 +276,11 @@ int mutt_enter_string(char *buf, size_t buflen, int col, int flags)
  * @retval 0  if input was given
  * @retval -1 if abort
  */
-int _mutt_enter_string(char *buf, size_t buflen, int col, int flags, int multiple,
-                       char ***files, int *numfiles, struct EnterState *state)
+int _mutt_enter_string(char *buf, size_t buflen, int col, int flags,
+                       int multiple, char ***files, int *numfiles,
+                       struct EnterState *state, enter_string_t *callback)
 {
+  char pattern[STRING];
   int width = MuttMessageWindow->cols - col - 1;
   int redraw;
   int pass = (flags & MUTT_PASS);
@@ -315,6 +322,8 @@ int _mutt_enter_string(char *buf, size_t buflen, int col, int flags, int multipl
     hclass = HC_COMMAND;
   else if (flags & MUTT_PATTERN)
     hclass = HC_PATTERN;
+  else if (flags & MUTT_MATCHER)
+    hclass = HC_MATCHER;
   else
     hclass = HC_OTHER;
 
@@ -855,6 +864,11 @@ int _mutt_enter_string(char *buf, size_t buflen, int col, int flags, int multipl
         mutt_flushinp();
         BEEP();
       }
+    }
+    if (callback)
+    {
+      my_wcstombs(pattern, sizeof(pattern), state->wbuf, state->lastchar);
+      callback(state, pattern);
     }
   }
 

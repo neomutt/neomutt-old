@@ -283,6 +283,7 @@
   _fmt(OP_SIDEBAR_PAGE_UP,                N_("scroll the sidebar up 1 page")) \
   _fmt(OP_SIDEBAR_PREV,                   N_("move the highlight to previous mailbox")) \
   _fmt(OP_SIDEBAR_PREV_NEW,               N_("move the highlight to previous mailbox with new mail")) \
+  _fmt(OP_SIDEBAR_START_SEARCH,           N_("dynamic search")) \
   _fmt(OP_SIDEBAR_TOGGLE_VIRTUAL,         N_("toggle between mailboxes and virtual mailboxes")) \
   _fmt(OP_SIDEBAR_TOGGLE_VISIBLE,         N_("make the sidebar (in)visible")) \
 

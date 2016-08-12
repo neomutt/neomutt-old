@@ -37,6 +37,7 @@ enum HistoryClass
   HC_PATTERN,
   HC_OTHER,
   HC_MBOX,
+  HC_MATCHER,
   /* insert new items here to keep history file working */
   HC_LAST
 };

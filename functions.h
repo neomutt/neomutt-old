@@ -212,6 +212,7 @@ const struct Binding OpMain[] = { /* map: index */
   { "sidebar-prev-new",          OP_SIDEBAR_PREV_NEW,               NULL },
   { "sidebar-toggle-virtual",    OP_SIDEBAR_TOGGLE_VIRTUAL,         NULL },
   { "sidebar-toggle-visible",    OP_SIDEBAR_TOGGLE_VISIBLE,         NULL },
+  { "sidebar-start-search",      OP_SIDEBAR_START_SEARCH,           NULL },
 #endif
   { "modify-tags",               OP_MAIN_MODIFY_TAGS,             NULL },
   { "modify-tags-then-hide",     OP_MAIN_MODIFY_TAGS_THEN_HIDE,   NULL },
@@ -352,6 +353,7 @@ const struct Binding OpPager[] = { /* map: pager */
   { "sidebar-prev-new",          OP_SIDEBAR_PREV_NEW,             NULL },
   { "sidebar-toggle-virtual",    OP_SIDEBAR_TOGGLE_VIRTUAL,       NULL },
   { "sidebar-toggle-visible",    OP_SIDEBAR_TOGGLE_VISIBLE,       NULL },
+  { "sidebar-start-search",      OP_SIDEBAR_START_SEARCH,         NULL },
 #endif
   { "modify-tags",               OP_MAIN_MODIFY_TAGS,             NULL },
   { "modify-tags-then-hide",     OP_MAIN_MODIFY_TAGS_THEN_HIDE,   NULL },

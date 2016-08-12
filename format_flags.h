@@ -25,6 +25,8 @@
 
 #include <stddef.h>
 
+struct EnterState;
+
 /**
  * enum FormatFlag - Control the behaviour of mutt_expando_format()
  */
@@ -45,6 +47,7 @@ typedef const char *format_t(char *dest, size_t destlen, size_t col, int cols,
                              const char *ifstring, const char *elsestring,
                              unsigned long data, enum FormatFlag flags);
 
+typedef int enter_string_t(struct EnterState *state, const char *pattern);
 void mutt_expando_format(char *dest, size_t destlen, size_t col, int cols,
                          const char *src, format_t *callback,
                          unsigned long data, enum FormatFlag flags);

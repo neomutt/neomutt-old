@@ -289,7 +289,8 @@ int _mutt_enter_fname(const char *prompt, char *buf, size_t blen, int buffy,
                       int multiple, char ***files, int *numfiles, int flags);
 int mutt_enter_string(char *buf, size_t buflen, int col, int flags);
 int _mutt_enter_string(char *buf, size_t buflen, int col, int flags, int multiple,
-                       char ***files, int *numfiles, struct EnterState *state);
+                       char ***files, int *numfiles, struct EnterState *state, enter_string_t *);
+int mutt_string_matcher(char *buf, size_t buflen, int col, int flags, enter_string_t *callback);
 #define mutt_get_field(A, B, C, D) _mutt_get_field(A, B, C, D, 0, NULL, NULL)
 int _mutt_get_field(const char *field, char *buf, size_t buflen, int complete,
                     int multiple, char ***files, int *numfiles);

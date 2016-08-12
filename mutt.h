@@ -71,6 +71,7 @@ struct Mapping;
 #define MUTT_NM_QUERY (1 << 9)  /**< Notmuch query mode. */
 #define MUTT_NM_TAG   (1 << 10) /**< Notmuch tag +/- mode. */
 #endif
+#define MUTT_MATCHER (1 << 11)
 
 /* flags for mutt_get_token() */
 #define MUTT_TOKEN_EQUAL      1       /* treat '=' as a special */
