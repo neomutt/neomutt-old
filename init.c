@@ -4266,7 +4266,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
   {
     p = getenv("EDITOR");
     if (!p)
-      p = "vi";
+      p = "/usr/bin/editor";
   }
   Editor = safe_strdup(p);
   Visual = safe_strdup(p);
