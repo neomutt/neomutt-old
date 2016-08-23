@@ -23,6 +23,7 @@
 #include "config.h"
 #include <ctype.h>
 #include <errno.h>
+#include <netdb.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <libgen.h>
@@ -4049,6 +4050,33 @@ static char *find_cfg(const char *home, const char *xdg_cfg_home)
   return NULL;
 }
 
+int getmailname(char *s, size_t l)
+{
+  FILE *f;
+  char tmp[512];
+  char *p = tmp;
+
+  if ((f = fopen("/etc/mailname", "r")) == NULL)
+    return (-1);
+
+  if (fgets(tmp, 510, f) != NULL)
+  {
+    while (*p && !ISSPACE(*p) && l > 0)
+    {
+      *s++ = *p++;
+      l--;
+    }
+    if (*(s - 1) == '.')
+      s--;
+    *s = 0;
+
+    fclose(f);
+    return 0;
+  }
+  fclose(f);
+  return (-1);
+}
+
 void mutt_init(int skip_sys_rc, struct ListHead *commands)
 {
   struct passwd *pw = NULL;
@@ -4150,11 +4178,17 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
   else
     ShortHostname = safe_strdup(utsname.nodename);
 
-/* now get FQDN.  Use configured domain first, DNS next, then uname */
+  /* now get FQDN.  Use /etc/mailname first, then configured domain, DNS next, then uname */
+  if (getmailname(buffer, sizeof(buffer)) != -1)
+    Hostname = safe_strdup(buffer);
 #ifdef DOMAIN
   /* we have a compile-time domain name, use that for Hostname */
-  Hostname = safe_malloc(mutt_strlen(DOMAIN) + mutt_strlen(ShortHostname) + 2);
-  sprintf(Hostname, "%s.%s", NONULL(ShortHostname), DOMAIN);
+  if (!Hostname)
+  {
+    Hostname = safe_malloc(mutt_strlen(DOMAIN) + mutt_strlen(Hostname) + 2);
+    sprintf(Hostname, "%s.%s", NONULL(Hostname), DOMAIN); /* __SPRINTF_CHECKED__ */
+  }
+  else
 #else
   if (!(getdnsdomainname(buffer, sizeof(buffer))))
   {
