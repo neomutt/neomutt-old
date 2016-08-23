@@ -195,7 +195,7 @@ System definition for handling non-text MIME types.
 User's personal mapping between MIME types and file extensions.
 .IP "@sysconfdir@/mime.types"
 System mapping between MIME types and file extensions.
-.IP "@docdir@/manual.txt"
+.IP "/usr/share/doc/neomutt/manual.txt.gz"
 The Mutt manual.
 .SH BUGS
 .PP
