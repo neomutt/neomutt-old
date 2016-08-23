@@ -38,7 +38,7 @@
 
 #ifdef _MAKEDOC
 #include "config.h"
-#include "doc/makedoc_defs.h"
+/* # include "doc/makedoc_defs.h" include only documented options for Debian */
 #else
 #include <stddef.h>
 #include "keymap.h"
