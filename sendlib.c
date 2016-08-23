@@ -2056,8 +2056,8 @@ out:
  *               anonymous remailer chains.
  */
 
-int mutt_write_rfc822_header(FILE *fp, struct Envelope *env,
-                             struct Body *attach, int mode, int privacy)
+int mutt_write_rfc822_header(FILE *fp, struct Envelope *env, struct Body *attach, int mode,
+                             int privacy, int should_write_bcc)
 {
   char buffer[LONG_STRING];
   char *p = NULL, *q = NULL;
@@ -2105,7 +2105,7 @@ int mutt_write_rfc822_header(FILE *fp, struct Envelope *env,
 #endif
       fputs("Cc: \n", fp);
 
-  if (env->bcc)
+  if (env->bcc && should_write_bcc)
   {
     if (mode != 0 || option(OPT_WRITE_BCC))
     {
@@ -3021,7 +3021,7 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
   /* post == 1 => postpone message. Set mode = -1 in mutt_write_rfc822_header()
    * post == 0 => Normal mode. Set mode = 0 in mutt_write_rfc822_header()
    * */
-  mutt_write_rfc822_header(msg->fp, hdr->env, hdr->content, post ? -post : 0, 0);
+  mutt_write_rfc822_header(msg->fp, hdr->env, hdr->content, post ? -post : 0, 0, 1);
 
   /* (postponement) if this was a reply of some sort, <msgid> contains the
    * Message-ID: of message replied to.  Save it using a special X-Mutt-

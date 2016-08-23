@@ -4377,14 +4377,9 @@ struct Option MuttVars[] = {
   { "write_bcc",        DT_BOOL, R_NONE, OPT_WRITE_BCC, 1 },
   /*
   ** .pp
-  ** Controls whether NeoMutt writes out the ``Bcc:'' header when preparing
-  ** messages to be sent.  Exim users may wish to unset this. If NeoMutt
-  ** is set to deliver directly via SMTP (see $$smtp_url), this
-  ** option does nothing: NeoMutt will never write out the ``Bcc:'' header
-  ** in this case.
-  ** .pp
-  ** \fBNote:\fP On Debian systems, exim4 and postfix strip BCC headers by
-  ** default. The above warning applies to exim3 users, see /etc/Muttrc.
+  ** Controls whether mutt writes out the Bcc header when saving
+  ** messages to FCC. Bcc headers will never be written to a message
+  ** when sending it. Note: this behavior is Debian specific.
   */
   { "write_inc",        DT_NUMBER,  R_NONE, UL &WriteInc, 10 },
   /*
