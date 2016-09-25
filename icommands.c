@@ -44,12 +44,20 @@
 #include "muttlib.h"
 #include "opcodes.h"
 #include "pager.h"
+#include "summary.h"
 #include "version.h"
 
 // clang-format off
-static enum CommandResult icmd_bind   (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
-static enum CommandResult icmd_set    (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
-static enum CommandResult icmd_version(struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_bind    (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_color   (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_help    (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_messages(struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_quit    (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_scripts (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_set     (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_test    (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_vars    (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
+static enum CommandResult icmd_version (struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);
 
 /**
  * ICommandList - All available informational commands
@@ -58,8 +66,18 @@ static enum CommandResult icmd_version(struct Buffer *buf, struct Buffer *s, int
  */
 const struct ICommand ICommandList[] = {
   { "bind",     icmd_bind,     0 },
+  { "color",    icmd_color,    0 },
+  { "help",     icmd_help,     0 },
   { "macro",    icmd_bind,     1 },
+  { "messages", icmd_messages, 0 },
+  { "q!",       icmd_quit,     0 },
+  { "q",        icmd_quit,     0 },
+  { "qa",       icmd_quit,     0 },
+  { "quit",     icmd_quit,     0 },
+  { "scripts",  icmd_scripts,  0 },
   { "set",      icmd_set,      0 },
+  { "test",     icmd_test,     0 },
+  { "vars",     icmd_vars,     0 },
   { "version",  icmd_version,  0 },
   { NULL,       NULL,          0 },
 };
@@ -93,6 +111,7 @@ enum CommandResult mutt_parse_icommand(/* const */ char *line, struct Buffer *er
   mutt_extract_token(token, &expn, MUTT_TOKEN_NO_FLAGS);
   for (size_t i = 0; ICommandList[i].name; i++)
   {
+    /* TODO: contemplate implementing a icommand specific tokenizer */
     if (!mutt_str_equal(token->data, ICommandList[i].name))
       continue;
 
@@ -107,6 +126,66 @@ finish:
   mutt_buffer_pool_release(&token);
   mutt_buffer_dealloc(&expn);
   return rc;
+}
+
+/*
+ *  wrapper functions to prepare and call other functionality within mutt
+ *  see icmd_quit and icmd_help for easy examples
+ */
+static enum CommandResult icmd_quit(struct Buffer *buf, struct Buffer *s,
+                                    intptr_t data, struct Buffer *err)
+{
+  /* TODO: exit more gracefully */
+  mutt_exit(0);
+  return MUTT_CMD_SUCCESS;
+}
+
+static enum CommandResult icmd_help(struct Buffer *buf, struct Buffer *s,
+                                    intptr_t data, struct Buffer *err)
+{
+  /* TODO: implement ':help' command as suggested by flatcap in #162 */
+  mutt_buffer_addstr(err, _("Not implemented yet."));
+  return MUTT_CMD_ERROR;
+}
+
+static enum CommandResult icmd_test(struct Buffer *buf, struct Buffer *s,
+                                    intptr_t data, struct Buffer *err)
+{
+  mutt_summary();
+  return MUTT_CMD_SUCCESS;
+}
+
+static enum CommandResult icmd_color(struct Buffer *buf, struct Buffer *s,
+                                     intptr_t data, struct Buffer *err)
+
+{
+  /* TODO: implement ':color' command as suggested by flatcap in #162 */
+  mutt_buffer_addstr(err, _("Not implemented yet."));
+  return MUTT_CMD_ERROR;
+}
+
+static enum CommandResult icmd_messages(struct Buffer *buf, struct Buffer *s,
+                                        intptr_t data, struct Buffer *err)
+{
+  /* TODO: implement ':messages' command as suggested by flatcap in #162 */
+  mutt_buffer_addstr(err, _("Not implemented yet."));
+  return MUTT_CMD_ERROR;
+}
+
+static enum CommandResult icmd_scripts(struct Buffer *buf, struct Buffer *s,
+                                       intptr_t data, struct Buffer *err)
+{
+  /* TODO: implement ':scripts' command as suggested by flatcap in #162 */
+  mutt_buffer_addstr(err, _("Not implemented yet."));
+  return MUTT_CMD_ERROR;
+}
+
+static enum CommandResult icmd_vars(struct Buffer *buf, struct Buffer *s,
+                                    intptr_t data, struct Buffer *err)
+{
+  /* TODO: implement ':vars' command as suggested by flatcap in #162 */
+  mutt_buffer_addstr(err, _("Not implemented yet."));
+  return MUTT_CMD_ERROR;
 }
 
 /**
