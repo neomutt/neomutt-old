@@ -79,6 +79,7 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
 int mutt_tag_attach(struct Menu *menu, int n, int m);
 int mutt_attach_display_loop(struct Menu *menu, int op, struct Header *hdr,
                              struct AttachCtx *acvtx, bool recv);
+int mutt_view_in_background(char *command);
 
 void mutt_save_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag,
                                struct Body *top, struct Header *hdr, struct Menu *menu);

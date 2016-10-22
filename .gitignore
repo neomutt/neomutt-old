@@ -22,6 +22,7 @@ conststrings.c
 git_ver.h
 hcache/hcversion.h
 neomutt
+mutt_launch
 pgpewrap
 pgpring
 txt2c

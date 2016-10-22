@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -431,6 +432,8 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
 
     if (rfc1524_expand_filename(entry->nametemplate, fname, tempfile, sizeof(tempfile)))
     {
+      mutt_debug(1, "nametemplate: %s, fname: %s, expanded filename: %s\n",
+                 entry->nametemplate, fname, tempfile);
       if (fp == NULL && (mutt_strcmp(tempfile, a->filename) != 0))
       {
         /* send case: the file is already there */
@@ -530,8 +533,14 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
     }
     else
     {
-      /* interactive command */
-      if (mutt_system(command) || (entry->needsterminal && option(OPT_WAIT_KEY)))
+      /* open viewer in background (usually an external graphical program) */
+      if (entry->backgroundopen)
+      {
+        mutt_view_in_background(command);
+
+        /* interactive command */
+      }
+      else if (mutt_system(command) || (entry->needsterminal && option(OPT_WAIT_KEY)))
         mutt_any_key_to_continue(NULL);
     }
   }
@@ -961,6 +970,40 @@ int mutt_decode_save_attachment(FILE *fp, struct Body *m, char *path, int displa
   }
 
   return ret;
+}
+
+int mutt_view_in_background(char *command)
+{
+  pid_t thepid = 0;
+  const char *launchcmd = "mutt_launch";
+  int launchcmdlen = strlen(launchcmd);
+  int commandlen = strlen(command);
+
+  char **commandline = calloc(2, sizeof(char *));
+  commandline[0] = malloc(sizeof(char) * launchcmdlen);
+  strncpy(commandline[0], launchcmd, launchcmdlen);
+
+  commandline[1] = malloc(sizeof(char) * commandlen);
+  strncpy(commandline[1], command, commandlen);
+
+
+  if ((thepid = fork()) == 0)
+  {
+    /* child process */
+
+    execvp(launchcmd, commandline);
+  }
+  else if (thepid == -1)
+  {
+    /* problem forking */
+  }
+  else
+  {
+    /* main mutt process */
+  }
+
+
+  return 0;
 }
 
 /**

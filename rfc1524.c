@@ -288,6 +288,13 @@ static int rfc1524_mailcap_parse(struct Body *a, char *filename, char *type,
         {
           get_field_text(field + 9, entry ? &entry->convert : NULL, type, filename, line);
         }
+        else if (mutt_strncasecmp(field, "x-backgroundopen", 17) == 0)
+        {
+          if (entry != NULL)
+          {
+            entry->backgroundopen = true;
+          }
+        }
         else if (mutt_strncasecmp(field, "test", 4) == 0)
         {
           /*
