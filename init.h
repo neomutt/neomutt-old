@@ -1994,6 +1994,41 @@ struct Option MuttVars[] = {
   ** This variable, when \fIset\fP, makes the thread tree narrower, allowing
   ** deeper threads to fit on the screen.
   */
+  { "net_folder_format", DT_STRING, R_INDEX, &NetFolderFormat, IP "%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %f" },
+  /*
+  ** .pp
+  ** This variable allows you to customize the file browser of IMAP mailboxes to your
+  ** personal taste.  If not set, $folder_format will be used. This string is similar
+  ** to $$index_format, but has its own set of \fCprintf(3)\fP-like sequences:
+  ** .dl
+  ** .dt %C  .dd current file number
+  ** .dt %d  .dd date/time folder was last modified
+  ** .dt %D  .dd date/time folder was last modified using $$date_format.
+  ** .dt %f  .dd filename (``/'' is appended to directory names,
+  **             ``@'' to symbolic links and ``*'' to executable
+  **             files)
+  ** .dt %F  .dd file permissions
+  ** .dt %g  .dd group name (or numeric gid, if missing)
+  ** .dt %l  .dd number of hard links
+  ** .dt %m  .dd number of messages in the mailbox *
+  ** .dt %n  .dd number of unread messages in the mailbox *
+  ** .dt %N  .dd N if mailbox has new mail, blank otherwise
+  ** .dt %s  .dd size in bytes
+  ** .dt %t  .dd ``*'' if the file is tagged, blank otherwise
+  ** .dt %u  .dd owner name (or numeric uid, if missing)
+  ** .dt %>X .dd right justify the rest of the string and pad with character ``X''
+  ** .dt %|X .dd pad to the end of the line with character ``X''
+  ** .dt %*X .dd soft-fill with character ``X'' as pad
+  ** .de
+  ** .pp
+  ** For an explanation of ``soft-fill'', see the $$index_format documentation.
+  ** .pp
+  ** * = can be optionally printed if nonzero
+  ** .pp
+  ** %m, %n, and %N only work for monitored mailboxes.
+  ** %m requires $$mail_check_stats to be set.
+  ** %n requires $$mail_check_stats to be set (except for IMAP mailboxes).
+  */
 #ifdef USE_SOCKET
   { "net_inc",  DT_NUMBER,  R_NONE, &NetInc, 10 },
   /*

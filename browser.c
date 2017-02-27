@@ -267,6 +267,99 @@ static int link_is_dir(const char *folder, const char *path)
     return 0;
 }
 
+#ifdef USE_IMAP
+static const char *net_folder_format_str(char *dest, size_t destlen, size_t col, int cols,
+                                         char op, const char *src, const char *fmt,
+                                         const char *ifstring, const char *elsestring,
+                                         unsigned long data, enum FormatFlag flags)
+{
+  char fn[SHORT_STRING], tmp[SHORT_STRING], permission[11];
+  struct Folder *folder = (struct Folder *) data;
+  char *s;
+  int optional = (flags & MUTT_FORMAT_OPTIONAL);
+
+  switch (op)
+  {
+    case 'f':
+    {
+      s = NONULL(folder->ff->desc);
+
+      snprintf(fn, sizeof(fn), "%s%s", s,
+               folder->ff->local ?
+                   (S_ISLNK(folder->ff->mode) ?
+                        "@" :
+                        (S_ISDIR(folder->ff->mode) ?
+                             "/" :
+                             ((folder->ff->mode & S_IXUSR) != 0 ? "*" : ""))) :
+                   "");
+
+      mutt_format_s(dest, destlen, fmt, fn);
+      break;
+    }
+
+    case 'F':
+    {
+      /* mark folders with subfolders AND mail */
+      snprintf(permission, sizeof(permission), "IMAP %c",
+               (folder->ff->inferiors && folder->ff->selectable) ? '+' : ' ');
+      mutt_format_s(dest, destlen, fmt, permission);
+    }
+    /* fallthrough */
+    case 'm':
+      if (!optional)
+      {
+        if (folder->ff->has_buffy)
+        {
+          snprintf(tmp, sizeof(tmp), "%%%sd", fmt);
+          snprintf(dest, destlen, tmp, folder->ff->msg_count);
+        }
+        else
+          mutt_format_s(dest, destlen, fmt, "");
+      }
+      else if (!folder->ff->msg_count)
+        optional = 0;
+      break;
+
+    case 'N':
+      snprintf(tmp, sizeof(tmp), "%%%sc", fmt);
+      snprintf(dest, destlen, tmp, folder->ff->new ? 'N' : ' ');
+      break;
+
+    case 'n':
+      if (!optional)
+      {
+        if (folder->ff->has_buffy)
+        {
+          snprintf(tmp, sizeof(tmp), "%%%sd", fmt);
+          snprintf(dest, destlen, tmp, folder->ff->msg_unread);
+        }
+        else
+          mutt_format_s(dest, destlen, fmt, "");
+      }
+      else if (!folder->ff->msg_unread)
+        optional = 0;
+      break;
+    case 't':
+      snprintf(tmp, sizeof(tmp), "%%%sc", fmt);
+      snprintf(dest, destlen, tmp, folder->ff->tagged ? '*' : ' ');
+      break;
+
+  }
+
+  if (optional)
+  {
+    mutt_expando_format(dest, destlen, col, cols, ifstring,
+        net_folder_format_str, data, 0);
+  }
+  else if (flags & MUTT_FORMAT_OPTIONAL)
+  {
+    mutt_expando_format(dest, destlen, col, cols, elsestring,
+        net_folder_format_str, data, 0);
+  }
+  return src;
+}
+#endif
+
 /**
  * folder_format_str - Format a string for the folder browser
  * @param[out] buf      Buffer in which to save string
@@ -362,11 +455,6 @@ static const char *folder_format_str(char *buf, size_t buflen, size_t col, int c
         s = NONULL(folder->ff->desc);
       else
 #endif
-#ifdef USE_IMAP
-          if (folder->ff->imap)
-        s = NONULL(folder->ff->desc);
-      else
-#endif
         s = NONULL(folder->ff->name);
 
       snprintf(fn, sizeof(fn), "%s%s", s,
@@ -403,15 +491,6 @@ static const char *folder_format_str(char *buf, size_t buflen, size_t col, int c
                      (folder->ff->mode & S_IXOTH) != 0 ? 'x' : '-');
         mutt_format_s(buf, buflen, prec, permission);
       }
-#ifdef USE_IMAP
-      else if (folder->ff->imap)
-      {
-        /* mark folders with subfolders AND mail */
-        snprintf(permission, sizeof(permission), "IMAP %c",
-                 (folder->ff->inferiors && folder->ff->selectable) ? '+' : ' ');
-        mutt_format_s(buf, buflen, prec, permission);
-      }
-#endif
       else
         mutt_format_s(buf, buflen, prec, "");
       break;
@@ -978,9 +1057,20 @@ static void folder_entry(char *buf, size_t buflen, struct Menu *menu, int num)
                         (unsigned long) &folder, MUTT_FORMAT_ARROWCURSOR);
   else
 #endif
-    mutt_expando_format(buf, buflen, 0, MuttIndexWindow->cols,
-                        NONULL(FolderFormat), folder_format_str,
-                        (unsigned long) &folder, MUTT_FORMAT_ARROWCURSOR);
+  {
+#ifdef USE_IMAP
+    if ((folder.ff)->imap)
+    {
+      mutt_expando_format(buf, buflen, 0, MuttIndexWindow->cols, NONULL(NetFolderFormat),
+          net_folder_format_str, (unsigned long) &folder, MUTT_FORMAT_ARROWCURSOR);
+    }
+    else
+#endif
+    {
+      mutt_expando_format(buf, buflen, 0, MuttIndexWindow->cols, NONULL(FolderFormat),
+          folder_format_str, (unsigned long) &folder, MUTT_FORMAT_ARROWCURSOR);
+    }
+  }
 }
 
 #ifdef USE_NOTMUCH
