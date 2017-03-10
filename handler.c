@@ -300,7 +300,7 @@ static void decode_quoted(struct State *s, long len, int istext, iconv_t cd, ico
     l += l3;
 
     /* check whether we potentially need iso-8859-1 -> cp1252 conversion */
-    if (cp1252_cd != (iconv_t) -1)
+    if (!usecp1252 && cp1252_cd != (iconv_t) -1)
     {
       for (size_t i = 0; i < l; ++i)
       {
