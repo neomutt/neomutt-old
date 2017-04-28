@@ -1,3 +1,9 @@
+neomutt (1:20170428-1lxtec3) unstable; urgency=medium
+
+  * Fixed typo in debian/changelog.
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 28 Apr 2017 15:36:22 +0200
+
 neomutt (1:20170428-1lxtec2) unstable; urgency=medium
 
   * Enabled lua. Added liblua5.2-dev to Build-Depends.
