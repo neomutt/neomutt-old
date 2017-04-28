@@ -58,6 +58,7 @@ override_dh_auto_configure:
 			--enable-smtp				\
 			--enable-debug				\
 			--enable-fcntl				\
+			--enable-lua				\
 			--with-mixmaster			\
 			--with-curses				\
 			--with-gss				\
