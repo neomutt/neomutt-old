@@ -471,6 +471,10 @@ if test $with_domain != yes -a $with_domain != no; then
 	AC_DEFINE_UNQUOTED(DOMAIN,"$withval",[Define your domain name.])
 fi
 
+dnl Smart Columns
+dnl AC_SEARCH_LIBS([scols_new_table], [smartcols], AC_MSG_ERROR([could not find libsmartcols @ util-linux]))
+LIBS="$LIBS -lsmartcols"
+
 dnl -- socket dependencies --
 
 dnl getaddrinfo/getaddrinfo_a is used by getdomain.c, and requires libnsl and

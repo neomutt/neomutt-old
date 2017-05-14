@@ -37,6 +37,22 @@
 #include "options.h"
 #include "pager.h"
 #include "protos.h"
+#include "libsmartcols/libsmartcols.h"
+
+void table_add_line(struct libscols_table *tb, const char *binding, const char *function, const char *description)
+{
+  struct libscols_line *line;
+  struct libscols_cell *cell;
+
+  line = scols_table_new_line(tb, NULL);
+
+  cell = scols_line_get_cell(line, 0); // Bind
+  scols_cell_set_data(cell, binding);
+  cell = scols_line_get_cell(line, 1); // Function
+  scols_cell_set_data(cell, function);
+  cell = scols_line_get_cell(line, 2); // Description
+  scols_cell_set_data(cell, description);
+}
 
 static const char *HelpStrings[] = {
 #define DEFINE_HELP_MESSAGE(opcode, help_string) help_string,
@@ -99,6 +115,7 @@ char *mutt_compile_help(char *buf, size_t buflen, int menu, const struct Mapping
   return buf;
 }
 
+#if 0
 static int print_macro(FILE *f, int maxwidth, const char **macro)
 {
   int n = maxwidth;
@@ -298,13 +315,18 @@ static void format_line(FILE *f, int ismacro, const char *t1, const char *t2, co
 
   fputc('\n', f);
 }
+#endif
 
-static void dump_menu(FILE *f, int menu)
+static void dump_menu(struct libscols_table *tb, int menu)
 {
   struct Keymap *map = NULL;
   const struct Binding *b = NULL;
   char buf[SHORT_STRING];
   bool is_alternate = true;
+
+  const char *binding = NULL;
+  const char *function = NULL;
+  const char *description = NULL;
 
   /* browse through the keymap table */
   for (map = Keymaps[menu]; map; map = map->next)
@@ -316,18 +338,26 @@ static void dump_menu(FILE *f, int menu)
 
       if (map->op == OP_MACRO)
       {
-        if (!map->descr)
-          format_line(f, -1, buf, "macro", map->macro, is_alternate);
-        else
-          format_line(f, 1, buf, map->macro, map->descr, is_alternate);
+        if (!map->descr) {
+          binding = buf;
+          function = "macro";
+          description = map->macro;
+        }
+        else {
+          binding = buf;
+          function = map->macro; // TODO: Prepend "M "
+          description = map->descr;
+        }
       }
       else
       {
         b = help_lookup_function(map->op, menu);
-        format_line(f, 0, buf, b ? b->name : "UNKNOWN",
-                    b ? _(HelpStrings[b->op]) :
-                        _("ERROR: please report this bug"), is_alternate);
+        binding = buf;
+        function = b ? b->name : "UNKNOWN";
+        description = b ? _(HelpStrings[b->op]) : _("ERROR: please report this bug");
       }
+
+      table_add_line(tb, binding, function, description);
     }
   }
 }
@@ -340,18 +370,18 @@ static bool is_bound(struct Keymap *map, int op)
   return false;
 }
 
-static void dump_unbound(FILE *f, const struct Binding *funcs,
+static void dump_unbound(struct libscols_table *tb, const struct Binding *funcs,
                          struct Keymap *map, struct Keymap *aux)
 {
-  bool is_alternate = true;
+  const char *bind = NULL;
+  const char *desc = NULL;
 
-  for (int i = 0; funcs[i].name; i++)
-  {
-
-    if (!is_bound(map, funcs[i].op) && (!aux || !is_bound(aux, funcs[i].op))) {
-      is_alternate = !is_alternate;
-      format_line(f, 0, funcs[i].name, "", _(HelpStrings[funcs[i].op]), is_alternate);
-    }
+  for (int i = 0; funcs[i].name; i++) {
+      if (!is_bound(map, funcs[i].op) && (!aux || !is_bound(aux, funcs[i].op))) {
+        bind = funcs[i].name;
+        desc = _(HelpStrings[funcs[i].op]);
+        table_add_line(tb, bind, "", desc);
+      }
   }
 }
 
@@ -370,31 +400,61 @@ void mutt_help(int menu)
   if (!desc)
     desc = _("<UNKNOWN>");
 
+  struct libscols_table *tb;
+  struct libscols_column *col;
+  struct libscols_cell *title;
+  struct libscols_symbols *sy;
+
   do
   {
+    tb = scols_new_table();
+    scols_table_set_termwidth(tb, MuttIndexWindow->cols);
+    scols_table_enable_colors(tb, 1); // Colors
+    /* scols_table_enable_noheadings(tb, 1); // No Headings */
+    scols_table_set_column_separator(tb, "│");
+
+    int default_flags = SCOLS_FL_STRICTWIDTH | SCOLS_FL_NOEXTREMES;
+    col = scols_table_new_column(tb, "Bind", 0.125, default_flags);
+    scols_column_set_color(col, "red");
+    scols_table_new_column(tb, "Func", 0.125, default_flags | SCOLS_FL_TRUNC | SCOLS_FL_WRAP);
+    scols_table_new_column(tb, "Description", 0.75, default_flags);
+
+    table_add_line(tb, "---------", "---------", "---------");
+
     f = safe_fopen(t, "w");
     if (!f)
     {
       mutt_perror(t);
       return;
     }
-
-    dump_menu(f, menu);
+    scols_table_set_stream(tb, f);
+    dump_menu(tb, menu);
     if (menu != MENU_EDITOR && menu != MENU_PAGER)
     {
-      fputs(_("\nGeneric bindings:\n\n"), f);
-      dump_menu(f, MENU_GENERIC);
+      table_add_line(tb, "---------", "---------", "---------");
+      table_add_line(tb, "", "Generic Bindings", "");
+      table_add_line(tb, "---------", "---------", "---------");
+      dump_menu(tb, MENU_GENERIC);
     }
 
-    fputs(_("\nUnbound functions:\n\n"), f);
+    /*TODO fputs(_("\nUnbound functions:\n\n"), f); */
     if (funcs)
-      dump_unbound(f, funcs, Keymaps[menu], NULL);
+      dump_unbound(tb, funcs, Keymaps[menu], NULL);
     if (menu != MENU_PAGER)
-      dump_unbound(f, OpGeneric, Keymaps[MENU_GENERIC], Keymaps[menu]);
+      dump_unbound(tb, OpGeneric, Keymaps[MENU_GENERIC], Keymaps[menu]);
 
+    title = scols_table_get_title(tb);
+    scols_cell_set_flags(title, SCOLS_CELL_FL_CENTER);
+
+    sy = scols_new_symbols();
+    scols_symbols_set_title_padding(sy, "=");
+    scols_table_set_symbols(tb, sy);
+
+    scols_print_table(tb);
     safe_fclose(&f);
+    scols_unref_table(tb);
 
     snprintf(buf, sizeof(buf), _("Help for %s"), desc);
-  } while (mutt_do_pager(buf, t, MUTT_PAGER_RETWINCH | MUTT_PAGER_MARKER | MUTT_PAGER_NSKIP | MUTT_PAGER_NOWRAP,
+  } while (mutt_do_pager(buf, t, MUTT_PAGER_RETWINCH | MUTT_PAGER_MARKER | MUTT_PAGER_NSKIP | MUTT_PAGER_NOWRAP | MUTT_SHOWCOLOR,
                          NULL) == OP_REFORMAT_WINCH);
 }
