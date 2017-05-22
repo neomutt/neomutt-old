@@ -1,3 +1,10 @@
+neomutt (1:20170522-1lxtec1) unstable; urgency=medium
+
+  * New version for test only
+  * For testbuild after overhaul from Flatcap.
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Mon, 22 May 2017 19:16:43 +0200
+
 neomutt (1:20170428-1lxtec3) unstable; urgency=medium
 
   * Fixed typo in debian/changelog.
