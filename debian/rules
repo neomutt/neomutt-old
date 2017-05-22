@@ -32,7 +32,7 @@ ifeq ($(HCACHE_DB),tokyocabinet)
 	hcache_db := --with-tokyocabinet --without-bdb --without-qdbm --without-lmdb --without-kyotocabinet
     endif
 endif
-ifeq ($(HCACHE_DB),kyotocabinet)A
+ifeq ($(HCACHE_DB),kyotocabinet)
     hcache_db := --with-kyotocabinet --without-gdbm --without-bdb --without-qdbm --without-lmdb --without-tokyocabinet
     ifeq ($(shell dpkg --print-architecture),hurd-i386)
 	hcache_db := --with-kyotocabinet --without-bdb --without-qdbm --without-lmdb --without-tokyocabinet
@@ -58,6 +58,7 @@ override_dh_auto_configure:
 			--enable-smtp				\
 			--enable-debug				\
 			--enable-fcntl				\
+			--enable-dotlock			\
 			--enable-lua				\
 			--with-mixmaster			\
 			--with-curses				\
