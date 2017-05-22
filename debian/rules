@@ -78,7 +78,7 @@ override_dh_install:
 	( sed -e '/## More settings/,$$d' debian/tmp/etc/NeoMuttrc || exit 1 ; \
 	  cat debian/extra/rc/Muttrc.foot ) > debian/tmp/NeoMuttrc
 	#mv debian/tmp/usr/share/doc/neomutt/NEWS  debian/tmp/usr/share/doc/neomutt/NEWS.old
-	cp NEWS  debian/tmp/usr/share/doc/neomutt/NEWS.old
+	#cp NEWS  debian/tmp/usr/share/doc/neomutt/NEWS.old
 	cp UPDATING debian/tmp/usr/share/doc/neomutt/NEWS
 	dh_install
 
