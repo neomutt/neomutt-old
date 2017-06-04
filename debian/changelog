@@ -1,3 +1,9 @@
+neomutt (1:20170602-1lxtec2) unstable; urgency=medium
+
+  * Justify debian/README.Debian
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 04 Jun 2017 09:39:59 +0200
+
 neomutt (1:20170602-1lxtec1) unstable; urgency=medium
 
   * New upstream stable release neomutt-20170602
