@@ -2,7 +2,7 @@
 # Description:   How to build a Debian package from neomutt's git source
 # Author:        Elimar Riesebieter <riesebie@lxtec.de>
 # Created:       Sat, 15 Apr 2017 12:32:08 +0200
-# Last modified: Sat, 15 Apr 2017 13:52:33 +0200
+# Last modified: Sun, 04 Jun 2017 09:38:55 +0200
 # File:          /source/neomutt/git/neomutt/debian/README.Debian
 ###############################################################################
 
@@ -52,6 +52,8 @@ The default will build with:
 --enable-smtp				\
 --enable-debug				\
 --enable-fcntl				\
+--enable-dotlock			\
+--enable-lua				\
 --with-mixmaster			\
 --with-curses				\
 --with-gss				\
@@ -79,7 +81,7 @@ $ debuild
 
 After a successful build the deb's should be in ../ ;-)
 
-Please not that a pristine Debian mutt install will be removed. Installing
+Please note that a pristine Debian mutt install will be removed. Installing
 neomutt will have /etc/NeoMuttrc and /etc/NeoMuttrc.d. The neomutt-common
 package includes all the documentation and contribs from neomutt's source.
 To go back to Debian's mutt please first remove the neomutt packages:
