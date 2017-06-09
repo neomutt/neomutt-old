@@ -1,3 +1,10 @@
+neomutt (1:20170609-1lxtec1) unstable; urgency=medium
+
+  * New upstream stable release neomutt-20170609.
+  * Adjusted 0001-Set-version-info-to-lxtec.patch.
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 09 Jun 2017 20:47:32 +0200
+
 neomutt (1:20170602-1lxtec2) unstable; urgency=medium
 
   * Justify debian/README.Debian
