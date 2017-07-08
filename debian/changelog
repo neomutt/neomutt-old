@@ -1,3 +1,9 @@
+neomutt (1:20170707-1lxtec2) unstable; urgency=medium
+
+  * fix: stop allowing duplicate mailboxes
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 08 Jul 2017 17:48:49 +0200
+
 neomutt (1:20170707-1lxtec1) unstable; urgency=medium
 
   * Removed dotlock configure option.
