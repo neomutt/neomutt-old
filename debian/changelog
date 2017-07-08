@@ -1,8 +1,9 @@
-neomutt (1:20170707-1lxtec2) UNRELEASED; urgency=medium
+neomutt (1:20170707-1lxtec1) UNRELEASED; urgency=medium
 
   * Removed dotlock configure option.
   * Removed dotlock from all install instructions.
   * Adjusted patches/0001-Set-version-info-to-lxtec.patch.
+  * Removed UPDATING. Its not included anymore.
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 08 Jul 2017 09:27:29 +0200
 
