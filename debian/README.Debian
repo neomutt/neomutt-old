@@ -2,7 +2,7 @@
 # Description:   How to build a Debian package from neomutt's git source
 # Author:        Elimar Riesebieter <riesebie@lxtec.de>
 # Created:       Sat, 15 Apr 2017 12:32:08 +0200
-# Last modified: Sun, 04 Jun 2017 09:38:55 +0200
+# Last modified: Sat, 08 Jul 2017 09:29:09 +0200
 # File:          /source/neomutt/git/neomutt/debian/README.Debian
 ###############################################################################
 
@@ -52,7 +52,6 @@ The default will build with:
 --enable-smtp				\
 --enable-debug				\
 --enable-fcntl				\
---enable-dotlock			\
 --enable-lua				\
 --with-mixmaster			\
 --with-curses				\
