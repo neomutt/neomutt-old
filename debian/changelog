@@ -4,6 +4,7 @@ neomutt (1:20170707-1lxtec1) UNRELEASED; urgency=medium
   * Removed dotlock from all install instructions.
   * Adjusted patches/0001-Set-version-info-to-lxtec.patch.
   * Removed UPDATING. Its not included anymore.
+  * Install ChangeLog.md as upstrams changelog.
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 08 Jul 2017 09:27:29 +0200
 
