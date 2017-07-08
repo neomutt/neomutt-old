@@ -23,7 +23,7 @@ Build-Depends: autotools-dev,
                w3m,
                xsltproc,
                zlib1g-dev
-Standards-Version: 3.9.8
+Standards-Version: 4.0.0
 Homepage: https://www.neomutt.org/
 
 Package: neomutt-common
