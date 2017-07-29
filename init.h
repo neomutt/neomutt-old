@@ -1308,8 +1308,15 @@ struct Option MuttVars[] = {
   ** render the part to plain text. These MIME parts can only
   ** be viewed from the attachment menu.
   ** .pp
+  ** NeoMutt will also refuse to autoview text MIME parts unless the disposition
+  ** is ``inline'' if this variable is set.
+  ** .pp
   ** If \fIunset\fP, NeoMutt will render all MIME parts it can
   ** properly transform to plain text.
+  ** .pp
+  ** Mutt will also autoview text MIME parts if ``$auto_view'' is in effect for
+  ** the subtype and this variable is unset (unless the disposition is
+  ** explicitly ``attachment'').
   */
   { "honor_followup_to", DT_QUAD, R_NONE, &HonorFollowupTo, MUTT_YES },
   /*
