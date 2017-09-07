@@ -1,6 +1,17 @@
+neomutt (1:20170907-1lxtec1) unstable; urgency=medium
+
+  * New upstream develeopment release 20170907.
+  * Use dh-lua to build lua support.
+  * Build with clang-5.0.
+  * Exclude architectures which don't run notmuch.
+  * Removed autotools-dev from Build-Depands.
+  * Adjusted debian/patches/0001-Set-version-info-to-lxtec.patch.
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Thu, 07 Sep 2017 14:28:01 +0200
+
 neomutt (1:20170714-1lxtec1) unstable; urgency=medium
 
-  * New ustrem develeopment release 20170714.
+  * New upstream develeopment release 20170714.
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 14 Jul 2017 16:57:55 +0200
 
