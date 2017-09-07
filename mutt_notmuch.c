@@ -46,6 +46,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#include "lib/lib.h"
 #include "mutt.h"
 #include "mutt_notmuch.h"
 #include "body.h"
@@ -54,7 +55,6 @@
 #include "envelope.h"
 #include "globals.h"
 #include "header.h"
-#include "lib/lib.h"
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mx.h"
@@ -142,10 +142,10 @@ struct NmCtxData
 {
   notmuch_database_t *db;
 
-  char *db_filename; /**< Filename of the NotMuch database */
-  char *db_query;    /**< Previous query */
-  int db_limit;      /**< Maximum number of results to return */
-  int query_type;    /**< Messages or Threads */
+  char *db_filename;           /**< Filename of the NotMuch database */
+  char *db_query;              /**< Previous query */
+  int db_limit;                /**< Maximum number of results to return */
+  enum NmQueryType query_type; /**< Messages or Threads */
 
   struct UriTag *query_items;
 
@@ -450,20 +450,23 @@ static struct NmCtxData *get_ctxdata(struct Context *ctx)
   return NULL;
 }
 
-static int string_to_query_type(const char *str)
+static enum NmQueryType string_to_query_type(const char *str)
 {
-  if (!str)
-    str = NmQueryType; /* user's default */
-  if (!str)
-    return NM_QUERY_TYPE_MESGS; /* hardcoded default */
-
-  if (strcmp(str, "threads") == 0)
+  if (mutt_strcmp(str, "threads") == 0)
     return NM_QUERY_TYPE_THREADS;
-  else if (strcmp(str, "messages") == 0)
+  else if (mutt_strcmp(str, "messages") == 0)
     return NM_QUERY_TYPE_MESGS;
 
   mutt_error(_("failed to parse notmuch query type: %s"), str);
   return NM_QUERY_TYPE_MESGS;
+}
+
+static char *query_type_to_string(enum NmQueryType query_type)
+{
+  if (query_type == NM_QUERY_TYPE_THREADS)
+    return "threads";
+  else
+    return "messages";
 }
 
 /**
@@ -553,8 +556,7 @@ static bool windowed_query_from_query(const char *query, char *buf, size_t bufsz
   }
 
   /* if the query has changed, reset the window position */
-  if (NmQueryWindowCurrentSearch == NULL ||
-      (strcmp(query, NmQueryWindowCurrentSearch) != 0))
+  if (NmQueryWindowCurrentSearch == NULL || (strcmp(query, NmQueryWindowCurrentSearch) != 0))
     query_window_reset();
 
   if (!query_window_check_timebase(NmQueryWindowTimebase))
@@ -566,8 +568,8 @@ static bool windowed_query_from_query(const char *query, char *buf, size_t bufsz
   }
 
   if (end == 0)
-    snprintf(buf, bufsz, "date:%d%s..now and %s", beg,
-             NmQueryWindowTimebase, NmQueryWindowCurrentSearch);
+    snprintf(buf, bufsz, "date:%d%s..now and %s", beg, NmQueryWindowTimebase,
+             NmQueryWindowCurrentSearch);
   else
     snprintf(buf, bufsz, "date:%d%s..%d%s and %s", beg, NmQueryWindowTimebase,
              end, NmQueryWindowTimebase, NmQueryWindowCurrentSearch);
@@ -604,6 +606,8 @@ static char *get_query_string(struct NmCtxData *data, int window)
   if (data->db_query)
     return data->db_query;
 
+  data->query_type = string_to_query_type(NmQueryType); /* user's default */
+
   for (item = data->query_items; item; item = item->next)
   {
     if (!item->value || !item->name)
@@ -623,9 +627,6 @@ static char *get_query_string(struct NmCtxData *data, int window)
 
   if (!data->db_query)
     return NULL;
-
-  if (!data->query_type)
-    data->query_type = string_to_query_type(NULL);
 
   if (window)
   {
@@ -651,11 +652,6 @@ static char *get_query_string(struct NmCtxData *data, int window)
 static int get_limit(struct NmCtxData *data)
 {
   return data ? data->db_limit : 0;
-}
-
-static int get_query_type(struct NmCtxData *data)
-{
-  return (data && data->query_type) ? data->query_type : string_to_query_type(NULL);
 }
 
 static const char *get_db_filename(struct NmCtxData *data)
@@ -1844,11 +1840,15 @@ char *nm_uri_from_query(struct Context *ctx, char *buf, size_t bufsz)
   int added;
 
   if (data)
-    added = snprintf(uri, sizeof(uri), "notmuch://%s?query=", get_db_filename(data));
+    added = snprintf(uri, sizeof(uri),
+                     "notmuch://%s?type=%s&query=", get_db_filename(data),
+                     query_type_to_string(data->query_type));
   else if (NmDefaultUri)
-    added = snprintf(uri, sizeof(uri), "%s?query=", NmDefaultUri);
+    added = snprintf(uri, sizeof(uri), "%s?type=%s&query=", NmDefaultUri,
+                     query_type_to_string(data->query_type));
   else if (Folder)
-    added = snprintf(uri, sizeof(uri), "notmuch://%s?query=", Folder);
+    added = snprintf(uri, sizeof(uri), "notmuch://%s?type=%s&query=", Folder,
+                     query_type_to_string(data->query_type));
   else
     return NULL;
 
@@ -2012,7 +2012,7 @@ bool nm_message_is_still_queried(struct Context *ctx, struct Header *hdr)
 
   q = notmuch_query_create(db, new_str);
 
-  switch (get_query_type(data))
+  switch (data->query_type)
   {
     case NM_QUERY_TYPE_MESGS:
     {
@@ -2306,7 +2306,7 @@ static int nm_open_mailbox(struct Context *ctx)
   if (q)
   {
     rc = 0;
-    switch (get_query_type(data))
+    switch (data->query_type)
     {
       case NM_QUERY_TYPE_MESGS:
         if (!read_mesgs_query(ctx, q, 0))
