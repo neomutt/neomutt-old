@@ -1,3 +1,11 @@
+neomutt (1:20170907-1lxtec2) unstable; urgency=medium
+
+  * Disabled build with clang-5.0 for now. Debian's llvm-toolchain isn't aware
+    of PIE yet.
+  * Bumped Standards to 4.0.1. Noch changes.
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 08 Sep 2017 12:58:29 +0200
+
 neomutt (1:20170907-1lxtec1) unstable; urgency=medium
 
   * New upstream develeopment release 20170907.
