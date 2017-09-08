@@ -1,6 +1,12 @@
+neomutt (1:20170907-1lxtec4) unstable; urgency=medium
+
+  * Spell fix: s/Reenabled/Re-enabled
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 08 Sep 2017 21:20:03 +0200
+
 neomutt (1:20170907-1lxtec3) unstable; urgency=medium
 
-  * Reenabled build with clang-5.0
+  * Re-enabled build with clang-5.0
     Added
       CFLAGS+=-fpie
       CPPFLAGS+=-fpie
@@ -12,24 +18,24 @@ neomutt (1:20170907-1lxtec2) unstable; urgency=medium
 
   * Disabled build with clang-5.0 for now. Debian's llvm-toolchain isn't aware
     of PIE yet.
-  * Bumped Standards to 4.0.1. Noch changes.
+  * Bumped Standards to 4.0.1. No changes.
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 08 Sep 2017 12:58:29 +0200
 
 neomutt (1:20170907-1lxtec1) unstable; urgency=medium
 
-  * New upstream develeopment release 20170907.
+  * New upstream development release 20170907.
   * Use dh-lua to build lua support.
   * Build with clang-5.0.
   * Exclude architectures which don't run notmuch.
-  * Removed autotools-dev from Build-Depands.
+  * Removed autotools-dev from Build-Depends.
   * Adjusted debian/patches/0001-Set-version-info-to-lxtec.patch.
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Thu, 07 Sep 2017 14:28:01 +0200
 
 neomutt (1:20170714-1lxtec1) unstable; urgency=medium
 
-  * New upstream develeopment release 20170714.
+  * New upstream development release 20170714.
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 14 Jul 2017 16:57:55 +0200
 
@@ -45,8 +51,8 @@ neomutt (1:20170707-1lxtec1) unstable; urgency=medium
   * Removed dotlock from all install instructions.
   * Adjusted patches/0001-Set-version-info-to-lxtec.patch.
   * Removed UPDATING. Its not included anymore.
-  * Install ChangeLog.md as upstrams changelog.
-  * Bumped Standards to 4.0.0. Noch changes.
+  * Install ChangeLog.md as upstreams changelog.
+  * Bumped Standards to 4.0.0. No changes.
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 08 Jul 2017 09:27:29 +0200
 
