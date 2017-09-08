@@ -1,3 +1,13 @@
+neomutt (1:20170907-1lxtec3) unstable; urgency=medium
+
+  * Reenabled build with clang-5.0
+    Added
+      CFLAGS+=-fpie
+      CPPFLAGS+=-fpie
+      LDFLAGS+=-pie
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 08 Sep 2017 21:13:05 +0200
+
 neomutt (1:20170907-1lxtec2) unstable; urgency=medium
 
   * Disabled build with clang-5.0 for now. Debian's llvm-toolchain isn't aware
