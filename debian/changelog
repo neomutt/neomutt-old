@@ -1,8 +1,9 @@
-neomutt (1:20170907-1lxtec5) UNRELEASED; urgency=medium
+neomutt (1:20170907-1lxtec6) UNRELEASED; urgency=medium
 
   * Bumped standards to 4.1.0. No changes
+  * Updated 0001-Set-version-info-to-lxtec.patch
 
- -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 12 Sep 2017 19:07:53 +0200
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 12 Sep 2017 19:11:14 +0200
 
 neomutt (1:20170907-1lxtec4) unstable; urgency=medium
 
