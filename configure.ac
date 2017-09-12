@@ -4,7 +4,7 @@ dnl     autoreconf -i
 CFLAGS=$CFLAGS
 LDFLAGS=$LDFLAGS
 
-AC_INIT([NeoMutt], [20170907], [neomutt-devel@neomutt.org], [mutt], [https://www.neomutt.org])
+AC_INIT([NeoMutt], [20170912], [neomutt-devel@neomutt.org], [mutt], [https://www.neomutt.org])
 AC_CONFIG_SRCDIR(mutt.h)
 AC_CONFIG_AUX_DIR([.build-aux])
 AM_INIT_AUTOMAKE
@@ -388,16 +388,16 @@ dnl --- ncurses
 
 			AC_CHECK_HEADERS(ncursesw/ncurses.h,
 				[cf_cv_ncurses_header="ncursesw/ncurses.h"],
-				AC_CHECK_HEADERS(ncurses/ncurses.h,
+				[AC_CHECK_HEADERS(ncurses/ncurses.h,
 					[cf_cv_ncurses_header="ncurses/ncurses.h"],
-					AC_CHECK_HEADERS(ncurses.h,
+					[AC_CHECK_HEADERS(ncurses.h,
 						[cf_cv_ncurses_header="ncurses.h"],
-						AC_CHECK_HEADERS(curses.h,
+						[AC_CHECK_HEADERS(curses.h,
 							[cf_cv_ncurses_header="curses.h"],
-							AC_MSG_ERROR(Unable to find ncurses headers)
-						)
-					)
-				)
+							[AC_MSG_ERROR([Unable to find ncurses headers])]
+						])
+					])
+				])
 			)
 		],)
 	])

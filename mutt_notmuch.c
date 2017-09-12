@@ -457,7 +457,7 @@ static enum NmQueryType string_to_query_type(const char *str)
   else if (mutt_strcmp(str, "messages") == 0)
     return NM_QUERY_TYPE_MESGS;
 
-  mutt_error(_("failed to parse notmuch query type: %s"), str);
+  mutt_error(_("failed to parse notmuch query type: %s"), NONULL(str));
   return NM_QUERY_TYPE_MESGS;
 }
 
@@ -1126,7 +1126,10 @@ static void progress_update(struct Context *ctx, notmuch_query_t *q)
     static char msg[STRING];
     snprintf(msg, sizeof(msg), _("Reading messages..."));
 
-#if LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
+#if LIBNOTMUCH_CHECK_VERSION(5, 0, 0)
+    if (notmuch_query_count_messages(q, &count) != NOTMUCH_STATUS_SUCCESS)
+      count = 0; /* may not be defined on error */
+#elif LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
     if (notmuch_query_count_messages_st(q, &count) != NOTMUCH_STATUS_SUCCESS)
       count = 0; /* may not be defined on error */
 #else
@@ -1313,7 +1316,10 @@ static bool read_mesgs_query(struct Context *ctx, notmuch_query_t *q, int dedup)
 
   limit = get_limit(data);
 
-#if LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
+#if LIBNOTMUCH_CHECK_VERSION(5, 0, 0)
+  if (notmuch_query_search_messages(q, &msgs) != NOTMUCH_STATUS_SUCCESS)
+    return false;
+#elif LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
   if (notmuch_query_search_messages_st(q, &msgs) != NOTMUCH_STATUS_SUCCESS)
     return false;
 #else
@@ -1343,7 +1349,10 @@ static bool read_threads_query(struct Context *ctx, notmuch_query_t *q, int dedu
   if (!data)
     return false;
 
-#if LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
+#if LIBNOTMUCH_CHECK_VERSION(5, 0, 0)
+  if (notmuch_query_search_threads(q, &threads) != NOTMUCH_STATUS_SUCCESS)
+    return false;
+#elif LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
   if (notmuch_query_search_threads_st(q, &threads) != NOTMUCH_STATUS_SUCCESS)
     return false;
 #else
@@ -1704,7 +1713,10 @@ static unsigned count_query(notmuch_database_t *db, const char *qstr)
   if (q)
   {
     apply_exclude_tags(q);
-#if LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
+#if LIBNOTMUCH_CHECK_VERSION(5, 0, 0)
+    if (notmuch_query_count_messages(q, &res) != NOTMUCH_STATUS_SUCCESS)
+      res = 0; /* may not be defined on error */
+#elif LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
     if (notmuch_query_count_messages_st(q, &res) != NOTMUCH_STATUS_SUCCESS)
       res = 0; /* may not be defined on error */
 #else
@@ -1845,10 +1857,10 @@ char *nm_uri_from_query(struct Context *ctx, char *buf, size_t bufsz)
                      query_type_to_string(data->query_type));
   else if (NmDefaultUri)
     added = snprintf(uri, sizeof(uri), "%s?type=%s&query=", NmDefaultUri,
-                     query_type_to_string(data->query_type));
+                     query_type_to_string(string_to_query_type(NmQueryType)));
   else if (Folder)
     added = snprintf(uri, sizeof(uri), "notmuch://%s?type=%s&query=", Folder,
-                     query_type_to_string(data->query_type));
+                     query_type_to_string(string_to_query_type(NmQueryType)));
   else
     return NULL;
 
@@ -2017,7 +2029,10 @@ bool nm_message_is_still_queried(struct Context *ctx, struct Header *hdr)
     case NM_QUERY_TYPE_MESGS:
     {
       notmuch_messages_t *messages = NULL;
-#if LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
+#if LIBNOTMUCH_CHECK_VERSION(5, 0, 0)
+      if (notmuch_query_search_messages(q, &messages) != NOTMUCH_STATUS_SUCCESS)
+        return false;
+#elif LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
       if (notmuch_query_search_messages_st(q, &messages) != NOTMUCH_STATUS_SUCCESS)
         return false;
 #else
@@ -2030,7 +2045,10 @@ bool nm_message_is_still_queried(struct Context *ctx, struct Header *hdr)
     case NM_QUERY_TYPE_THREADS:
     {
       notmuch_threads_t *threads = NULL;
-#if LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
+#if LIBNOTMUCH_CHECK_VERSION(5, 0, 0)
+      if (notmuch_query_search_threads(q, &threads) != NOTMUCH_STATUS_SUCCESS)
+        return false;
+#elif LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
       if (notmuch_query_search_threads_st(q, &threads) != NOTMUCH_STATUS_SUCCESS)
         return false;
 #else
@@ -2402,7 +2420,10 @@ static int nm_check_mailbox(struct Context *ctx, int *index_hint)
 
   limit = get_limit(data);
 
-#if LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
+#if LIBNOTMUCH_CHECK_VERSION(5, 0, 0)
+  if (notmuch_query_search_messages(q, &msgs) != NOTMUCH_STATUS_SUCCESS)
+    return false;
+#elif LIBNOTMUCH_CHECK_VERSION(4, 3, 0)
   if (notmuch_query_search_messages_st(q, &msgs) != NOTMUCH_STATUS_SUCCESS)
     goto done;
 #else
