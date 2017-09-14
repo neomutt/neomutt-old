@@ -1,0 +1,103 @@
+From 70054f783506dbfd1262ff823e3d17cd7c08f81b Mon Sep 17 00:00:00 2001
+From: Richard Russon <rich@flatcap.org>
+Date: Thu, 14 Sep 2017 17:36:19 +0100
+Subject: [PATCH] fix: %{fmt} date format
+
+A mistake was introduced when moving the date code to the library.
+The dates being displayed were those of the base timezone, not the email.
+
+Remove the `%<...>` documentation from `$index_format`
+
+Fixes #757
+---
+ init.h     |  2 --
+ lib/date.c | 12 ++++++++----
+ lib/date.h |  2 +-
+ parse.c    | 10 +++++-----
+ 4 files changed, 14 insertions(+), 12 deletions(-)
+
+Index: neomutt/init.h
+===================================================================
+--- neomutt.orig/init.h
++++ neomutt/init.h
+@@ -1593,8 +1593,6 @@ struct Option MuttVars[] = {
+   ** .dt %(fmt) .dd the local date and time when the message was received.
+   **                ``fmt'' is expanded by the library function \fCstrftime(3)\fP;
+   **                a leading bang disables locales
+-  ** .dt %<fmt> .dd the current local time. ``fmt'' is expanded by the library
+-  **                function \fCstrftime(3)\fP; a leading bang disables locales.
+   ** .dt %>X    .dd right justify the rest of the string and pad with character ``X''
+   ** .dt %|X    .dd pad to the end of the line with character ``X''
+   ** .dt %*X    .dd soft-fill with character ``X'' as pad
+Index: neomutt/lib/date.c
+===================================================================
+--- neomutt.orig/lib/date.c
++++ neomutt/lib/date.c
+@@ -432,7 +432,7 @@ bool is_day_name(const char *s)
+  *
+  * The 'timezone' field is optional; it defaults to +0000 if missing.
+  */
+-time_t mutt_parse_date(const char *s, const struct Tz **tz_out)
++time_t mutt_parse_date(const char *s, struct Tz *tz_out)
+ {
+   int count = 0;
+   char *t = NULL;
+@@ -537,9 +537,6 @@ time_t mutt_parse_date(const char *s, co
+             zhours = tz->zhours;
+             zminutes = tz->zminutes;
+             zoccident = tz->zoccident;
+-
+-            if (tz_out)
+-              *tz_out = tz;
+           }
+ 
+           /* ad hoc support for the European MET (now officially CET) TZ */
+@@ -568,5 +565,12 @@ time_t mutt_parse_date(const char *s, co
+     return -1;
+   }
+ 
++  if (tz_out)
++  {
++    tz_out->zhours = zhours;
++    tz_out->zminutes = zminutes;
++    tz_out->zoccident = zoccident;
++  }
++
+   return (mutt_mktime(&tm, 0) + tz_offset);
+ }
+Index: neomutt/lib/date.h
+===================================================================
+--- neomutt.orig/lib/date.h
++++ neomutt/lib/date.h
+@@ -45,7 +45,7 @@ time_t mutt_local_tz(time_t t);
+ time_t mutt_mktime(struct tm *t, int local);
+ void mutt_normalize_time(struct tm *tm);
+ char *mutt_make_date(char *buf, size_t buflen);
+-time_t mutt_parse_date(const char *s, const struct Tz **tz_out);
++time_t mutt_parse_date(const char *s, struct Tz *tz_out);
+ bool is_day_name(const char *s);
+ int mutt_check_month(const char *s);
+ 
+Index: neomutt/parse.c
+===================================================================
+--- neomutt.orig/parse.c
++++ neomutt/parse.c
+@@ -835,13 +835,13 @@ int mutt_parse_rfc822_line(struct Envelo
+         mutt_str_replace(&e->date, p);
+         if (hdr)
+         {
+-          const struct Tz *tz = NULL;
++          struct Tz tz;
+           hdr->date_sent = mutt_parse_date(p, &tz);
+-          if (tz)
++          if (tz.tzname)
+           {
+-            hdr->zhours = tz->zhours;
+-            hdr->zminutes = tz->zminutes;
+-            hdr->zoccident = tz->zoccident;
++            hdr->zhours = tz.zhours;
++            hdr->zminutes = tz.zminutes;
++            hdr->zoccident = tz.zoccident;
+           }
+         }
+         matched = 1;
