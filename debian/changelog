@@ -1,3 +1,9 @@
+neomutt (1:20170912-1lxtec3) unstable; urgency=medium
+
+  * Install contrib/colorschemes into examples
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 15 Sep 2017 14:53:26 +0200
+
 neomutt (1:20170912-1lxtec2) unstable; urgency=medium
 
   * Introduced 0002-fix-fmt-date-format.patch
