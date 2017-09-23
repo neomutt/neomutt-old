@@ -1,4 +1,4 @@
-neomutt (1:20170912-1lxtec4) UNRELEASED; urgency=medium
+neomutt (1:20170912-1lxtec4) unstable; urgency=medium
 
   * Removed old NEWS cruft from debian install instructions
 
