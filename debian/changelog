@@ -1,3 +1,9 @@
+neomutt (1:20170912-1lxtec4) UNRELEASED; urgency=medium
+
+  * Removed old NEWS cruft from debian install instructions
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 23 Sep 2017 14:50:12 +0200
+
 neomutt (1:20170912-1lxtec3) unstable; urgency=medium
 
   * Install contrib/colorschemes into examples
