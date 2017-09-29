@@ -45,6 +45,7 @@
 #include "mutt_menu.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
+#include "notifications.h"
 #include "opcodes.h"
 #include "options.h"
 #include "pattern.h"
@@ -3344,6 +3345,11 @@ int mutt_index_menu(void)
         mutt_sb_toggle_virtual();
         break;
 #endif
+
+      case OP_NOTIFICATIONS_SHOW:
+        mutt_notifications_show();
+        break;
+
       default:
         if (menu->menu == MENU_MAIN)
           km_error_key(MENU_MAIN);

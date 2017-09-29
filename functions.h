@@ -229,6 +229,7 @@ const struct Binding OpMain[] = { /* map: index */
   { "vfolder-window-forward",    OP_MAIN_WINDOWED_VFOLDER_FORWARD,  NULL },
   { "entire-thread",             OP_MAIN_ENTIRE_THREAD,             NULL },
 #endif
+  { "show-notifications",        OP_NOTIFICATIONS_SHOW,             NULL },
   { NULL,                        0,                                 NULL },
 };
 
