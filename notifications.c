@@ -27,13 +27,23 @@
 #include "mutt/message.h"
 #include "mutt/string2.h"
 #include "mutt/list.h"
+#include "mutt/queue.h"
 #include "mutt.h"
 #include "mutt_menu.h"
 #include "notifications.h"
 #include "opcodes.h"
 #include <string.h>
 
-struct ListHead Notifications = STAILQ_HEAD_INITIALIZER(Notifications);
+#include <string.h>
+
+static TAILQ_HEAD(NotificationsHead, Notification) Notifications =
+  TAILQ_HEAD_INITIALIZER(Notifications);
+
+struct Notification
+{
+  const char *data;
+  TAILQ_ENTRY(Notification) entries;
+};
 
 static const struct Mapping NotificationsHelp[] = {
   { N_("Exit"), OP_EXIT }, { NULL, 0 },
@@ -42,8 +52,8 @@ static const struct Mapping NotificationsHelp[] = {
 static void notifications_entry(char *b, size_t blen, struct Menu *menu, int num)
 {
   size_t i = 0;
-  struct ListNode *np;
-  STAILQ_FOREACH(np, &Notifications, entries)
+  struct Notification *np;
+  TAILQ_FOREACH(np, &Notifications, entries)
   {
     if (i++ == num)
     {
@@ -60,8 +70,8 @@ static void notifications_entry(char *b, size_t blen, struct Menu *menu, int num
 void mutt_notifications_show(void)
 {
   size_t nof_notifications = 0;
-  struct ListNode *np;
-  STAILQ_FOREACH(np, &Notifications, entries)
+  struct Notification *np;
+  TAILQ_FOREACH(np, &Notifications, entries)
   {
     ++nof_notifications;
   }
@@ -100,15 +110,15 @@ void mutt_notifications_add(const char *s)
   if (!s || !*s)
     return;
 
-  struct ListNode *np;
-  STAILQ_FOREACH(np, &Notifications, entries)
+  struct Notification *np;
+  TAILQ_FOREACH(np, &Notifications, entries)
   {
     if (strcmp(s, np->data) == 0)
     {
       return;
     }
   }
-  np = mutt_mem_calloc(1, sizeof(struct ListNode));
+  np = mutt_mem_calloc(1, sizeof(struct Notification));
   np->data = mutt_str_strdup(s);
-  STAILQ_INSERT_HEAD(&Notifications, np, entries);
+  TAILQ_INSERT_TAIL(&Notifications, np, entries);
 }
