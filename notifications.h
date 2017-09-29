@@ -24,7 +24,7 @@
 #define _MUTT_NOTIFICATIONS_H
 
 /**
- * mutt_notifications_show - Show the notifications screen
+ * mutt_notifications_show - Show the notifications screen, if there is any
  */
 void mutt_notifications_show(void);
 
@@ -36,5 +36,11 @@ void mutt_notifications_show(void);
  * times has no effect.
  */
 void mutt_notifications_add(const char *s);
+
+/**
+ * mutt_has_notifications - Check if there are notifications
+ * @return true if there are notifications
+ */
+bool mutt_has_notifications(void);
 
 #endif /* !_MUTT_NOTIFICATIONS_H */

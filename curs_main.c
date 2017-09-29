@@ -942,6 +942,13 @@ int mutt_index_menu(void)
     menu->redraw = REDRAW_FULL;
   }
 
+  /* Show the notifications screen, if there is any, just once */
+  if (ShowNotifications && mutt_has_notifications())
+  {
+    mutt_notifications_show();
+  }
+  ShowNotifications = false;
+
   while (true)
   {
     /* Clear the tag prefix unless we just started it.  Don't clear
