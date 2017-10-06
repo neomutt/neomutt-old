@@ -122,6 +122,7 @@ extern const struct Binding OpBrowser[];
 extern const struct Binding OpEditor[];
 extern const struct Binding OpQuery[];
 extern const struct Binding OpAlias[];
+extern const struct Binding OpNotifications[];
 
 extern const struct Binding OpPgp[];
 

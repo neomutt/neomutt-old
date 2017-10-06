@@ -30,12 +30,15 @@ void mutt_notifications_show(void);
 
 /**
  * mutt_notifications_add - Add a new notification
- * @param[in] s String to display in the notification screen
+ * @param[in] head Head (or title) to display in the notification screen
+ * @param[in] body Body of the notification
+ * @param[in] copy Copy the body if true, use the string as-is if false.
  *
- * Notifications are kept in a unique list, so adding the same string multiple
- * times has no effect.
+ * Notifications are kept in a unique list, so adding notifications with the
+ * same head (title) multiple times has no effect, no matter wheter the body is
+ * actually the same or not.
  */
-void mutt_notifications_add(const char *s);
+void mutt_notifications_add(const char *head, const char *body, bool copy);
 
 /**
  * mutt_has_notifications - Check if there are notifications

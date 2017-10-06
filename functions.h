@@ -233,6 +233,13 @@ const struct Binding OpMain[] = { /* map: index */
   { NULL,                        0,                                 NULL },
 };
 
+const struct Binding OpNotifications[] = { /* map: notifications */
+  { "exit",        OP_EXIT,        "q" },
+  { "view-attach", OP_VIEW_ATTACH, "\n" },
+  { "view-attach", OP_VIEW_ATTACH, "\r" },
+  { NULL,          0,              NULL },
+};
+
 const struct Binding OpPager[] = { /* map: pager */
   { "break-thread",              OP_MAIN_BREAK_THREAD,            "#" },
   { "create-alias",              OP_CREATE_ALIAS,                 "a" },

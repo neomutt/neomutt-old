@@ -54,8 +54,8 @@
 #include "mutt_menu.h"
 #include "mx.h"
 #include "myvar.h"
-#include "notifications.h"
 #include "ncrypt/ncrypt.h"
+#include "notifications.h"
 #include "options.h"
 #include "pattern.h"
 #include "sidebar.h"
@@ -218,18 +218,23 @@ int query_quadoption(int opt, const char *prompt)
  */
 int mutt_option_index(const char *s)
 {
-  char notification[STRING];
+  static const char synonym_notification_body[] =
+      "The synonyms are being deprecated. For more information, "
+      "please see Issue 596 [1].\n\n"
+      "[1] https://github.com/neomutt/neomutt/issues/596";
+
   for (int i = 0; MuttVars[i].name; i++)
   {
     if (mutt_str_strcmp(s, MuttVars[i].name) == 0)
     {
       if (MuttVars[i].type == DT_SYNONYM)
       {
-        snprintf(notification, sizeof(notification),
+        char head[STRING];
+        snprintf(head, sizeof(head),
                  "The option \"%s\" is deprecated, please use \"%s\" instead.",
-                 MuttVars[i].name, (const char *)MuttVars[i].var);
-        mutt_notifications_add(notification);
-        return mutt_option_index((const char *)MuttVars[i].var);
+                 MuttVars[i].name, (const char *) MuttVars[i].var);
+        mutt_notifications_add(head, synonym_notification_body, false);
+        return mutt_option_index((const char *) MuttVars[i].var);
       }
       return i;
     }

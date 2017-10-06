@@ -2214,7 +2214,8 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
 
             /* If these header pointers don't match, then our email may have
              * been deleted.  Make the pointer safe, then leave the pager */
-            if (extra->hdr != Context->hdrs[Context->v2r[rd.index->current]])
+            if (IsHeader(extra) &&
+                extra->hdr != Context->hdrs[Context->v2r[rd.index->current]])
             {
               extra->hdr = Context->hdrs[Context->v2r[rd.index->current]];
               ch = -1;
