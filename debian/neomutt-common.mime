@@ -1,1 +1,1 @@
-message/rfc822; mutt -Rf '%s'; edit=mutt -f '%s'; needsterminal
+message/rfc822; mutt -Rf '%s'; edit=neomutt -f '%s'; needsterminal

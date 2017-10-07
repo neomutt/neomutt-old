@@ -1,4 +1,4 @@
-contrib/colorschemes
+
 contrib/hcache-bench
 contrib/keybase
 contrib/lua
@@ -6,5 +6,5 @@ contrib/vim-keys
 debian/extra/samples/*
 debian/tmp/etc/NeoMuttrc
 debian/tmp/usr/share/doc/neomutt/samples/*
-doc/muttrc*
+doc/neomuttrc*
 doc/neomutt-syntax.vim

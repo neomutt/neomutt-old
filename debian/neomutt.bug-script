@@ -1,5 +1,5 @@
 #!/bin/sh
 
-echo "Including output of \`mutt -v'..."
+echo "Including output of \`neomutt -v'..."
 
-LC_ALL=C mutt -v >&3
+LC_ALL=C neomutt -v >&3
