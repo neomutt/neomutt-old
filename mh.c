@@ -296,11 +296,11 @@ static bool mh_valid_message(const char *s)
  * @param check_stats Also count total, new, and flagged messages
  * @retval true if the mailbox has new mail
  */
-int mh_buffy(struct Buffy *mailbox, int check_stats)
+bool mh_buffy(struct Buffy *mailbox, bool check_stats)
 {
   struct MhSequences mhs;
-  int check_new = 1;
-  int rc = 0;
+  bool check_new = true;
+  bool rc = false;
   DIR *dirp = NULL;
   struct dirent *de = NULL;
 
@@ -308,8 +308,8 @@ int mh_buffy(struct Buffy *mailbox, int check_stats)
    * since the last mailbox visit, there is no "new mail" */
   if (option(OPT_MAIL_CHECK_RECENT) && mh_sequences_changed(mailbox) <= 0)
   {
-    rc = 0;
-    check_new = 0;
+    rc = false;
+    check_new = false;
   }
 
   if (!(check_new || check_stats))
@@ -317,7 +317,7 @@ int mh_buffy(struct Buffy *mailbox, int check_stats)
 
   memset(&mhs, 0, sizeof(mhs));
   if (mh_read_sequences(&mhs, mailbox->path) < 0)
-    return 0;
+    return false;
 
   if (check_stats)
   {
@@ -341,12 +341,12 @@ int mh_buffy(struct Buffy *mailbox, int check_stats)
         if (!option(OPT_MAIL_CHECK_RECENT) || mh_already_notified(mailbox, i) == 0)
         {
           mailbox->new = true;
-          rc = 1;
+          rc = true;
         }
         /* Because we are traversing from high to low, we can stop
          * checking for new mail after the first unseen message.
          * Whether it resulted in "new mail" or not. */
-        check_new = 0;
+        check_new = false;
         if (!check_stats)
           break;
       }
@@ -1562,7 +1562,7 @@ static int maildir_open_new_message(struct Message *msg, struct Context *dest,
  *
  * msg->path looks like this:
  *
- *    tmp/{cur,new}.mutt-HOSTNAME-PID-COUNTER:flags
+ *    tmp/{cur,new}.neomutt-HOSTNAME-PID-COUNTER:flags
  *
  * See also maildir_open_new_message().
  */
@@ -1782,10 +1782,10 @@ static int mh_rewrite_message(struct Context *ctx, int msgno)
      *
      * Note that there is a race condition against programs which
      * use the first free slot instead of the maximum message
-     * number.  Mutt does _not_ behave like this.
+     * number.  NeoMutt does _not_ behave like this.
      *
      * Anyway, if this fails, the message is in the folder, so
-     * all what happens is that a concurrently running mutt will
+     * all what happens is that a concurrently running neomutt will
      * lose flag modifications.
      */
 
@@ -2029,6 +2029,7 @@ static int maildir_check_mailbox(struct Context *ctx, int *index_hint)
   bool flags_changed = false; /* message flags were changed in the mailbox */
   struct Maildir *md = NULL;  /* list of messages in the mailbox */
   struct Maildir **last = NULL, *p = NULL;
+  int count = 0;
   struct Hash *fnames = NULL; /* hash table for quickly looking up the base filename
                                    for a maildir message */
   struct MhData *data = mh_data(ctx);
@@ -2066,15 +2067,15 @@ static int maildir_check_mailbox(struct Context *ctx, int *index_hint)
   md = NULL;
   last = &md;
   if (changed & 1)
-    maildir_parse_dir(ctx, &last, "new", NULL, NULL);
+    maildir_parse_dir(ctx, &last, "new", &count, NULL);
   if (changed & 2)
-    maildir_parse_dir(ctx, &last, "cur", NULL, NULL);
+    maildir_parse_dir(ctx, &last, "cur", &count, NULL);
 
   /* we create a hash table keyed off the canonical (sans flags) filename
    * of each message we scanned.  This is used in the loop over the
    * existing messages below to do some correlation.
    */
-  fnames = hash_create(1031, 0);
+  fnames = hash_create(count, 0);
 
   for (p = md; p; p = p->next)
   {
@@ -2181,6 +2182,7 @@ static int mh_check_mailbox(struct Context *ctx, int *index_hint)
   struct Maildir *md = NULL, *p = NULL;
   struct Maildir **last = NULL;
   struct MhSequences mhs;
+  int count = 0;
   struct Hash *fnames = NULL;
   int i;
   struct MhData *data = mh_data(ctx);
@@ -2225,7 +2227,7 @@ static int mh_check_mailbox(struct Context *ctx, int *index_hint)
   md = NULL;
   last = &md;
 
-  maildir_parse_dir(ctx, &last, NULL, NULL, NULL);
+  maildir_parse_dir(ctx, &last, NULL, &count, NULL);
   maildir_delayed_parsing(ctx, &md, NULL);
 
   if (mh_read_sequences(&mhs, ctx->path) < 0)
@@ -2234,7 +2236,7 @@ static int mh_check_mailbox(struct Context *ctx, int *index_hint)
   mhs_free_sequences(&mhs);
 
   /* check for modifications and adjust flags */
-  fnames = hash_create(1031, 0);
+  fnames = hash_create(count, 0);
 
   for (p = md; p; p = p->next)
   {
@@ -2610,6 +2612,8 @@ struct MxOps mx_maildir_ops = {
   .open_new_msg = maildir_open_new_message,
   .check = maildir_check_mailbox,
   .sync = mh_sync_mailbox,
+  .edit_msg_tags = NULL,
+  .commit_msg_tags = NULL,
 };
 
 struct MxOps mx_mh_ops = {
@@ -2622,4 +2626,6 @@ struct MxOps mx_mh_ops = {
   .open_new_msg = mh_open_new_message,
   .check = mh_check_mailbox,
   .sync = mh_sync_mailbox,
+  .edit_msg_tags = NULL,
+  .commit_msg_tags = NULL,
 };

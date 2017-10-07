@@ -166,6 +166,7 @@ void imap_get_parent_path(char *output, const char *path, size_t olen)
 
   /* Returns a fully qualified IMAP url */
   imap_qualify_path(output, olen, &mx, mbox);
+  FREE(&mx.mbox);
 }
 
 /**
@@ -543,7 +544,7 @@ void imap_free_idata(struct ImapData **idata)
 /**
  * imap_fix_path - Fix up the imap path
  *
- * This is necessary because the rest of mutt assumes a hierarchy delimiter of
+ * This is necessary because the rest of neomutt assumes a hierarchy delimiter of
  * '/', which is not necessarily true in IMAP.  Additionally, the filesystem
  * converts multiple hierarchy delimiters into a single one, ie "///" is equal
  * to "/".  IMAP servers are not required to do this.
@@ -901,7 +902,7 @@ void imap_keepalive(void)
   struct ImapData *idata = NULL;
   time_t now = time(NULL);
 
-  for (conn = mutt_socket_head(); conn; conn = conn->next)
+  TAILQ_FOREACH(conn, mutt_socket_head(), entries)
   {
     if (conn->account.type == MUTT_ACCT_TYPE_IMAP)
     {

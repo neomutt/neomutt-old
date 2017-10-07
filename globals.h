@@ -189,7 +189,6 @@ WHERE char *TSIconFormat;
 WHERE short TSSupported;
 WHERE char *Username;
 WHERE char *Visual;
-WHERE char *XlabelDelimiter;
 
 WHERE char *CurrentFolder;
 WHERE char *LastFolder;
@@ -198,10 +197,9 @@ WHERE const char *GitVer;
 
 WHERE struct Hash *Groups;
 WHERE struct Hash *ReverseAliases;
-#ifdef USE_NOTMUCH
+WHERE char *HiddenTags;
 WHERE struct Hash *TagTransforms;
 WHERE struct Hash *TagFormats;
-#endif
 
 WHERE struct ListHead AutoViewList INITVAL(STAILQ_HEAD_INITIALIZER(AutoViewList));
 WHERE struct ListHead AlternativeOrderList INITVAL(STAILQ_HEAD_INITIALIZER(AlternativeOrderList));
@@ -332,7 +330,6 @@ WHERE int NmOpenTimeout;
 WHERE char *NmDefaultUri;
 WHERE char *NmExcludeTags;
 WHERE char *NmUnreadTag;
-WHERE char *NmHiddenTags;
 WHERE char *VfolderFormat;
 WHERE int NmDbLimit;
 WHERE char *NmQueryType;
@@ -346,7 +343,7 @@ WHERE char *NmQueryWindowCurrentSearch;
 #ifdef MAIN_C
 const char *const BodyTypes[] = {
     "x-unknown", "audio",     "application", "image", "message",
-    "model",     "multipart", "text",        "video",
+    "model",     "multipart", "text",        "video", "*",
 };
 const char *const BodyEncodings[] = {
     "x-unknown", "7bit",   "8bit",        "quoted-printable",

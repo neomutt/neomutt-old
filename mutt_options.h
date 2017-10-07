@@ -1,6 +1,6 @@
 /**
  * @file
- * NotMuch virtual mailbox type
+ * Notmuch virtual mailbox type
  *
  * @authors
  * Copyright (C) 2016 Bernard Pratz <z+mutt+pub@m0g.net>
@@ -24,6 +24,7 @@
 #define _MUTT_OPTIONS_H
 
 #include <stddef.h>
+#include <stdbool.h>
 
 struct Buffer;
 

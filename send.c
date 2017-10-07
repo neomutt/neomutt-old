@@ -577,7 +577,7 @@ static int default_to(struct Address **to, struct Envelope *env, int flags, int 
        */
       /* L10N:
          Asks whether the user respects the reply-to header.
-         If she says no, mutt will reply to the from header's address instead. */
+         If she says no, neomutt will reply to the from header's address instead. */
       snprintf(prompt, sizeof(prompt), _("Reply to %s%s?"),
                env->reply_to->mailbox, env->reply_to->next ? ",..." : "");
       switch (query_quadoption(OPT_REPLY_TO, prompt))
@@ -672,7 +672,7 @@ void mutt_fix_reply_recipients(struct Envelope *env)
      * the user is the only recipient, it ends up on the TO: field
      */
     env->cc = remove_user(env->cc, (env->to == NULL));
-    env->to = remove_user(env->to, (env->cc == NULL));
+    env->to = remove_user(env->to, (env->cc == NULL) || option(OPT_REPLY_SELF));
   }
 
   /* the CC field can get cluttered, especially with lists */

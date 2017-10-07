@@ -794,7 +794,7 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
        */
       if (!option(OPT_HEADER_COLOR_PARTIAL))
       {
-        for (color_line = ColorHdrList; color_line; color_line = color_line->next)
+        STAILQ_FOREACH(color_line, &ColorHdrList, entries)
         {
           if (REGEXEC(color_line->regex, buf) == 0)
           {
@@ -908,11 +908,12 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
 
       found = false;
       null_rx = false;
+      struct ColorLineHead *head = NULL;
       if (line_info[n].type == MT_COLOR_HDEFAULT)
-        color_line = ColorHdrList;
+        head = &ColorHdrList;
       else
-        color_line = ColorBodyList;
-      while (color_line)
+        head = &ColorBodyList;
+      STAILQ_FOREACH(color_line, head, entries)
       {
         if (regexec(&color_line->regex, buf + offset, 1, pmatch,
                     (offset ? REG_NOTBOL : 0)) == 0)
@@ -947,9 +948,8 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
             null_rx = false;
           }
           else
-            null_rx = true; /* empty regexp; don't add it, but keep looking */
+            null_rx = true; /* empty regex; don't add it, but keep looking */
         }
-        color_line = color_line->next;
       }
 
       if (null_rx)
@@ -981,7 +981,7 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
 
       found = false;
       null_rx = false;
-      for (color_line = ColorAttachList; color_line; color_line = color_line->next)
+      STAILQ_FOREACH(color_line, &ColorAttachList, entries)
       {
         if (regexec(&color_line->regex, buf + offset, 1, pmatch,
                     (offset ? REG_NOTBOL : 0)) == 0)
@@ -1009,7 +1009,7 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
             null_rx = 0;
           }
           else
-            null_rx = 1; /* empty regexp; don't add it, but keep looking */
+            null_rx = 1; /* empty regex; don't add it, but keep looking */
         }
       }
 
@@ -2288,7 +2288,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
         break;
 
       case OP_QUIT:
-        if (query_quadoption(OPT_QUIT, _("Quit Mutt?")) == MUTT_YES)
+        if (query_quadoption(OPT_QUIT, _("Quit NeoMutt?")) == MUTT_YES)
         {
           /* avoid prompting again in the index menu */
           set_quadoption(OPT_QUIT, MUTT_YES);
@@ -2862,7 +2862,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
       case OP_PIPE:
         CHECK_MODE(IsHeader(extra) || IsAttach(extra));
         if (IsAttach(extra))
-          mutt_pipe_attachment_list(extra->actx, extra->fp, 0, extra->bdy, 0);
+          mutt_pipe_attachment_list(extra->actx, extra->fp, false, extra->bdy, false);
         else
           mutt_pipe_message(extra->hdr);
         break;
@@ -2870,7 +2870,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
       case OP_PRINT:
         CHECK_MODE(IsHeader(extra) || IsAttach(extra));
         if (IsAttach(extra))
-          mutt_print_attachment_list(extra->actx, extra->fp, 0, extra->bdy);
+          mutt_print_attachment_list(extra->actx, extra->fp, false, extra->bdy);
         else
           mutt_print_message(extra->hdr);
         break;
@@ -2993,7 +2993,8 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
       case OP_SAVE:
         if (IsAttach(extra))
         {
-          mutt_save_attachment_list(extra->actx, extra->fp, 0, extra->bdy, extra->hdr, NULL);
+          mutt_save_attachment_list(extra->actx, extra->fp, false, extra->bdy,
+                                    extra->hdr, NULL);
           break;
         }
       /* fall through */

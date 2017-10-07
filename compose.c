@@ -688,7 +688,7 @@ static unsigned long cum_attachs_size(struct Menu *menu)
  * * \%a Total number of attachments
  * * \%h ShortHostname  [option]
  * * \%l Approx. length of current message (in bytes)
- * * \%v Mutt version
+ * * \%v NeoMutt version
  *
  * This function is similar to status_format_str().  Look at that function for
  * help when modifying this function.
@@ -1473,7 +1473,7 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
       case OP_VIEW_ATTACH:
       case OP_DISPLAY_HEADERS:
         CHECK_COUNT;
-        mutt_attach_display_loop(menu, op, NULL, actx, 0);
+        mutt_attach_display_loop(menu, op, NULL, actx, false);
         menu->redraw = REDRAW_FULL;
         /* no send2hook, since this doesn't modify the message */
         break;

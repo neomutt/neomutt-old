@@ -54,8 +54,10 @@
 
 /* theoretically time_t can be float but it is integer on most (if not all) systems */
 #define TIME_T_MAX ((((time_t) 1 << (sizeof(time_t) * 8 - 2)) - 1) * 2 + 1)
+#define TIME_T_MIN (-TIME_T_MAX - 1)
 #define TM_YEAR_MAX                                                            \
   (1970 + (((((TIME_T_MAX - 59) / 60) - 59) / 60) - 23) / 24 / 366)
+#define TM_YEAR_MIN (1970 - (TM_YEAR_MAX - 1970) - 1)
 
 /**
  * Weekdays - Day of the week (abbreviated)
@@ -247,7 +249,17 @@ time_t mutt_mktime(struct tm *t, int local)
 
   /* Prevent an integer overflow.
    * The time_t cast is an attempt to silence a clang range warning. */
-  if ((time_t) t->tm_year > TM_YEAR_MAX)
+  if ((time_t) t->tm_year > (TM_YEAR_MAX - 1900))
+    return TIME_T_MAX;
+  if ((time_t) t->tm_year < (TM_YEAR_MIN - 1900))
+    return TIME_T_MIN;
+
+  if ((t->tm_mday < 1) || (t->tm_mday > 31))
+    return TIME_T_MIN;
+  if ((t->tm_hour < 0) || (t->tm_hour > 23) || (t->tm_min < 0) ||
+      (t->tm_min > 59) || (t->tm_sec < 0) || (t->tm_sec > 60))
+    return TIME_T_MIN;
+  if (t->tm_year > 9999)
     return TIME_T_MAX;
 
   /* Compute the number of days since January 1 in the same year */
@@ -432,7 +444,7 @@ bool is_day_name(const char *s)
  *
  * The 'timezone' field is optional; it defaults to +0000 if missing.
  */
-time_t mutt_parse_date(const char *s, const struct Tz **tz_out)
+time_t mutt_parse_date(const char *s, struct Tz *tz_out)
 {
   int count = 0;
   char *t = NULL;
@@ -475,13 +487,15 @@ time_t mutt_parse_date(const char *s, const struct Tz **tz_out)
 
       case 1: /* month of the year */
         i = mutt_check_month(t);
-        if (i < 0)
+        if ((i < 0) || (i > 11))
           return -1;
         tm.tm_mon = i;
         break;
 
       case 2: /* year */
         if ((mutt_atoi(t, &tm.tm_year) < 0) || (tm.tm_year < 0))
+          return -1;
+        if ((tm.tm_year < 0) || (tm.tm_year > 9999))
           return -1;
         if (tm.tm_year < 50)
           tm.tm_year += 100;
@@ -499,6 +513,8 @@ time_t mutt_parse_date(const char *s, const struct Tz **tz_out)
           mutt_debug(1, "parse_date: could not process time format: %s\n", t);
           return -1;
         }
+        if ((hour < 0) || (hour > 23) || (min < 0) || (min > 59) || (sec < 0) || (sec > 60))
+          return -1;
         tm.tm_hour = hour;
         tm.tm_min = min;
         tm.tm_sec = sec;
@@ -537,9 +553,6 @@ time_t mutt_parse_date(const char *s, const struct Tz **tz_out)
             zhours = tz->zhours;
             zminutes = tz->zminutes;
             zoccident = tz->zoccident;
-
-            if (tz_out)
-              *tz_out = tz;
           }
 
           /* ad hoc support for the European MET (now officially CET) TZ */
@@ -566,6 +579,13 @@ time_t mutt_parse_date(const char *s, const struct Tz **tz_out)
     mutt_debug(
         1, "parse_date(): error parsing date format, using received time\n");
     return -1;
+  }
+
+  if (tz_out)
+  {
+    tz_out->zhours = zhours;
+    tz_out->zminutes = zminutes;
+    tz_out->zoccident = zoccident;
   }
 
   return (mutt_mktime(&tm, 0) + tz_offset);

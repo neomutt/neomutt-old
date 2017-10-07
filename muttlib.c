@@ -60,6 +60,8 @@
 #include "mime.h"
 #include "mutt_curses.h"
 #include "mutt_regex.h"
+#include "mutt_tags.h"
+
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
@@ -135,7 +137,7 @@ int mutt_remove_from_regex_list(struct RegexList **l, const char *str)
     {
       if (mutt_strcasecmp(str, p->regex->pattern) == 0)
       {
-        mutt_free_regexp(&p->regex);
+        mutt_free_regex(&p->regex);
         if (last)
           last->next = p->next;
         else
@@ -165,6 +167,7 @@ void mutt_free_header(struct Header **h)
 #ifdef MIXMASTER
   mutt_list_free(&(*h)->chain);
 #endif
+  driver_tags_free(&(*h)->tags);
 #if defined(USE_POP) || defined(USE_IMAP) || defined(USE_NNTP) || defined(USE_NOTMUCH)
   if ((*h)->free_cb)
     (*h)->free_cb(*h);
@@ -178,7 +181,7 @@ void mutt_free_header(struct Header **h)
  *
  * checks Ignore and UnIgnore using mutt_list_match
  */
-int mutt_matches_ignore(const char *s)
+bool mutt_matches_ignore(const char *s)
 {
   return mutt_list_match(s, &Ignore) && !mutt_list_match(s, &UnIgnore);
 }
@@ -409,7 +412,7 @@ char *mutt_gecos_name(char *dest, size_t destlen, struct passwd *pw)
 /**
  * mutt_needs_mailcap - Does this type need a mailcap entry do display
  * @param m Attachment body to be displayed
- * @retval true  Mutt requires a mailcap entry to display
+ * @retval true  NeoMutt requires a mailcap entry to display
  * @retval false otherwise
  */
 bool mutt_needs_mailcap(struct Body *m)
@@ -1030,7 +1033,7 @@ void mutt_expando_format(char *dest, size_t destlen, size_t col, int cols,
           mutt_debug(3, "fmtpipe < %s\n", dest);
 
           /* If the result ends with '%', this indicates that the filter
-           * generated %-tokens that mutt can expand.  Eliminate the '%'
+           * generated %-tokens that neomutt can expand.  Eliminate the '%'
            * marker and recycle the string through mutt_expando_format().
            * To literally end with "%", use "%%". */
           if ((n > 0) && dest[n - 1] == '%')
@@ -1572,22 +1575,22 @@ void mutt_sleep(short s)
 const char *mutt_make_version(void)
 {
   static char vstring[STRING];
-  snprintf(vstring, sizeof(vstring), "NeoMutt %s%s (%s)", PACKAGE_VERSION, GitVer, MUTT_VERSION);
+  snprintf(vstring, sizeof(vstring), "NeoMutt %s%s", PACKAGE_VERSION, GitVer);
   return vstring;
 }
 
-struct Regex *mutt_compile_regexp(const char *s, int flags)
+struct Regex *mutt_compile_regex(const char *s, int flags)
 {
   struct Regex *pp = safe_calloc(1, sizeof(struct Regex));
   pp->pattern = safe_strdup(s);
   pp->regex = safe_calloc(1, sizeof(regex_t));
   if (REGCOMP(pp->regex, NONULL(s), flags) != 0)
-    mutt_free_regexp(&pp);
+    mutt_free_regex(&pp);
 
   return pp;
 }
 
-void mutt_free_regexp(struct Regex **pp)
+void mutt_free_regex(struct Regex **pp)
 {
   FREE(&(*pp)->pattern);
   regfree((*pp)->regex);
@@ -1605,7 +1608,7 @@ void mutt_free_regex_list(struct RegexList **list)
   {
     p = *list;
     *list = (*list)->next;
-    mutt_free_regexp(&p->regex);
+    mutt_free_regex(&p->regex);
     FREE(&p);
   }
 }
@@ -1620,7 +1623,7 @@ void mutt_free_replace_list(struct ReplaceList **list)
   {
     p = *list;
     *list = (*list)->next;
-    mutt_free_regexp(&p->regex);
+    mutt_free_regex(&p->regex);
     FREE(&p->template);
     FREE(&p);
   }
@@ -1758,25 +1761,7 @@ int mutt_set_xdg_path(enum XdgType type, char *buf, size_t bufsize)
 
   while ((token = strsep(&xdg, ":")))
   {
-    if (snprintf(buf, bufsize, "%s/%s/neomuttrc-%s", token, PACKAGE, PACKAGE_VERSION) < 0)
-      continue;
-    mutt_expand_path(buf, bufsize);
-    if (access(buf, F_OK) == 0)
-    {
-      rc = 1;
-      break;
-    }
-
     if (snprintf(buf, bufsize, "%s/%s/neomuttrc", token, PACKAGE) < 0)
-      continue;
-    mutt_expand_path(buf, bufsize);
-    if (access(buf, F_OK) == 0)
-    {
-      rc = 1;
-      break;
-    }
-
-    if (snprintf(buf, bufsize, "%s/%s/Muttrc-%s", token, PACKAGE, MUTT_VERSION) < 0)
       continue;
     mutt_expand_path(buf, bufsize);
     if (access(buf, F_OK) == 0)

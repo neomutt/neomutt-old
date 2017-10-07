@@ -27,6 +27,7 @@
 #include <regex.h>
 #include "lib/lib.h"
 #include "options.h"
+#include "queue.h"
 
 #ifdef USE_SLANG_CURSES
 
@@ -166,9 +167,7 @@ enum ColorId
   MT_COLOR_INDEX,
   MT_COLOR_INDEX_AUTHOR,
   MT_COLOR_INDEX_FLAGS,
-#ifdef USE_NOTMUCH
   MT_COLOR_INDEX_TAG,
-#endif
   MT_COLOR_INDEX_SUBJECT,
   /* below here - only index coloring stuff that doesn't have a pattern */
   MT_COLOR_INDEX_COLLAPSED,
@@ -176,9 +175,7 @@ enum ColorId
   MT_COLOR_INDEX_LABEL,
   MT_COLOR_INDEX_NUMBER,
   MT_COLOR_INDEX_SIZE,
-#ifdef USE_NOTMUCH
   MT_COLOR_INDEX_TAGS,
-#endif
   MT_COLOR_COMPOSE_HEADER,
   MT_COLOR_COMPOSE_SECURITY_ENCRYPT,
   MT_COLOR_COMPOSE_SECURITY_SIGN,
@@ -190,6 +187,7 @@ enum ColorId
 /**
  * struct ColorLine - A regular expression and a color to highlight a line
  */
+STAILQ_HEAD(ColorLineHead, ColorLine);
 struct ColorLine
 {
   regex_t regex;
@@ -200,7 +198,7 @@ struct ColorLine
   short fg;
   short bg;
   int pair;
-  struct ColorLine *next;
+  STAILQ_ENTRY(ColorLine) entries;
 };
 
 #define MUTT_PROGRESS_SIZE (1 << 0) /**< traffic-based progress */
@@ -272,18 +270,15 @@ static inline int mutt_window_wrap_cols(struct MuttWindow *win, short wrap)
 extern int *ColorQuote;
 extern int ColorQuoteUsed;
 extern int ColorDefs[];
-extern struct ColorLine *ColorHdrList;
-extern struct ColorLine *ColorBodyList;
-extern struct ColorLine *ColorAttachList;
-extern struct ColorLine *ColorStatusList;
-extern struct ColorLine *ColorIndexList;
-extern struct ColorLine *ColorIndexAuthorList;
-extern struct ColorLine *ColorIndexFlagsList;
-extern struct ColorLine *ColorIndexSubjectList;
-
-#ifdef USE_NOTMUCH
-extern struct ColorLine *ColorIndexTagList;
-#endif
+extern struct ColorLineHead ColorHdrList;
+extern struct ColorLineHead ColorBodyList;
+extern struct ColorLineHead ColorAttachList;
+extern struct ColorLineHead ColorStatusList;
+extern struct ColorLineHead ColorIndexList;
+extern struct ColorLineHead ColorIndexAuthorList;
+extern struct ColorLineHead ColorIndexFlagsList;
+extern struct ColorLineHead ColorIndexSubjectList;
+extern struct ColorLineHead ColorIndexTagList;
 
 void ci_start_color(void);
 

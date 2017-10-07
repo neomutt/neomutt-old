@@ -1618,7 +1618,7 @@ static int nntp_open_message(struct Context *ctx, struct Message *msg, int msgno
 
     /* create new cache file */
     mutt_message(fetch_msg);
-    msg->fp = mutt_bcache_put(nntp_data->bcache, article, 1);
+    msg->fp = mutt_bcache_put(nntp_data->bcache, article);
     if (!msg->fp)
     {
       mutt_mktemp(buf, sizeof(buf));
@@ -1680,7 +1680,7 @@ static int nntp_open_message(struct Context *ctx, struct Message *msg, int msgno
   fseek(msg->fp, 0, SEEK_END);
   hdr->content->length = ftell(msg->fp) - hdr->content->offset;
 
-  /* this is called in mutt before the open which fetches the message,
+  /* this is called in neomutt before the open which fetches the message,
    * which is probably wrong, but we just call it again here to handle
    * the problem instead of fixing it */
   NHDR(hdr)->parsed = true;
@@ -2183,7 +2183,7 @@ static int nntp_date(struct NntpServer *nserv, time_t *now)
 int nntp_active_fetch(struct NntpServer *nserv, unsigned int new)
 {
   struct NntpData nntp_data;
-  char msg[SHORT_STRING];
+  char msg[STRING];
   char buf[LONG_STRING];
   unsigned int i;
   int rc;
@@ -2527,4 +2527,6 @@ struct MxOps mx_nntp_ops = {
   .close_msg = nntp_close_message,
   .commit_msg = NULL,
   .open_new_msg = NULL,
+  .edit_msg_tags = NULL,
+  .commit_msg_tags = NULL,
 };

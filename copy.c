@@ -39,6 +39,7 @@
 #include "mime.h"
 #include "mutt_curses.h"
 #include "mutt_idna.h"
+#include "mutt_tags.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
@@ -129,15 +130,6 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
           continue;
 
         ignore = false;
-      }
-
-      if (flags & CH_UPDATE_LABEL)
-      {
-        if ((mutt_strncasecmp("X-Label:", buf, 8) == 0) ||
-            (mutt_strncasecmp("X-Keywords:", buf, 11) == 0) ||
-            (mutt_strncasecmp("X-Mozilla-Keys:", buf, 15) == 0) ||
-            (mutt_strncasecmp("Keywords:", buf, 9) == 0))
-          continue;
       }
 
       if (!ignore && fputs(buf, out) == EOF)
@@ -464,13 +456,14 @@ int mutt_copy_header(FILE *in, struct Header *h, FILE *out, int flags, const cha
       fputs(buf, out);
       fputc('\n', out);
     }
-    char *tags = nm_header_get_tags(h);
+    char *tags = driver_tags_get(&h->tags);
     if (tags && !(option(OPT_WEED) && mutt_matches_ignore("tags")))
     {
       fputs("Tags: ", out);
       fputs(tags, out);
       fputc('\n', out);
     }
+    FREE(&tags);
   }
 #endif
 

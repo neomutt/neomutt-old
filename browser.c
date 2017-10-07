@@ -1203,7 +1203,7 @@ void _mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numf
        * we press up/down keys to navigate in a displayed list.
        *
        * We only do this when CurrentFolder has been set (ie, not
-       * when listing folders on startup with "mutt -y").
+       * when listing folders on startup with "neomutt -y").
        *
        * This tracker is only used when browser_track is true,
        * meaning only with sort methods SUBJECT/DESC for now.
@@ -1590,6 +1590,8 @@ void _mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numf
               mutt_message(_("Mailbox deleted."));
               init_menu(&state, menu, title, sizeof(title), buffy);
             }
+            else
+              mutt_error(_("Mailbox deletion failed."));
           }
           else
             mutt_message(_("Mailbox not deleted."));

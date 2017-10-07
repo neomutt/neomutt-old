@@ -113,7 +113,7 @@ int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
 
   if (data & (MUTT_FOLDERHOOK | MUTT_MBOXHOOK))
   {
-    /* Accidentally using the ^ mailbox shortcut in the .muttrc is a
+    /* Accidentally using the ^ mailbox shortcut in the .neomuttrc is a
      * common mistake */
     if ((*pattern.data == '^') && (!CurrentFolder))
     {
@@ -128,7 +128,7 @@ int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
      * This is likely a mistake too */
     if (!*path && *pattern.data)
     {
-      strfcpy(err->data, _("mailbox shortcut expanded to empty regexp"), err->dsize);
+      strfcpy(err->data, _("mailbox shortcut expanded to empty regex"), err->dsize);
       goto error;
     }
 
@@ -154,7 +154,7 @@ int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
 
     /* At this stage remain only message-hooks, reply-hooks, send-hooks,
      * send2-hooks, save-hooks, and fcc-hooks: All those allowing full
-     * patterns. If given a simple regexp, we expand $default_hook.
+     * patterns. If given a simple regex, we expand $default_hook.
      */
     strfcpy(tmp, pattern.data, sizeof(tmp));
     mutt_check_simple(tmp, sizeof(tmp), DefaultHook);
@@ -226,7 +226,7 @@ int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
   }
   else if (~data & MUTT_GLOBALHOOK) /* NOT a global hook */
   {
-    /* Hooks not allowing full patterns: Check syntax of regexp */
+    /* Hooks not allowing full patterns: Check syntax of regex */
     rx = safe_malloc(sizeof(regex_t));
 #ifdef MUTT_CRYPTHOOK
     if ((rc = REGCOMP(rx, NONULL(pattern.data),

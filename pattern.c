@@ -62,14 +62,15 @@
 #include "thread.h"
 #ifdef USE_IMAP
 #include "imap/imap.h"
-#include "mx.h"
 #endif
+#include "mutt_tags.h"
+#include "mx.h"
 #ifdef USE_NOTMUCH
 #include "mutt_notmuch.h"
 #endif
 
 /**
- * enum EatRangeError - Error codes for eat_range_by_regexp()
+ * enum EatRangeError - Error codes for eat_range_by_regex()
  */
 enum EatRangeError
 {
@@ -78,7 +79,7 @@ enum EatRangeError
   RANGE_E_CTX,
 };
 
-static bool eat_regexp(struct Pattern *pat, struct Buffer *s, struct Buffer *err)
+static bool eat_regex(struct Pattern *pat, struct Buffer *s, struct Buffer *err)
 {
   struct Buffer buf;
   char errmsg[STRING];
@@ -231,7 +232,7 @@ static const char *get_date(const char *s, struct tm *t, struct Buffer *err)
  */
 struct RangeRegex
 {
-  const char *raw; /**< regexp as string */
+  const char *raw; /**< regex as string */
   int lgrp;        /**< paren group matching the left side */
   int rgrp;        /**< paren group matching the right side */
   int ready;       /**< compiled yet? */
@@ -252,7 +253,7 @@ enum RangeType
   RANGE_K_INVALID
 };
 
-static struct RangeRegex range_regexps[] = {
+static struct RangeRegex range_regexes[] = {
       [RANGE_K_REL] = {.raw = RANGE_REL_RX, .lgrp = 1, .rgrp = 3, .ready = 0 },
       [RANGE_K_ABS] = {.raw = RANGE_ABS_RX, .lgrp = 1, .rgrp = 3, .ready = 0 },
       [RANGE_K_LT] = {.raw = RANGE_LT_RX, .lgrp = 1, .rgrp = 2, .ready = 0 },
@@ -728,14 +729,14 @@ static void order_range(struct Pattern *pat)
   pat->max = num;
 }
 
-static int eat_range_by_regexp(struct Pattern *pat, struct Buffer *s, int kind,
-                               struct Buffer *err)
+static int eat_range_by_regex(struct Pattern *pat, struct Buffer *s, int kind,
+                              struct Buffer *err)
 {
   int regerr;
   regmatch_t pmatch[RANGE_RX_GROUPS];
-  struct RangeRegex *pspec = &range_regexps[kind];
+  struct RangeRegex *pspec = &range_regexes[kind];
 
-  /* First time through, compile the big regexp */
+  /* First time through, compile the big regex */
   if (!pspec->ready)
   {
     regerr = regcomp(&pspec->cooked, pspec->raw, REG_EXTENDED);
@@ -744,7 +745,7 @@ static int eat_range_by_regexp(struct Pattern *pat, struct Buffer *s, int kind,
     pspec->ready = 1;
   }
 
-  /* Match the pattern buffer against the compiled regexp.
+  /* Match the pattern buffer against the compiled regex.
    * No match means syntax error. */
   regerr = regexec(&pspec->cooked, s->dptr, RANGE_RX_GROUPS, pmatch, 0);
   if (regerr)
@@ -800,7 +801,7 @@ static bool eat_message_range(struct Pattern *pat, struct Buffer *s, struct Buff
 
   for (int i_kind = 0; i_kind != RANGE_K_INVALID; ++i_kind)
   {
-    switch (eat_range_by_regexp(pat, s, i_kind, err))
+    switch (eat_range_by_regex(pat, s, i_kind, err))
     {
       case RANGE_E_CTX:
         /* This means it matched syntactically but lacked context.
@@ -830,24 +831,24 @@ static const struct PatternFlags
   bool (*eat_arg)(struct Pattern *, struct Buffer *, struct Buffer *);
 } Flags[] = {
   { 'A', MUTT_ALL, 0, NULL },
-  { 'b', MUTT_BODY, MUTT_FULL_MSG, eat_regexp },
-  { 'B', MUTT_WHOLE_MSG, MUTT_FULL_MSG, eat_regexp },
-  { 'c', MUTT_CC, 0, eat_regexp },
-  { 'C', MUTT_RECIPIENT, 0, eat_regexp },
+  { 'b', MUTT_BODY, MUTT_FULL_MSG, eat_regex },
+  { 'B', MUTT_WHOLE_MSG, MUTT_FULL_MSG, eat_regex },
+  { 'c', MUTT_CC, 0, eat_regex },
+  { 'C', MUTT_RECIPIENT, 0, eat_regex },
   { 'd', MUTT_DATE, 0, eat_date },
   { 'D', MUTT_DELETED, 0, NULL },
-  { 'e', MUTT_SENDER, 0, eat_regexp },
+  { 'e', MUTT_SENDER, 0, eat_regex },
   { 'E', MUTT_EXPIRED, 0, NULL },
-  { 'f', MUTT_FROM, 0, eat_regexp },
+  { 'f', MUTT_FROM, 0, eat_regex },
   { 'F', MUTT_FLAG, 0, NULL },
   { 'g', MUTT_CRYPT_SIGN, 0, NULL },
   { 'G', MUTT_CRYPT_ENCRYPT, 0, NULL },
-  { 'h', MUTT_HEADER, MUTT_FULL_MSG, eat_regexp },
-  { 'H', MUTT_HORMEL, 0, eat_regexp },
-  { 'i', MUTT_ID, 0, eat_regexp },
+  { 'h', MUTT_HEADER, MUTT_FULL_MSG, eat_regex },
+  { 'H', MUTT_HORMEL, 0, eat_regex },
+  { 'i', MUTT_ID, 0, eat_regex },
   { 'k', MUTT_PGP_KEY, 0, NULL },
   { 'l', MUTT_LIST, 0, NULL },
-  { 'L', MUTT_ADDRESS, 0, eat_regexp },
+  { 'L', MUTT_ADDRESS, 0, eat_regex },
   { 'm', MUTT_MESSAGE, 0, eat_message_range },
   { 'n', MUTT_SCORE, 0, eat_range },
   { 'N', MUTT_NEW, 0, NULL },
@@ -857,28 +858,26 @@ static const struct PatternFlags
   { 'Q', MUTT_REPLIED, 0, NULL },
   { 'r', MUTT_DATE_RECEIVED, 0, eat_date },
   { 'R', MUTT_READ, 0, NULL },
-  { 's', MUTT_SUBJECT, 0, eat_regexp },
+  { 's', MUTT_SUBJECT, 0, eat_regex },
   { 'S', MUTT_SUPERSEDED, 0, NULL },
-  { 't', MUTT_TO, 0, eat_regexp },
+  { 't', MUTT_TO, 0, eat_regex },
   { 'T', MUTT_TAG, 0, NULL },
   { 'u', MUTT_SUBSCRIBED_LIST, 0, NULL },
   { 'U', MUTT_UNREAD, 0, NULL },
   { 'v', MUTT_COLLAPSED, 0, NULL },
   { 'V', MUTT_CRYPT_VERIFIED, 0, NULL },
 #ifdef USE_NNTP
-  { 'w', MUTT_NEWSGROUPS, 0, eat_regexp },
+  { 'w', MUTT_NEWSGROUPS, 0, eat_regex },
 #endif
-  { 'x', MUTT_REFERENCE, 0, eat_regexp },
+  { 'x', MUTT_REFERENCE, 0, eat_regex },
   { 'X', MUTT_MIMEATTACH, 0, eat_range },
-  { 'y', MUTT_XLABEL, 0, eat_regexp },
-#ifdef USE_NOTMUCH
-  { 'Y', MUTT_NOTMUCH_LABEL, 0, eat_regexp },
-#endif
+  { 'y', MUTT_XLABEL, 0, eat_regex },
+  { 'Y', MUTT_DRIVER_TAGS, 0, eat_regex },
   { 'z', MUTT_SIZE, 0, eat_range },
   { '=', MUTT_DUPLICATED, 0, NULL },
   { '$', MUTT_UNREFERENCED, 0, NULL },
   { '#', MUTT_BROKEN, 0, NULL },
-  { '/', MUTT_SERVERSEARCH, 0, eat_regexp },
+  { '/', MUTT_SERVERSEARCH, 0, eat_regex },
   { 0, 0, 0, NULL },
 };
 
@@ -1611,7 +1610,7 @@ int mutt_pattern_exec(struct Pattern *pat, enum PatternExecFlag flags,
       return 0;
 #else
       mutt_error(_("error: server custom search only supported with IMAP."));
-      return (-1);
+      return -1;
 #endif
     case MUTT_SENDER:
       return (pat->not ^ match_adrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 1,
@@ -1713,13 +1712,13 @@ int mutt_pattern_exec(struct Pattern *pat, enum PatternExecFlag flags,
       return (pat->not ^ ((h->security & APPLICATION_PGP) && (h->security & PGPKEY)));
     case MUTT_XLABEL:
       return (pat->not ^ (h->env->x_label && patmatch(pat, h->env->x_label) == 0));
-#ifdef USE_NOTMUCH
-    case MUTT_NOTMUCH_LABEL:
+    case MUTT_DRIVER_TAGS:
     {
-      char *tags = nm_header_get_tags(h);
-      return (pat->not ^ (tags && patmatch(pat, tags) == 0));
+      char *tags = driver_tags_get(&h->tags);
+      bool ret = (pat->not ^ (tags && patmatch(pat, tags) == 0));
+      FREE(&tags);
+      return ret;
     }
-#endif
     case MUTT_HORMEL:
       return (pat->not ^ (h->env->spam && h->env->spam->data &&
                           patmatch(pat, h->env->spam->data) == 0));

@@ -4,7 +4,7 @@ dnl     autoreconf -i
 CFLAGS=$CFLAGS
 LDFLAGS=$LDFLAGS
 
-AC_INIT([NeoMutt], [20170912], [neomutt-devel@neomutt.org], [mutt], [https://www.neomutt.org])
+AC_INIT([NeoMutt], [20171006], [neomutt-devel@neomutt.org], [neomutt], [https://www.neomutt.org])
 AC_CONFIG_SRCDIR(mutt.h)
 AC_CONFIG_AUX_DIR([.build-aux])
 AM_INIT_AUTOMAKE
@@ -15,8 +15,6 @@ AC_DEFUN([AC_DEFINE_SUBST], [
 	AC_DEFINE([$1], [$2], [$3])
 	AC_SUBST([$1], ['$2'])
 ])
-
-AC_DEFINE_SUBST(MUTT_VERSION, "1.9.0", [Version of upstream Mutt])
 
 AC_USE_SYSTEM_EXTENSIONS
 
@@ -186,7 +184,7 @@ AC_ARG_WITH(mailpath,
 AC_ARG_WITH(docdir,
 	AS_HELP_STRING([--with-docdir=PATH],[Specify where to put the documentation]),
 	[mutt_cv_docdir=$withval],
-	[mutt_cv_docdir='${datarootdir}/doc/mutt'])
+	[mutt_cv_docdir='${datarootdir}/doc/neomutt'])
 
 AC_ARG_WITH(domain,
 	AS_HELP_STRING([--with-domain=DOMAIN],[Specify your DNS domain name]),
@@ -220,7 +218,7 @@ AS_IF([test x$use_pgp != "xno"], [
 dnl --enable-smime
 AS_IF([test x$use_smime != "xno"], [
 	AC_DEFINE(CRYPT_BACKEND_CLASSIC_SMIME, 1, [Define if you want classic S/MIME support.])
-	SMIMEAUX_TARGET='$(top_srcdir)/contrib/smime_keys'
+	SMIMEAUX_TARGET='$(srcdir)/contrib/smime_keys'
 	build_ncrypt_smime="yes"
 ])
 
@@ -359,17 +357,17 @@ main ()
 		[AC_MSG_ERROR(unable to compile.  check config.log)], -lm)
 else
 dnl --- ncurses
-	dnl Plese note that --with-slang=no --with-curses=no will result in
+	dnl Please note that --with-slang=no --with-curses=no will result in
 	dnl configure trying to locate curses at /no/include first. The mutual
 	dnl exclusion of slang and curses and the requirement that one (and only
 	dnl one) is chosen could be improved.
-    if test x$with_curses != xyes; then
-        mutt_cv_curses=$withval
-    fi
-    if test x$mutt_cv_curses != x/usr; then
-        LDFLAGS="$LDFLAGS -L${with_curses}/lib"
-        CPPFLAGS="$CPPFLAGS -I${with_curses}/include"
-    fi
+	if test x$with_curses != xyes -a x$with_curses != xno; then
+		mutt_cv_curses=$withval
+	fi
+	if test x$mutt_cv_curses != x/usr -a x$mutt_cv_curses != x; then
+		LDFLAGS="$LDFLAGS -L${mutt_cv_curses}/lib"
+		CPPFLAGS="$CPPFLAGS -I${mutt_cv_curses}/include"
+	fi
 	mutt_cv_curses=/usr
 	AC_CHECK_FUNC(initscr,,[
 		cf_ncurses=""
@@ -845,7 +843,7 @@ AM_GNU_GETTEXT([external])
 
 AM_ICONV
 if test "$am_cv_func_iconv" != yes; then
-    AC_MSG_ERROR([An iconv implementation is required])
+	AC_MSG_ERROR([An iconv implementation is required])
 fi
 
 AC_ARG_WITH(idn, AS_HELP_STRING([--with-idn=@<:@PFX@:>@],[Use GNU libidn for internationalized domain names]),
@@ -860,29 +858,29 @@ AC_ARG_WITH(idn, AS_HELP_STRING([--with-idn=@<:@PFX@:>@],[Use GNU libidn for int
 		[with_idn=auto])
 
 if test "x$with_idn" != "xno"; then
-    dnl Solaris 11 has /usr/include/idn
-    have_stringprep_h=no
-    AC_CHECK_HEADERS([stringprep.h idn/stringprep.h], [
-                have_stringprep_h=yes
-                break])
-    have_idna_h=no
-    AC_CHECK_HEADERS([idna.h idn/idna.h], [
-                have_idna_h=yes
-                break])
+	dnl Solaris 11 has /usr/include/idn
+	have_stringprep_h=no
+	AC_CHECK_HEADERS([stringprep.h idn/stringprep.h], [
+		have_stringprep_h=yes
+		break])
+	have_idna_h=no
+	AC_CHECK_HEADERS([idna.h idn/idna.h], [
+		have_idna_h=yes
+		break])
 
-    AC_SEARCH_LIBS([stringprep_check_version], [idn], [
-        AC_DEFINE([HAVE_LIBIDN], 1, [Define to 1 if you have the GNU idn library])
+	AC_SEARCH_LIBS([stringprep_check_version], [idn], [
+		AC_DEFINE([HAVE_LIBIDN], 1, [Define to 1 if you have the GNU idn library])
 
-        LIBS="$LIBS $LIBICONV"
-        AC_CHECK_FUNCS(idna_to_unicode_utf8_from_utf8 idna_to_unicode_8z8z)
-        AC_CHECK_FUNCS(idna_to_ascii_from_utf8 idna_to_ascii_8z)
-        AC_CHECK_FUNCS(idna_to_ascii_lz idna_to_ascii_from_locale)
-    ])
+		LIBS="$LIBS $LIBICONV"
+		AC_CHECK_FUNCS(idna_to_unicode_utf8_from_utf8 idna_to_unicode_8z8z)
+		AC_CHECK_FUNCS(idna_to_ascii_from_utf8 idna_to_ascii_8z)
+		AC_CHECK_FUNCS(idna_to_ascii_lz idna_to_ascii_from_locale)
+	])
 
-    if test "$with_idn" != auto; then
-        if test $have_stringprep_h = no || test $have_idna_h = no || test $ac_cv_search_stringprep_check_version = no; then
-            AC_MSG_ERROR([IDN was requested, but libidn was not usable on this system])
-        fi
+	if test "$with_idn" != auto; then
+		if test $have_stringprep_h = no || test $have_idna_h = no || test $ac_cv_search_stringprep_check_version = no; then
+			AC_MSG_ERROR([IDN was requested, but libidn was not usable on this system])
+		fi
 	fi
 fi
 

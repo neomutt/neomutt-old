@@ -1747,7 +1747,8 @@ static int fold_one_header(FILE *fp, const char *tag, const char *value,
   char buf[HUGE_STRING] = "";
   int first = 1, enc, col = 0, w, l = 0, fold;
 
-  mutt_debug(4, "mwoh: pfx=[%s], tag=[%s], flags=%d value=[%s]\n", pfx, tag, flags, value);
+  mutt_debug(4, "mwoh: pfx=[%s], tag=[%s], flags=%d value=[%s]\n", pfx, tag,
+             flags, NONULL(value));
 
   if (tag && *tag && fprintf(fp, "%s%s: ", NONULL(pfx), tag) < 0)
     return -1;
@@ -1923,7 +1924,7 @@ static int write_one_header(FILE *fp, int pfxw, int max, int wraplen, const char
       valbuf = mutt_substrdup(t, end);
     }
     mutt_debug(4, "mwoh: buf[%s%s] too long, max width = %d > %d\n",
-               NONULL(pfx), valbuf, max, wraplen);
+               NONULL(pfx), NONULL(valbuf), max, wraplen);
     if (fold_one_header(fp, tagbuf, valbuf, pfx, wraplen, flags) < 0)
     {
       FREE(&valbuf);
@@ -2197,7 +2198,7 @@ int mutt_write_rfc822_header(FILE *fp, struct Envelope *env, struct Body *attach
   if (mode == 0 && !privacy && option(OPT_USER_AGENT) && !has_agent)
   {
     /* Add a vanity header */
-    fprintf(fp, "User-Agent: NeoMutt/%s%s (%s)\n", PACKAGE_VERSION, GitVer, MUTT_VERSION);
+    fprintf(fp, "User-Agent: NeoMutt/%s%s\n", PACKAGE_VERSION, GitVer);
   }
 
   return (ferror(fp) == 0 ? 0 : -1);

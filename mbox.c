@@ -1099,7 +1099,7 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
   {
     /* this means ctx->changed or ctx->deleted was set, but no
      * messages were found to be changed or deleted.  This should
-     * never happen, is we presume it is a bug in mutt.
+     * never happen, is we presume it is a bug in neomutt.
      */
     mutt_error(
         _("sync: mbox modified, but no modified messages! (report this bug)"));
@@ -1411,6 +1411,8 @@ struct MxOps mx_mbox_ops = {
   .open_new_msg = mbox_open_new_message,
   .check = mbox_check_mailbox,
   .sync = mbox_sync_mailbox,
+  .edit_msg_tags = NULL,
+  .commit_msg_tags = NULL,
 };
 
 struct MxOps mx_mmdf_ops = {
@@ -1423,4 +1425,6 @@ struct MxOps mx_mmdf_ops = {
   .open_new_msg = mbox_open_new_message,
   .check = mbox_check_mailbox,
   .sync = mbox_sync_mailbox,
+  .edit_msg_tags = NULL,
+  .commit_msg_tags = NULL,
 };

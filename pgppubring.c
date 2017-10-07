@@ -24,10 +24,10 @@
  * This is a "simple" PGP key ring dumper.
  *
  * The output format is supposed to be compatible to the one GnuPG
- * emits and Mutt expects.
+ * emits and NeoMutt expects.
  *
  * Note that the code of this program could be considerably less
- * complex, but most of it was taken from mutt's second generation
+ * complex, but most of it was taken from neomutt's second generation
  * key ring parser.
  *
  * You can actually use this to put together some fairly general
@@ -559,7 +559,7 @@ static int pgp_parse_pgp3_sig(unsigned char *buff, size_t l,
           break;
         case 4:  /* exportable */
         case 5:  /* trust */
-        case 6:  /* regexp */
+        case 6:  /* regex */
         case 7:  /* revocable */
         case 11: /* Pref. symm. alg. */
         case 12: /* revocation key */

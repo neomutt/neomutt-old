@@ -2161,7 +2161,7 @@ static int pgp_gpgme_extract_keys(gpgme_data_t keydata, FILE **fp, int dryrun)
 
   if (dryrun)
   {
-    snprintf(tmpdir, sizeof(tmpdir), "%s/mutt-gpgme-XXXXXX", Tmpdir);
+    snprintf(tmpdir, sizeof(tmpdir), "%s/neomutt-gpgme-XXXXXX", Tmpdir);
     if (!mkdtemp(tmpdir))
     {
       mutt_debug(1, "Error creating temporary GPGME home\n");
@@ -2402,7 +2402,7 @@ void pgp_gpgme_invoke_import(const char *fname)
  * around in the main handler.
  *
  * (Note that we aren't worse than Outlook & Cie in this, and also note that we
- * can successfully handle anything produced by any existing versions of mutt.)
+ * can successfully handle anything produced by any existing versions of neomutt.)
  */
 static void copy_clearsigned(gpgme_data_t data, struct State *s, char *charset)
 {
@@ -3382,7 +3382,8 @@ static struct DnArray *parse_dn(const char *string)
     if (!*string)
       break; /* ready */
     if (arrayidx >= arraysize)
-    { /* mutt lacks a real safe_realoc - so we need to copy */
+    {
+      /* neomutt lacks a real safe_realloc - so we need to copy */
       struct DnArray *a2 = NULL;
 
       arraysize += 5;
@@ -5054,7 +5055,6 @@ int smime_gpgme_verify_sender(struct Header *h)
 
 void mutt_gpgme_set_sender(const char *sender)
 {
-  mutt_error("[setting sender] mailbox: %s\n", sender);
   FREE(&current_sender);
   current_sender = safe_strdup(sender);
 }

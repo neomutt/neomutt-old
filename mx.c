@@ -265,7 +265,7 @@ int mx_get_magic(const char *path)
     int ch;
 
     /* Some mailbox creation tools erroneously append a blank line to
-     * a file before appending a mail message.  This allows mutt to
+     * a file before appending a mail message.  This allows neomutt to
      * detect magic for and thus open those files. */
     while ((ch = fgetc(f)) != EOF)
     {
@@ -467,7 +467,7 @@ struct Context *mx_open_mailbox(const char *path, int flags, struct Context *pct
 
   mutt_make_label_hash(ctx);
 
-  /* if the user has a `push' command in their .muttrc, or in a folder-hook,
+  /* if the user has a `push' command in their .neomuttrc, or in a folder-hook,
    * it will cause the progress messages not to be displayed because
    * mutt_refresh() will think we are in the middle of a macro.  so set a
    * flag to indicate that we should really refresh the screen.
@@ -1366,4 +1366,37 @@ int mx_check_empty(const char *path)
       return -1;
   }
   /* not reached */
+}
+
+/**
+ * mx_tags_editor - start the tag editor of the mailbox
+ * @retval -1 Error
+ */
+int mx_tags_editor(struct Context *ctx, const char *tags, char *buf, size_t buflen)
+{
+  if (ctx->mx_ops->edit_msg_tags)
+    return ctx->mx_ops->edit_msg_tags(ctx, tags, buf, buflen);
+
+  mutt_message(_("Folder doesn't support tagging, aborting."));
+  return -1;
+}
+
+/**
+ * mx_tags_commit - save tags to the mailbox
+ */
+int mx_tags_commit(struct Context *ctx, struct Header *h, char *tags)
+{
+  if (ctx->mx_ops->commit_msg_tags)
+    return ctx->mx_ops->commit_msg_tags(ctx, h, tags);
+
+  mutt_message(_("Folder doesn't support tagging, aborting."));
+  return -1;
+}
+
+/**
+ * mx_tags_is_supported - return true if mailbox support tagging
+ */
+int mx_tags_is_supported(struct Context *ctx)
+{
+  return ctx->mx_ops->commit_msg_tags && ctx->mx_ops->edit_msg_tags;
 }

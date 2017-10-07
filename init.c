@@ -71,6 +71,9 @@
 #ifdef USE_NOTMUCH
 #include "mutt_notmuch.h"
 #endif
+#ifdef USE_IMAP
+#include "imap/imap.h" /* for imap_subscribe() */
+#endif
 
 #define CHECK_PAGER                                                                  \
   if ((CurrentMenu == MENU_PAGER) && (idx >= 0) && (MuttVars[idx].flags & R_RESORT)) \
@@ -687,7 +690,7 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
           mutt_buffer_addstr(dest, env);
         else if ((idx = mutt_option_index(var)) != -1)
         {
-          /* expand settable mutt variables */
+          /* expand settable neomutt variables */
           char val[LONG_STRING];
 
           if (var_to_string(idx, val, sizeof(val)))
@@ -778,9 +781,9 @@ int mutt_add_to_regex_list(struct RegexList **list, const char *s, int flags,
   if (!s || !*s)
     return 0;
 
-  if (!(rx = mutt_compile_regexp(s, flags)))
+  if (!(rx = mutt_compile_regex(s, flags)))
   {
-    snprintf(err->data, err->dsize, "Bad regexp: %s\n", s);
+    snprintf(err->data, err->dsize, "Bad regex: %s\n", s);
     return -1;
   }
 
@@ -810,7 +813,7 @@ int mutt_add_to_regex_list(struct RegexList **list, const char *s, int flags,
       *list = last = t;
   }
   else /* duplicate */
-    mutt_free_regexp(&rx);
+    mutt_free_regex(&rx);
 
   return 0;
 }
@@ -827,7 +830,7 @@ static int remove_from_replace_list(struct ReplaceList **list, const char *pat)
   if (cur->regex && (mutt_strcmp(cur->regex->pattern, pat) == 0))
   {
     *list = cur->next;
-    mutt_free_regexp(&cur->regex);
+    mutt_free_regex(&cur->regex);
     FREE(&cur->template);
     FREE(&cur);
     return 1;
@@ -839,7 +842,7 @@ static int remove_from_replace_list(struct ReplaceList **list, const char *pat)
     if (mutt_strcmp(cur->regex->pattern, pat) == 0)
     {
       prev->next = cur->next;
-      mutt_free_regexp(&cur->regex);
+      mutt_free_regex(&cur->regex);
       FREE(&cur->template);
       FREE(&cur);
       cur = prev->next;
@@ -868,9 +871,9 @@ static int add_to_replace_list(struct ReplaceList **list, const char *pat,
   if (!pat || !*pat || !templ)
     return 0;
 
-  if (!(rx = mutt_compile_regexp(pat, REG_ICASE)))
+  if (!(rx = mutt_compile_regex(pat, REG_ICASE)))
   {
-    snprintf(err->data, err->dsize, _("Bad regexp: %s"), pat);
+    snprintf(err->data, err->dsize, _("Bad regex: %s"), pat);
     return -1;
   }
 
@@ -907,7 +910,7 @@ static int add_to_replace_list(struct ReplaceList **list, const char *pat,
       *list = t;
   }
   else
-    mutt_free_regexp(&rx);
+    mutt_free_regex(&rx);
 
   /* Now t is the ReplaceList* that we want to modify. It is prepared. */
   t->template = safe_strdup(templ);
@@ -977,7 +980,7 @@ static int finish_source(struct Buffer *tmp, struct Buffer *s,
  * If a given variable, function, command or compile-time symbol exists, then
  * read the rest of the line of config commands.
  * e.g.
- *      ifdef sidebar source ~/.mutt/sidebar.rc
+ *      ifdef sidebar source ~/.neomutt/sidebar.rc
  *
  * If (data == 1) then it means use the 'ifndef' (if-not-defined) command.
  * e.g.
@@ -1208,7 +1211,7 @@ static int parse_replace_list(struct Buffer *buf, struct Buffer *s,
 
   memset(&templ, 0, sizeof(templ));
 
-  /* First token is a regexp. */
+  /* First token is a regex. */
   if (!MoreArgs(s))
   {
     strfcpy(err->data, _("not enough arguments"), err->dsize);
@@ -1239,7 +1242,7 @@ static int parse_unreplace_list(struct Buffer *buf, struct Buffer *s,
 {
   struct ReplaceList **list = (struct ReplaceList **) data;
 
-  /* First token is a regexp. */
+  /* First token is a regex. */
   if (!MoreArgs(s))
   {
     strfcpy(err->data, _("not enough arguments"), err->dsize);
@@ -1308,7 +1311,7 @@ static int parse_spam_list(struct Buffer *buf, struct Buffer *s,
     return -1;
   }
 
-  /* Extract the first token, a regexp */
+  /* Extract the first token, a regex */
   mutt_extract_token(buf, s, 0);
 
   /* data should be either MUTT_SPAM or MUTT_NOSPAM. MUTT_SPAM is for spam commands. */
@@ -2158,7 +2161,7 @@ static void restore_default(struct Option *p)
         {
           char msgbuf[STRING];
           regerror(retval, pp->regex, msgbuf, sizeof(msgbuf));
-          fprintf(stderr, _("restore_default(%s): error in regexp: %s\n"),
+          fprintf(stderr, _("restore_default(%s): error in regex: %s\n"),
                   p->option, pp->pattern);
           fprintf(stderr, "%s\n", msgbuf);
           mutt_sleep(0);
@@ -2318,8 +2321,7 @@ static void start_debug(void)
   if ((debugfile = safe_fopen(debugfilename, "w")) != NULL)
   {
     setbuf(debugfile, NULL); /* don't buffer the debugging output! */
-    mutt_debug(1, "NeoMutt/%s (%s) debugging at level %d\n", PACKAGE_VERSION,
-               MUTT_VERSION, debuglevel);
+    mutt_debug(1, "NeoMutt/%s debugging at level %d\n", PACKAGE_VERSION, debuglevel);
   }
 }
 
@@ -2340,13 +2342,12 @@ static void restart_debug(void)
 
   if (disable_debug || file_changed)
   {
-    mutt_debug(1, "NeoMutt/%s (%s) stop debugging\n", PACKAGE_VERSION, MUTT_VERSION);
+    mutt_debug(1, "NeoMutt/%s stop debugging\n", PACKAGE_VERSION);
     safe_fclose(&debugfile);
   }
 
   if (!enable_debug && !disable_debug && debuglevel != DebugLevel)
-    mutt_debug(1, "NeoMutt/%s (%s) debugging at level %d\n", PACKAGE_VERSION,
-               MUTT_VERSION, DebugLevel);
+    mutt_debug(1, "NeoMutt/%s debugging at level %d\n", PACKAGE_VERSION, DebugLevel);
 
   debuglevel = DebugLevel;
 
@@ -2360,7 +2361,7 @@ static void restart_debug(void)
  * @param value     Value the envionment variable should have
  * @param overwrite Whether the environment variable should be overwritten
  *
- * It's broken out because some other parts of mutt (filter.c) need
+ * It's broken out because some other parts of neomutt (filter.c) need
  * to set/overwrite environment variables in envlist before execing.
  */
 void mutt_envlist_set(const char *name, const char *value, bool overwrite)
@@ -2842,7 +2843,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
             p = "MH";
             break;
           case MUTT_MAILDIR:
-            p = "Folder";
+            p = "Maildir";
             break;
           default:
             p = "unknown";
@@ -3155,7 +3156,7 @@ static int to_absolute_path(char *path, const char *reference)
  * source_rc - Read an initialization file
  * @param rcfile_path Path to initialization file
  * @param err         Buffer for error messages
- * @retval <0 if mutt should pause to let the user know
+ * @retval <0 if neomutt should pause to let the user know
  */
 static int source_rc(const char *rcfile_path, struct Buffer *err)
 {
@@ -3167,6 +3168,7 @@ static int source_rc(const char *rcfile_path, struct Buffer *err)
   char rcfile[PATH_MAX];
   size_t buflen;
   size_t rcfilelen;
+  bool ispipe;
 
   pid_t pid;
 
@@ -3176,7 +3178,9 @@ static int source_rc(const char *rcfile_path, struct Buffer *err)
   if (rcfilelen == 0)
     return -1;
 
-  if (rcfile[rcfilelen - 1] != '|')
+  ispipe = rcfile[rcfilelen - 1] == '|';
+
+  if (!ispipe)
   {
     struct ListNode *np = STAILQ_FIRST(&MuttrcStack);
     if (!to_absolute_path(rcfile, np ? NONULL(np->data) : ""))
@@ -3261,7 +3265,7 @@ static int source_rc(const char *rcfile_path, struct Buffer *err)
     mutt_wait_filter(pid);
   if (rc)
   {
-    /* the muttrc source keyword */
+    /* the neomuttrc source keyword */
     snprintf(err->data, err->dsize,
              rc >= -MAXERRS ?
                  _("source: errors in %s") :
@@ -3279,7 +3283,7 @@ static int source_rc(const char *rcfile_path, struct Buffer *err)
     }
   }
 
-  if (!STAILQ_EMPTY(&MuttrcStack))
+  if (!ispipe && !STAILQ_EMPTY(&MuttrcStack))
   {
     STAILQ_REMOVE_HEAD(&MuttrcStack, entries);
   }
@@ -3915,7 +3919,7 @@ int var_to_string(int idx, char *val, size_t len)
         p = "MH";
         break;
       case MUTT_MAILDIR:
-        p = "Folder";
+        p = "Maildir";
         break;
       default:
         p = "unknown";
@@ -4040,27 +4044,24 @@ static int execute_commands(struct ListHead *p)
 static char *find_cfg(const char *home, const char *xdg_cfg_home)
 {
   const char *names[] = {
-    "neomuttrc-" PACKAGE_VERSION, "neomuttrc", "muttrc-" MUTT_VERSION, "muttrc", NULL,
+    "neomuttrc", "muttrc", NULL,
   };
 
   const char *locations[][2] = {
-    {
-        xdg_cfg_home, "mutt/",
-    },
-    {
-        home, ".",
-    },
+    { xdg_cfg_home, "neomutt/" },
+    { xdg_cfg_home, "mutt/" },
+    { home, ".neomutt/" },
     { home, ".mutt/" },
+    { home, "." },
     { NULL, NULL },
   };
+
   for (int i = 0; locations[i][0] || locations[i][1]; i++)
   {
-    int j;
-
     if (!locations[i][0])
       continue;
 
-    for (j = 0; names[j]; j++)
+    for (int j = 0; names[j]; j++)
     {
       char buffer[STRING];
 
@@ -4118,10 +4119,8 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
   /* reverse alias keys need to be strdup'ed because of idna conversions */
   ReverseAliases =
       hash_create(1031, MUTT_HASH_STRCASECMP | MUTT_HASH_STRDUP_KEYS | MUTT_HASH_ALLOW_DUPS);
-#ifdef USE_NOTMUCH
   TagTransforms = hash_create(64, 1);
   TagFormats = hash_create(64, 0);
-#endif
 
   mutt_menu_init();
 
@@ -4408,15 +4407,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
       if (mutt_set_xdg_path(XDG_CONFIG_DIRS, buffer, sizeof(buffer)))
         break;
 
-      snprintf(buffer, sizeof(buffer), "%s/neomuttrc-%s", SYSCONFDIR, PACKAGE_VERSION);
-      if (access(buffer, F_OK) == 0)
-        break;
-
       snprintf(buffer, sizeof(buffer), "%s/neomuttrc", SYSCONFDIR);
-      if (access(buffer, F_OK) == 0)
-        break;
-
-      snprintf(buffer, sizeof(buffer), "%s/Muttrc-%s", SYSCONFDIR, MUTT_VERSION);
       if (access(buffer, F_OK) == 0)
         break;
 
@@ -4424,15 +4415,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
       if (access(buffer, F_OK) == 0)
         break;
 
-      snprintf(buffer, sizeof(buffer), "%s/neomuttrc-%s", PKGDATADIR, PACKAGE_VERSION);
-      if (access(buffer, F_OK) == 0)
-        break;
-
       snprintf(buffer, sizeof(buffer), "%s/neomuttrc", PKGDATADIR);
-      if (access(buffer, F_OK) == 0)
-        break;
-
-      snprintf(buffer, sizeof(buffer), "%s/Muttrc-%s", PKGDATADIR, MUTT_VERSION);
       if (access(buffer, F_OK) == 0)
         break;
 
@@ -4539,7 +4522,6 @@ bail:
   return -1;
 }
 
-#ifdef USE_NOTMUCH
 static int parse_tag_transforms(struct Buffer *b, struct Buffer *s,
                                 unsigned long data, struct Buffer *err)
 {
@@ -4610,6 +4592,117 @@ static int parse_tag_formats(struct Buffer *b, struct Buffer *s,
     hash_insert(TagFormats, format, tag);
   }
   return 0;
+}
+
+#ifdef USE_IMAP
+/**
+ * parse_subscribe_to - 'subscribe-to' command: Add an IMAP subscription.
+ * @param b    Buffer space shared by all command handlers
+ * @param s    Current line of the config file
+ * @param data Data field from init.h:struct Command
+ * @param err  Buffer for any error message
+ * @retval  0 Success
+ * @retval -1 Failed
+ *
+ * The 'subscribe-to' command allows to subscribe to an IMAP-Mailbox.
+ * Patterns are not supported.
+ * Use it as follows: subscribe-to =folder
+ */
+static int parse_subscribe_to(struct Buffer *b, struct Buffer *s,
+                              unsigned long data, struct Buffer *err)
+{
+  if (!b || !s || !err)
+    return -1;
+
+  mutt_buffer_reset(err);
+
+  if (MoreArgs(s))
+  {
+    mutt_extract_token(b, s, 0);
+
+    if (MoreArgs(s))
+    {
+      mutt_buffer_addstr(err, _("Too many arguments"));
+      return -1;
+    }
+
+    if (b->data && *b->data)
+    {
+      /* Expand and subscribe */
+      if (imap_subscribe(mutt_expand_path(b->data, b->dsize), 1) != 0)
+      {
+        mutt_buffer_printf(err, _("Could not subscribe to %s"), b->data);
+        return -1;
+      }
+      else
+      {
+        mutt_message(_("Subscribed to %s"), b->data);
+        return 0;
+      }
+    }
+    else
+    {
+      mutt_debug(5, "Corrupted buffer");
+      return -1;
+    }
+  }
+
+  mutt_buffer_addstr(err, _("No folder specified"));
+  return -1;
+}
+
+/**
+ * parse_unsubscribe_from - 'unsubscribe-from' command: Cancel an IMAP subscription.
+ * @param b    Buffer space shared by all command handlers
+ * @param s    Current line of the config file
+ * @param data Data field from init.h:struct Command
+ * @param err  Buffer for any error message
+ * @retval  0 Success
+ * @retval -1 Failed
+ *
+ * The 'unsubscribe-from' command allows to unsubscribe from an IMAP-Mailbox.
+ * Patterns are not supported.
+ * Use it as follows: unsubscribe-from =folder
+ */
+static int parse_unsubscribe_from(struct Buffer *b, struct Buffer *s,
+                                  unsigned long data, struct Buffer *err)
+{
+  if (!b || !s || !err)
+    return -1;
+
+  if (MoreArgs(s))
+  {
+    mutt_extract_token(b, s, 0);
+
+    if (MoreArgs(s))
+    {
+      mutt_buffer_addstr(err, _("Too many arguments"));
+      return -1;
+    }
+
+    if (b->data && *b->data)
+    {
+      /* Expand and subscribe */
+      if (imap_subscribe(mutt_expand_path(b->data, b->dsize), 0) != 0)
+      {
+        mutt_buffer_printf(err, _("Could not unsubscribe from %s"), b->data);
+        return -1;
+      }
+      else
+      {
+        mutt_message(_("Unsubscribed from %s"), b->data);
+        return 0;
+      }
+    }
+    else
+    {
+      mutt_debug(5, "Corrupted buffer");
+      return -1;
+    }
+  }
+
+  mutt_buffer_addstr(err, _("No folder specified"));
+  return -1;
 }
 #endif
 

@@ -45,6 +45,7 @@
  * | mutt_strncmp()            | Compare two strings (to a maximum), safely
  * | mutt_str_adjust()         | Shrink-to-fit a string
  * | mutt_str_replace()        | Replace one string with another
+ * | mutt_str_append_item()    | Add a string to another
  * | mutt_substrcpy()          | Copy a sub-string into a buffer
  * | mutt_substrdup()          | Duplicate a sub-string
  * | rfc822_dequote_comment()  | Un-escape characters in an email address comment
@@ -62,6 +63,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include "debug.h"
 #include "memory.h"
 #include "string2.h"
 
@@ -248,6 +250,30 @@ void mutt_str_replace(char **p, const char *s)
 }
 
 /**
+ * mutt_str_append_item - Add string to another seprated by sep
+ * @param str String appened
+ * @param item String to append
+ * @param sep separator between string item
+ *
+ * This function appends a string to another separate them by sep
+ * if needed
+ *
+ * This function alters the pointer of the caller.
+ */
+void mutt_str_append_item(char **str, const char *item, int sep)
+{
+  char *p = NULL;
+  size_t sz = strlen(item);
+  size_t ssz = *str ? strlen(*str) : 0;
+
+  safe_realloc(str, ssz + ((ssz && sep) ? 1 : 0) + sz + 1);
+  p = *str + ssz;
+  if (sep && ssz)
+    *p++ = sep;
+  memcpy(p, item, sz + 1);
+}
+
+/**
  * mutt_str_adjust - Shrink-to-fit a string
  * @param p String to alter
  *
@@ -338,13 +364,22 @@ char *mutt_substrdup(const char *begin, const char *end)
   size_t len;
   char *p = NULL;
 
-  if (end != NULL && end < begin)
+  if (!begin)
+  {
+    mutt_debug(1, "%s: ERROR: 'begin' is NULL\n", __func__);
     return NULL;
+  }
 
   if (end)
+  {
+    if (begin > end)
+      return NULL;
     len = end - begin;
+  }
   else
+  {
     len = strlen(begin);
+  }
 
   p = safe_malloc(len + 1);
   memcpy(p, begin, len);

@@ -51,8 +51,8 @@
 #endif
 
 #ifdef USE_HCACHE
-#define HC_FNAME "mutt"  /* filename for hcache as POP lacks paths */
-#define HC_FEXT "hcache" /* extension for hcache as POP lacks paths */
+#define HC_FNAME "neomutt" /* filename for hcache as POP lacks paths */
+#define HC_FEXT "hcache"   /* extension for hcache as POP lacks paths */
 #endif
 
 /**
@@ -599,7 +599,7 @@ static int pop_fetch_message(struct Context *ctx, struct Message *msg, int msgno
                        NetInc, h->content->length + h->content->offset - 1);
 
     /* see if we can put in body cache; use our cache as fallback */
-    if (!(msg->fp = mutt_bcache_put(pop_data->bcache, h->data, 1)))
+    if (!(msg->fp = mutt_bcache_put(pop_data->bcache, h->data)))
     {
       /* no */
       bcache = 0;
@@ -979,4 +979,6 @@ struct MxOps mx_pop_ops = {
   .commit_msg = NULL,
   .open_new_msg = NULL,
   .sync = pop_sync_mailbox,
+  .edit_msg_tags = NULL,
+  .commit_msg_tags = NULL,
 };

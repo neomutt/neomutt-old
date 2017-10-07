@@ -34,6 +34,7 @@ struct ReplaceList;
 struct RegexList;
 struct State;
 struct ListHead;
+struct TagHead;
 struct Mapping;
 
 /* On OS X 10.5.x, wide char functions are inlined by default breaking
@@ -196,9 +197,7 @@ enum MuttMisc
   MUTT_PGP_KEY,
   MUTT_XLABEL,
   MUTT_SERVERSEARCH,
-#ifdef USE_NOTMUCH
-  MUTT_NOTMUCH_LABEL,
-#endif
+  MUTT_DRIVER_TAGS,
   MUTT_MIMEATTACH,
 #ifdef USE_NNTP
   MUTT_NEWSGROUPS,
@@ -304,15 +303,9 @@ enum QuadOptionVars
 #define MUTT_SPAM   1
 #define MUTT_NOSPAM 2
 
-/* flags for keywords headers */
-#define MUTT_X_LABEL        (1 << 0) /**< introduced to mutt in 2000 */
-#define MUTT_X_KEYWORDS     (1 << 1) /**< used in c-client, dovecot */
-#define MUTT_X_MOZILLA_KEYS (1 << 2) /**< tbird */
-#define MUTT_KEYWORDS       (1 << 3) /**< rfc2822 */
-
 void mutt_free_regex_list(struct RegexList **list);
 void mutt_free_replace_list(struct ReplaceList **list);
-int mutt_matches_ignore(const char *s);
+bool mutt_matches_ignore(const char *s);
 
 /* add an element to a list */
 int mutt_remove_from_regex_list(struct RegexList **l, const char *str);

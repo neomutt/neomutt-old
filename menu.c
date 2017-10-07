@@ -56,41 +56,42 @@ static struct Menu **MenuStack = NULL;
 
 static int get_color(int index, unsigned char *s)
 {
-  struct ColorLine *color = NULL;
+  struct ColorLineHead *color = NULL;
+  struct ColorLine *np = NULL;
   struct Header *hdr = Context->hdrs[Context->v2r[index]];
   int type = *s;
 
   switch (type)
   {
     case MT_COLOR_INDEX_AUTHOR:
-      color = ColorIndexAuthorList;
+      color = &ColorIndexAuthorList;
       break;
     case MT_COLOR_INDEX_FLAGS:
-      color = ColorIndexFlagsList;
+      color = &ColorIndexFlagsList;
       break;
     case MT_COLOR_INDEX_SUBJECT:
-      color = ColorIndexSubjectList;
+      color = &ColorIndexSubjectList;
       break;
-#ifdef USE_NOTMUCH
     case MT_COLOR_INDEX_TAG:
-      for (color = ColorIndexTagList; color; color = color->next)
+      STAILQ_FOREACH(np, &ColorIndexTagList, entries)
       {
-        if (strncmp((const char *) (s + 1), color->pattern, strlen(color->pattern)) == 0)
-          return color->pair;
-        const char *transform = hash_find(TagTransforms, color->pattern);
+        if (strncmp((const char *) (s + 1), np->pattern, strlen(np->pattern)) == 0)
+          return np->pair;
+        const char *transform = hash_find(TagTransforms, np->pattern);
         if (transform &&
             (strncmp((const char *) (s + 1), transform, strlen(transform)) == 0))
-          return color->pair;
+          return np->pair;
       }
       return 0;
-#endif
     default:
       return ColorDefs[type];
   }
 
-  for (; color; color = color->next)
-    if (mutt_pattern_exec(color->color_pattern, MUTT_MATCH_FULL_ADDRESS, Context, hdr, NULL))
-      return color->pair;
+  STAILQ_FOREACH(np, color, entries)
+  {
+    if (mutt_pattern_exec(np->color_pattern, MUTT_MATCH_FULL_ADDRESS, Context, hdr, NULL))
+      return np->pair;
+  }
 
   return 0;
 }
@@ -1099,7 +1100,7 @@ int mutt_menu_loop(struct Menu *menu)
      * the prefix on a timeout (i==-2), but do clear on an abort (i==-1)
      */
     if (menu->tagprefix && i != OP_TAG_PREFIX && i != OP_TAG_PREFIX_COND && i != -2)
-      menu->tagprefix = 0;
+      menu->tagprefix = false;
 
     mutt_curs_set(0);
 
@@ -1135,14 +1136,14 @@ int mutt_menu_loop(struct Menu *menu)
     {
       if (menu->tagprefix)
       {
-        menu->tagprefix = 0;
+        menu->tagprefix = false;
         mutt_window_clearline(menu->messagewin, 0);
         continue;
       }
 
       if (menu->tagged)
       {
-        menu->tagprefix = 1;
+        menu->tagprefix = true;
         continue;
       }
       else if (i == OP_TAG_PREFIX)
@@ -1158,7 +1159,7 @@ int mutt_menu_loop(struct Menu *menu)
       }
     }
     else if (menu->tagged && option(OPT_AUTO_TAG))
-      menu->tagprefix = 1;
+      menu->tagprefix = true;
 
     mutt_curs_set(1);
 

@@ -835,13 +835,13 @@ int mutt_parse_rfc822_line(struct Envelope *e, struct Header *hdr, char *line,
         mutt_str_replace(&e->date, p);
         if (hdr)
         {
-          const struct Tz *tz = NULL;
+          struct Tz tz;
           hdr->date_sent = mutt_parse_date(p, &tz);
-          if (tz)
+          if (hdr->date_sent > 0)
           {
-            hdr->zhours = tz->zhours;
-            hdr->zminutes = tz->zminutes;
-            hdr->zoccident = tz->zoccident;
+            hdr->zhours = tz.zhours;
+            hdr->zminutes = tz.zminutes;
+            hdr->zoccident = tz.zoccident;
           }
         }
         matched = 1;
@@ -888,7 +888,7 @@ int mutt_parse_rfc822_line(struct Envelope *e, struct Header *hdr, char *line,
         if (hdr)
         {
           /*
-         * HACK - mutt has, for a very short time, produced negative
+         * HACK - neomutt has, for a very short time, produced negative
          * Lines header values.  Ignore them.
          */
           if (mutt_atoi(p, &hdr->lines) < 0 || hdr->lines < 0)
