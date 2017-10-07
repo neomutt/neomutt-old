@@ -21,34 +21,26 @@ HCACHE_DB := lmdb
 
 no_notmuch_architectures := alpha hppa hurd-i386 powerpcspe ppc64 sh4 sparc64
 ifneq ($(DEB_HOST_ARCH),$(filter $(DEB_HOST_ARCH), $(no_notmuch_architectures)))
-	notmuch = --enable-notmuch
-else
-	notmuch = --disable-notmuch
+	notmuch = --notmuch
 endif
 
 ifeq ($(HCACHE_DB),bdb)
-    hcache_db := --with-bdb --without-gdbm --without-qdbm --without-tokyocabinet --without-lmdb --without-kyotocabinet
+    hcache_db := --bdb
 endif
 ifeq ($(HCACHE_DB),lmdb)
-    hcache_db := --with-lmdb --without-gdbm --without-qdbm --without-tokyocabinet --without-bdb --without-kyotocabinet
+    hcache_db := --lmdb
 endif
 ifeq ($(HCACHE_DB),gdbm)
-    hcache_db := --with-gdbm --without-qdbm --without-bdb --without-tokyocabinet --without lmdb --without-kyotocabinet
+    hcache_db := --gdbm
 endif
 ifeq ($(HCACHE_DB),qdbm)
-    hcache_db := --with-qdbm --without-gdbm --without-bdb --without-tokyocabinet --without-lmdb --without-kyotocabinet
+    hcache_db := --qdbm
 endif
 ifeq ($(HCACHE_DB),tokyocabinet)
-    hcache_db := --with-tokyocabinet --without-gdbm --without-bdb --without-qdbm --without-lmdb --without-kyotocabinet
-    ifeq ($(shell dpkg --print-architecture),hurd-i386)
-	hcache_db := --with-tokyocabinet --without-bdb --without-qdbm --without-lmdb --without-kyotocabinet
-    endif
+    hcache_db := --tokyocabinet
 endif
 ifeq ($(HCACHE_DB),kyotocabinet)
-    hcache_db := --with-kyotocabinet --without-gdbm --without-bdb --without-qdbm --without-lmdb --without-tokyocabinet
-    ifeq ($(shell dpkg --print-architecture),hurd-i386)
-	hcache_db := --with-kyotocabinet --without-bdb --without-qdbm --without-lmdb --without-tokyocabinet
-    endif
+    hcache_db := --kyotocabinet
 endif
 
 %:
@@ -58,25 +50,16 @@ override_dh_auto_configure:
 		dh_auto_configure --				\
 			--with-docdir=/usr/share/doc/neomutt	\
 			--with-mailpath=/var/mail		\
-			--disable-dependency-tracking		\
-			--enable-gpgme				\
-			--enable-fmemopen			\
-			--enable-sidebar			\
-			$(notmuch)			\
-			--enable-compressed			\
-			--enable-pop				\
-			--enable-imap				\
-			--enable-nntp				\
-			--enable-smtp				\
-			--enable-debug				\
-			--enable-fcntl				\
-			--enable-lua				\
-			--with-mixmaster			\
-			--with-curses				\
-			--with-gss				\
-			--with-gnutls				\
-			--with-idn				\
-			--with-sasl				\
+			--gpgme					\
+			--fmemopen	n			\
+			$(notmuch)				\
+			--logging				\
+			--lua					\
+			--mixmasteri				\
+			--with-ui=ncurses			\
+			--gss					\
+			--gnutls				\
+			--sasl					\
 			$(hcache_db)
 
 override_dh_auto_install:

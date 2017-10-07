@@ -1,8 +1,10 @@
-neomutt (1:20170912-1lxtec5) UNRELEASED; urgency=medium
+neomutt (1:20170912-1lxtec7) UNRELEASED; urgency=medium
 
   * Adjusted 0001-Set-version-info-to-lxtec.patch
+  * Adjusted debian/* to reflect the change mutt => neomutt
+  * Adjusted debian/rules to use autosetup
 
- -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 07 Oct 2017 15:29:06 +0200
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 07 Oct 2017 16:44:00 +0200
 
 neomutt (1:20170912-1lxtec4) unstable; urgency=medium
 
