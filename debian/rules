@@ -44,23 +44,24 @@ ifeq ($(HCACHE_DB),kyotocabinet)
 endif
 
 %:
-	dh $@ --builddirectory=debian/build
+	dh $@ --without autoreconf
 
 override_dh_auto_configure:
-		dh_auto_configure --				\
-			--with-docdir=/usr/share/doc/neomutt	\
+		./configure.autosetup				\
+			--sysconfdir=/etc			\
 			--with-mailpath=/var/mail		\
 			--gpgme					\
-			--fmemopen	n			\
+			--fmemopen				\
 			$(notmuch)				\
 			--logging				\
 			--lua					\
-			--mixmasteri				\
+			--mixmaster				\
 			--with-ui=ncurses			\
 			--gss					\
 			--gnutls				\
 			--sasl					\
 			$(hcache_db)
+
 
 override_dh_auto_install:
 	dh_auto_install --destdir=debian/tmp
@@ -68,9 +69,9 @@ override_dh_auto_install:
 override_dh_install:
 	rm -rf debian/tmp/usr/share/doc/neomutt/samples/iconv
 	rm -f debian/tmp/usr/share/doc/neomutt/samples/ca-bundle.crt
-	mv debian/tmp/etc/Muttrc debian/tmp/etc/NeoMuttrc
-	( sed -e '/## More settings/,$$d' debian/tmp/etc/NeoMuttrc || exit 1 ; \
-	  cat debian/extra/rc/Muttrc.foot ) > debian/tmp/NeoMuttrc
+	#mv debian/tmp/etc/neomuttrc debian/tmp/etc/neomuttrc
+	( sed -e '/## More settings/,$$d' debian/tmp/etc/neomuttrc || exit 1 ; \
+	  cat debian/extra/rc/Muttrc.foot) > debian/tmp/neomuttrc
 	dh_install
 
 override_dh_installchangelogs:
