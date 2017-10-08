@@ -1,6 +1,6 @@
 debian/extra/neomutt.xpm	usr/share/pixmaps
 debian/extra/neomutt.desktop	usr/share/applications
 debian/tmp/usr/bin/neomutt
-debian/tmp/usr/bin/pgpewrap	usr/lib/neomutt
-debian/tmp/usr/bin/pgpring	usr/lib/neomutt
-debian/tmp/usr/bin/smime_keys
+debian/tmp/usr/lib/pgpewrap
+debian/tmp/usr/lib/pgpring
+debian/tmp/usr/lib/smime_keys
