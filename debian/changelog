@@ -1,4 +1,4 @@
-neomutt (1:20170912-1lxtec14) UNRELEASED; urgency=medium
+neomutt (1:20171006-0lxtec1) unstable; urgency=medium
 
   * Adjusted 0001-Set-version-info-to-lxtec.patch
   * Adjusted debian/* to reflect the change mutt => neomutt
