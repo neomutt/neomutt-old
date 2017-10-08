@@ -1,4 +1,4 @@
-neomutt (1:20170912-1lxtec11) UNRELEASED; urgency=medium
+neomutt (1:20170912-1lxtec12) UNRELEASED; urgency=medium
 
   * Adjusted 0001-Set-version-info-to-lxtec.patch
   * Adjusted debian/* to reflect the change mutt => neomutt
@@ -7,8 +7,9 @@ neomutt (1:20170912-1lxtec11) UNRELEASED; urgency=medium
   * Adjusted debian/rules to build --without autoreconf
   * Standards-Version. 4.1.1. No changes
   * Adjusted new install locations
+  * Switched exec and icon to neomutt in debian/extra/neomutt.desktop
 
- -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 08 Oct 2017 16:30:41 +0200
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 08 Oct 2017 16:42:06 +0200
 
 neomutt (1:20170912-1lxtec4) unstable; urgency=medium
 

@@ -1,0 +1,25 @@
+From a3c28f7756df6c80bba87ffa8c7e53aa48a0e58d Mon Sep 17 00:00:00 2001
+From: Elimar Riesebieter <riesebie@lxtec.de>
+Date: Sun, 8 Oct 2017 15:24:23 +0200
+Subject: [PATCH] Adjusted NeoMutt version in auto.def
+
+---
+ auto.def | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/auto.def b/auto.def
+index 95bb5000..1307865d 100644
+--- a/auto.def
++++ b/auto.def
+@@ -12,7 +12,7 @@ use system cc cc-lib mutt-gettext mutt-iconv
+ ###############################################################################
+ # Names and versions
+ define PACKAGE          "neomutt"
+-define PACKAGE_VERSION  "20171006"
++define PACKAGE_VERSION  "20171006-lxtec"
+ define BUGS_ADDRESS     "neomutt-devel@neomutt.org"
+ 
+ # Subdirectories that contain additional Makefile.autosetup files
+-- 
+2.14.2
+
