@@ -1,4 +1,4 @@
-neomutt (1:20170912-1lxtec10) UNRELEASED; urgency=medium
+neomutt (1:20170912-1lxtec11) UNRELEASED; urgency=medium
 
   * Adjusted 0001-Set-version-info-to-lxtec.patch
   * Adjusted debian/* to reflect the change mutt => neomutt
@@ -6,8 +6,9 @@ neomutt (1:20170912-1lxtec10) UNRELEASED; urgency=medium
   * 0002-fix-fmt-date-format.patch applied from upstream
   * Adjusted debian/rules to build --without autoreconf
   * Standards-Version. 4.1.1. No changes
+  * Adjusted new install locations
 
- -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 08 Oct 2017 16:27:02 +0200
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 08 Oct 2017 16:30:41 +0200
 
 neomutt (1:20170912-1lxtec4) unstable; urgency=medium
 
