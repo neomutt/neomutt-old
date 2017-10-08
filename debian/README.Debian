@@ -2,7 +2,7 @@
 # Description:   How to build a Debian package from neomutt's git source
 # Author:        Elimar Riesebieter <riesebie@lxtec.de>
 # Created:       Sat, 15 Apr 2017 12:32:08 +0200
-# Last modified: Sun, 24 Sep 2017 09:39:38 +0200
+# Last modified: Sun, 08 Oct 2017 17:30:18 +0200
 # File:          /source/neomutt/git/neomutt/debian/README.Debian
 ###############################################################################
 
@@ -27,6 +27,7 @@ $ git checkout -b mybranch
 
 Make changes to whatever file in the debian dir.
 
+NeoMutt is now build with autosetup.
 Create a package from customized settings:
 $ sudo apt install gitpkg
 $ gitpkg mybranch
@@ -38,30 +39,23 @@ $ ls ../deb-packages/neomutt/
 
 The default will build with:
 
---with-docdir=/usr/share/doc/neomutt	\
---with-mailpath=/var/mail		\
---disable-dependency-tracking		\
---enable-gpgme				\
---enable-fmemopen			\
---enable-sidebar			\
---enable-notmuch			\
---enable-compressed			\
---enable-pop				\
---enable-imap				\
---enable-nntp				\
---enable-smtp				\
---enable-debug				\
---enable-fcntl				\
---enable-lua				\
---with-mixmaster			\
---with-curses				\
---with-gss				\
---with-gnutls				\
---with-idn				\
---with-sasl				\
-$(hcache_db)
+./configure.autosetup			\
+	--sysconfdir=/etc		\
+	--with-mailpath=/var/mail	\
+	--gpgme				\
+	--fmemopen			\
+	$(notmuch)			\
+	--logging			\
+	--lua				\
+	--mixmaster			\
+	--with-ui=ncurses		\
+	--gss				\
+	--gnutls			\
+	--sasl				\
+	$(hcache_db)
 
-Whereas hcache_db points to lmdb.
+Whereas hcache_db points to lmdb. You can change hcache_db by adjusting
+debian/rules.
 
 To suite to your own settings adapt debian/rules accordingly. debian/control has
 to be adapted to point to you as an uploader and force to demand the dev
@@ -81,7 +75,7 @@ $ dpkg-buildpackage -us -uc
 After a successful build the deb's should be in ../ ;-)
 
 Please note that a pristine Debian mutt install will be removed. Installing
-neomutt will have /etc/NeoMuttrc and /etc/NeoMuttrc.d. The neomutt-common
+neomutt will have /etc/neomuttrc and /etc/NeoMuttrc.d. The neomutt-common
 package includes all the documentation and contribs from neomutt's source.
 To go back to Debian's mutt please first remove the neomutt packages:
 

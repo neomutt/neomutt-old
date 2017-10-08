@@ -1,3 +1,9 @@
+neomutt (1:20171006-0lxtec2) UNRELEASED; urgency=medium
+
+  * Adjusted README.Debian to reflecht autosetup changes
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 08 Oct 2017 17:29:06 +0200
+
 neomutt (1:20171006-0lxtec1) unstable; urgency=medium
 
   * Adjusted 0001-Set-version-info-to-lxtec.patch
