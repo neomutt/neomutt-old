@@ -1,3 +1,11 @@
+neomutt (1:20171006-1lxtec2) unstable; urgency=medium
+
+  * Introduced 0003-If-set-use-D_FILE_OFFSET_BITS-64-when-checking-for-G.patch
+    and debian/patches/0004-Let-OFF_T_FMT-be-PRId64-whenever-LFS-is-there.patch
+    to build gpgme with autosetup on 32bit systems.
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Mon, 09 Oct 2017 18:49:51 +0200
+
 neomutt (1:20171006-1lxtec1) unstable; urgency=medium
 
   * Adjusted 0001-Set-version-info-to-lxtec.patch

@@ -1,2 +1,4 @@
 0001-Set-version-info-to-lxtec.patch
 0002-Adjusted-NeoMutt-version-in-auto.def.patch
+0003-If-set-use-D_FILE_OFFSET_BITS-64-when-checking-for-G.patch
+0004-Let-OFF_T_FMT-be-PRId64-whenever-LFS-is-there.patch
