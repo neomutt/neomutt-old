@@ -1,3 +1,9 @@
+neomutt (1:20171006-1lxtec3) unstable; urgency=medium
+
+  * Use consequently neomutt instead of mutt in Debian's extras
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Mon, 09 Oct 2017 21:46:59 +0200
+
 neomutt (1:20171006-1lxtec2) unstable; urgency=medium
 
   * Introduced 0003-If-set-use-D_FILE_OFFSET_BITS-64-when-checking-for-G.patch
