@@ -70,7 +70,7 @@ override_dh_install:
 	rm -rf debian/tmp/usr/share/doc/neomutt/samples/iconv
 	rm -f debian/tmp/usr/share/doc/neomutt/samples/ca-bundle.crt
 	( sed -e '/## More settings/,$$d' debian/tmp/etc/neomuttrc || exit 1 ; \
-	  cat debian/extra/rc/Muttrc.foot) > debian/tmp/neomuttrc
+	  cat debian/extra/rc/NeoMuttrc.foot) > debian/tmp/neomuttrc
 	dh_install
 
 override_dh_installchangelogs:

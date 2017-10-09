@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # by Ben Collins <bcollins@debian.org>, butchered by Marco d'Itri <md@linux.it>
-# to use, add to ~/.muttrc:
+# to use, add to ~/.neomuttrc:
 #  set query_command="/usr/lib/neomutt/debian-ldap-query %s"
 
 use strict;
