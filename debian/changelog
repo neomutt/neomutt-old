@@ -1,3 +1,9 @@
+neomutt (1:20171006-1lxtec6) unstable; urgency=medium
+
+  * Don't build with --fmemopen as it is unconditionally turned off
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 10 Oct 2017 22:06:35 +0200
+
 neomutt (1:20171006-1lxtec5) unstable; urgency=medium
 
   * Overhaul gpg.rc to use gpgme
