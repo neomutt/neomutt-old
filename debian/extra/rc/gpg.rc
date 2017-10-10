@@ -1,0 +1,87 @@
+set crypt_use_gpgme=yes
+#set pgp_self_encrypt=yes
+#set pgp_use_gpg_agent=yes
+
+## Common Crypto Options
+#set crypt_autoencrypt           = no     # Automatically encrypt all mail
+#set crypt_autopgp               = yes    # Allow automatic pgp functions
+#set crypt_autosign              = no     # Automatically sign all mail
+#set crypt_autosmime             = yes    # Allow automatic smime functions
+#set crypt_confirmhook           = yes
+#set crypt_opportunistic_encrypt = no
+#set crypt_replyencrypt          = yes
+#set crypt_replysign             = yes
+#set crypt_replysignencrypted    = yes
+#set crypt_timestamp             = yes
+#set crypt_use_gpgme             = no
+#set crypt_use_pka               = no
+#set crypt_verify_sig            = yes
+#set pgp_use_gpg_agent           = yes
+
+## SSL Options
+#set ssl_starttls     = yes
+#set ssl_use_sslv3    = no
+#set ssl_use_tlsv1    = yes
+#set ssl_use_tlsv1_1  = yes
+#set ssl_use_tlsv1_2  = yes
+#set ssl_verify_dates = yes
+#set ssl_verify_host  = yes
+
+## PGP Options
+#set pgp_autoinline      = no
+#set pgp_auto_decode     = yes
+#set pgp_check_exit      = yes
+#set pgp_entry_format    = "%4n %t%f %4l/0x%k %-4a %2c %u"
+#set pgp_good_sign       = "Good signature from"
+#set pgp_ignore_subkeys  = yes
+#set pgp_long_ids        = no # mutt uses full fingerprint internally
+#set pgp_mime_auto       = no
+#set pgp_replyinline     = no
+#set pgp_retainable_sigs = yes
+#set pgp_show_unusable   = no
+#set pgp_sign_as         = "0x039A8F7E08BBBE7DFEE665CA3DAB374DB7DCF1BB"
+#set pgp_sort_keys       = address
+#set pgp_strict_enc      = yes
+##set pgp_timeout         = 21600 # Remember PGP passphrase for 6 hours
+#set pgp_use_gpg_agent   = yes
+
+## PGP Commands
+#set pgp_clearsign_command    = "gpg --batch --output - %?p?--passphrase-fd 0? --armor --textmode --clearsign %?a?-u %a? %f"
+#set pgp_decode_command       = "gpg --pinentry-mode ask --status-fd=2 %?p?--passphrase-fd 0? --quiet --batch --output - %f"
+#set pgp_decrypt_command      = "gpg --pinentry-mode ask --status-fd=2 %?p?--passphrase-fd 0? --quiet --batch --output - %f"
+#set pgp_encrypt_only_command = "pgpewrap gpg --batch --quiet --output - --encrypt --textmode --armor --always-trust -- -r %r -- %f"
+#set pgp_encrypt_sign_command = "pgpewrap gpg %?p?--passphrase-fd 0? --batch --quiet --textmode --output - --encrypt --sign %?a?-u %a? --armor --always-trust -- -r %r -- %f"
+#set pgp_export_command       = "gpg --export --armor %r"
+#set pgp_getkeys_command      = ""
+#set pgp_import_command       = "gpg --import -v %f"
+#set pgp_list_pubring_command = "gpg --with-colons --with-fingerprint --list-keys %r"
+#set pgp_list_secring_command = "gpg --with-colons --with-fingerprint --list-secret-keys %r"
+#set pgp_sign_command         = "gpg --comment 'I welcome encrypted mail.' --batch --output - %?p?--passphrase-fd 0? --armor --detach-sign --textmode %?a?-u %a? %f"
+#set pgp_verify_command       = "gpg --status-fd=2 --quiet --batch --output - --verify %s %f"
+#set pgp_verify_key_command   = "gpg --verbose --batch --fingerprint --check-sigs %r"
+
+## S/MIME Options
+#set smime_ask_cert_label         = yes
+#set smime_ca_location            = "~/.smime/ca-bundle.crt"
+#set smime_certificates           = "~/.smime/certificates"
+#set smime_timeout                = 21600 # Remember S/MIME passphrase for 6 hours
+#set smime_decrypt_use_default_key= yes
+#set smime_default_key            = "XXXXXXXXXX"
+#set smime_encrypt_with           = "aes256"
+#set smime_is_default             = no
+#set smime_keys                   = "~/.smime/keys"
+
+## S/MIME Commands
+#set smime_decrypt_command        = "openssl smime -decrypt -passin stdin -inform DER -in %f -inkey %k -recip %c"
+#set smime_encrypt_command        = "openssl smime -encrypt -%a -outform DER -in %f %c"
+#set smime_get_cert_command       = "openssl pkcs7 -print_certs -in %f"
+#set smime_get_cert_email_command = "openssl x509 -in %f -noout -email"
+#set smime_get_signer_cert_command= "openssl smime -verify -in %f -noverify -signer %c -out /dev/null"
+#set smime_import_cert_command    = "smime_keys add_cert %f"
+#set smime_pk7out_command         = "openssl smime -verify -in %f -noverify -pk7out"
+#set smime_sign_command           = "openssl smime -sign -signer %c -inkey %k -passin stdin -in %f -certfile %i -outform DER"
+#set smime_verify_command         = "openssl smime -verify -inform DER -in %s %C -content %f"
+#set smime_verify_opaque_command  = "openssl smime -verify -inform DER -in %s %C || openssl smime -verify -inform DER -in %s -noverify 2>/dev/null"
+#set smime_sign_opaque_command    = ""
+
+# vim: syntax=neomuttrc tw=180

@@ -1,3 +1,9 @@
+neomutt (1:20171006-1lxtec5) unstable; urgency=medium
+
+  * Overhaul gpg.rc to use gpgme
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 10 Oct 2017 08:35:13 +0200
+
 neomutt (1:20171006-1lxtec4) unstable; urgency=medium
 
   * Read from /usr/lib/neomutt/source-neomuttrc.d
