@@ -5,6 +5,17 @@ This repo contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repo tidier.
 
+## NeoMutt 2017-10-13
+
+These NeoMutt branches are based on NeoMutt 2017-10-13
+
+- iso8859-1_cp1252_fallback
+  Fallback iso8859-1 -> cp1252 if chars are within 0x80-0x9f
+- matcher
+  sidebar matcher - quickly filter large numbers of mailboxes
+- shrink-lmdb-size
+  Try to decrease LMDB's db size if the default is too much
+
 ## Mutt-1.6.2
 
 These NeoMutt branches are based on Mutt-1.6.2
