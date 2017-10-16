@@ -15,6 +15,8 @@ These NeoMutt branches are based on NeoMutt 2017-10-13
   sidebar matcher - quickly filter large numbers of mailboxes
 - shrink-lmdb-size
   Try to decrease LMDB's db size if the default is too much
+- debian-20171013
+  Rebased copy of riesebie's Debian branch
 
 ## Mutt-1.6.2
 
