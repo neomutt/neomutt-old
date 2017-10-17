@@ -4,6 +4,7 @@ neomutt (1:20171013-1lxtec1) unstable; urgency=medium
   * Merged patches:
     0003-If-set-use-D_FILE_OFFSET_BITS-64-when-checking-for-G.patch
     0004-Let-OFF_T_FMT-be-PRId64-whenever-LFS-is-there.patch
+  * Build with fmemopen again
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 17 Oct 2017 11:13:46 +0200
 

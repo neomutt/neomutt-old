@@ -47,18 +47,20 @@ endif
 	dh $@ --without autoreconf
 
 override_dh_auto_configure:
-		./configure.autosetup				\
-			--sysconfdir=/etc			\
-			--with-mailpath=/var/mail		\
-			--gpgme					\
-			$(notmuch)				\
-			--logging				\
-			--lua					\
-			--mixmaster				\
-			--with-ui=ncurses			\
-			--gss					\
-			--gnutls				\
-			--sasl					\
+		./configure.autosetup			\
+			--sysconfdir=/etc		\
+			--with-mailpath=/var/mail	\
+			--docdir=/usr/share/doc/neomutt	\
+			--fmemopen			\
+			--gpgme				\
+			$(notmuch)			\
+			--logging			\
+			--lua				\
+			--mixmaster			\
+			--with-ui=ncurses		\
+			--gss				\
+			--gnutls			\
+			--sasl				\
 			$(hcache_db)
 
 
