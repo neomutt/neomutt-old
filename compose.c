@@ -205,13 +205,12 @@ static void calc_header_width_padding(int idx, const char *header, int calc_max)
 static void init_header_padding(void)
 {
   static short done = 0;
-  int i;
 
   if (done)
     return;
   done = 1;
 
-  for (i = 0; i <= HDR_XCOMMENTTO; i++)
+  for (int i = 0; i <= HDR_XCOMMENTTO; i++)
     calc_header_width_padding(i, _(Prompts[i]), 1);
 
   /* Don't include "Sign as: " in the MaxHeaderWidth calculation.  It
@@ -219,7 +218,7 @@ static void init_header_padding(void)
    * the other fields look funny. */
   calc_header_width_padding(HDR_CRYPTINFO, _(Prompts[HDR_CRYPTINFO]), 0);
 
-  for (i = 0; i <= HDR_XCOMMENTTO; i++)
+  for (int i = 0; i <= HDR_XCOMMENTTO; i++)
   {
     HeaderPadding[i] += MaxHeaderWidth;
     if (HeaderPadding[i] < 0)
@@ -380,7 +379,8 @@ static int check_attachments(struct AttachCtx *actx)
       mutt_pretty_mailbox(pretty, sizeof(pretty));
       snprintf(msg, sizeof(msg), _("%s [#%d] modified. Update encoding?"), pretty, i + 1);
 
-      if ((r = mutt_yesorno(msg, MUTT_YES)) == MUTT_YES)
+      r = mutt_yesorno(msg, MUTT_YES);
+      if (r == MUTT_YES)
         mutt_update_encoding(actx->idx[i]->content);
       else if (r == MUTT_ABORT)
         return -1;
@@ -648,14 +648,13 @@ static void compose_menu_redraw(struct Menu *menu)
  */
 static unsigned long cum_attachs_size(struct Menu *menu)
 {
-  size_t s;
-  unsigned short i;
+  size_t s = 0;
   struct AttachCtx *actx = menu->data;
   struct AttachPtr **idx = actx->idx;
   struct Content *info = NULL;
   struct Body *b = NULL;
 
-  for (i = 0, s = 0; i < actx->idxlen; i++)
+  for (unsigned short i = 0; i < actx->idxlen; i++)
   {
     b = idx[i]->content;
 
@@ -996,7 +995,8 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
         if (!(WithCrypto & APPLICATION_PGP))
           break;
         new = safe_calloc(1, sizeof(struct AttachPtr));
-        if ((new->content = crypt_pgp_make_key_attachment(NULL)) != NULL)
+        new->content = crypt_pgp_make_key_attachment(NULL);
+        if (new->content)
         {
           update_idx(menu, actx, new);
           menu->redraw |= REDRAW_INDEX;
@@ -1033,7 +1033,7 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
           new = (struct AttachPtr *) safe_calloc(1, sizeof(struct AttachPtr));
           new->unowned = 1;
           new->content = mutt_make_file_attach(att);
-          if (new->content != NULL)
+          if (new->content)
             update_idx(menu, actx, new);
           else
           {
@@ -1068,7 +1068,8 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
         unset_option(OPT_NEWS);
         if (op == OP_COMPOSE_ATTACH_NEWS_MESSAGE)
         {
-          if (!(CurrentNewsSrv = nntp_select_server(NewsServer, 0)))
+          CurrentNewsSrv = nntp_select_server(NewsServer, 0);
+          if (!CurrentNewsSrv)
             break;
 
           prompt = _("Open newsgroup to attach message from");
@@ -1155,7 +1156,7 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
           {
             new = (struct AttachPtr *) safe_calloc(1, sizeof(struct AttachPtr));
             new->content = mutt_make_message_attach(Context, h, 1);
-            if (new->content != NULL)
+            if (new->content)
               update_idx(menu, actx, new);
             else
             {
@@ -1417,20 +1418,23 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
         if (mutt_get_field("Content-Type: ", type, sizeof(type), 0) != 0 || !type[0])
           continue;
 
-        if (!(p = strchr(type, '/')))
+        p = strchr(type, '/');
+        if (!p)
         {
           mutt_error(_("Content-Type is of the form base/sub"));
           continue;
         }
         *p++ = 0;
-        if ((itype = mutt_check_mime_type(type)) == TYPEOTHER)
+        itype = mutt_check_mime_type(type);
+        if (itype == TYPEOTHER)
         {
           mutt_error(_("Unknown Content-Type %s"), type);
           continue;
         }
         new = (struct AttachPtr *) safe_calloc(1, sizeof(struct AttachPtr));
         /* Touch the file */
-        if (!(fp = safe_fopen(fname, "w")))
+        fp = safe_fopen(fname, "w");
+        if (!fp)
         {
           mutt_error(_("Can't create file %s"), fname);
           FREE(&new);
@@ -1438,7 +1442,8 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
         }
         safe_fclose(&fp);
 
-        if ((new->content = mutt_make_file_attach(fname)) == NULL)
+        new->content = mutt_make_file_attach(fname);
+        if (!new->content)
         {
           mutt_error(_("What we have here is a failure to make an attachment"));
           FREE(&new);
@@ -1503,7 +1508,8 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
         break;
 
       case OP_EXIT:
-        if ((i = query_quadoption(OPT_POSTPONE, _("Postpone this message?"))) == MUTT_NO)
+        i = query_quadoption(OPT_POSTPONE, _("Postpone this message?"));
+        if (i == MUTT_NO)
         {
           for (i = 0; i < actx->idxlen; i++)
             if (actx->idx[i]->unowned)

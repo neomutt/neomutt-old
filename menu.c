@@ -823,11 +823,9 @@ struct Menu *mutt_new_menu(int menu)
 
 void mutt_menu_destroy(struct Menu **p)
 {
-  int i;
-
   if ((*p)->dialog)
   {
-    for (i = 0; i < (*p)->max; i++)
+    for (int i = 0; i < (*p)->max; i++)
       FREE(&(*p)->dialog[i]);
 
     FREE(&(*p)->dialog);
@@ -1243,7 +1241,8 @@ int mutt_menu_loop(struct Menu *menu)
         if (menu->search && !menu->dialog) /* Searching dialogs won't work */
         {
           menu->oldcurrent = menu->current;
-          if ((menu->current = menu_search(menu, i)) != -1)
+          menu->current = menu_search(menu, i);
+          if (menu->current != -1)
             menu->redraw = REDRAW_MOTION;
           else
             menu->current = menu->oldcurrent;

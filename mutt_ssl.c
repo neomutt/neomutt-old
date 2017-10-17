@@ -121,7 +121,8 @@ static int ssl_load_certificates(SSL_CTX *ctx)
     SSL_CTX_set_cert_store(ctx, store);
   }
 
-  if ((fp = fopen(CertificateFile, "rt")) == NULL)
+  fp = fopen(CertificateFile, "rt");
+  if (!fp)
     return 0;
 
   while (NULL != PEM_read_X509(fp, &cert, NULL, NULL))
@@ -288,7 +289,8 @@ static void ssl_dprint_err_stack(void)
   long buflen;
   char *output = NULL;
 
-  if (!(bio = BIO_new(BIO_s_mem())))
+  bio = BIO_new(BIO_s_mem());
+  if (!bio)
     return;
   ERR_print_errors(bio);
   if ((buflen = BIO_get_mem_data(bio, &buf)) > 0)
@@ -358,7 +360,6 @@ static void x509_fingerprint(char *s, int l, X509 *cert, const EVP_MD *(*hashfun
 {
   unsigned char md[EVP_MAX_MD_SIZE];
   unsigned int n;
-  int j;
 
   if (!X509_digest(cert, hashfunc(), md, &n))
   {
@@ -366,10 +367,10 @@ static void x509_fingerprint(char *s, int l, X509 *cert, const EVP_MD *(*hashfun
   }
   else
   {
-    for (j = 0; j < (int) n; j++)
+    for (int i = 0; i < (int) n; i++)
     {
       char ch[8];
-      snprintf(ch, 8, "%02X%s", md[j], (j % 2 ? " " : ""));
+      snprintf(ch, 8, "%02X%s", md[i], (i % 2 ? " " : ""));
       safe_strcat(s, l, ch);
     }
   }
@@ -604,14 +605,13 @@ static bool check_certificate_cache(X509 *peercert)
   unsigned char peermd[EVP_MAX_MD_SIZE];
   unsigned int peermdlen;
   X509 *cert = NULL;
-  int i;
 
   if (!X509_digest(peercert, EVP_sha256(), peermd, &peermdlen) || !SslSessionCerts)
   {
     return false;
   }
 
-  for (i = sk_X509_num(SslSessionCerts); i-- > 0;)
+  for (int i = sk_X509_num(SslSessionCerts); i-- > 0;)
   {
     cert = sk_X509_value(SslSessionCerts, i);
     if (compare_certificates(cert, peercert, peermd, peermdlen))
@@ -634,7 +634,8 @@ static int check_certificate_file(X509 *peercert)
   if (!CertificateFile)
     return 0;
 
-  if ((fp = fopen(CertificateFile, "rt")) == NULL)
+  fp = fopen(CertificateFile, "rt");
+  if (!fp)
     return 0;
 
   if (!X509_digest(peercert, EVP_sha256(), peermd, &peermdlen))
@@ -666,7 +667,7 @@ static int check_certificate_file(X509 *peercert)
  */
 static int check_host(X509 *x509cert, const char *hostname, char *err, size_t errlen)
 {
-  int i, rc = 0;
+  int rc = 0;
   /* hostname in ASCII format: */
   char *hostname_ascii = NULL;
   /* needed to get the common name: */
@@ -697,7 +698,7 @@ static int check_host(X509 *x509cert, const char *hostname, char *err, size_t er
   if ((subj_alt_names = X509_get_ext_d2i(x509cert, NID_subject_alt_name, NULL, NULL)))
   {
     subj_alt_names_count = sk_GENERAL_NAME_num(subj_alt_names);
-    for (i = 0; i < subj_alt_names_count; i++)
+    for (int i = 0; i < subj_alt_names_count; i++)
     {
       subj_alt_name = sk_GENERAL_NAME_value(subj_alt_names, i);
       if (subj_alt_name->type == GEN_DNS)
@@ -718,7 +719,8 @@ static int check_host(X509 *x509cert, const char *hostname, char *err, size_t er
   if (!match_found)
   {
     /* Try the common name */
-    if (!(x509_subject = X509_get_subject_name(x509cert)))
+    x509_subject = X509_get_subject_name(x509cert);
+    if (!x509_subject)
     {
       if (err && errlen)
         strfcpy(err, _("cannot get certificate subject"), errlen);
@@ -797,7 +799,6 @@ static int interactive_check_cert(X509 *cert, int idx, int len, SSL *ssl, int al
   char title[STRING];
   struct Menu *menu = mutt_new_menu(MENU_GENERIC);
   int done, row;
-  unsigned u;
   FILE *fp = NULL;
   int allow_skip = 0;
 
@@ -812,7 +813,7 @@ static int interactive_check_cert(X509 *cert, int idx, int len, SSL *ssl, int al
   strfcpy(menu->dialog[row], _("This certificate belongs to:"), SHORT_STRING);
   row++;
   x509_subject = X509_get_subject_name(cert);
-  for (u = 0; u < mutt_array_size(part); u++)
+  for (unsigned int u = 0; u < mutt_array_size(part); u++)
     snprintf(menu->dialog[row++], SHORT_STRING, "   %s",
              x509_get_part(x509_subject, part[u]));
 
@@ -820,7 +821,7 @@ static int interactive_check_cert(X509 *cert, int idx, int len, SSL *ssl, int al
   strfcpy(menu->dialog[row], _("This certificate was issued by:"), SHORT_STRING);
   row++;
   x509_issuer = X509_get_issuer_name(cert);
-  for (u = 0; u < mutt_array_size(part); u++)
+  for (unsigned int u = 0; u < mutt_array_size(part); u++)
     snprintf(menu->dialog[row++], SHORT_STRING, "   %s",
              x509_get_part(x509_issuer, part[u]));
 
@@ -961,13 +962,15 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
   unsigned int last_cert_mdlen;
 #endif
 
-  if (!(ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx())))
+  ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
+  if (!ssl)
   {
     mutt_debug(1, "ssl_verify_callback: failed to retrieve SSL structure from "
                   "X509_STORE_CTX\n");
     return 0;
   }
-  if (!(host = SSL_get_ex_data(ssl, HostExDataIndex)))
+  host = SSL_get_ex_data(ssl, HostExDataIndex);
+  if (!host)
   {
     mutt_debug(1, "ssl_verify_callback: failed to retrieve hostname from SSL "
                   "structure\n");
@@ -1077,7 +1080,8 @@ static int ssl_negotiate(struct Connection *conn, struct SslSockData *ssldata)
   int err;
   const char *errmsg = NULL;
 
-  if ((HostExDataIndex = SSL_get_ex_new_index(0, "host", NULL, NULL, NULL)) == -1)
+  HostExDataIndex = SSL_get_ex_new_index(0, "host", NULL, NULL, NULL);
+  if (HostExDataIndex == -1)
   {
     mutt_debug(1, "failed to get index for application specific data\n");
     return -1;
@@ -1089,7 +1093,8 @@ static int ssl_negotiate(struct Connection *conn, struct SslSockData *ssldata)
     return -1;
   }
 
-  if ((SkipModeExDataIndex = SSL_get_ex_new_index(0, "skip", NULL, NULL, NULL)) == -1)
+  SkipModeExDataIndex = SSL_get_ex_new_index(0, "skip", NULL, NULL, NULL);
+  if (SkipModeExDataIndex == -1)
   {
     mutt_debug(1, "failed to get index for application specific data\n");
     return -1;
@@ -1115,7 +1120,8 @@ static int ssl_negotiate(struct Connection *conn, struct SslSockData *ssldata)
 
   ERR_clear_error();
 
-  if ((err = SSL_connect(ssldata->ssl)) != 1)
+  err = SSL_connect(ssldata->ssl);
+  if (err != 1)
   {
     switch (SSL_get_error(ssldata->ssl, err))
     {
@@ -1149,7 +1155,8 @@ static int ssl_socket_open(struct Connection *conn)
   data = safe_calloc(1, sizeof(struct SslSockData));
   conn->sockdata = data;
 
-  if (!(data->ctx = SSL_CTX_new(SSLv23_client_method())))
+  data->ctx = SSL_CTX_new(SSLv23_client_method());
+  if (!data->ctx)
   {
     /* L10N: an SSL context is a data structure returned by the OpenSSL
              function SSL_CTX_new().  In this case it returned NULL: an
@@ -1253,7 +1260,8 @@ int mutt_ssl_starttls(struct Connection *conn)
    * TLSv1_client_method gives us explicitly TLSv1.0, not 1.1 or 1.2 (True as
    * of OpenSSL 1.0.1c)
    */
-  if (!(ssldata->ctx = SSL_CTX_new(SSLv23_client_method())))
+  ssldata->ctx = SSL_CTX_new(SSLv23_client_method());
+  if (!ssldata->ctx)
   {
     mutt_debug(1, "mutt_ssl_starttls: Error allocating SSL_CTX\n");
     goto bail_ssldata;
@@ -1312,7 +1320,8 @@ int mutt_ssl_starttls(struct Connection *conn)
     mutt_sleep(2);
   }
 
-  if (!(ssldata->ssl = SSL_new(ssldata->ctx)))
+  ssldata->ssl = SSL_new(ssldata->ctx);
+  if (!ssldata->ssl)
   {
     mutt_debug(1, "mutt_ssl_starttls: Error allocating SSL\n");
     goto bail_ctx;

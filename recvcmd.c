@@ -171,7 +171,8 @@ void mutt_attach_bounce(FILE *fp, struct Header *hdr, struct AttachCtx *actx, st
   if (mutt_get_field(prompt, buf, sizeof(buf), MUTT_ALIAS) || buf[0] == '\0')
     return;
 
-  if (!(adr = rfc822_parse_adrlist(adr, buf)))
+  adr = rfc822_parse_adrlist(adr, buf);
+  if (!adr)
   {
     mutt_error(_("Error parsing address!"));
     return;
@@ -417,7 +418,8 @@ static void attach_forward_bodies(FILE *fp, struct Header *hdr, struct AttachCtx
   mutt_make_forward_subject(tmphdr->env, Context, parent_hdr);
 
   mutt_mktemp(tmpbody, sizeof(tmpbody));
-  if ((tmpfp = safe_fopen(tmpbody, "w")) == NULL)
+  tmpfp = safe_fopen(tmpbody, "w");
+  if (!tmpfp)
   {
     mutt_error(_("Can't open temporary file %s."), tmpbody);
     mutt_free_header(&tmphdr);
@@ -588,7 +590,8 @@ static void attach_forward_msgs(FILE *fp, struct Header *hdr,
     /* no MIME encapsulation */
 
     mutt_mktemp(tmpbody, sizeof(tmpbody));
-    if (!(tmpfp = safe_fopen(tmpbody, "w")))
+    tmpfp = safe_fopen(tmpbody, "w");
+    if (!tmpfp)
     {
       mutt_error(_("Can't create %s."), tmpbody);
       mutt_free_header(&tmphdr);
@@ -708,7 +711,7 @@ static int attach_reply_envelope_defaults(struct Envelope *env, struct AttachCtx
     curhdr = parent;
   }
 
-  if (curenv == NULL || curhdr == NULL)
+  if (!curenv || !curhdr)
   {
     mutt_error(_("Can't find any tagged messages."));
     return -1;
@@ -814,7 +817,8 @@ void mutt_attach_reply(FILE *fp, struct Header *hdr, struct AttachCtx *actx,
   if (!check_all_msg(actx, cur, false))
   {
     nattach = count_tagged(actx);
-    if ((parent = find_parent(actx, cur, nattach)) != NULL)
+    parent = find_parent(actx, cur, nattach);
+    if (parent)
     {
       parent_hdr = parent->content->hdr;
       parent_fp = parent->fp;
@@ -849,7 +853,8 @@ void mutt_attach_reply(FILE *fp, struct Header *hdr, struct AttachCtx *actx,
   }
 
   mutt_mktemp(tmpbody, sizeof(tmpbody));
-  if ((tmpfp = safe_fopen(tmpbody, "w")) == NULL)
+  tmpfp = safe_fopen(tmpbody, "w");
+  if (!tmpfp)
   {
     mutt_error(_("Can't create %s."), tmpbody);
     mutt_free_header(&tmphdr);

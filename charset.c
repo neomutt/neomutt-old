@@ -214,7 +214,8 @@ void mutt_set_langinfo_charset(void)
   mutt_canonical_charset(buff2, sizeof(buff2), buff);
 
   /* finally, set $charset */
-  if (!(Charset = safe_strdup(buff2)))
+  Charset = safe_strdup(buff2);
+  if (!Charset)
     Charset = safe_strdup("iso-8859-1");
 }
 
@@ -348,7 +349,8 @@ iconv_t mutt_iconv_open(const char *tocode, const char *fromcode, int flags)
   fromcode2 = (fromcode2) ? fromcode2 : fromcode1;
 
   /* call system iconv with names it appreciates */
-  if ((cd = iconv_open(tocode2, fromcode2)) != (iconv_t) -1)
+  cd = iconv_open(tocode2, fromcode2);
+  if (cd != (iconv_t) -1)
     return cd;
 
   return (iconv_t) -1;
@@ -551,7 +553,8 @@ char *fgetconvs(char *buf, size_t l, FGETCONV *_fc)
 
   for (r = 0; r + 1 < l;)
   {
-    if ((c = fgetconv(_fc)) == EOF)
+    c = fgetconv(_fc);
+    if (c == EOF)
       break;
     buf[r++] = (char) c;
     if (c == '\n')
@@ -629,21 +632,21 @@ void fgetconv_close(FGETCONV **_fc)
 
 bool mutt_check_charset(const char *s, bool strict)
 {
-  int i;
   iconv_t cd;
 
   if (mutt_is_utf8(s))
     return true;
 
   if (!strict)
-    for (i = 0; PreferredMIMENames[i].key; i++)
+    for (int i = 0; PreferredMIMENames[i].key; i++)
     {
       if ((mutt_strcasecmp(PreferredMIMENames[i].key, s) == 0) ||
           (mutt_strcasecmp(PreferredMIMENames[i].pref, s) == 0))
         return true;
     }
 
-  if ((cd = mutt_iconv_open(s, s, 0)) != (iconv_t)(-1))
+  cd = mutt_iconv_open(s, s, 0);
+  if (cd != (iconv_t)(-1))
   {
     iconv_close(cd);
     return true;

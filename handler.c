@@ -144,7 +144,8 @@ static void decode_xbit(struct State *s, long len, int istext, iconv_t cd)
     {
       if (c == '\r' && len)
       {
-        if ((ch = fgetc(s->fpin)) == '\n')
+        ch = fgetc(s->fpin);
+        if (ch == '\n')
         {
           c = ch;
           len--;
@@ -319,7 +320,8 @@ void mutt_decode_base64(struct State *s, long len, int istext, iconv_t cd)
   {
     for (i = 0; i < 4 && len > 0; len--)
     {
-      if ((ch = fgetc(s->fpin)) == EOF)
+      ch = fgetc(s->fpin);
+      if (ch == EOF)
         break;
       if (ch >= 0 && ch < 128 && (base64val(ch) != -1 || ch == '='))
         buf[i++] = ch;
@@ -970,7 +972,8 @@ static int is_mmnoask(const char *buf)
 
     while ((p = strtok(p, ",")) != NULL)
     {
-      if ((q = strrchr(p, '/')) != NULL)
+      q = strrchr(p, '/');
+      if (q)
       {
         if (*(q + 1) == '*')
         {
@@ -1289,8 +1292,6 @@ int mutt_can_decode(struct Body *a)
     return 1;
   else if (a->type == TYPEMULTIPART)
   {
-    struct Body *p = NULL;
-
     if (WithCrypto)
     {
       if ((mutt_strcasecmp(a->subtype, "signed") == 0) ||
@@ -1298,9 +1299,9 @@ int mutt_can_decode(struct Body *a)
         return 1;
     }
 
-    for (p = a->parts; p; p = p->next)
+    for (struct Body *b = a->parts; b; b = b->next)
     {
-      if (mutt_can_decode(p))
+      if (mutt_can_decode(b))
         return 1;
     }
   }
@@ -1417,7 +1418,8 @@ static int autoview_handler(struct Body *a, struct State *s)
       mutt_message(_("Invoking autoview command: %s"), command);
     }
 
-    if ((fpin = safe_fopen(tempfile, "w+")) == NULL)
+    fpin = safe_fopen(tempfile, "w+");
+    if (!fpin)
     {
       mutt_perror("fopen");
       rfc1524_free_entry(&entry);
@@ -1725,7 +1727,8 @@ static int run_decode_and_handler(struct Body *b, struct State *s,
       }
 #else
       mutt_mktemp(tempfile, sizeof(tempfile));
-      if ((s->fpout = safe_fopen(tempfile, "w")) == NULL)
+      s->fpout = safe_fopen(tempfile, "w");
+      if (!s->fpout)
       {
         mutt_error(_("Unable to open temporary file!"));
         mutt_debug(1, "Can't open %s.\n", tempfile);

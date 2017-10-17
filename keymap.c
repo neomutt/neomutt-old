@@ -202,7 +202,8 @@ static int parsekeys(const char *str, keycode_t *d, int max)
       c = *t;
       *t = '\0';
 
-      if ((n = mutt_getvaluebyname(s, KeyNames)) != -1)
+      n = mutt_getvaluebyname(s, KeyNames);
+      if (n != -1)
       {
         s = t;
         *d = n;
@@ -1088,9 +1089,10 @@ int mutt_parse_bind(struct Buffer *buf, struct Buffer *s, unsigned long data,
 {
   const struct Binding *bindings = NULL;
   char *key = NULL;
-  int menu[sizeof(Menus) / sizeof(struct Mapping) - 1], r = 0, nummenus, i;
+  int menu[sizeof(Menus) / sizeof(struct Mapping) - 1], r = 0, nummenus;
 
-  if ((key = parse_keymap(menu, s, sizeof(menu) / sizeof(menu[0]), &nummenus, err)) == NULL)
+  key = parse_keymap(menu, s, sizeof(menu) / sizeof(menu[0]), &nummenus, err);
+  if (!key)
     return -1;
 
   /* function to execute */
@@ -1102,14 +1104,14 @@ int mutt_parse_bind(struct Buffer *buf, struct Buffer *s, unsigned long data,
   }
   else if (mutt_strcasecmp("noop", buf->data) == 0)
   {
-    for (i = 0; i < nummenus; ++i)
+    for (int i = 0; i < nummenus; ++i)
     {
       km_bindkey(key, menu[i], OP_NULL); /* the `unbind' command */
     }
   }
   else
   {
-    for (i = 0; i < nummenus; ++i)
+    for (int i = 0; i < nummenus; ++i)
     {
       /* The pager and editor menus don't use the generic map,
        * however for other menus try generic first. */
@@ -1143,11 +1145,12 @@ int mutt_parse_bind(struct Buffer *buf, struct Buffer *s, unsigned long data,
 int mutt_parse_macro(struct Buffer *buf, struct Buffer *s, unsigned long data,
                      struct Buffer *err)
 {
-  int menu[sizeof(Menus) / sizeof(struct Mapping) - 1], r = -1, nummenus, i;
+  int menu[sizeof(Menus) / sizeof(struct Mapping) - 1], r = -1, nummenus;
   char *seq = NULL;
   char *key = NULL;
 
-  if ((key = parse_keymap(menu, s, sizeof(menu) / sizeof(menu[0]), &nummenus, err)) == NULL)
+  key = parse_keymap(menu, s, sizeof(menu) / sizeof(menu[0]), &nummenus, err);
+  if (!key)
     return -1;
 
   mutt_extract_token(buf, s, MUTT_TOKEN_CONDENSE);
@@ -1169,7 +1172,7 @@ int mutt_parse_macro(struct Buffer *buf, struct Buffer *s, unsigned long data,
       }
       else
       {
-        for (i = 0; i < nummenus; ++i)
+        for (int i = 0; i < nummenus; ++i)
         {
           r = km_bind(key, menu[i], OP_MACRO, seq, buf->data);
         }
@@ -1179,7 +1182,7 @@ int mutt_parse_macro(struct Buffer *buf, struct Buffer *s, unsigned long data,
     }
     else
     {
-      for (i = 0; i < nummenus; ++i)
+      for (int i = 0; i < nummenus; ++i)
       {
         r = km_bind(key, menu[i], OP_MACRO, buf->data, NULL);
       }

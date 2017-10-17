@@ -47,20 +47,19 @@ static const char *HelpStrings[] = {
 
 static const struct Binding *help_lookup_function(int op, int menu)
 {
-  int i;
   const struct Binding *map = NULL;
 
   if (menu != MENU_PAGER)
   {
     /* first look in the generic map for the function */
-    for (i = 0; OpGeneric[i].name; i++)
+    for (int i = 0; OpGeneric[i].name; i++)
       if (OpGeneric[i].op == op)
         return (&OpGeneric[i]);
   }
 
   if ((map = km_get_table(menu)))
   {
-    for (i = 0; map[i].name; i++)
+    for (int i = 0; map[i].name; i++)
       if (map[i].op == op)
         return (&map[i]);
   }
@@ -359,7 +358,8 @@ void mutt_help(int menu)
 
   do
   {
-    if ((f = safe_fopen(t, "w")) == NULL)
+    f = safe_fopen(t, "w");
+    if (!f)
     {
       mutt_perror(t);
       return;

@@ -127,7 +127,8 @@ static int cmd_queue(struct ImapData *idata, const char *cmdstr, int flags)
       return rc;
   }
 
-  if (!(cmd = cmd_new(idata)))
+  cmd = cmd_new(idata);
+  if (!cmd)
     return IMAP_CMD_BAD;
 
   if (mutt_buffer_printf(idata->cmdbuf, "%s %s\r\n", cmd->seq, cmdstr) < 0)
@@ -334,7 +335,6 @@ static void cmd_parse_fetch(struct ImapData *idata, char *s)
  */
 static void cmd_parse_capability(struct ImapData *idata, char *s)
 {
-  int x;
   bool found;
   char *bracket = NULL;
 
@@ -351,23 +351,25 @@ static void cmd_parse_capability(struct ImapData *idata, char *s)
   while (*s)
   {
     found = false;
-    for (x = 0; x < CAPMAX; x++)
-      if (imap_wordcasecmp(Capabilities[x], s) == 0)
+    for (int i = 0; i < CAPMAX; i++)
+    {
+      if (imap_wordcasecmp(Capabilities[i], s) == 0)
       {
-        mutt_bit_set(idata->capabilities, x);
-        mutt_debug(4, " Found capability \"%s\": %d\n", Capabilities[x], x);
+        mutt_bit_set(idata->capabilities, i);
+        mutt_debug(4, " Found capability \"%s\": %d\n", Capabilities[i], i);
         found = true;
         break;
       }
+    }
     if (!found)
     {
-      for (x = 0; CapabilityAliases[x].name != NULL; x++)
+      for (int i = 0; CapabilityAliases[i].name != NULL; i++)
       {
-        if (imap_wordcasecmp(CapabilityAliases[x].name, s) == 0)
+        if (imap_wordcasecmp(CapabilityAliases[i].name, s) == 0)
         {
-          mutt_bit_set(idata->capabilities, CapabilityAliases[x].value);
+          mutt_bit_set(idata->capabilities, CapabilityAliases[i].value);
           mutt_debug(4, " Found capability \"%s\": %d\n",
-                     CapabilityAliases[x].name, CapabilityAliases[x].value);
+                     CapabilityAliases[i].name, CapabilityAliases[i].value);
           break;
         }
       }
@@ -1140,7 +1142,20 @@ int imap_cmd_idle(struct ImapData *idata)
 {
   int rc;
 
-  imap_cmd_start(idata, "IDLE");
+  if (cmd_start(idata, "IDLE", IMAP_CMD_POLL) < 0)
+  {
+    cmd_handle_fatal(idata);
+    return -1;
+  }
+
+  if ((ImapPollTimeout > 0) && (mutt_socket_poll(idata->conn, ImapPollTimeout)) == 0)
+  {
+    mutt_error(_("Connection to %s timed out"), idata->conn->account.host);
+    mutt_sleep(2);
+    cmd_handle_fatal(idata);
+    return -1;
+  }
+
   do
     rc = imap_cmd_step(idata);
   while (rc == IMAP_CMD_CONTINUE);

@@ -226,7 +226,7 @@ static void resolve_color(struct Line *line_info, int n, int cnt, int flags,
   int color;             /* final color */
   static int last_color; /* last color set */
   bool search = false;
-  int i, m;
+  int m;
 
   if (!cnt)
     last_color = -1; /* force attrset() */
@@ -270,7 +270,7 @@ static void resolve_color(struct Line *line_info, int n, int cnt, int flags,
   color = def_color;
   if (flags & MUTT_SHOWCOLOR)
   {
-    for (i = 0; i < line_info[m].chunks; i++)
+    for (int i = 0; i < line_info[m].chunks; i++)
     {
       /* we assume the chunks are sorted */
       if (cnt > (line_info[m].syntax)[i].last)
@@ -289,7 +289,7 @@ static void resolve_color(struct Line *line_info, int n, int cnt, int flags,
 
   if (flags & MUTT_SEARCH)
   {
-    for (i = 0; i < line_info[m].search_cnt; i++)
+    for (int i = 0; i < line_info[m].search_cnt; i++)
     {
       if (cnt > (line_info[m].search)[i].last)
         continue;
@@ -445,7 +445,7 @@ static struct QClass *classify_quote(struct QClass **quote_list, const char *qpt
   {
     /* not much point in classifying quotes... */
 
-    if (*quote_list == NULL)
+    if (!*quote_list)
     {
       class = safe_calloc(1, sizeof(struct QClass));
       class->color = ColorQuote[0];
@@ -1154,7 +1154,8 @@ static int fill_buffer(FILE *f, LOFF_T *last_pos, LOFF_T offset, unsigned char *
   {
     if (offset != *last_pos)
       fseeko(f, offset, SEEK_SET);
-    if ((*buf = (unsigned char *) mutt_read_line((char *) *buf, blen, f, &l, MUTT_EOL)) == NULL)
+    *buf = (unsigned char *) mutt_read_line((char *) *buf, blen, f, &l, MUTT_EOL);
+    if (!*buf)
     {
       fmt[0] = 0;
       return -1;
@@ -2063,7 +2064,8 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
   rd.searchbuf = searchbuf;
   rd.has_types = (IsHeader(extra) || (flags & MUTT_SHOWCOLOR)) ? MUTT_TYPES : 0; /* main message or rfc822 attachment */
 
-  if ((rd.fp = fopen(fname, "r")) == NULL)
+  rd.fp = fopen(fname, "r");
+  if (!rd.fp)
   {
     mutt_perror(fname);
     return -1;

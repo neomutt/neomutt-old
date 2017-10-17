@@ -577,7 +577,7 @@ static const char *newsgroup_format_str(char *dest, size_t destlen, size_t col, 
       break;
 
     case 'd':
-      if (folder->ff->nd->desc != NULL)
+      if (folder->ff->nd->desc)
       {
         char *buf = safe_strdup(folder->ff->nd->desc);
         if (NewsgroupsCharset && *NewsgroupsCharset)
@@ -716,7 +716,8 @@ static int examine_directory(struct Menu *menu, struct BrowserState *state,
 
     mutt_buffy_check(false);
 
-    if ((dp = opendir(d)) == NULL)
+    dp = opendir(d);
+    if (!dp)
     {
       mutt_perror(d);
       return -1;
@@ -1096,11 +1097,10 @@ void _mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numf
     else
     {
       struct NntpServer *nserv = CurrentNewsSrv;
-      unsigned int j;
 
       /* default state for news reader mode is browse subscribed newsgroups */
       buffy = 0;
-      for (j = 0; j < nserv->groups_num; j++)
+      for (unsigned int j = 0; j < nserv->groups_num; j++)
       {
         struct NntpData *nntp_data = nserv->groups_list[j];
         if (nntp_data && nntp_data->subscribed)
@@ -1122,9 +1122,10 @@ void _mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numf
       init_state(&state, NULL);
       state.imap_browse = true;
       if (!imap_browse(f, &state))
+      {
         strfcpy(LastDir, state.folder, sizeof(LastDir));
-      else
         browser_sort(&state);
+      }
     }
     else
     {
@@ -1467,13 +1468,12 @@ void _mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numf
         if (multiple)
         {
           char **tfiles = NULL;
-          int j, k;
 
           if (menu->tagged)
           {
             *numfiles = menu->tagged;
             tfiles = safe_calloc(*numfiles, sizeof(char *));
-            for (j = 0, k = 0; j < state.entrylen; j++)
+            for (int j = 0, k = 0; j < state.entrylen; j++)
             {
               struct FolderFile ff = state.entry[j];
               char full[_POSIX_PATH_MAX];
@@ -1697,7 +1697,8 @@ void _mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numf
             not = 1;
           }
 
-          if ((err = REGCOMP(rx, s, REG_NOSUB)) != 0)
+          err = REGCOMP(rx, s, REG_NOSUB);
+          if (err != 0)
           {
             regerror(err, rx, buf, sizeof(buf));
             FREE(&rx);
@@ -1946,12 +1947,11 @@ void _mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numf
         if (option(OPT_NEWS))
         {
           struct NntpServer *nserv = CurrentNewsSrv;
-          unsigned int j;
 
           if (nntp_newsrc_parse(nserv) < 0)
             break;
 
-          for (j = 0; j < nserv->groups_num; j++)
+          for (unsigned int j = 0; j < nserv->groups_num; j++)
           {
             struct NntpData *nntp_data = nserv->groups_list[j];
             if (nntp_data)
@@ -2045,9 +2045,7 @@ void _mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numf
           }
           if (i == OP_SUBSCRIBE_PATTERN)
           {
-            unsigned int k;
-
-            for (k = 0; nserv && k < nserv->groups_num; k++)
+            for (unsigned int k = 0; nserv && (k < nserv->groups_num); k++)
             {
               struct NntpData *nntp_data = nserv->groups_list[k];
               if (nntp_data && nntp_data->group && !nntp_data->subscribed)

@@ -11218,11 +11218,6 @@ color index_size cyan default
               <link linkend="status-color">Status-Color feature</link>
             </para>
           </listitem>
-          <listitem>
-            <para>
-              <link linkend="keywords">Keywords feature</link>
-            </para>
-          </listitem>
         </itemizedlist>
       </sect2>
 
@@ -14810,7 +14805,7 @@ folder-hook ^pop 'set read_inc=1'</screen>
             </row>
             <row>
               <entry>-d</entry>
-              <entry>log debugging output to ~/.muttdebug0 if NeoMutt was compiled
+              <entry>log debugging output to ~/.neomuttdebug0 if NeoMutt was compiled
               with <literal>+debug</literal>; it can range from 1-5 and affects
               verbosity (a value of 2 is recommended)</entry>
             </row>

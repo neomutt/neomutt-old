@@ -231,7 +231,8 @@ int mutt_protect(struct Header *msg, char *keylist)
   {
     if ((WithCrypto & APPLICATION_SMIME) && (msg->security & APPLICATION_SMIME))
     {
-      if (!(tmp_pbody = crypt_smime_sign_message(msg->content)))
+      tmp_pbody = crypt_smime_sign_message(msg->content);
+      if (!tmp_pbody)
         return -1;
       pbody = tmp_smime_pbody = tmp_pbody;
     }
@@ -239,7 +240,8 @@ int mutt_protect(struct Header *msg, char *keylist)
     if ((WithCrypto & APPLICATION_PGP) && (msg->security & APPLICATION_PGP) &&
         (!(flags & ENCRYPT) || option(OPT_PGP_RETAINABLE_SIGS)))
     {
-      if (!(tmp_pbody = crypt_pgp_sign_message(msg->content)))
+      tmp_pbody = crypt_pgp_sign_message(msg->content);
+      if (!tmp_pbody)
         return -1;
 
       flags &= ~SIGN;
@@ -317,7 +319,8 @@ int mutt_is_multipart_signed(struct Body *b)
       (mutt_strcasecmp(b->subtype, "signed") != 0))
     return 0;
 
-  if (!(p = mutt_get_parameter("protocol", b->parameter)))
+  p = mutt_get_parameter("protocol", b->parameter);
+  if (!p)
     return 0;
 
   if (!(mutt_strcasecmp(p, "multipart/mixed") != 0))
@@ -579,15 +582,14 @@ int crypt_query(struct Body *m)
 
   if (m->type == TYPEMULTIPART || m->type == TYPEMESSAGE)
   {
-    struct Body *p = NULL;
     int u, v, w;
 
     u = m->parts ? 0xffffffff : 0; /* Bits set in all parts */
     w = 0;                         /* Bits set in any part  */
 
-    for (p = m->parts; p; p = p->next)
+    for (struct Body *b = m->parts; b; b = b->next)
     {
-      v = crypt_query(p);
+      v = crypt_query(b);
       u &= v;
       w |= v;
     }
@@ -615,7 +617,8 @@ int crypt_write_signed(struct Body *a, struct State *s, const char *tempfile)
   if (!WithCrypto)
     return -1;
 
-  if (!(fp = safe_fopen(tempfile, "w")))
+  fp = safe_fopen(tempfile, "w");
+  if (!fp)
   {
     mutt_perror(tempfile);
     return -1;
@@ -626,7 +629,8 @@ int crypt_write_signed(struct Body *a, struct State *s, const char *tempfile)
   hadcr = false;
   while (bytes > 0)
   {
-    if ((c = fgetc(s->fpin)) == EOF)
+    c = fgetc(s->fpin);
+    if (c == EOF)
       break;
 
     bytes--;
@@ -684,7 +688,6 @@ void convert_to_7bit(struct Body *a)
 
 void crypt_extract_keys_from_messages(struct Header *h)
 {
-  int i;
   char tempfname[_POSIX_PATH_MAX], *mbox = NULL;
   struct Address *tmp = NULL;
   FILE *fpout = NULL;
@@ -693,7 +696,8 @@ void crypt_extract_keys_from_messages(struct Header *h)
     return;
 
   mutt_mktemp(tempfname, sizeof(tempfname));
-  if (!(fpout = safe_fopen(tempfname, "w")))
+  fpout = safe_fopen(tempfname, "w");
+  if (!fpout)
   {
     mutt_perror(tempfname);
     return;
@@ -704,7 +708,7 @@ void crypt_extract_keys_from_messages(struct Header *h)
 
   if (!h)
   {
-    for (i = 0; i < Context->vcount; i++)
+    for (int i = 0; i < Context->vcount; i++)
     {
       if (Context->hdrs[Context->v2r[i]]->tagged)
       {
@@ -842,7 +846,8 @@ int crypt_get_keys(struct Header *msg, char **keylist, int oppenc_mode)
   {
     if ((WithCrypto & APPLICATION_PGP) && (msg->security & APPLICATION_PGP))
     {
-      if ((*keylist = crypt_pgp_findkeys(adrlist, oppenc_mode)) == NULL)
+      *keylist = crypt_pgp_findkeys(adrlist, oppenc_mode);
+      if (!*keylist)
       {
         rfc822_free_address(&adrlist);
         return -1;
@@ -853,7 +858,8 @@ int crypt_get_keys(struct Header *msg, char **keylist, int oppenc_mode)
     }
     if ((WithCrypto & APPLICATION_SMIME) && (msg->security & APPLICATION_SMIME))
     {
-      if ((*keylist = crypt_smime_findkeys(adrlist, oppenc_mode)) == NULL)
+      *keylist = crypt_smime_findkeys(adrlist, oppenc_mode);
+      if (!*keylist)
       {
         rfc822_free_address(&adrlist);
         return -1;
@@ -934,7 +940,6 @@ int mutt_signed_handler(struct Body *a, struct State *s)
   struct Body *b = a;
   struct Body **signatures = NULL;
   int sigcnt = 0;
-  int i;
   bool goodsig = true;
   int rc = 0;
 
@@ -995,7 +1000,7 @@ int mutt_signed_handler(struct Body *a, struct State *s)
       mutt_mktemp(tempfile, sizeof(tempfile));
       if (crypt_write_signed(a, s, tempfile) == 0)
       {
-        for (i = 0; i < sigcnt; i++)
+        for (int i = 0; i < sigcnt; i++)
         {
           if ((WithCrypto & APPLICATION_PGP) && signatures[i]->type == TYPEAPPLICATION &&
               (mutt_strcasecmp(signatures[i]->subtype, "pgp-signature") == 0))

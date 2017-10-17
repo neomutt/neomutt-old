@@ -105,7 +105,7 @@ static void usage(void)
          "  -D -S         like -D, but hide the value of sensitive variables\n"
          "  -B            run in batch mode (do not start the ncurses UI)"));
 #ifdef DEBUG
-  puts(_("  -d <level>    log debugging output to ~/.muttdebug0"));
+  puts(_("  -d <level>    log debugging output to ~/.neomuttdebug0"));
 #endif
   puts(_(
          "  -E            edit the draft (-H) or include (-i) file\n"
@@ -150,7 +150,7 @@ static void start_curses(void)
      its own SIGWINCH handler */
   mutt_signal_init();
 #endif
-  if (initscr() == NULL)
+  if (!initscr())
   {
     puts(_("Error initializing terminal."));
     exit(1);
@@ -632,7 +632,8 @@ int main(int argc, char **argv, char **env)
         {
           strfcpy(expanded_infile, infile, sizeof(expanded_infile));
           mutt_expand_path(expanded_infile, sizeof(expanded_infile));
-          if ((fin = fopen(expanded_infile, "r")) == NULL)
+          fin = fopen(expanded_infile, "r");
+          if (!fin)
           {
             if (!option(OPT_NO_CURSES))
               mutt_endwin(NULL);
@@ -651,7 +652,8 @@ int main(int argc, char **argv, char **env)
         mutt_mktemp(buf, sizeof(buf));
         tempfile = safe_strdup(buf);
 
-        if ((fout = safe_fopen(tempfile, "w")) == NULL)
+        fout = safe_fopen(tempfile, "w");
+        if (!fout)
         {
           if (!option(OPT_NO_CURSES))
             mutt_endwin(NULL);
@@ -670,7 +672,8 @@ int main(int argc, char **argv, char **env)
           fputs(bodytext, fout);
         safe_fclose(&fout);
 
-        if ((fin = fopen(tempfile, "r")) == NULL)
+        fin = fopen(tempfile, "r");
+        if (!fin)
         {
           if (!option(OPT_NO_CURSES))
             mutt_endwin(NULL);
@@ -796,7 +799,8 @@ int main(int argc, char **argv, char **env)
           perror(expanded_infile);
           exit(1);
         }
-        if ((fout = safe_fopen(expanded_infile, "a")) == NULL)
+        fout = safe_fopen(expanded_infile, "a");
+        if (!fout)
         {
           if (!option(OPT_NO_CURSES))
             mutt_endwin(NULL);
@@ -865,7 +869,8 @@ int main(int argc, char **argv, char **env)
       if (flags & MUTT_NEWS)
       {
         set_option(OPT_NEWS);
-        if (!(CurrentNewsSrv = nntp_select_server(NewsServer, 0)))
+        CurrentNewsSrv = nntp_select_server(NewsServer, 0);
+        if (!CurrentNewsSrv)
         {
           mutt_endwin(ErrorBuf);
           exit(1);

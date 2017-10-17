@@ -61,13 +61,15 @@ static int tunnel_socket_open(struct Connection *conn)
 
   mutt_message(_("Connecting with \"%s\"..."), Tunnel);
 
-  if ((rc = pipe(pin)) == -1)
+  rc = pipe(pin);
+  if (rc == -1)
   {
     mutt_perror("pipe");
     FREE(&conn->sockdata);
     return -1;
   }
-  if ((rc = pipe(pout)) == -1)
+  rc = pipe(pout);
+  if (rc == -1)
   {
     mutt_perror("pipe");
     close(pin[0]);
@@ -77,7 +79,8 @@ static int tunnel_socket_open(struct Connection *conn)
   }
 
   mutt_block_signals_system();
-  if ((pid = fork()) == 0)
+  pid = fork();
+  if (pid == 0)
   {
     mutt_unblock_signals_system(0);
     devnull = open("/dev/null", O_RDWR);
@@ -186,13 +189,17 @@ static int tunnel_socket_poll(struct Connection *conn, time_t wait_secs)
   return rc;
 }
 
-int mutt_tunnel_socket_setup(struct Connection *conn)
+/**
+ * mutt_tunnel_socket_setup - setups tunnel connection functions.
+ * @param conn Connection to asign functions to
+ *
+ * Assign tunnel socket functions to the Connection conn.
+ */
+void mutt_tunnel_socket_setup(struct Connection *conn)
 {
   conn->conn_open = tunnel_socket_open;
   conn->conn_close = tunnel_socket_close;
   conn->conn_read = tunnel_socket_read;
   conn->conn_write = tunnel_socket_write;
   conn->conn_poll = tunnel_socket_poll;
-
-  return 0;
 }

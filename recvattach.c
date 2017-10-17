@@ -100,11 +100,11 @@ void mutt_update_tree(struct AttachCtx *actx)
 {
   char buf[STRING];
   char *s = NULL;
-  int rindex, vindex;
+  int rindex;
 
   mutt_update_v2r(actx);
 
-  for (vindex = 0; vindex < actx->vcount; vindex++)
+  for (int vindex = 0; vindex < actx->vcount; vindex++)
   {
     rindex = actx->v2r[vindex];
     actx->idx[rindex]->num = vindex;
@@ -470,7 +470,8 @@ static int query_save_attachment(FILE *fp, struct Body *body,
       struct stat st;
 
       /* check to make sure that this file is really the one the user wants */
-      if ((rc = mutt_save_confirm(buf, &st)) == 1)
+      rc = mutt_save_confirm(buf, &st);
+      if (rc == 1)
       {
         prompt = _("Save to file: ");
         continue;
@@ -512,13 +513,13 @@ void mutt_save_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag,
 {
   char buf[_POSIX_PATH_MAX], tfile[_POSIX_PATH_MAX];
   char *directory = NULL;
-  int i, rc = 1;
+  int rc = 1;
   int last = menu ? menu->current : -1;
   FILE *fpout = NULL;
 
   buf[0] = 0;
 
-  for (i = 0; !tag || i < actx->idxlen; i++)
+  for (int i = 0; !tag || i < actx->idxlen; i++)
   {
     if (tag)
     {
@@ -641,7 +642,8 @@ static void pipe_attachment(FILE *fp, struct Body *b, struct State *state)
   }
   else
   {
-    if ((ifp = fopen(b->filename, "r")) == NULL)
+    ifp = fopen(b->filename, "r");
+    if (!ifp)
     {
       mutt_perror("fopen");
       return;
@@ -656,9 +658,7 @@ static void pipe_attachment(FILE *fp, struct Body *b, struct State *state)
 static void pipe_attachment_list(char *command, struct AttachCtx *actx, FILE *fp, bool tag,
                                  struct Body *top, bool filter, struct State *state)
 {
-  int i;
-
-  for (i = 0; !tag || i < actx->idxlen; i++)
+  for (int i = 0; !tag || i < actx->idxlen; i++)
   {
     if (tag)
     {
@@ -772,7 +772,8 @@ static void print_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag,
           mutt_mktemp(newfile, sizeof(newfile));
           if (mutt_decode_save_attachment(fp, top, newfile, MUTT_PRINTING, 0) == 0)
           {
-            if ((ifp = fopen(newfile, "r")) != NULL)
+            ifp = fopen(newfile, "r");
+            if (ifp)
             {
               mutt_copy_stream(ifp, state->fpout);
               safe_fclose(&ifp);
@@ -819,13 +820,11 @@ void mutt_print_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag, stru
 
 static void recvattach_extract_pgp_keys(struct AttachCtx *actx, struct Menu *menu)
 {
-  int i;
-
   if (!menu->tagprefix)
     crypt_pgp_extract_keys_from_attachment_list(CURATTACH->fp, 0, CURATTACH->content);
   else
   {
-    for (i = 0; i < actx->idxlen; i++)
+    for (int i = 0; i < actx->idxlen; i++)
       if (actx->idx[i]->content->tagged)
         crypt_pgp_extract_keys_from_attachment_list(actx->idx[i]->fp, 0,
                                                     actx->idx[i]->content);
@@ -834,13 +833,13 @@ static void recvattach_extract_pgp_keys(struct AttachCtx *actx, struct Menu *men
 
 static int recvattach_pgp_check_traditional(struct AttachCtx *actx, struct Menu *menu)
 {
-  int i, rv = 0;
+  int rv = 0;
 
   if (!menu->tagprefix)
     rv = crypt_pgp_check_traditional(CURATTACH->fp, CURATTACH->content, 1);
   else
   {
-    for (i = 0; i < actx->idxlen; i++)
+    for (int i = 0; i < actx->idxlen; i++)
       if (actx->idx[i]->content->tagged)
         rv = rv || crypt_pgp_check_traditional(actx->idx[i]->fp, actx->idx[i]->content, 1);
   }
@@ -1119,14 +1118,14 @@ void mutt_view_attachments(struct Header *hdr)
   struct AttachCtx *actx = NULL;
   int flags = 0;
   int op = OP_NULL;
-  int i;
 
   /* make sure we have parsed this message */
   mutt_parse_mime_message(Context, hdr);
 
   mutt_message_hook(Context, hdr, MUTT_MESSAGEHOOK);
 
-  if ((msg = mx_open_message(Context, hdr->msgno)) == NULL)
+  msg = mx_open_message(Context, hdr->msgno);
+  if (!msg)
     return;
 
   menu = mutt_new_menu(MENU_ATTACH);
@@ -1266,15 +1265,13 @@ void mutt_view_attachments(struct Header *hdr)
         }
         else
         {
-          int x;
-
-          for (x = 0; x < menu->max; x++)
+          for (int i = 0; i < menu->max; i++)
           {
-            if (actx->idx[x]->content->tagged)
+            if (actx->idx[i]->content->tagged)
             {
-              if (actx->idx[x]->parent_type == TYPEMULTIPART)
+              if (actx->idx[i]->parent_type == TYPEMULTIPART)
               {
-                actx->idx[x]->content->deleted = true;
+                actx->idx[i]->content->deleted = true;
                 menu->redraw = REDRAW_INDEX;
               }
               else
@@ -1300,13 +1297,11 @@ void mutt_view_attachments(struct Header *hdr)
         }
         else
         {
-          int x;
-
-          for (x = 0; x < menu->max; x++)
+          for (int i = 0; i < menu->max; i++)
           {
-            if (actx->idx[x]->content->tagged)
+            if (actx->idx[i]->content->tagged)
             {
-              actx->idx[x]->content->deleted = false;
+              actx->idx[i]->content->deleted = false;
               menu->redraw = REDRAW_INDEX;
             }
           }
@@ -1381,12 +1376,14 @@ void mutt_view_attachments(struct Header *hdr)
         mx_close_message(Context, &msg);
 
         hdr->attach_del = false;
-        for (i = 0; i < actx->idxlen; i++)
+        for (int i = 0; i < actx->idxlen; i++)
+        {
           if (actx->idx[i]->content && actx->idx[i]->content->deleted)
           {
             hdr->attach_del = true;
             break;
           }
+        }
         if (hdr->attach_del)
           hdr->changed = true;
 

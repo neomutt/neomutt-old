@@ -12,7 +12,7 @@ use system cc cc-lib mutt-gettext mutt-iconv
 ###############################################################################
 # Names and versions
 define PACKAGE          "neomutt"
-define PACKAGE_VERSION  "20171006"
+define PACKAGE_VERSION  "20171013"
 define BUGS_ADDRESS     "neomutt-devel@neomutt.org"
 
 # Subdirectories that contain additional Makefile.autosetup files
@@ -30,6 +30,7 @@ options {
   logging=0                 => "Enable debug logging"
   doc=1                     => "Disable building the documentation"
   full-doc=0                => "Build the full documentation set"
+  docdir:path               => "Documentation root"
   flock=0                   => "Use flock() to lock files"
   fcntl=1                   => "Do NOT use fcntl() to lock files"
   fmemopen=0                => "Use fmemopen() for temporary in-memory files"
@@ -125,7 +126,7 @@ if {1} {
 define BINDIR           [get-define bindir]
 define MUTTLOCALEDIR    [get-define datadir]/locale
 define PKGDATADIR       [get-define datadir]/neomutt
-define PKGDOCDIR        [get-define datadir]/doc/neomutt
+define PKGDOCDIR        [opt-val docdir [get-define datadir]/doc/neomutt]
 define SYSCONFDIR       [get-define sysconfdir]
 ###############################################################################
 
@@ -225,14 +226,12 @@ if {1} {
   cc-with [list -cflags [get-define CFLAGS]]
 
   # Large file support
-  cc-with {-includes sys/types.h} {
-    if {[cc-check-sizeof off_t] eq {8}} {
-      define OFF_T_FMT {"%" PRId64}
-    } else {
-      define OFF_T_FMT {"%" PRId32}
-    }
-    define LOFF_T off_t
+  if {[cc-check-lfs]} {
+    define OFF_T_FMT {"%" PRId64}
+  } else {
+    define OFF_T_FMT {"%" PRId32}
   }
+  define LOFF_T off_t
 
   # Let's always use volatile for sig_atomic_t
   cc-check-includes signal.h
@@ -319,11 +318,17 @@ if {[get-define want-full-doc]} {define MAKEDOC_FULL}
 ###############################################################################
 # GPGME
 if {[get-define want-gpgme]} {
-  if {![check-inc-and-lib gpgme [opt-val with-gpgme $prefix] \
-                          gpgme.h gpgme_new gpgme]} {
-    user-error "Unable to find GPGME"
+  set gpgme_cflags {}
+  if {[is-defined _FILE_OFFSET_BITS]} {
+    set gpgme_cflags -D_FILE_OFFSET_BITS=[get-define _FILE_OFFSET_BITS]
   }
-  cc-check-functions gpgme_op_export_keys
+  cc-with [list -cflags $gpgme_cflags] {
+    if {![check-inc-and-lib gpgme [opt-val with-gpgme $prefix] \
+                            gpgme.h gpgme_new gpgme]} {
+      user-error "Unable to find GPGME"
+    }
+    cc-check-functions gpgme_op_export_keys
+  }
   define CRYPT_BACKEND_GPGME
 }
 
@@ -423,10 +428,14 @@ if {[get-define want-nls]} {
 
 ###############################################################################
 # fmemopen(3)
-if {[get-define want-fmemopen] && [cc-check-functions fmemopen open_memstream]} {
-  # Temporarily disable fmemopen, due to this bug:
-  # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=834408
-  define USE_FMEMOPEN 0
+if {[get-define want-fmemopen]} {
+  if {![cc-check-functions fmemopen]} {
+    user-error "Unable to find fmemopen"
+  }
+  if {![cc-check-functions open_memstream]} {
+    user-error "Unable to find open_memstream"
+  }
+  define USE_FMEMOPEN 1
 } else {
   define USE_FMEMOPEN 0
 }
@@ -537,11 +546,11 @@ if {[get-define want-ssl] && ![get-define want-gnutls]} {
     if {![cc-check-includes openssl/bio.h openssl/err.h openssl/ssl.h] ||
         ![cc-check-function-in-lib X509_STORE_CTX_new crypto] ||
         ![cc-check-function-in-lib SSL_new ssl] ||
-        ![cc-check-function-in-lib deflate z] ||
         ![cc-with {-includes openssl/ssl.h} {cc-check-decls SSL_set_mode}]} {
       user-error "Unable to find OpenSSL"
     }
     cc-check-functions RAND_status RAND_egd
+    cc-check-function-in-lib deflate z
   }
   define USE_SSL
   define USE_SSL_OPENSSL
@@ -842,6 +851,7 @@ foreach dir $subdirs {
 
 ###############################################################################
 # Generate Makefile and config.h
+define PWD [pwd]
 make-template Makefile.autosetup Makefile
 make-config-header config.h -auto $auto_rep -bare $bare_rep -str $str_rep
 

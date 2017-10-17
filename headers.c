@@ -56,7 +56,8 @@ void mutt_edit_headers(const char *editor, const char *body, struct Header *msg,
   struct stat st;
 
   mutt_mktemp(path, sizeof(path));
-  if ((ofp = safe_fopen(path, "w")) == NULL)
+  ofp = safe_fopen(path, "w");
+  if (!ofp)
   {
     mutt_perror(path);
     return;
@@ -67,7 +68,8 @@ void mutt_edit_headers(const char *editor, const char *body, struct Header *msg,
   fputc('\n', ofp); /* tie off the header. */
 
   /* now copy the body of the message. */
-  if ((ifp = fopen(body, "r")) == NULL)
+  ifp = fopen(body, "r");
+  if (!ifp)
   {
     mutt_perror(body);
     safe_fclose(&ofp);
@@ -101,13 +103,15 @@ void mutt_edit_headers(const char *editor, const char *body, struct Header *msg,
   mutt_list_free(&msg->env->userhdrs);
 
   /* Read the temp file back in */
-  if ((ifp = fopen(path, "r")) == NULL)
+  ifp = fopen(path, "r");
+  if (!ifp)
   {
     mutt_perror(path);
     return;
   }
 
-  if ((ofp = safe_fopen(body, "w")) == NULL)
+  ofp = safe_fopen(body, "w");
+  if (!ofp)
   {
     /* intentionally leak a possible temporary file here */
     safe_fclose(&ifp);
@@ -268,10 +272,10 @@ static int label_message(struct Context *ctx, struct Header *hdr, char *new)
   if (mutt_strcmp(hdr->env->x_label, new) == 0)
     return 0;
 
-  if (hdr->env->x_label != NULL)
+  if (hdr->env->x_label)
     label_ref_dec(ctx, hdr->env->x_label);
   mutt_str_replace(&hdr->env->x_label, new);
-  if (hdr->env->x_label != NULL)
+  if (hdr->env->x_label)
     label_ref_inc(ctx, hdr->env->x_label);
 
   return hdr->changed = hdr->xlabel_changed = true;
@@ -280,7 +284,6 @@ static int label_message(struct Context *ctx, struct Header *hdr, char *new)
 int mutt_label_message(struct Header *hdr)
 {
   char buf[LONG_STRING], *new = NULL;
-  int i;
   int changed;
 
   if (!Context || !Context->label_hash)
@@ -312,7 +315,7 @@ int mutt_label_message(struct Header *hdr)
   else
   {
 #define HDR_OF(index) Context->hdrs[Context->v2r[(index)]]
-    for (i = 0; i < Context->vcount; ++i)
+    for (int i = 0; i < Context->vcount; ++i)
     {
       if (HDR_OF(i)->tagged)
         if (label_message(Context, HDR_OF(i), new))

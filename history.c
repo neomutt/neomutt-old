@@ -86,17 +86,21 @@ struct History
 static struct History Histories[HC_LAST];
 static int OldSize = 0;
 
-#define GET_HISTORY(CLASS) ((CLASS >= HC_LAST) ? NULL : &Histories[CLASS])
+static struct History *get_history(enum HistoryClass hclass)
+{
+  if (hclass >= HC_LAST)
+    return NULL;
+
+  return &Histories[hclass];
+}
 
 static void init_history(struct History *h)
 {
-  int i;
-
   if (OldSize)
   {
     if (h->hist)
     {
-      for (i = 0; i <= OldSize; i++)
+      for (int i = 0; i <= OldSize; i++)
         FREE(&h->hist[i]);
       FREE(&h->hist);
     }
@@ -116,7 +120,8 @@ void mutt_read_histfile(void)
   char *linebuf = NULL, *p = NULL;
   size_t buflen;
 
-  if ((f = fopen(HistoryFile, "r")) == NULL)
+  f = fopen(HistoryFile, "r");
+  if (!f)
     return;
 
   while ((linebuf = mutt_read_line(linebuf, &buflen, f, &line, 0)) != NULL)
@@ -196,7 +201,8 @@ static void shrink_histfile(void)
   bool regen_file = false;
   struct Hash *dup_hashes[HC_LAST] = { 0 };
 
-  if ((f = fopen(HistoryFile, "r")) == NULL)
+  f = fopen(HistoryFile, "r");
+  if (!f)
     return;
 
   if (option(OPT_HISTORY_REMOVE_DUPS))
@@ -236,7 +242,8 @@ static void shrink_histfile(void)
   if (regen_file)
   {
     mutt_mktemp(tmpfname, sizeof(tmpfname));
-    if ((tmp = safe_fopen(tmpfname, "w+")) == NULL)
+    tmp = safe_fopen(tmpfname, "w+");
+    if (!tmp)
     {
       mutt_perror(tmpfname);
       goto cleanup;
@@ -286,12 +293,13 @@ static void save_history(enum HistoryClass hclass, const char *s)
 {
   static int n = 0;
   FILE *f = NULL;
-  char *tmp = NULL, *p = NULL;
+  char *tmp = NULL;
 
   if (!s || !*s) /* This shouldn't happen, but it's safer. */
     return;
 
-  if ((f = fopen(HistoryFile, "a")) == NULL)
+  f = fopen(HistoryFile, "a");
+  if (!f)
   {
     mutt_perror("fopen");
     return;
@@ -303,7 +311,7 @@ static void save_history(enum HistoryClass hclass, const char *s)
   /* Format of a history item (1 line): "<histclass>:<string>|".
      We add a '|' in order to avoid lines ending with '\'. */
   fprintf(f, "%d:", (int) hclass);
-  for (p = tmp; *p; p++)
+  for (char *p = tmp; *p; p++)
   {
     /* Don't copy \n as a history item must fit on one line. The string
        shouldn't contain such a character anyway, but as this can happen
@@ -332,7 +340,7 @@ static void save_history(enum HistoryClass hclass, const char *s)
 static void remove_history_dups(enum HistoryClass hclass, const char *s)
 {
   int source, dest, old_last;
-  struct History *h = GET_HISTORY(hclass);
+  struct History *h = get_history(hclass);
 
   if (!History || !h)
     return; /* disabled */
@@ -385,7 +393,7 @@ void mutt_init_history(void)
 void mutt_history_add(enum HistoryClass hclass, const char *s, bool save)
 {
   int prev;
-  struct History *h = GET_HISTORY(hclass);
+  struct History *h = get_history(hclass);
 
   if (!History || !h)
     return; /* disabled */
@@ -417,7 +425,7 @@ void mutt_history_add(enum HistoryClass hclass, const char *s, bool save)
 char *mutt_history_next(enum HistoryClass hclass)
 {
   int next;
-  struct History *h = GET_HISTORY(hclass);
+  struct History *h = get_history(hclass);
 
   if (!History || !h)
     return ""; /* disabled */
@@ -439,7 +447,7 @@ char *mutt_history_next(enum HistoryClass hclass)
 char *mutt_history_prev(enum HistoryClass hclass)
 {
   int prev;
-  struct History *h = GET_HISTORY(hclass);
+  struct History *h = get_history(hclass);
 
   if (!History || !h)
     return ""; /* disabled */
@@ -460,7 +468,7 @@ char *mutt_history_prev(enum HistoryClass hclass)
 
 void mutt_reset_history_state(enum HistoryClass hclass)
 {
-  struct History *h = GET_HISTORY(hclass);
+  struct History *h = get_history(hclass);
 
   if (!History || !h)
     return; /* disabled */
@@ -470,7 +478,7 @@ void mutt_reset_history_state(enum HistoryClass hclass)
 
 bool mutt_history_at_scratch(enum HistoryClass hclass)
 {
-  struct History *h = GET_HISTORY(hclass);
+  struct History *h = get_history(hclass);
 
   if (!History || !h)
     return false; /* disabled */
@@ -480,7 +488,7 @@ bool mutt_history_at_scratch(enum HistoryClass hclass)
 
 void mutt_history_save_scratch(enum HistoryClass hclass, const char *s)
 {
-  struct History *h = GET_HISTORY(hclass);
+  struct History *h = get_history(hclass);
 
   if (!History || !h)
     return; /* disabled */

@@ -110,7 +110,8 @@ void mutt_adv_mktemp(char *s, size_t l)
     if (lstat(s, &sb) == -1 && errno == ENOENT)
       return;
 
-    if ((suffix = strrchr(prefix, '.')) != NULL)
+    suffix = strrchr(prefix, '.');
+    if (suffix)
     {
       *suffix = 0;
       suffix++;
@@ -810,11 +811,9 @@ void mutt_save_path(char *d, size_t dsize, struct Address *a)
 
 void mutt_safe_path(char *s, size_t l, struct Address *a)
 {
-  char *p = NULL;
-
   mutt_save_path(s, l, a);
-  for (p = s; *p; p++)
-    if (*p == '/' || ISSPACE(*p) || !IsPrint((unsigned char) *p))
+  for (char *p = s; *p; p++)
+    if ((*p == '/') || ISSPACE(*p) || !IsPrint((unsigned char) *p))
       *p = '_';
 }
 
@@ -832,7 +831,7 @@ char *mutt_apply_replace(char *dbuf, size_t dlen, char *sbuf, struct ReplaceList
   static char twinbuf[2][LONG_STRING];
   int switcher = 0;
   char *p = NULL;
-  int i, n;
+  int n;
   size_t cpysize, tlen;
   char *src = NULL, *dst = NULL;
 
@@ -893,7 +892,7 @@ char *mutt_apply_replace(char *dbuf, size_t dlen, char *sbuf, struct ReplaceList
               n = strtoul(p, &p, 10);             /* get subst number */
               while (isdigit((unsigned char) *p)) /* skip subst token */
                 p++;
-              for (i = pmatch[n].rm_so;
+              for (int i = pmatch[n].rm_so;
                    (i < pmatch[n].rm_eo) && (tlen < LONG_STRING - 1); i++)
                 dst[tlen++] = src[i];
             }
@@ -985,8 +984,6 @@ void mutt_expando_format(char *dest, size_t destlen, size_t col, int cols,
       /* Iterate expansions across successive arguments */
       do
       {
-        char *p = NULL;
-
         /* Extract the command name and copy to command line */
         mutt_debug(3, "fmtpipe +++: %s\n", srcbuf->dptr);
         if (word->data)
@@ -996,7 +993,7 @@ void mutt_expando_format(char *dest, size_t destlen, size_t col, int cols,
         mutt_buffer_addch(command, '\'');
         mutt_expando_format(buf, sizeof(buf), 0, cols, word->data, callback,
                             data, flags | MUTT_FORMAT_NOFILTER);
-        for (p = buf; p && *p; p++)
+        for (char *p = buf; p && *p; p++)
         {
           if (*p == '\'')
             /* shell quoting doesn't permit escaping a single quote within
@@ -1016,7 +1013,8 @@ void mutt_expando_format(char *dest, size_t destlen, size_t col, int cols,
       col -= wlen; /* reset to passed in value */
       wptr = dest; /* reset write ptr */
       wlen = ((flags & MUTT_FORMAT_ARROWCURSOR) && option(OPT_ARROW_CURSOR)) ? 3 : 0;
-      if ((pid = mutt_create_filter(command->data, NULL, &filter, NULL)) != -1)
+      pid = mutt_create_filter(command->data, NULL, &filter, NULL);
+      if (pid != -1)
       {
         int rc;
 
@@ -1499,7 +1497,8 @@ int mutt_save_confirm(const char *s, struct stat *st)
     if (option(OPT_CONFIRMAPPEND))
     {
       snprintf(tmp, sizeof(tmp), _("Append messages to %s?"), s);
-      if ((rc = mutt_yesorno(tmp, MUTT_YES)) == MUTT_NO)
+      rc = mutt_yesorno(tmp, MUTT_YES);
+      if (rc == MUTT_NO)
         ret = 1;
       else if (rc == MUTT_ABORT)
         ret = -1;
@@ -1533,7 +1532,8 @@ int mutt_save_confirm(const char *s, struct stat *st)
       if (option(OPT_CONFIRMCREATE))
       {
         snprintf(tmp, sizeof(tmp), _("Create %s?"), s);
-        if ((rc = mutt_yesorno(tmp, MUTT_YES)) == MUTT_NO)
+        rc = mutt_yesorno(tmp, MUTT_YES);
+        if (rc == MUTT_NO)
           ret = 1;
         else if (rc == MUTT_ABORT)
           ret = -1;

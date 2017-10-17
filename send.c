@@ -236,7 +236,8 @@ static int edit_address(struct Address **a, /* const */ char *field)
       return -1;
     rfc822_free_address(a);
     *a = mutt_expand_aliases(mutt_parse_adrlist(NULL, buf));
-    if ((idna_ok = mutt_addrlist_to_intl(*a, &err)) != 0)
+    idna_ok = mutt_addrlist_to_intl(*a, &err);
+    if (idna_ok != 0)
     {
       mutt_error(_("Error: '%s' is a bad IDN."), err);
       mutt_refresh();
@@ -615,7 +616,8 @@ int mutt_fetch_recips(struct Envelope *out, struct Envelope *in, int flags)
              in->mail_followup_to->mailbox,
              in->mail_followup_to->next ? ",..." : "");
 
-    if ((hmfupto = query_quadoption(OPT_HONOR_FOLLOWUP_TO, prompt)) == MUTT_ABORT)
+    hmfupto = query_quadoption(OPT_HONOR_FOLLOWUP_TO, prompt);
+    if (hmfupto == MUTT_ABORT)
       return -1;
   }
 
@@ -761,13 +763,12 @@ static int envelope_defaults(struct Envelope *env, struct Context *ctx,
                              struct Header *cur, int flags)
 {
   struct Envelope *curenv = NULL;
-  int i = 0;
   bool tag = false;
 
   if (!cur)
   {
     tag = true;
-    for (i = 0; i < ctx->vcount; i++)
+    for (int i = 0; i < ctx->vcount; i++)
       if (ctx->hdrs[ctx->v2r[i]]->tagged)
       {
         cur = ctx->hdrs[ctx->v2r[i]];
@@ -805,7 +806,7 @@ static int envelope_defaults(struct Envelope *env, struct Context *ctx,
     {
       struct Header *h = NULL;
 
-      for (i = 0; i < ctx->vcount; i++)
+      for (int i = 0; i < ctx->vcount; i++)
       {
         h = ctx->hdrs[ctx->v2r[i]];
         if (h->tagged && mutt_fetch_recips(env, h->env, flags) == -1)
@@ -853,7 +854,8 @@ static int generate_body(FILE *tempfp, struct Header *msg, int flags,
 
   if (flags & SENDREPLY)
   {
-    if ((i = query_quadoption(OPT_INCLUDE, _("Include message in reply?"))) == MUTT_ABORT)
+    i = query_quadoption(OPT_INCLUDE, _("Include message in reply?"));
+    if (i == MUTT_ABORT)
       return -1;
 
     if (i == MUTT_YES)
@@ -881,7 +883,8 @@ static int generate_body(FILE *tempfp, struct Header *msg, int flags,
   }
   else if (flags & SENDFORWARD)
   {
-    if ((i = query_quadoption(OPT_MIME_FORWARD, _("Forward as attachment?"))) == MUTT_YES)
+    i = query_quadoption(OPT_MIME_FORWARD, _("Forward as attachment?"));
+    if (i == MUTT_YES)
     {
       struct Body *last = msg->content;
 
@@ -1089,7 +1092,8 @@ static int send_message(struct Header *msg)
 
   /* Write out the message in MIME form. */
   mutt_mktemp(tempfile, sizeof(tempfile));
-  if ((tempfp = safe_fopen(tempfile, "w")) == NULL)
+  tempfp = safe_fopen(tempfile, "w");
+  if (!tempfp)
     return -1;
 
 #ifdef USE_SMTP
@@ -1148,9 +1152,7 @@ static int send_message(struct Header *msg)
  */
 void mutt_encode_descriptions(struct Body *b, short recurse)
 {
-  struct Body *t = NULL;
-
-  for (t = b; t; t = t->next)
+  for (struct Body *t = b; t; t = t->next)
   {
     if (t->description)
     {
@@ -1166,9 +1168,7 @@ void mutt_encode_descriptions(struct Body *b, short recurse)
  */
 static void decode_descriptions(struct Body *b)
 {
-  struct Body *t = NULL;
-
-  for (t = b; t; t = t->next)
+  for (struct Body *t = b; t; t = t->next)
   {
     if (t->description)
     {
@@ -1183,7 +1183,8 @@ static void fix_end_of_file(const char *data)
 {
   FILE *fp = NULL;
 
-  if ((fp = safe_fopen(data, "a+")) == NULL)
+  fp = safe_fopen(data, "a+");
+  if (!fp)
     return;
   if (fseek(fp, -1, SEEK_END) >= 0)
   {
@@ -1343,7 +1344,8 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
     /* If the user is composing a new message, check to see if there
      * are any postponed messages first.
      */
-    if ((i = query_quadoption(OPT_RECALL, _("Recall postponed message?"))) == MUTT_ABORT)
+    i = query_quadoption(OPT_RECALL, _("Recall postponed message?"));
+    if (i == MUTT_ABORT)
       return rv;
 
     if (i == MUTT_YES)
@@ -1391,7 +1393,8 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
 
     if (flags & (SENDPOSTPONED | SENDRESEND))
     {
-      if ((tempfp = safe_fopen(msg->content->filename, "a+")) == NULL)
+      tempfp = safe_fopen(msg->content->filename, "a+");
+      if (!tempfp)
       {
         mutt_perror(msg->content->filename);
         goto cleanup;
@@ -1422,7 +1425,8 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
       pbody->next = msg->content; /* don't kill command-line attachments */
       msg->content = pbody;
 
-      if (!(ctype = safe_strdup(ContentType)))
+      ctype = safe_strdup(ContentType);
+      if (!ctype)
         ctype = safe_strdup("text/plain");
       mutt_parse_content_type(ctype, msg->content);
       FREE(&ctype);

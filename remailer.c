@@ -142,12 +142,14 @@ static struct Remailer **mix_type2_list(size_t *l)
   if (!l)
     return NULL;
 
-  if ((devnull = open("/dev/null", O_RDWR)) == -1)
+  devnull = open("/dev/null", O_RDWR);
+  if (devnull == -1)
     return NULL;
 
   snprintf(cmd, sizeof(cmd), "%s -T", Mixmaster);
 
-  if ((mm_pid = mutt_create_filter_fd(cmd, NULL, &fp, NULL, devnull, -1, devnull)) == -1)
+  mm_pid = mutt_create_filter_fd(cmd, NULL, &fp, NULL, devnull, -1, devnull);
+  if (mm_pid == -1)
   {
     close(devnull);
     return NULL;
@@ -163,25 +165,30 @@ static struct Remailer **mix_type2_list(size_t *l)
   {
     p = mix_new_remailer();
 
-    if (!(t = strtok(line, " \t\n")))
+    t = strtok(line, " \t\n");
+    if (!t)
       goto problem;
 
     p->shortname = safe_strdup(t);
 
-    if (!(t = strtok(NULL, " \t\n")))
+    t = strtok(NULL, " \t\n");
+    if (!t)
       goto problem;
 
     p->addr = safe_strdup(t);
 
-    if (!(t = strtok(NULL, " \t\n")))
+    t = strtok(NULL, " \t\n");
+    if (!t)
       goto problem;
 
-    if (!(t = strtok(NULL, " \t\n")))
+    t = strtok(NULL, " \t\n");
+    if (!t)
       goto problem;
 
     p->ver = safe_strdup(t);
 
-    if (!(t = strtok(NULL, " \t\n")))
+    t = strtok(NULL, " \t\n");
+    if (!t)
       goto problem;
 
     p->caps = mix_get_caps(t);
@@ -282,15 +289,13 @@ static void mix_redraw_ce(struct Remailer **type2_list, struct Coord *coords,
 static void mix_redraw_chain(struct Remailer **type2_list, struct Coord *coords,
                              struct MixChain *chain, int cur)
 {
-  int i;
-
-  for (i = MIX_VOFFSET; i < MIX_MAXROW; i++)
+  for (int i = MIX_VOFFSET; i < MIX_MAXROW; i++)
   {
     mutt_window_move(MuttIndexWindow, i, 0);
     mutt_window_clrtoeol(MuttIndexWindow);
   }
 
-  for (i = 0; i < chain->cl; i++)
+  for (int i = 0; i < chain->cl; i++)
     mix_redraw_ce(type2_list, coords, chain, i, i == cur);
 }
 
@@ -467,10 +472,11 @@ void mix_make_chain(struct ListHead *chainhead)
   bool loop = true;
   int op;
 
-  int i, j;
+  int j;
   char *t = NULL;
 
-  if (!(type2_list = mix_type2_list(&ttll)))
+  type2_list = mix_type2_list(&ttll);
+  if (!type2_list)
   {
     mutt_error(_("Can't get mixmaster's type2.list!"));
     return;
@@ -486,7 +492,7 @@ void mix_make_chain(struct ListHead *chainhead)
   mutt_list_free(chainhead);
 
   /* safety check */
-  for (i = 0; i < chain->cl; i++)
+  for (int i = 0; i < chain->cl; i++)
   {
     if (chain->ch[i] >= ttll)
       chain->ch[i] = 0;
@@ -581,7 +587,7 @@ void mix_make_chain(struct ListHead *chainhead)
         if (chain->cl < MAXMIXES)
         {
           chain->cl++;
-          for (i = chain->cl - 1; i > c_cur; i--)
+          for (int i = chain->cl - 1; i > c_cur; i--)
             chain->ch[i] = chain->ch[i - 1];
 
           chain->ch[c_cur] = menu->current;
@@ -600,7 +606,7 @@ void mix_make_chain(struct ListHead *chainhead)
         {
           chain->cl--;
 
-          for (i = c_cur; i < chain->cl; i++)
+          for (int i = c_cur; i < chain->cl; i++)
             chain->ch[i] = chain->ch[i + 1];
 
           if (c_cur == chain->cl && c_cur)
@@ -645,7 +651,7 @@ void mix_make_chain(struct ListHead *chainhead)
 
   if (chain->cl)
   {
-    for (i = 0; i < chain->cl; i++)
+    for (int i = 0; i < chain->cl; i++)
     {
       if ((j = chain->ch[i]))
         t = type2_list[j]->shortname;
@@ -668,7 +674,6 @@ int mix_check_message(struct Header *msg)
 {
   const char *fqdn = NULL;
   bool need_hostname = false;
-  struct Address *p = NULL;
 
   if (msg->env->cc || msg->env->bcc)
   {
@@ -682,9 +687,9 @@ int mix_check_message(struct Header *msg)
    * use_domain won't be respected at this point, hidden_host will.
    */
 
-  for (p = msg->env->to; p; p = p->next)
+  for (struct Address *a = msg->env->to; a; a = a->next)
   {
-    if (!p->group && strchr(p->mailbox, '@') == NULL)
+    if (!a->group && strchr(a->mailbox, '@') == NULL)
     {
       need_hostname = true;
       break;
@@ -693,7 +698,8 @@ int mix_check_message(struct Header *msg)
 
   if (need_hostname)
   {
-    if (!(fqdn = mutt_fqdn(1)))
+    fqdn = mutt_fqdn(1);
+    if (!fqdn)
     {
       mutt_error(_("Please set the hostname variable to a proper value when "
                    "using mixmaster!"));

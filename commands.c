@@ -126,7 +126,8 @@ int mutt_display_message(struct Header *cur)
   }
 
   mutt_mktemp(tempfile, sizeof(tempfile));
-  if ((fpout = safe_fopen(tempfile, "w")) == NULL)
+  fpout = safe_fopen(tempfile, "w");
+  if (!fpout)
   {
     mutt_error(_("Could not create temporary file!"));
     return 0;
@@ -237,7 +238,8 @@ int mutt_display_message(struct Header *cur)
 
     mutt_endwin(NULL);
     snprintf(buf, sizeof(buf), "%s %s", NONULL(Pager), tempfile);
-    if ((r = mutt_system(buf)) == -1)
+    r = mutt_system(buf);
+    if (r == -1)
       mutt_error(_("Error running \"%s\"!"), buf);
     unlink(tempfile);
     if (!option(OPT_NO_CURSES))
@@ -297,7 +299,8 @@ void ci_bounce_message(struct Header *h)
   if (rc || !buf[0])
     return;
 
-  if (!(adr = mutt_parse_adrlist(adr, buf)))
+  adr = mutt_parse_adrlist(adr, buf);
+  if (!adr)
   {
     mutt_error(_("Error parsing address!"));
     return;
@@ -392,7 +395,7 @@ static void pipe_msg(struct Header *h, FILE *fp, int decode, int print)
 static int _mutt_pipe_message(struct Header *h, char *cmd, int decode,
                               int print, int split, char *sep)
 {
-  int i, rc = 0;
+  int rc = 0;
   pid_t thepid;
   FILE *fpout = NULL;
 
@@ -425,7 +428,7 @@ static int _mutt_pipe_message(struct Header *h, char *cmd, int decode,
 
     if (WithCrypto && decode)
     {
-      for (i = 0; i < Context->vcount; i++)
+      for (int i = 0; i < Context->vcount; i++)
         if (Context->hdrs[Context->v2r[i]]->tagged)
         {
           mutt_message_hook(Context, Context->hdrs[Context->v2r[i]], MUTT_MESSAGEHOOK);
@@ -438,7 +441,7 @@ static int _mutt_pipe_message(struct Header *h, char *cmd, int decode,
 
     if (split)
     {
-      for (i = 0; i < Context->vcount; i++)
+      for (int i = 0; i < Context->vcount; i++)
       {
         if (Context->hdrs[Context->v2r[i]]->tagged)
         {
@@ -470,7 +473,7 @@ static int _mutt_pipe_message(struct Header *h, char *cmd, int decode,
         return 1;
       }
       set_option(OPT_KEEP_QUIET);
-      for (i = 0; i < Context->vcount; i++)
+      for (int i = 0; i < Context->vcount; i++)
       {
         if (Context->hdrs[Context->v2r[i]]->tagged)
         {
@@ -725,7 +728,8 @@ int _mutt_save_message(struct Header *h, struct Context *ctx, int delete, int de
   if (decode || decrypt)
     mutt_parse_mime_message(Context, h);
 
-  if ((rc = mutt_append_message(ctx, Context, h, cmflags, chflags)) != 0)
+  rc = mutt_append_message(ctx, Context, h, cmflags, chflags);
+  if (rc != 0)
     return rc;
 
   if (delete)
@@ -746,7 +750,7 @@ int _mutt_save_message(struct Header *h, struct Context *ctx, int delete, int de
  */
 int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
 {
-  int i, need_buffy_cleanup;
+  int need_buffy_cleanup;
   int need_passphrase = 0, app = 0;
   char prompt[SHORT_STRING], buf[_POSIX_PATH_MAX];
   struct Context ctx;
@@ -775,7 +779,7 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
   {
     /* look for the first tagged message */
 
-    for (i = 0; i < Context->vcount; i++)
+    for (int i = 0; i < Context->vcount; i++)
     {
       if (Context->hdrs[Context->v2r[i]]->tagged)
       {
@@ -885,7 +889,7 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
       if (Context->magic == MUTT_NOTMUCH)
         nm_longrun_init(Context, true);
 #endif
-      for (i = 0; i < Context->vcount; i++)
+      for (int i = 0; i < Context->vcount; i++)
       {
         if (Context->hdrs[Context->v2r[i]]->tagged)
         {
@@ -994,7 +998,8 @@ int mutt_edit_content_type(struct Header *h, struct Body *b, FILE *fp)
     int r;
     snprintf(tmp, sizeof(tmp), _("Convert to %s upon sending?"),
              mutt_get_parameter("charset", b->parameter));
-    if ((r = mutt_yesorno(tmp, !b->noconv)) != MUTT_ABORT)
+    r = mutt_yesorno(tmp, !b->noconv);
+    if (r != MUTT_ABORT)
       b->noconv = (r == MUTT_NO);
   }
 
@@ -1051,7 +1056,8 @@ static int _mutt_check_traditional_pgp(struct Header *h, int *redraw)
   h->security |= PGP_TRADITIONAL_CHECKED;
 
   mutt_parse_mime_message(Context, h);
-  if ((msg = mx_open_message(Context, h->msgno)) == NULL)
+  msg = mx_open_message(Context, h->msgno);
+  if (!msg)
     return 0;
   if (crypt_pgp_check_traditional(msg->fp, h->content, 0))
   {
@@ -1067,13 +1073,12 @@ static int _mutt_check_traditional_pgp(struct Header *h, int *redraw)
 
 int mutt_check_traditional_pgp(struct Header *h, int *redraw)
 {
-  int i;
   int rv = 0;
   if (h && !(h->security & PGP_TRADITIONAL_CHECKED))
     rv = _mutt_check_traditional_pgp(h, redraw);
   else
   {
-    for (i = 0; i < Context->vcount; i++)
+    for (int i = 0; i < Context->vcount; i++)
       if (Context->hdrs[Context->v2r[i]]->tagged &&
           !(Context->hdrs[Context->v2r[i]]->security & PGP_TRADITIONAL_CHECKED))
       {

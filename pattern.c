@@ -484,7 +484,8 @@ static bool eat_date(struct Pattern *pat, struct Buffer *s, struct Buffer *err)
     if (isdigit((unsigned char) *pc))
     {
       /* minimum date specified */
-      if ((pc = get_date(pc, &min, err)) == NULL)
+      pc = get_date(pc, &min, err);
+      if (!pc)
       {
         FREE(&buffer.data);
         return false;
@@ -940,7 +941,8 @@ static int msg_search(struct Context *ctx, struct Pattern *pat, int msgno)
   struct stat st;
 #endif
 
-  if ((msg = mx_open_message(ctx, msgno)) != NULL)
+  msg = mx_open_message(ctx, msgno);
+  if (msg)
   {
     if (option(OPT_THOROUGH_SEARCH))
     {
@@ -957,7 +959,8 @@ static int msg_search(struct Context *ctx, struct Pattern *pat, int msgno)
       }
 #else
       mutt_mktemp(tempfile, sizeof(tempfile));
-      if ((s.fpout = safe_fopen(tempfile, "w+")) == NULL)
+      s.fpout = safe_fopen(tempfile, "w+");
+      if (!s.fpout)
       {
         mutt_perror(tempfile);
         return 0;
@@ -1235,7 +1238,8 @@ struct Pattern *mutt_pattern_comp(/* const */ char *s, int flags, struct Buffer 
           isalias = false;
           /* compile the sub-expression */
           buf = mutt_substrdup(ps.dptr + 1, p);
-          if ((tmp2 = mutt_pattern_comp(buf, flags, err)) == NULL)
+          tmp2 = mutt_pattern_comp(buf, flags, err);
+          if (!tmp2)
           {
             FREE(&buf);
             mutt_pattern_free(&curlist);
@@ -1274,7 +1278,8 @@ struct Pattern *mutt_pattern_comp(/* const */ char *s, int flags, struct Buffer 
         last = tmp;
 
         ps.dptr++; /* move past the ~ */
-        if ((entry = lookup_tag(*ps.dptr)) == NULL)
+        entry = lookup_tag(*ps.dptr);
+        if (!entry)
         {
           snprintf(err->data, err->dsize, _("%c: invalid pattern modifier"), *ps.dptr);
           mutt_pattern_free(&curlist);
@@ -1317,7 +1322,8 @@ struct Pattern *mutt_pattern_comp(/* const */ char *s, int flags, struct Buffer 
         }
         /* compile the sub-expression */
         buf = mutt_substrdup(ps.dptr + 1, p);
-        if ((tmp = mutt_pattern_comp(buf, flags, err)) == NULL)
+        tmp = mutt_pattern_comp(buf, flags, err);
+        if (!tmp)
         {
           FREE(&buf);
           mutt_pattern_free(&curlist);
@@ -1379,12 +1385,11 @@ static int perform_or(struct Pattern *pat, enum PatternExecFlag flags,
 static int match_adrlist(struct Pattern *pat, int match_personal, int n, ...)
 {
   va_list ap;
-  struct Address *a = NULL;
 
   va_start(ap, n);
   for (; n; n--)
   {
-    for (a = va_arg(ap, struct Address *); a; a = a->next)
+    for (struct Address *a = va_arg(ap, struct Address *); a; a = a->next)
     {
       if (pat->alladdr ^ ((!pat->isalias || alias_reverse_lookup(a)) &&
                           ((a->mailbox && !patmatch(pat, a->mailbox)) ||
@@ -1767,9 +1772,8 @@ void mutt_check_simple(char *s, size_t len, const char *simple)
 {
   char tmp[LONG_STRING];
   bool do_simple = true;
-  char *p = NULL;
 
-  for (p = s; p && *p; p++)
+  for (char *p = s; p && *p; p++)
   {
     if (*p == '\\' && *(p + 1))
       p++;
@@ -1897,7 +1901,8 @@ int mutt_pattern_func(int op, char *prompt)
   mutt_buffer_init(&err);
   err.dsize = STRING;
   err.data = safe_malloc(err.dsize);
-  if ((pat = mutt_pattern_comp(buf, MUTT_FULL_MSG, &err)) == NULL)
+  pat = mutt_pattern_comp(buf, MUTT_FULL_MSG, &err);
+  if (!pat)
   {
     FREE(&simple);
     mutt_error("%s", err.data);
@@ -1913,8 +1918,6 @@ int mutt_pattern_func(int op, char *prompt)
   mutt_progress_init(&progress, _("Executing command on matching messages..."),
                      MUTT_PROGRESS_MSG, ReadInc,
                      (op == MUTT_LIMIT) ? Context->msgcount : Context->vcount);
-
-#define THIS_BODY Context->hdrs[i]->content
 
   if (op == MUTT_LIMIT)
   {
@@ -1936,7 +1939,8 @@ int mutt_pattern_func(int op, char *prompt)
         Context->hdrs[i]->limited = true;
         Context->v2r[Context->vcount] = i;
         Context->vcount++;
-        Context->vsize += THIS_BODY->length + THIS_BODY->offset - THIS_BODY->hdr_offset;
+        struct Body *b = Context->hdrs[i]->content;
+        Context->vsize += b->length + b->offset - b->hdr_offset;
       }
     }
   }
@@ -1965,8 +1969,6 @@ int mutt_pattern_func(int op, char *prompt)
       }
     }
   }
-
-#undef THIS_BODY
 
   mutt_clear_error();
 
@@ -1997,7 +1999,6 @@ int mutt_pattern_func(int op, char *prompt)
 
 int mutt_search_command(int cur, int op)
 {
-  int i, j;
   char buf[STRING];
   char temp[LONG_STRING];
   int incr;
@@ -2035,7 +2036,8 @@ int mutt_search_command(int cur, int op)
       mutt_pattern_free(&SearchPattern);
       err.dsize = STRING;
       err.data = safe_malloc(err.dsize);
-      if ((SearchPattern = mutt_pattern_comp(temp, MUTT_FULL_MSG, &err)) == NULL)
+      SearchPattern = mutt_pattern_comp(temp, MUTT_FULL_MSG, &err);
+      if (!SearchPattern)
       {
         mutt_error("%s", err.data);
         FREE(&err.data);
@@ -2048,7 +2050,7 @@ int mutt_search_command(int cur, int op)
 
   if (option(OPT_SEARCH_INVALID))
   {
-    for (i = 0; i < Context->msgcount; i++)
+    for (int i = 0; i < Context->msgcount; i++)
       Context->hdrs[i]->searched = false;
 #ifdef USE_IMAP
     if (Context->magic == MUTT_IMAP && imap_search(Context, SearchPattern) < 0)
@@ -2064,7 +2066,7 @@ int mutt_search_command(int cur, int op)
   mutt_progress_init(&progress, _("Searching..."), MUTT_PROGRESS_MSG, ReadInc,
                      Context->vcount);
 
-  for (i = cur + incr, j = 0; j != Context->vcount; j++)
+  for (int i = cur + incr, j = 0; j != Context->vcount; j++)
   {
     mutt_progress_update(&progress, j, -1);
     if (i > Context->vcount - 1)

@@ -159,7 +159,8 @@ static struct Parameter *parse_parameters(const char *s)
 
   while (*s)
   {
-    if ((p = strpbrk(s, "=;")) == NULL)
+    p = strpbrk(s, "=;");
+    if (!p)
     {
       mutt_debug(1, "parse_parameters: malformed parameter: %s\n", s);
       goto bail;
@@ -310,7 +311,8 @@ void mutt_parse_content_type(char *s, struct Body *ct)
   mutt_free_parameter(&ct->parameter);
 
   /* First extract any existing parameters */
-  if ((pc = strchr(s, ';')) != NULL)
+  pc = strchr(s, ';');
+  if (pc)
   {
     *pc++ = 0;
     while (*pc && ISSPACE(*pc))
@@ -379,7 +381,8 @@ void mutt_parse_content_type(char *s, struct Body *ct)
   /* Default character set for text types. */
   if (ct->type == TYPETEXT)
   {
-    if (!(pc = mutt_get_parameter("charset", ct->parameter)))
+    pc = mutt_get_parameter("charset", ct->parameter);
+    if (!pc)
       mutt_set_parameter("charset",
                          (AssumedCharset && *AssumedCharset) ?
                              (const char *) mutt_get_default_charset() :
@@ -400,7 +403,8 @@ static void parse_content_disposition(const char *s, struct Body *ct)
     ct->disposition = DISPATTACH;
 
   /* Check to see if a default filename was given */
-  if ((s = strchr(s, ';')) != NULL)
+  s = strchr(s, ';');
+  if (s)
   {
     s = skip_email_wsp(s + 1);
     if ((s = mutt_get_parameter("filename", (parms = parse_parameters(s)))))
@@ -906,7 +910,8 @@ int mutt_parse_rfc822_line(struct Envelope *e, struct Header *hdr, char *line,
           for (beg = strchr(p, '<'); beg; beg = strchr(end, ','))
           {
             beg++;
-            if (!(end = strchr(beg, '>')))
+            end = strchr(beg, '>');
+            if (!end)
               break;
 
             /* Take the first mailto URL */
@@ -1297,7 +1302,8 @@ struct Address *mutt_parse_adrlist(struct Address *p, const char *s)
   const char *q = NULL;
 
   /* check for a simple whitespace separated list of addresses */
-  if ((q = strpbrk(s, "\"<>():;,\\")) == NULL)
+  q = strpbrk(s, "\"<>():;,\\");
+  if (!q)
   {
     char tmp[HUGE_STRING];
     char *r = NULL;
@@ -1351,15 +1357,6 @@ static bool count_body_parts_check(struct ListHead *checklist, struct Body *b, b
   return false;
 }
 
-#define AT_COUNT(why)                                                          \
-  {                                                                            \
-    shallcount = true;                                                         \
-  }
-#define AT_NOCOUNT(why)                                                        \
-  {                                                                            \
-    shallcount = false;                                                        \
-  }
-
 static int count_body_parts(struct Body *body, int flags)
 {
   int count = 0;
@@ -1372,7 +1369,7 @@ static int count_body_parts(struct Body *body, int flags)
   for (bp = body; bp != NULL; bp = bp->next)
   {
     /* Initial disposition is to count and not to recurse this part. */
-    AT_COUNT("default");
+    shallcount = true; /* default */
     shallrecurse = false;
 
     mutt_debug(5, "bp: desc=\"%s\"; fn=\"%s\", type=\"%d/%s\"\n",
@@ -1390,7 +1387,7 @@ static int count_body_parts(struct Body *body, int flags)
 
       /* Don't count containers if they're top-level. */
       if (flags & MUTT_PARTS_TOPLEVEL)
-        AT_NOCOUNT("top-level message/*");
+        shallcount = false; // top-level message/*
     }
     else if (bp->type == TYPEMULTIPART)
     {
@@ -1401,12 +1398,12 @@ static int count_body_parts(struct Body *body, int flags)
 
       /* Don't count containers if they're top-level. */
       if (flags & MUTT_PARTS_TOPLEVEL)
-        AT_NOCOUNT("top-level multipart");
+        shallcount = false; /* top-level multipart */
     }
 
     if (bp->disposition == DISPINLINE && bp->type != TYPEMULTIPART &&
         bp->type != TYPEMESSAGE && bp == body)
-      AT_NOCOUNT("ignore fundamental inlines");
+      shallcount = false; /* ignore fundamental inlines */
 
     /* If this body isn't scheduled for enumeration already, don't bother
      * profiling it further.
@@ -1421,16 +1418,16 @@ static int count_body_parts(struct Body *body, int flags)
       if (bp->disposition == DISPATTACH)
       {
         if (!count_body_parts_check(&AttachAllow, bp, true))
-          AT_NOCOUNT("attach not allowed");
+          shallcount = false; /* attach not allowed */
         if (count_body_parts_check(&AttachExclude, bp, false))
-          AT_NOCOUNT("attach excluded");
+          shallcount = false; /* attach excluded */
       }
       else
       {
         if (!count_body_parts_check(&InlineAllow, bp, true))
-          AT_NOCOUNT("inline not allowed");
+          shallcount = false; /* inline not allowed */
         if (count_body_parts_check(&InlineExclude, bp, false))
-          AT_NOCOUNT("excluded");
+          shallcount = false; /* excluded */
       }
     }
 

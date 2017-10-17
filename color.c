@@ -207,7 +207,6 @@ void ci_start_color(void)
 static char *get_color_name(char *dest, size_t destlen, int val)
 {
   static const char *const missing[3] = { "brown", "lightgray", "default" };
-  int i;
 
   switch (val)
   {
@@ -224,7 +223,7 @@ static char *get_color_name(char *dest, size_t destlen, int val)
       return dest;
   }
 
-  for (i = 0; Colors[i].name; i++)
+  for (int i = 0; Colors[i].name; i++)
   {
     if (Colors[i].value == val)
     {
@@ -470,7 +469,7 @@ static void do_uncolor(struct Buffer *buf, struct Buffer *s,
           {
             *do_cache = 1;
           }
-          mutt_debug(1, "Freeing pattern \"%s\" from ColorList\n", tmp->pattern);
+          mutt_debug(1, "Freeing pattern \"%s\" from ColorList\n", buf->data);
           if (tmp)
             STAILQ_REMOVE_AFTER(cl, tmp, entries);
           else
@@ -498,7 +497,8 @@ static int _mutt_parse_uncolor(struct Buffer *buf, struct Buffer *s, unsigned lo
 
   mutt_extract_token(buf, s, 0);
 
-  if ((object = mutt_getvaluebyname(buf->data, Fields)) == -1)
+  object = mutt_getvaluebyname(buf->data, Fields);
+  if (object == -1)
   {
     snprintf(err->data, err->dsize, _("%s: no such object"), buf->data);
     return -1;
@@ -643,7 +643,8 @@ static int add_pattern(struct ColorLineHead *top, const char *s, int sensitive, 
     {
       strfcpy(buf, NONULL(s), sizeof(buf));
       mutt_check_simple(buf, sizeof(buf), NONULL(SimpleSearch));
-      if ((tmp->color_pattern = mutt_pattern_comp(buf, MUTT_FULL_MSG, err)) == NULL)
+      tmp->color_pattern = mutt_pattern_comp(buf, MUTT_FULL_MSG, err);
+      if (!tmp->color_pattern)
       {
         free_color_line(tmp, 1);
         return -1;
@@ -714,7 +715,8 @@ static int parse_object(struct Buffer *buf, struct Buffer *s, int *o, int *ql,
 
     mutt_extract_token(buf, s, 0);
 
-    if ((*o = mutt_getvaluebyname(buf->data, ComposeFields)) == -1)
+    *o = mutt_getvaluebyname(buf->data, ComposeFields);
+    if (*o == -1)
     {
       snprintf(err->data, err->dsize, _("%s: no such object"), buf->data);
       return (-1);
