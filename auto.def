@@ -12,7 +12,7 @@ use system cc cc-lib mutt-gettext mutt-iconv
 ###############################################################################
 # Names and versions
 define PACKAGE          "neomutt"
-define PACKAGE_VERSION  "20171013"
+define PACKAGE_VERSION  "20171027"
 define BUGS_ADDRESS     "neomutt-devel@neomutt.org"
 
 # Subdirectories that contain additional Makefile.autosetup files
@@ -183,6 +183,7 @@ if {1} {
   if {[cc-check-standards c99] eq {}} {
     user-error "C99 is required"
   }
+  define-append CFLAGS_FOR_BUILD -std=c99
 
   # Check for tools and programs
   cc-check-tools ar ranlib strip
@@ -202,9 +203,6 @@ if {1} {
     }
   }
 
-  # Endianess
-  cc-check-endian
-
   # GCC-specifc CFLAGS
   if {![catch {exec [get-define CC] --version} res]} {
     if {[regexp -nocase gcc $res]} {
@@ -215,15 +213,23 @@ if {1} {
   # Enable extensions (reverse-engineered from AC_SYSTEM_EXTENSIONS)
   if {1} {
     if {[cc-check-includes minix/config.h]} {
-      define-append CFLAGS -D_POSIX_SOURCE=1
-      define-append CFLAGS -D_POSIX_1_SOURCE=2
-      define-append CFLAGS -D_MINIX=1
+      lappend extensions -D_POSIX_SOURCE=1
+      lappend extensions -D_POSIX_1_SOURCE=2
+      lappend extensions -D_MINIX=1
     }
-    define-append CFLAGS -D_ALL_SOURCE=1
-    define-append CFLAGS -D_GNU_SOURCE=1
-    define-append CFLAGS -D__EXTENSIONS__
+    lappend extensions -D_ALL_SOURCE=1
+    lappend extensions -D_GNU_SOURCE=1
+    lappend extensions -D__EXTENSIONS__
+    define-append CFLAGS_FOR_BUILD {*}$extensions
+    define-append CFLAGS {*}$extensions
   }
   cc-with [list -cflags [get-define CFLAGS]]
+
+  # Endianness
+  cc-check-endian
+  if {[have-feature BIG_ENDIAN]} {
+    define WORDS_BIGENDIAN
+  }
 
   # Large file support
   if {[cc-check-lfs]} {
@@ -232,10 +238,17 @@ if {1} {
     define OFF_T_FMT {"%" PRId32}
   }
   define LOFF_T off_t
+}
+###############################################################################
 
-  # Let's always use volatile for sig_atomic_t
-  cc-check-includes signal.h
-  define SIG_ATOMIC_VOLATILE_T "volatile sig_atomic_t"
+###############################################################################
+# signal-related checks
+# Let's always use volatile for sig_atomic_t
+cc-check-includes signal.h
+define SIG_ATOMIC_VOLATILE_T "volatile sig_atomic_t"
+
+cc-with {-includes "signal.h unistd.h"} {
+  cc-check-decls sys_siglist
 }
 ###############################################################################
 
@@ -258,7 +271,8 @@ if {1} {
     iswblank \
     mkdtemp \
     strsep \
-    vasprintf
+    vasprintf \
+    wcscasecmp
 
   cc-check-function-in-lib gethostent nsl
   cc-check-function-in-lib setsockopt socket
@@ -822,6 +836,7 @@ set auto_rep {
   SUN_ATTACHMENT
   SYSCONFDIR
   USE_*
+  WORDS_BIGENDIAN
 }
 set bare_rep {
   ICONV_CONST
@@ -837,6 +852,7 @@ set str_rep {
 # Use ccache - don't do it earlier than here
 if {[get-define CCACHE] ne {none}} {
   define CC "[get-define CCACHE] [get-define CC]"
+  define CC_FOR_BUILD "[get-define CCACHE] [get-define CC_FOR_BUILD]"
 }
 
 ###############################################################################

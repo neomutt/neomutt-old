@@ -52,7 +52,6 @@
 #include "format_flags.h"
 #include "globals.h"
 #include "header.h"
-#include "list.h"
 #include "mailbox.h"
 #include "mime.h"
 #include "mutt_curses.h"
@@ -424,7 +423,8 @@ int mutt_write_mime_header(struct Body *a, FILE *f)
 
 static bool write_as_text_part(struct Body *b)
 {
-  return (mutt_is_text_part(b) || ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(b)));
+  return (mutt_is_text_part(b) ||
+          ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(b)));
 }
 
 int mutt_write_mime_body(struct Body *a, FILE *f)
@@ -1445,7 +1445,8 @@ static void run_mime_type_query(struct Body *att)
 
   mutt_expand_file_fmt(cmd, sizeof(cmd), MimeTypeQueryCommand, att->filename);
 
-  if ((thepid = mutt_create_filter(cmd, NULL, &fp, &fperr)) < 0)
+  thepid = mutt_create_filter(cmd, NULL, &fp, &fperr);
+  if (thepid < 0)
   {
     mutt_error(_("Error running \"%s\"!"), cmd);
     return;
@@ -2012,7 +2013,8 @@ int mutt_write_one_header(FILE *fp, const char *tag, const char *value,
     /* find maximum line width in current header */
     if (p)
       *p = 0;
-    if ((w = my_width(line, 0, flags)) > max)
+    w = my_width(line, 0, flags);
+    if (w > max)
       max = w;
     if (p)
       *p = '\n';
@@ -2758,7 +2760,7 @@ static int _mutt_bounce_message(FILE *fp, struct Header *h, struct Address *to,
   {
     /* Try to bounce each message out, aborting if we get any failures. */
     for (int i = 0; i < Context->msgcount; i++)
-      if (Context->hdrs[i]->tagged)
+      if (message_is_tagged(Context, i))
         ret |= _mutt_bounce_message(fp, Context->hdrs[i], to, resent_from, env_from);
     return ret;
   }
@@ -2980,6 +2982,7 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
   if (post)
     set_noconv_flags(hdr->content, 1);
 
+  mutt_folder_hook(path);
   if (mx_open_mailbox(path, MUTT_APPEND | MUTT_QUIET, &f) == NULL)
   {
     mutt_debug(1, "mutt_write_fcc(): unable to open mailbox %s in append-mode, "

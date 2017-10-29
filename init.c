@@ -26,7 +26,6 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <libgen.h>
 #include <limits.h>
 #include <pwd.h>
 #include <regex.h>
@@ -52,7 +51,6 @@
 #include "header.h"
 #include "history.h"
 #include "keymap.h"
-#include "list.h"
 #include "mailbox.h"
 #include "mbtable.h"
 #include "mbyte.h"
@@ -399,10 +397,9 @@ int mutt_option_set(const struct Option *val, struct Buffer *err)
               struct Envelope *e = Context->hdrs[i]->env;
               if (e && e->subject)
               {
-                e->real_subj =
-                    (regexec(ReplyRegexp.regex, e->subject, 1, pmatch, 0)) ?
-                        e->subject :
-                        e->subject + pmatch[0].rm_eo;
+                e->real_subj = (regexec(ReplyRegexp.regex, e->subject, 1, pmatch, 0)) ?
+                                   e->subject :
+                                   e->subject + pmatch[0].rm_eo;
               }
             }
           }
@@ -621,7 +618,8 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
         return -1;
       }
       cmd = mutt_substrdup(tok->dptr, pc);
-      if ((pid = mutt_create_filter(cmd, NULL, &fp, NULL)) < 0)
+      pid = mutt_create_filter(cmd, NULL, &fp, NULL);
+      if (pid < 0)
       {
         mutt_debug(1, "mutt_get_token: unable to fork command: %s\n", cmd);
         FREE(&cmd);
@@ -2817,10 +2815,9 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
             struct Envelope *e = Context->hdrs[i]->env;
             if (e && e->subject)
             {
-              e->real_subj =
-                  (regexec(ReplyRegexp.regex, e->subject, 1, pmatch, 0)) ?
-                      e->subject :
-                      e->subject + pmatch[0].rm_eo;
+              e->real_subj = (regexec(ReplyRegexp.regex, e->subject, 1, pmatch, 0)) ?
+                                 e->subject :
+                                 e->subject + pmatch[0].rm_eo;
             }
           }
         }
@@ -3117,7 +3114,7 @@ static struct ListHead MuttrcStack = STAILQ_HEAD_INITIALIZER(MuttrcStack);
  */
 static int to_absolute_path(char *path, const char *reference)
 {
-  char *ref_tmp = NULL, *dirpath = NULL;
+  const char *dirpath = NULL;
   char abs_path[PATH_MAX];
   int path_len;
 
@@ -3127,12 +3124,10 @@ static int to_absolute_path(char *path, const char *reference)
     return true;
   }
 
-  ref_tmp = safe_strdup(reference);
-  dirpath = dirname(ref_tmp); /* get directory name of */
+  dirpath = mutt_dirname(reference);
   strfcpy(abs_path, dirpath, PATH_MAX);
   safe_strncat(abs_path, sizeof(abs_path), "/", 1); /* append a / at the end of the path */
 
-  FREE(&ref_tmp);
   path_len = PATH_MAX - strlen(path);
 
   safe_strncat(abs_path, sizeof(abs_path), path, path_len > 0 ? path_len : 0);

@@ -45,7 +45,6 @@
 #include "globals.h"
 #include "header.h"
 #include "imap/imap.h"
-#include "list.h"
 #include "mailbox.h"
 #include "message.h"
 #include "mutt_socket.h"
@@ -326,6 +325,7 @@ int imap_parse_path(const char *path, struct ImapMbox *mx)
   {
     if (mutt_account_fromurl(&mx->account, &url) < 0 || !*mx->account.host)
     {
+      url_free(&url);
       FREE(&c);
       return -1;
     }
@@ -335,11 +335,13 @@ int imap_parse_path(const char *path, struct ImapMbox *mx)
     if (url.scheme == U_IMAPS)
       mx->account.flags |= MUTT_ACCT_SSL;
 
+    url_free(&url);
     FREE(&c);
   }
   /* old PINE-compatibility code */
   else
   {
+    url_free(&url);
     FREE(&c);
     if (sscanf(path, "{%127[^}]}", tmp) != 1)
       return -1;
@@ -359,7 +361,8 @@ int imap_parse_path(const char *path, struct ImapMbox *mx)
       mx->account.flags |= MUTT_ACCT_USER;
     }
 
-    if ((n = sscanf(tmp, "%127[^:/]%127s", mx->account.host, tmp)) < 1)
+    n = sscanf(tmp, "%127[^:/]%127s", mx->account.host, tmp);
+    if (n < 1)
     {
       mutt_debug(1, "imap_parse_path: NULL host in %s\n", path);
       FREE(&mx->mbox);
@@ -636,7 +639,7 @@ int imap_get_literal_count(const char *buf, long *bytes)
 }
 
 /**
- * imap_get_qualifier - Get the qualifier from a tagged reponse
+ * imap_get_qualifier - Get the qualifier from a tagged response
  *
  * In a tagged response, skip tag and status for the qualifier message. Used by
  * imap_copy_message for TRYCREATE

@@ -928,7 +928,7 @@ const char *nntp_format_str(char *dest, size_t destlen, size_t col, int cols,
  * system has broken mtimes, this might mean the file is reloaded every time,
  * which we'd have to fix.
  */
-struct NntpServer *nntp_select_server(char *server, int leave_lock)
+struct NntpServer *nntp_select_server(char *server, bool leave_lock)
 {
   char file[_POSIX_PATH_MAX];
 #ifdef USE_HCACHE
@@ -954,9 +954,10 @@ struct NntpServer *nntp_select_server(char *server, int leave_lock)
   acct.type = MUTT_ACCT_TYPE_NNTP;
   snprintf(file, sizeof(file), "%s%s", strstr(server, "://") ? "" : "news://", server);
   if (url_parse(&url, file) < 0 || (url.path && *url.path) ||
-      !(url.scheme == U_NNTP || url.scheme == U_NNTPS) ||
+      !(url.scheme == U_NNTP || url.scheme == U_NNTPS) || !url.host ||
       mutt_account_fromurl(&acct, &url) < 0)
   {
+    url_free(&url);
     mutt_error(_("%s is an invalid news server specification!"), server);
     mutt_sleep(2);
     return NULL;
@@ -966,6 +967,7 @@ struct NntpServer *nntp_select_server(char *server, int leave_lock)
     acct.flags |= MUTT_ACCT_SSL;
     acct.port = NNTP_SSL_PORT;
   }
+  url_free(&url);
 
   /* find connection by account */
   conn = mutt_conn_find(NULL, &acct);
@@ -1041,7 +1043,7 @@ struct NntpServer *nntp_select_server(char *server, int leave_lock)
 
     /* load list of newsgroups from server */
     else
-      rc = nntp_active_fetch(nserv, 0);
+      rc = nntp_active_fetch(nserv, false);
   }
 
   if (rc >= 0)

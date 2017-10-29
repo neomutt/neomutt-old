@@ -35,7 +35,6 @@
 #include "envelope.h"
 #include "globals.h"
 #include "header.h"
-#include "list.h"
 #include "mailbox.h"
 #include "mutt_regex.h"
 #include "ncrypt/ncrypt.h"
@@ -329,7 +328,7 @@ int mutt_parse_unhook(struct Buffer *buf, struct Buffer *s, unsigned long data,
   return 0;
 }
 
-void mutt_folder_hook(char *path)
+void mutt_folder_hook(const char *path)
 {
   struct Hook *tmp = NULL;
   struct Buffer err, token;

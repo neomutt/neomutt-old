@@ -37,7 +37,6 @@
 #include "filter.h"
 #include "globals.h"
 #include "header.h"
-#include "list.h"
 #include "mailbox.h"
 #include "mime.h"
 #include "mutt_curses.h"
@@ -356,8 +355,7 @@ void mutt_check_lookup_list(struct Body *b, char *type, int len)
  * @param a      The message body containing the attachment
  * @param flag   Option flag for how the attachment should be viewed
  * @param hdr    Message header for the current message. Can be NULL
- * @param idx    Attachment
- * @param idxlen Number of attachments
+ * @param actx   Attachment context
  * @retval 0  If the viewer is run and exited succesfully
  * @retval -1 Error
  * @retval n  Return value of mutt_do_pager() when it is used
@@ -653,11 +651,14 @@ int mutt_pipe_attachment(FILE *fp, struct Body *b, const char *path, char *outfi
   int rv = 0;
 
   if (outfile && *outfile)
-    if ((out = safe_open(outfile, O_CREAT | O_EXCL | O_WRONLY)) < 0)
+  {
+    out = safe_open(outfile, O_CREAT | O_EXCL | O_WRONLY);
+    if (out < 0)
     {
       mutt_perror("open");
       return 0;
     }
+  }
 
   mutt_endwin(NULL);
 
@@ -1029,7 +1030,8 @@ int mutt_print_attachment(FILE *fp, struct Body *a)
         return 0;
       }
 
-      if ((thepid = mutt_create_filter(command, &fpout, NULL, NULL)) < 0)
+      thepid = mutt_create_filter(command, &fpout, NULL, NULL);
+      if (thepid < 0)
       {
         mutt_perror(_("Can't create filter"));
         rfc1524_free_entry(&entry);
@@ -1086,7 +1088,8 @@ int mutt_print_attachment(FILE *fp, struct Body *a)
       mutt_debug(2, "successfully opened %s read-only\n", newfile);
 
       mutt_endwin(NULL);
-      if ((thepid = mutt_create_filter(NONULL(PrintCommand), &fpout, NULL, NULL)) < 0)
+      thepid = mutt_create_filter(NONULL(PrintCommand), &fpout, NULL, NULL);
+      if (thepid < 0)
       {
         mutt_perror(_("Can't create filter"));
         goto bail0;

@@ -1,4 +1,7 @@
-MAKEDOC_CPP = $(CPP) $(CPPFLAGS) -D_MAKEDOC -C -I.
+MAKEDOC_CPP = $(CC_FOR_BUILD) -D_MAKEDOC -E -C -I.
+
+doc/makedoc$(EXEEXT): doc/makedoc.c
+	$(CC_FOR_BUILD) -I. -o $@ doc/makedoc.c
 
 doc/neomuttrc: $(SRCDIR)/init.h doc/makedoc$(EXEEXT) $(SRCDIR)/doc/neomuttrc.head
 	sed -e 's,@docdir@,$(docdir),' $(SRCDIR)/doc/neomuttrc.head \
@@ -151,7 +154,7 @@ sortcheck-doc: doc/manual.xml
 all-doc: doc/neomuttrc
 
 clean-doc:
-	$(RM) doc/neomuttrc
+	$(RM) doc/neomuttrc doc/makedoc$(EXEEXT)
 
 install-doc: all-doc
 	$(MKDIR_P) $(DESTDIR)$(sysconfdir)

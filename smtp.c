@@ -292,14 +292,16 @@ static int smtp_fill_account(struct Account *account)
 
   urlstr = safe_strdup(SmtpUrl);
   url_parse(&url, urlstr);
-  if ((url.scheme != U_SMTP && url.scheme != U_SMTPS) ||
+  if ((url.scheme != U_SMTP && url.scheme != U_SMTPS) || !url.host ||
       mutt_account_fromurl(account, &url) < 0)
   {
+    url_free(&url);
     FREE(&urlstr);
     mutt_error(_("Invalid SMTP URL: %s"), SmtpUrl);
     mutt_sleep(1);
     return -1;
   }
+  url_free(&url);
   FREE(&urlstr);
 
   if (url.scheme == U_SMTPS)
@@ -411,7 +413,8 @@ static int smtp_auth_sasl(struct Connection *conn, const char *mechlist)
   {
     if (mutt_socket_write(conn, buf) < 0)
       goto fail;
-    if ((rc = mutt_socket_readln(buf, bufsize, conn)) < 0)
+    rc = mutt_socket_readln(buf, bufsize, conn);
+    if (rc < 0)
       goto fail;
     if (!valid_smtp_code(buf, rc, &rc))
       goto fail;

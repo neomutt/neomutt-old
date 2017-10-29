@@ -47,7 +47,6 @@
 #include "globals.h"
 #include "header.h"
 #include "keymap.h"
-#include "list.h"
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_idna.h"
@@ -869,7 +868,7 @@ int main(int argc, char **argv, char **env)
       if (flags & MUTT_NEWS)
       {
         set_option(OPT_NEWS);
-        CurrentNewsSrv = nntp_select_server(NewsServer, 0);
+        CurrentNewsSrv = nntp_select_server(NewsServer, false);
         if (!CurrentNewsSrv)
         {
           mutt_endwin(ErrorBuf);

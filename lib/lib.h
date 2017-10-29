@@ -35,6 +35,7 @@
  * -# @subpage exit
  * -# @subpage file
  * -# @subpage hash
+ * -# @subpage list
  * -# @subpage mapping
  * -# @subpage md5
  * -# @subpage memory
@@ -53,9 +54,9 @@
 #include "exit.h"
 #include "file.h"
 #include "hash.h"
+#include "list.h"
 #include "mapping.h"
 #include "md5.h"
-#include "memory.h"
 #include "memory.h"
 #include "message.h"
 #include "sha1.h"

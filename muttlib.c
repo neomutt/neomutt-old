@@ -26,7 +26,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
-#include <libgen.h>
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #endif
@@ -55,7 +54,6 @@
 #include "format_flags.h"
 #include "globals.h"
 #include "header.h"
-#include "list.h"
 #include "mailbox.h"
 #include "mime.h"
 #include "mutt_curses.h"
@@ -1242,7 +1240,8 @@ void mutt_expando_format(char *dest, size_t destlen, size_t col, int cols,
          * %*X: right justify to EOL, right takes precedence */
         int soft = ch == '*';
         int pl, pw;
-        if ((pl = mutt_charlen(src, &pw)) <= 0)
+        pl = mutt_charlen(src, &pw);
+        if (pl <= 0)
           pl = pw = 1;
 
         /* see if there's room to add content, else ignore */
@@ -1316,7 +1315,8 @@ void mutt_expando_format(char *dest, size_t destlen, size_t col, int cols,
       {
         /* pad to EOL */
         int pl, pw, c;
-        if ((pl = mutt_charlen(src, &pw)) <= 0)
+        pl = mutt_charlen(src, &pw);
+        if (pl <= 0)
           pl = pw = 1;
 
         /* see if there's room to add content, else ignore */
@@ -1409,7 +1409,8 @@ void mutt_expando_format(char *dest, size_t destlen, size_t col, int cols,
     {
       int tmp, w;
       /* in case of error, simply copy byte */
-      if ((tmp = mutt_charlen(src, &w)) < 0)
+      tmp = mutt_charlen(src, &w);
+      if (tmp < 0)
         tmp = w = 1;
       if (tmp > 0 && wlen + tmp < destlen)
       {
@@ -1542,10 +1543,8 @@ int mutt_save_confirm(const char *s, struct stat *st)
       /* user confirmed with MUTT_YES or set OPT_CONFIRMCREATE */
       if (ret == 0)
       {
-        strncpy(tmp, s, sizeof(tmp) - 1);
-
         /* create dir recursively */
-        if (mutt_mkdir(dirname(tmp), S_IRWXU) == -1)
+        if (mutt_mkdir(mutt_dirname(s), S_IRWXU) == -1)
         {
           /* report failure & abort */
           mutt_perror(s);

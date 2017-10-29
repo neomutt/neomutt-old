@@ -4,7 +4,7 @@ dnl     autoreconf -i
 CFLAGS=$CFLAGS
 LDFLAGS=$LDFLAGS
 
-AC_INIT([NeoMutt], [20171013], [neomutt-devel@neomutt.org], [neomutt], [https://www.neomutt.org])
+AC_INIT([NeoMutt], [20171027], [neomutt-devel@neomutt.org], [neomutt], [https://www.neomutt.org])
 AC_CONFIG_SRCDIR(mutt.h)
 AC_CONFIG_AUX_DIR([.build-aux])
 AM_INIT_AUTOMAKE
@@ -246,12 +246,12 @@ AC_DEFINE(SUN_ATTACHMENT,1,[ Define to enable Sun mailtool attachments support. 
 
 dnl --enable-lua
 AS_IF([test x$use_lua = "xyes"], [
-	AX_PROG_LUA([5.2],[],:,enable_lua=no)
-	AX_LUA_HEADERS(:,enable_lua=no)
-	AX_LUA_LIBS(:,enable_lua=no)
+	AX_PROG_LUA([5.2],[],:,use_lua=no)
+	AX_LUA_HEADERS(:,use_lua=no)
+	AX_LUA_LIBS(:,use_lua=no)
 ])
 
-AS_IF([test x$enable_lua = "xyes"], [
+AS_IF([test x$use_lua = "xyes"], [
 	AC_DEFINE(USE_LUA, 1, [Define if you want support for LUA.])
 	MUTT_LIB_OBJECTS="$MUTT_LIB_OBJECTS mutt_lua.o"
 	CPPFLAGS="$CPPFLAGS $LUA_INCLUDE"

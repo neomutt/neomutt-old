@@ -183,7 +183,7 @@ void mutt_enter_command(void);
 void mutt_expand_file_fmt(char *dest, size_t destlen, const char *fmt, const char *src);
 void mutt_expand_fmt(char *dest, size_t destlen, const char *fmt, const char *src);
 void mutt_fix_reply_recipients(struct Envelope *env);
-void mutt_folder_hook(char *path);
+void mutt_folder_hook(const char *path);
 void mutt_simple_format(char *dest, size_t destlen, int min_width, int max_width, int justify,
                         char m_pad_char, const char *s, size_t n, int arboreal);
 void mutt_format_s(char *dest, size_t destlen, const char *prefix, const char *s);
@@ -397,5 +397,8 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile, struct Contex
 #ifndef HAVE_WCSCASECMP
 int wcscasecmp(const wchar_t *a, const wchar_t *b);
 #endif
+
+bool message_is_tagged(struct Context *ctx, int index);
+bool message_is_visible(struct Context *ctx, int index);
 
 #endif /* _MUTT_PROTOS_H */

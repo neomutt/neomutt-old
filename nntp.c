@@ -1453,8 +1453,10 @@ static int nntp_open_mailbox(struct Context *ctx)
   struct Url url;
 
   strfcpy(buf, ctx->path, sizeof(buf));
-  if (url_parse(&url, buf) < 0 || !url.path || !(url.scheme == U_NNTP || url.scheme == U_NNTPS))
+  if (url_parse(&url, buf) < 0 || !url.host || !url.path ||
+      !(url.scheme == U_NNTP || url.scheme == U_NNTPS))
   {
+    url_free(&url);
     mutt_error(_("%s is an invalid newsgroup specification!"), ctx->path);
     mutt_sleep(2);
     return -1;
@@ -1463,7 +1465,8 @@ static int nntp_open_mailbox(struct Context *ctx)
   group = url.path;
   url.path = strchr(url.path, '\0');
   url_tostring(&url, server, sizeof(server), 0);
-  nserv = nntp_select_server(server, 1);
+  nserv = nntp_select_server(server, true);
+  url_free(&url);
   if (!nserv)
     return -1;
   CurrentNewsSrv = nserv;
@@ -1719,7 +1722,7 @@ int nntp_post(const char *msg)
     nntp_data = Context->data;
   else
   {
-    CurrentNewsSrv = nntp_select_server(NewsServer, 0);
+    CurrentNewsSrv = nntp_select_server(NewsServer, false);
     if (!CurrentNewsSrv)
       return -1;
 
@@ -2180,7 +2183,7 @@ static int nntp_date(struct NntpServer *nserv, time_t *now)
 /**
  * nntp_active_fetch - Fetch list of all newsgroups from server
  */
-int nntp_active_fetch(struct NntpServer *nserv, unsigned int new)
+int nntp_active_fetch(struct NntpServer *nserv, bool new)
 {
   struct NntpData nntp_data;
   char msg[STRING];
@@ -2214,7 +2217,7 @@ int nntp_active_fetch(struct NntpServer *nserv, unsigned int new)
     for (; i < nserv->groups_num; i++)
     {
       struct NntpData *data = nserv->groups_list[i];
-      data->new = 1;
+      data->new = true;
     }
   }
 
@@ -2322,7 +2325,7 @@ int nntp_check_new_groups(struct NntpServer *nserv)
     for (; i < nserv->groups_num; i++)
     {
       struct NntpData *data = nserv->groups_list[i];
-      data->new = 1;
+      data->new = true;
     }
 
     /* loading descriptions */

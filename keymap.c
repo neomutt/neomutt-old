@@ -396,7 +396,8 @@ static void generic_tokenize_push_string(char *s, void (*generic_push)(int, int)
         ;
       if (pp >= s)
       {
-        if ((i = parse_fkey(pp)) > 0)
+        i = parse_fkey(pp);
+        if (i > 0)
         {
           generic_push(KEY_F(i), 0);
           p = pp - 1;
@@ -462,10 +463,11 @@ static int retry_generic(int menu, keycode_t *keys, int keyslen, int lastkey)
 
 /**
  * km_dokey - Determine what a keypress should do
- * @retval >0       Function to execute
- * @retval #OP_NULL No function bound to key sequence
- * @retval -1       Error occurred while reading input
- * @retval -2       A timeout or sigwinch occurred
+ * @param menu Menu ID, e.g. #MENU_EDITOR
+ * @retval >0      Function to execute
+ * @retval OP_NULL No function bound to key sequence
+ * @retval -1      Error occurred while reading input
+ * @retval -2      A timeout or sigwinch occurred
  */
 int km_dokey(int menu)
 {
@@ -1091,7 +1093,7 @@ int mutt_parse_bind(struct Buffer *buf, struct Buffer *s, unsigned long data,
   char *key = NULL;
   int menu[sizeof(Menus) / sizeof(struct Mapping) - 1], r = 0, nummenus;
 
-  key = parse_keymap(menu, s, sizeof(menu) / sizeof(menu[0]), &nummenus, err);
+  key = parse_keymap(menu, s, mutt_array_size(menu), &nummenus, err);
   if (!key)
     return -1;
 
@@ -1149,7 +1151,7 @@ int mutt_parse_macro(struct Buffer *buf, struct Buffer *s, unsigned long data,
   char *seq = NULL;
   char *key = NULL;
 
-  key = parse_keymap(menu, s, sizeof(menu) / sizeof(menu[0]), &nummenus, err);
+  key = parse_keymap(menu, s, mutt_array_size(menu), &nummenus, err);
   if (!key)
     return -1;
 
@@ -1228,7 +1230,7 @@ int mutt_parse_exec(struct Buffer *buf, struct Buffer *s, unsigned long data,
       return -1;
     }
     nops++;
-  } while (MoreArgs(s) && nops < sizeof(ops) / sizeof(ops[0]));
+  } while (MoreArgs(s) && nops < mutt_array_size(ops));
 
   while (nops)
     mutt_push_macro_event(0, ops[--nops]);

@@ -36,7 +36,6 @@
 #include "envelope.h"
 #include "globals.h"
 #include "header.h"
-#include "list.h"
 #include "mutt_idna.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
@@ -314,16 +313,18 @@ int mutt_label_message(struct Header *hdr)
   }
   else
   {
-#define HDR_OF(index) Context->hdrs[Context->v2r[(index)]]
-    for (int i = 0; i < Context->vcount; ++i)
+    for (int i = 0; i < Context->msgcount; ++i)
     {
-      if (HDR_OF(i)->tagged)
-        if (label_message(Context, HDR_OF(i), new))
-        {
-          changed++;
-          mutt_set_flag(Context, HDR_OF(i), MUTT_TAG, 0);
-          /* mutt_set_flag re-evals the header color */
-        }
+      if (!message_is_tagged(Context, i))
+        continue;
+
+      struct Header *h = Context->hdrs[i];
+      if (label_message(Context, h, new))
+      {
+        changed++;
+        mutt_set_flag(Context, h, MUTT_TAG, 0);
+        /* mutt_set_flag re-evals the header color */
+      }
     }
   }
 

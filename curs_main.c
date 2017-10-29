@@ -42,7 +42,6 @@
 #include "globals.h"
 #include "header.h"
 #include "keymap.h"
-#include "list.h"
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
@@ -977,7 +976,8 @@ int mutt_index_menu(void)
               CURHDR->index :
               0;
 
-      if ((check = mx_check_mailbox(Context, &index_hint)) < 0)
+      check = mx_check_mailbox(Context, &index_hint);
+      if (check < 0)
       {
         if (!Context->path)
         {
@@ -1631,8 +1631,9 @@ int mutt_index_menu(void)
         CHECK_VISIBLE;
         if (tag && !option(OPT_AUTO_TAG))
         {
-          for (j = 0; j < Context->vcount; j++)
-            mutt_set_flag(Context, Context->hdrs[Context->v2r[j]], MUTT_TAG, 0);
+          for (j = 0; j < Context->msgcount; j++)
+            if (message_is_visible(Context, j))
+              mutt_set_flag(Context, Context->hdrs[j], MUTT_TAG, 0);
           menu->redraw |= REDRAW_STATUS | REDRAW_INDEX;
         }
         else
@@ -1791,11 +1792,11 @@ int mutt_index_menu(void)
         CHECK_VISIBLE;
         if (tag)
         {
-          for (j = 0; j < Context->vcount; j++)
+          for (j = 0; j < Context->msgcount; j++)
           {
-            if (Context->hdrs[Context->v2r[j]]->tagged)
+            if (message_is_tagged(Context, j))
             {
-              Context->hdrs[Context->v2r[j]]->quasi_deleted = true;
+              Context->hdrs[j]->quasi_deleted = true;
               Context->changed = true;
             }
           }
@@ -1887,24 +1888,23 @@ int mutt_index_menu(void)
           if (Context->magic == MUTT_NOTMUCH)
             nm_longrun_init(Context, true);
 #endif
-          for (px = 0, j = 0; j < Context->vcount; j++)
+          for (px = 0, j = 0; j < Context->msgcount; j++)
           {
-            if (Context->hdrs[Context->v2r[j]]->tagged)
+            if (!message_is_tagged(Context, j))
+              continue;
+
+            if (!Context->quiet)
+              mutt_progress_update(&progress, ++px, -1);
+            mx_tags_commit(Context, Context->hdrs[j], buf);
+            if (op == OP_MAIN_MODIFY_TAGS_THEN_HIDE)
             {
-              if (!Context->quiet)
-                mutt_progress_update(&progress, ++px, -1);
-              mx_tags_commit(Context, Context->hdrs[Context->v2r[j]], buf);
-              if (op == OP_MAIN_MODIFY_TAGS_THEN_HIDE)
-              {
-                bool still_queried = false;
+              bool still_queried = false;
 #ifdef USE_NOTMUCH
-                if (Context->magic == MUTT_NOTMUCH)
-                  still_queried = nm_message_is_still_queried(
-                      Context, Context->hdrs[Context->v2r[j]]);
+              if (Context->magic == MUTT_NOTMUCH)
+                still_queried = nm_message_is_still_queried(Context, Context->hdrs[j]);
 #endif
-                Context->hdrs[Context->v2r[j]]->quasi_deleted = !still_queried;
-                Context->changed = true;
-              }
+              Context->hdrs[j]->quasi_deleted = !still_queried;
+              Context->changed = true;
             }
           }
 #ifdef USE_NOTMUCH
@@ -2082,7 +2082,7 @@ int mutt_index_menu(void)
           if (op == OP_MAIN_CHANGE_GROUP || op == OP_MAIN_CHANGE_GROUP_READONLY)
           {
             set_option(OPT_NEWS);
-            CurrentNewsSrv = nntp_select_server(NewsServer, 0);
+            CurrentNewsSrv = nntp_select_server(NewsServer, false);
             if (!CurrentNewsSrv)
               break;
             if (flags)
@@ -2163,7 +2163,8 @@ int mutt_index_menu(void)
          * set CurrentMenu incorrectly when we return back to the index menu. */
         menu->menu = MENU_MAIN;
 
-        if ((op = mutt_display_message(CURHDR)) < 0)
+        op = mutt_display_message(CURHDR);
+        if (op < 0)
         {
           unset_option(OPT_NEED_RESORT);
           break;
@@ -2526,11 +2527,11 @@ int mutt_index_menu(void)
 
         if (tag)
         {
-          for (j = 0; j < Context->vcount; j++)
+          for (j = 0; j < Context->msgcount; j++)
           {
-            if (Context->hdrs[Context->v2r[j]]->tagged)
-              mutt_set_flag(Context, Context->hdrs[Context->v2r[j]], MUTT_FLAG,
-                            !Context->hdrs[Context->v2r[j]]->flagged);
+            if (message_is_tagged(Context, j))
+              mutt_set_flag(Context, Context->hdrs[j], MUTT_FLAG,
+                            !Context->hdrs[j]->flagged);
           }
 
           menu->redraw |= REDRAW_INDEX;
@@ -2565,16 +2566,15 @@ int mutt_index_menu(void)
 
         if (tag)
         {
-          for (j = 0; j < Context->vcount; j++)
+          for (j = 0; j < Context->msgcount; j++)
           {
-            if (Context->hdrs[Context->v2r[j]]->tagged)
-            {
-              if (Context->hdrs[Context->v2r[j]]->read ||
-                  Context->hdrs[Context->v2r[j]]->old)
-                mutt_set_flag(Context, Context->hdrs[Context->v2r[j]], MUTT_NEW, 1);
-              else
-                mutt_set_flag(Context, Context->hdrs[Context->v2r[j]], MUTT_READ, 1);
-            }
+            if (!message_is_tagged(Context, j))
+              continue;
+
+            if (Context->hdrs[j]->read || Context->hdrs[j]->old)
+              mutt_set_flag(Context, Context->hdrs[j], MUTT_NEW, 1);
+            else
+              mutt_set_flag(Context, Context->hdrs[j], MUTT_READ, 1);
           }
           menu->redraw |= REDRAW_STATUS | REDRAW_INDEX;
         }
@@ -2658,7 +2658,8 @@ int mutt_index_menu(void)
         CHECK_MSGCOUNT;
         CHECK_VISIBLE;
 
-        if ((menu->current = mutt_parent_message(Context, CURHDR, op == OP_MAIN_ROOT_MESSAGE)) < 0)
+        menu->current = mutt_parent_message(Context, CURHDR, op == OP_MAIN_ROOT_MESSAGE);
+        if (menu->current < 0)
         {
           menu->current = menu->oldcurrent;
         }
@@ -3105,10 +3106,10 @@ int mutt_index_menu(void)
 
         if (tag)
         {
-          for (j = 0; j < Context->vcount; j++)
+          for (j = 0; j < Context->msgcount; j++)
           {
-            if (Context->hdrs[Context->v2r[j]]->tagged)
-              mutt_resend_message(NULL, Context, Context->hdrs[Context->v2r[j]]);
+            if (message_is_tagged(Context, j))
+              mutt_resend_message(NULL, Context, Context->hdrs[j]);
           }
         }
         else

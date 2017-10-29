@@ -42,7 +42,6 @@
 #include "globals.h"
 #include "header.h"
 #include "imap/imap.h"
-#include "list.h"
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_socket.h"
@@ -594,7 +593,8 @@ int imap_read_headers(struct ImapData *idata, unsigned int msn_begin, unsigned i
         if (rc != IMAP_CMD_CONTINUE)
           break;
 
-        if ((mfhrc = msg_fetch_header(ctx, &h, idata->buf, NULL)) < 0)
+        mfhrc = msg_fetch_header(ctx, &h, idata->buf, NULL);
+        if (mfhrc < 0)
           continue;
 
         if (!h.data->uid)
@@ -712,7 +712,8 @@ int imap_read_headers(struct ImapData *idata, unsigned int msn_begin, unsigned i
         if (rc != IMAP_CMD_CONTINUE)
           break;
 
-        if ((mfhrc = msg_fetch_header(ctx, &h, idata->buf, fp)) < 0)
+        mfhrc = msg_fetch_header(ctx, &h, idata->buf, fp);
+        if (mfhrc < 0)
           continue;
 
         if (!ftello(fp))
@@ -1274,14 +1275,17 @@ int imap_copy_messages(struct Context *ctx, struct Header *h, char *dest, int de
        * remainder. */
       for (int i = 0; i < ctx->msgcount; i++)
       {
-        if (ctx->hdrs[i]->tagged && ctx->hdrs[i]->attach_del)
+        if (!message_is_tagged(ctx, i))
+          continue;
+
+        if (ctx->hdrs[i]->attach_del)
         {
           mutt_debug(3, "imap_copy_messages: Message contains attachments to "
                         "be deleted\n");
           return 1;
         }
 
-        if (ctx->hdrs[i]->tagged && ctx->hdrs[i]->active && ctx->hdrs[i]->changed)
+        if (ctx->hdrs[i]->active && ctx->hdrs[i]->changed)
         {
           rc = imap_sync_message_for_copy(idata, ctx->hdrs[i], &sync_cmd, &err_continue);
           if (rc < 0)
@@ -1321,7 +1325,8 @@ int imap_copy_messages(struct Context *ctx, struct Header *h, char *dest, int de
           goto out;
         }
       }
-      if ((rc = imap_exec(idata, cmd.data, IMAP_CMD_QUEUE)) < 0)
+      rc = imap_exec(idata, cmd.data, IMAP_CMD_QUEUE);
+      if (rc < 0)
       {
         mutt_debug(1, "could not queue copy\n");
         goto out;
@@ -1366,13 +1371,13 @@ int imap_copy_messages(struct Context *ctx, struct Header *h, char *dest, int de
     {
       for (int i = 0; i < ctx->msgcount; i++)
       {
-        if (ctx->hdrs[i]->tagged)
-        {
-          mutt_set_flag(ctx, ctx->hdrs[i], MUTT_DELETE, 1);
-          mutt_set_flag(ctx, ctx->hdrs[i], MUTT_PURGE, 1);
-          if (option(OPT_DELETE_UNTAG))
-            mutt_set_flag(ctx, ctx->hdrs[i], MUTT_TAG, 0);
-        }
+        if (!message_is_tagged(ctx, i))
+          continue;
+
+        mutt_set_flag(ctx, ctx->hdrs[i], MUTT_DELETE, 1);
+        mutt_set_flag(ctx, ctx->hdrs[i], MUTT_PURGE, 1);
+        if (option(OPT_DELETE_UNTAG))
+          mutt_set_flag(ctx, ctx->hdrs[i], MUTT_TAG, 0);
       }
     }
     else

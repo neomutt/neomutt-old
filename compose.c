@@ -44,7 +44,6 @@
 #include "globals.h"
 #include "header.h"
 #include "keymap.h"
-#include "list.h"
 #include "mailbox.h"
 #include "mime.h"
 #include "mutt_curses.h"
@@ -56,7 +55,6 @@
 #include "opcodes.h"
 #include "options.h"
 #include "protos.h"
-#include "rfc1524.h"
 #include "rfc822.h"
 #include "sort.h"
 #ifdef MIXMASTER
@@ -1059,7 +1057,6 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
 #endif
       {
         char *prompt = NULL;
-        struct Header *h = NULL;
 
         fname[0] = 0;
         prompt = _("Open mailbox to attach message from");
@@ -1068,7 +1065,7 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
         unset_option(OPT_NEWS);
         if (op == OP_COMPOSE_ATTACH_NEWS_MESSAGE)
         {
-          CurrentNewsSrv = nntp_select_server(NewsServer, 0);
+          CurrentNewsSrv = nntp_select_server(NewsServer, false);
           if (!CurrentNewsSrv)
             break;
 
@@ -1151,18 +1148,17 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
 
         for (i = 0; i < Context->msgcount; i++)
         {
-          h = Context->hdrs[i];
-          if (h->tagged)
+          if (!message_is_tagged(Context, i))
+            continue;
+
+          new = (struct AttachPtr *) safe_calloc(1, sizeof(struct AttachPtr));
+          new->content = mutt_make_message_attach(Context, Context->hdrs[i], 1);
+          if (new->content != NULL)
+            update_idx(menu, actx, new);
+          else
           {
-            new = (struct AttachPtr *) safe_calloc(1, sizeof(struct AttachPtr));
-            new->content = mutt_make_message_attach(Context, h, 1);
-            if (new->content)
-              update_idx(menu, actx, new);
-            else
-            {
-              mutt_error(_("Unable to attach!"));
-              FREE(&new);
-            }
+            mutt_error(_("Unable to attach!"));
+            FREE(&new);
           }
         }
         menu->redraw |= REDRAW_FULL;

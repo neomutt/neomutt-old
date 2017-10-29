@@ -130,7 +130,8 @@ proc write-if-changed {file buf {script {}}} {
 
 # @make-template template ?outfile?
 #
-# Reads the input file '<srcdir>/$template' and writes the output file '$outfile'.
+# Reads the input file '<srcdir>/$template' and writes the output file '$outfile'
+# (unless unchanged).
 # If '$outfile' is blank/omitted, '$template' should end with '.in' which
 # is removed to create the output file name.
 #
@@ -222,9 +223,9 @@ proc make-template {template {out {}}} {
 		}
 		lappend result $line
 	}
-	writefile $out [string map $mapping [join $result \n]]\n
-
-	msg-result "Created [relative-path $out] from [relative-path $template]"
+	write-if-changed $out [string map $mapping [join $result \n]]\n {
+		msg-result "Created [relative-path $out] from [relative-path $template]"
+	}
 }
 
 # build/host tuples and cross-compilation prefix
@@ -265,8 +266,9 @@ define target [get-define host]
 define prefix $prefix
 define builddir $autosetup(builddir)
 define srcdir $autosetup(srcdir)
-# Allow this to come from the environment
-define top_srcdir [get-env top_srcdir [get-define srcdir]]
+define top_srcdir $autosetup(srcdir)
+define abs_top_srcdir [file-normalize $autosetup(srcdir)]
+define abs_top_builddir [file-normalize $autosetup(builddir)]
 
 # autoconf supports all of these
 set exec_prefix [lindex [opt-val exec-prefix $prefix] end]
@@ -281,15 +283,19 @@ foreach {name defpath} {
 }
 foreach {name defpath} {
 	datadir /share
-	sysconfdir /etc
 	sharedstatedir /com
-	localstatedir /var
 	infodir /share/info
 	mandir /share/man
 	includedir /include
 } {
 	define $name [lindex [opt-val $name $prefix$defpath] end]
 }
+if {$prefix ne {/usr}} {
+	define sysconfdir [lindex [opt-val sysconfdir $prefix/etc] end]
+} else {
+	define sysconfdir [lindex [opt-val sysconfdir /etc] end]
+}
+define localstatedir [lindex [opt-val localstatedir /var] end]
 
 define SHELL [get-env SHELL [find-an-executable sh bash ksh]]
 
