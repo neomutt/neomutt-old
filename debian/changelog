@@ -1,7 +1,8 @@
 neomutt (1:20171027-1lxtec1) unstable; urgency=medium
 
-  * New upstream release neomutt-20171027
-  * Adjusted versionpatches
+  * New upstream release neomutt-20171027.
+  * Adjusted versionpatches.
+  * Cleaned trailing whitespace in changelog.
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 29 Oct 2017 08:50:49 +0100
 
@@ -232,7 +233,7 @@ neomutt (1:20170128-1lxtec2) unstable; urgency=medium
 
 neomutt (1:20170128-1lxtec1) unstable; urgency=medium
 
-  * New upstream release 
+  * New upstream release
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 29 Jan 2017 09:28:24 +0100
 
@@ -365,7 +366,7 @@ neomutt (1:20160925-1lxtec1) unstable; urgency=medium
 
 neomutt (1:20160925-1lxtec1) unstable; urgency=medium
 
-  * Updated to latest neomutt commit 
+  * Updated to latest neomutt commit
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 25 Sep 2016 11:35:09 +0200
 
