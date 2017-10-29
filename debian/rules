@@ -48,7 +48,6 @@ endif
 
 override_dh_auto_configure:
 		./configure.autosetup			\
-			--sysconfdir=/etc		\
 			--with-mailpath=/var/mail	\
 			--docdir=/usr/share/doc/neomutt	\
 			--fmemopen			\
