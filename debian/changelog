@@ -1,8 +1,9 @@
-neomutt (1:20171027-1lxtec1) UNRELEASED; urgency=medium
+neomutt (1:20171027-1lxtec1) unstable; urgency=medium
 
+  * New upstream release neomutt-20171027
   * Adjusted versionpatches
 
- -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 29 Oct 2017 08:26:36 +0100
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 29 Oct 2017 08:50:49 +0100
 
 neomutt (1:20171013-1lxtec1) unstable; urgency=medium
 

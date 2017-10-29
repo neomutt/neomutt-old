@@ -2,7 +2,7 @@
 # Description:   How to build a Debian package from neomutt's git source
 # Author:        Elimar Riesebieter <riesebie@lxtec.de>
 # Created:       Sat, 15 Apr 2017 12:32:08 +0200
-# Last modified: Sun, 08 Oct 2017 17:30:18 +0200
+# Last modified: Sun, 29 Oct 2017 08:32:55 +0100
 # File:          /source/neomutt/git/neomutt/debian/README.Debian
 ###############################################################################
 
@@ -40,7 +40,6 @@ $ ls ../deb-packages/neomutt/
 The default will build with:
 
 ./configure.autosetup			\
-	--sysconfdir=/etc		\
 	--with-mailpath=/var/mail	\
 	--gpgme				\
 	--fmemopen			\
