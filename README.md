@@ -5,6 +5,14 @@ This repo contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repo tidier.
 
+## NeoMutt 2017-10-27
+
+These NeoMutt branches are based on NeoMutt 2017-10-27
+
+- display_filter
+  Filter out NeoMutt's escape sequence when using display_filter
+  https://github.com/neomutt/neomutt/issues/897
+
 ## NeoMutt 2017-10-13
 
 These NeoMutt branches are based on NeoMutt 2017-10-13
