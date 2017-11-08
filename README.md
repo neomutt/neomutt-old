@@ -1,15 +1,15 @@
 # NeoMutt Old
 
-This repo contains old NeoMutt branches.
+This repository contains old NeoMutt branches.
 
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
-They have simply been moved to keep the main repo tidier.
+They have simply been moved to keep the main repository tidier.
 
 ## NeoMutt 2017-10-27
 
 These NeoMutt branches are based on NeoMutt 2017-10-27
 
-- display_filter
+- [display_filter](https://github.com/neomutt/neomutt-old/tree/display_filter)
   Filter out NeoMutt's escape sequence when using display_filter
   https://github.com/neomutt/neomutt/issues/897
 
@@ -17,13 +17,13 @@ These NeoMutt branches are based on NeoMutt 2017-10-27
 
 These NeoMutt branches are based on NeoMutt 2017-10-13
 
-- iso8859-1_cp1252_fallback
+- [iso8859-1_cp1252_fallback](https://github.com/neomutt/neomutt-old/tree/iso8859-1_cp1252_fallback)
   Fallback iso8859-1 -> cp1252 if chars are within 0x80-0x9f
-- matcher
+- [matcher](https://github.com/neomutt/neomutt-old/tree/matcher)
   sidebar matcher - quickly filter large numbers of mailboxes
-- shrink-lmdb-size
+- [shrink-lmdb-size](https://github.com/neomutt/neomutt-old/tree/shrink-lmdb-size)
   Try to decrease LMDB's db size if the default is too much
-- debian-20171013
+- [debian-20171013](https://github.com/neomutt/neomutt-old/tree/debian-20171013)
   Rebased copy of riesebie's Debian branch
 
 ## Mutt-1.6.2
