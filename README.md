@@ -13,6 +13,20 @@ These NeoMutt branches are based on NeoMutt 2017-10-27
   Filter out NeoMutt's escape sequence when using display_filter
   https://github.com/neomutt/neomutt/issues/897
 
+- [bg-attach-open](https://github.com/neomutt/neomutt-old/tree/bg-attach-open)
+  Spawn a new process when opening an attachment, so NeoMutt doesn't have to wait.
+
+- [configure-scan-cache-backends](https://github.com/neomutt/neomutt-old/tree/configure-scan-cache-backends)
+  Create a configure option to enable all the options for which it can find libraries.
+  Any missing libraries cause options to be silently ignored.
+
+- [help-visual](https://github.com/neomutt/neomutt-old/tree/help-visual)
+  Change the help page to have a line of dots between options for clarity on
+  wide screens.
+
+- [help-libsmartcols](https://github.com/neomutt/neomutt-old/tree/help-libsmartcols)
+  Change the help page to dynamically draw dividers and resize using libsmartcols.
+
 ## NeoMutt 2017-10-13
 
 These NeoMutt branches are based on NeoMutt 2017-10-13
