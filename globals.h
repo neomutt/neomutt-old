@@ -90,6 +90,8 @@ WHERE struct ListHead SidebarWhitelist INITVAL(STAILQ_HEAD_INITIALIZER(SidebarWh
 WHERE SIG_ATOMIC_VOLATILE_T SigAlrm;
 WHERE SIG_ATOMIC_VOLATILE_T SigInt;
 WHERE SIG_ATOMIC_VOLATILE_T SigWinch;
+WHERE SIG_ATOMIC_VOLATILE_T SigUsr1;
+WHERE SIG_ATOMIC_VOLATILE_T SigUsr2;
 
 WHERE int CurrentMenu;
 
@@ -226,6 +228,8 @@ WHERE char *Trash;
 WHERE char *TSStatusFormat;
 WHERE char *TSIconFormat;
 WHERE char *Visual;
+WHERE char *Usr1Command;
+WHERE char *Usr2Command;
 
 WHERE char *HiddenTags;
 

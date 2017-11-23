@@ -1106,6 +1106,35 @@ int mutt_index_menu(void)
         clearok(stdscr, true);
         continue;
       }
+      if (SigUsr1)
+      {
+        struct Buffer token;
+        struct Buffer err;
+        char buf2[STRING];
+        mutt_buffer_init(&token);
+        err.data = buf2;
+        err.dsize = sizeof(buf2);
+        SigUsr1 = 0;
+        if (Usr1Command && (mutt_parse_rc_line(Usr1Command, &token, &err) == -1))
+        {
+          mutt_error("SIGUSR1 : %s", Usr1Command);
+        }
+      }
+
+      if (SigUsr2)
+      {
+        struct Buffer token;
+        struct Buffer err;
+        char buf2[STRING];
+        mutt_buffer_init(&token);
+        err.data = buf2;
+        err.dsize = sizeof(buf2);
+        SigUsr2 = 0;
+        if (Usr2Command && (mutt_parse_rc_line(Usr2Command, &token, &err) == -1))
+        {
+          mutt_error("SIGUSR2 : %s", Usr2Command);
+        }
+      }
 
       op = km_dokey(MENU_MAIN);
 

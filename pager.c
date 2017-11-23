@@ -2272,6 +2272,35 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
       }
       continue;
     }
+    if (SigUsr1)
+    {
+      struct Buffer token;
+      struct Buffer err2;
+      char buf[STRING];
+      mutt_buffer_init(&token);
+      err2.data = buf;
+      err2.dsize = sizeof(buf);
+      SigUsr1 = 0;
+      if (Usr1Command && (mutt_parse_rc_line(Usr1Command, &token, &err2) == -1))
+      {
+        mutt_error("SIGUSR1 : %s", Usr1Command);
+      }
+    }
+
+    if (SigUsr2)
+    {
+      struct Buffer token;
+      struct Buffer err2;
+      char buf[STRING];
+      mutt_buffer_init(&token);
+      err2.data = buf;
+      err2.dsize = sizeof(buf);
+      SigUsr2 = 0;
+      if (Usr2Command && (mutt_parse_rc_line(Usr2Command, &token, &err2) == -1))
+      {
+        mutt_error("SIGUSR2 : %s", Usr2Command);
+      }
+    }
 
     if (ch < 0)
     {

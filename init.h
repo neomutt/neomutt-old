@@ -4375,6 +4375,8 @@ struct Option MuttVars[] = {
   ** .pp
   ** When \fIset\fP, NeoMutt will collapse all threads when entering a folder.
   */
+  { "usr1_command", DT_STRING, R_NONE, UL &Usr1Command, UL NULL },
+  { "usr2_command", DT_STRING, R_NONE, UL &Usr2Command, UL NULL },
   /*--*/
 
   { "pgp_encrypt_self",   DT_QUAD,    R_NONE,  UL &PgpEncryptSelf,   MUTT_NO },

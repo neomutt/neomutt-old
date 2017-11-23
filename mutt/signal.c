@@ -133,6 +133,8 @@ void mutt_sig_init(sig_handler_t sig_fn, sig_handler_t exit_fn)
   sigaction(SIGTSTP, &act, NULL);
   sigaction(SIGINT, &act, NULL);
   sigaction(SIGWINCH, &act, NULL);
+  sigaction(SIGUSR1, &act, NULL);
+  sigaction(SIGUSR2, &act, NULL);
 
   /* POSIX doesn't allow us to ignore SIGCHLD,
    * so we just install a dummy handler for it */

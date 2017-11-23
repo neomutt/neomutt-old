@@ -66,6 +66,14 @@ static void curses_signal_handler(int sig)
     case SIGINT:
       SigInt = 1;
       break;
+
+    case SIGUSR1:
+      SigUsr1 = 1;
+      break;
+
+    case SIGUSR2:
+      SigUsr2 = 1;
+      break;
   }
   errno = save_errno;
 }
