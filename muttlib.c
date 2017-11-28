@@ -1505,7 +1505,8 @@ int debuglevel;
 char *debugfile_cmdline = NULL;
 int debuglevel_cmdline;
 
-int mutt_debug_real(const char *function, const char *file, int line, int level, ...)
+int mutt_debug_real(const char *function, const char *UNUSED(file),
+                    int UNUSED(line), int level, ...)
 {
   va_list ap;
   time_t now = time(NULL);
