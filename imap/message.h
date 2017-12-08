@@ -21,12 +21,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _MUTT_IMAP_MESSAGE_H
-#define _MUTT_IMAP_MESSAGE_H
+#ifndef _IMAP_MESSAGE_H
+#define _IMAP_MESSAGE_H
 
 #include <stdbool.h>
 #include <time.h>
-#include "lib/list.h"
+#include "mutt/list.h"
 
 /**
  * struct ImapHeaderData - IMAP-specific header data
@@ -65,4 +65,4 @@ struct ImapHeader
 
 #define HEADER_DATA(ph) ((struct ImapHeaderData *) ((ph)->data))
 
-#endif /* _MUTT_IMAP_MESSAGE_H */
+#endif /* _IMAP_MESSAGE_H */

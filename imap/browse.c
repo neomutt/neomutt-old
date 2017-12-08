@@ -21,7 +21,17 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* NeoMutt browser support routines */
+/**
+ * @page imap_browse Mailbox browser
+ *
+ * GUI select an IMAP mailbox from a list
+ *
+ * | Function              | Description
+ * | :-------------------- | :-------------------------------------------------
+ * | imap_browse()         | IMAP hook into the folder browser
+ * | imap_mailbox_create() | Create a new IMAP mailbox
+ * | imap_mailbox_rename() | Rename a mailbox
+ */
 
 #include "config.h"
 #ifdef ENABLE_NLS
@@ -32,26 +42,32 @@
 #include <stdio.h>
 #include <string.h>
 #include "imap_private.h"
-#include "lib/lib.h"
+#include "mutt/mutt.h"
 #include "mutt.h"
-#include "account.h"
 #include "browser.h"
 #include "buffy.h"
 #include "context.h"
 #include "globals.h"
 #include "imap/imap.h"
+#include "mutt_account.h"
 #include "mutt_regex.h"
 #include "options.h"
 #include "protos.h"
 
 /**
- * imap_add_folder - Format and add an IMAP folder to the browser
+ * add_folder - Format and add an IMAP folder to the browser
+ * @param delim       Path delimiter
+ * @param folder      Name of the folder
+ * @param noselect    true if item isn't selectable
+ * @param noinferiors true if item has no children
+ * @param state       Browser state to add to
+ * @param isparent    true if item represents the parent folder
  *
  * The folder parameter should already be 'unmunged' via
  * imap_unmunge_mbox_name().
  */
-static void imap_add_folder(char delim, char *folder, int noselect, int noinferiors,
-                            struct BrowserState *state, short isparent)
+static void add_folder(char delim, char *folder, int noselect, int noinferiors,
+                       struct BrowserState *state, short isparent)
 {
   char tmp[LONG_STRING];
   char relpath[LONG_STRING];
@@ -63,19 +79,19 @@ static void imap_add_folder(char delim, char *folder, int noselect, int noinferi
 
   if (state->entrylen + 1 == state->entrymax)
   {
-    safe_realloc(&state->entry, sizeof(struct FolderFile) * (state->entrymax += 256));
+    mutt_mem_realloc(&state->entry, sizeof(struct FolderFile) * (state->entrymax += 256));
     memset(state->entry + state->entrylen, 0,
            (sizeof(struct FolderFile) * (state->entrymax - state->entrylen)));
   }
 
   /* render superiors as unix-standard ".." */
   if (isparent)
-    strfcpy(relpath, "../", sizeof(relpath));
+    mutt_str_strfcpy(relpath, "../", sizeof(relpath));
   /* strip current folder from target, to render a relative path */
-  else if (mutt_strncmp(mx.mbox, folder, mutt_strlen(mx.mbox)) == 0)
-    strfcpy(relpath, folder + mutt_strlen(mx.mbox), sizeof(relpath));
+  else if (mutt_str_strncmp(mx.mbox, folder, mutt_str_strlen(mx.mbox)) == 0)
+    mutt_str_strfcpy(relpath, folder + mutt_str_strlen(mx.mbox), sizeof(relpath));
   else
-    strfcpy(relpath, folder, sizeof(relpath));
+    mutt_str_strfcpy(relpath, folder, sizeof(relpath));
 
   /* apply filemask filter. This should really be done at menu setup rather
    * than at scan, since it's so expensive to scan. But that's big changes
@@ -87,7 +103,7 @@ static void imap_add_folder(char delim, char *folder, int noselect, int noinferi
   }
 
   imap_qualify_path(tmp, sizeof(tmp), &mx, folder);
-  (state->entry)[state->entrylen].name = safe_strdup(tmp);
+  (state->entry)[state->entrylen].name = mutt_str_strdup(tmp);
 
   /* mark desc with delim in browser if it can have subfolders */
   if (!isparent && !noinferiors && strlen(relpath) < sizeof(relpath) - 1)
@@ -96,7 +112,7 @@ static void imap_add_folder(char delim, char *folder, int noselect, int noinferi
     relpath[strlen(relpath)] = delim;
   }
 
-  (state->entry)[state->entrylen].desc = safe_strdup(relpath);
+  (state->entry)[state->entrylen].desc = mutt_str_strdup(relpath);
 
   (state->entry)[state->entrylen].imap = true;
   /* delimiter at the root is useless. */
@@ -107,11 +123,11 @@ static void imap_add_folder(char delim, char *folder, int noselect, int noinferi
   (state->entry)[state->entrylen].inferiors = !noinferiors;
 
   b = Incoming;
-  while (b && (mutt_strcmp(tmp, b->path) != 0))
+  while (b && (mutt_str_strcmp(tmp, b->path) != 0))
     b = b->next;
   if (b)
   {
-    if (Context && (mutt_strcmp(b->realpath, Context->realpath) == 0))
+    if (Context && (mutt_str_strcmp(b->realpath, Context->realpath) == 0))
     {
       b->msg_count = Context->msgcount;
       b->msg_unread = Context->unread;
@@ -127,6 +143,15 @@ static void imap_add_folder(char delim, char *folder, int noselect, int noinferi
   FREE(&mx.mbox);
 }
 
+/**
+ * browse_add_list_result - Add entries to the folder browser
+ * @param idata    Server data
+ * @param cmd      Command string from server
+ * @param state    Browser state to add to
+ * @param isparent Is this a shortcut for the parent directory?
+ * @retval  0 Success
+ * @retval -1 Failure
+ */
 static int browse_add_list_result(struct ImapData *idata, const char *cmd,
                                   struct BrowserState *state, short isparent)
 {
@@ -136,8 +161,7 @@ static int browse_add_list_result(struct ImapData *idata, const char *cmd,
 
   if (imap_parse_path(state->folder, &mx))
   {
-    mutt_debug(2, "browse_add_list_result: current folder %s makes no sense\n",
-               state->folder);
+    mutt_debug(2, "current folder %s makes no sense\n", state->folder);
     return -1;
   }
 
@@ -155,9 +179,8 @@ static int browse_add_list_result(struct ImapData *idata, const char *cmd,
       if (isparent)
         list.noselect = true;
       /* prune current folder from output */
-      if (isparent || (mutt_strncmp(list.name, mx.mbox, strlen(list.name)) != 0))
-        imap_add_folder(list.delim, list.name, list.noselect, list.noinferiors,
-                        state, isparent);
+      if (isparent || (mutt_str_strncmp(list.name, mx.mbox, strlen(list.name)) != 0))
+        add_folder(list.delim, list.name, list.noselect, list.noinferiors, state, isparent);
     }
   } while (rc == IMAP_CMD_CONTINUE);
   idata->cmddata = NULL;
@@ -168,6 +191,10 @@ static int browse_add_list_result(struct ImapData *idata, const char *cmd,
 
 /**
  * imap_browse - IMAP hook into the folder browser
+ * @param path  Current folder
+ * @param state BrowserState to populate
+ * @retval  0 Success
+ * @retval -1 Failure
  *
  * Fill out browser_state, given a current folder to browse
  */
@@ -193,7 +220,8 @@ int imap_browse(char *path, struct BrowserState *state)
 
   save_lsub = option(OPT_IMAP_CHECK_SUBSCRIBED);
   unset_option(OPT_IMAP_CHECK_SUBSCRIBED);
-  strfcpy(list_cmd, option(OPT_IMAP_LIST_SUBSCRIBED) ? "LSUB" : "LIST", sizeof(list_cmd));
+  mutt_str_strfcpy(list_cmd, option(OPT_IMAP_LIST_SUBSCRIBED) ? "LSUB" : "LIST",
+                   sizeof(list_cmd));
 
   idata = imap_conn_find(&(mx.account), 0);
   if (!idata)
@@ -205,7 +233,7 @@ int imap_browse(char *path, struct BrowserState *state)
   if (mx.mbox && mx.mbox[0] != '\0')
   {
     imap_fix_path(idata, mx.mbox, mbox, sizeof(mbox));
-    n = mutt_strlen(mbox);
+    n = mutt_str_strlen(mbox);
   }
   else
   {
@@ -216,7 +244,7 @@ int imap_browse(char *path, struct BrowserState *state)
   if (n)
   {
     int rc;
-    mutt_debug(3, "imap_browse: mbox: %s\n", mbox);
+    mutt_debug(3, "mbox: %s\n", mbox);
 
     /* if our target exists and has inferiors, enter it if we
      * aren't already going to */
@@ -246,7 +274,7 @@ int imap_browse(char *path, struct BrowserState *state)
     {
       showparents = true;
       imap_qualify_path(buf, sizeof(buf), &mx, mbox);
-      state->folder = safe_strdup(buf);
+      state->folder = mutt_str_strdup(buf);
       n--;
     }
 
@@ -267,8 +295,8 @@ int imap_browse(char *path, struct BrowserState *state)
 
       if (showparents)
       {
-        mutt_debug(3, "imap_init_browse: adding parent %s\n", mbox);
-        imap_add_folder(list.delim, mbox, 1, 0, state, 1);
+        mutt_debug(3, "adding parent %s\n", mbox);
+        add_folder(list.delim, mbox, 1, 0, state, 1);
       }
 
       /* if our target isn't a folder, we are in our superior */
@@ -279,7 +307,7 @@ int imap_browse(char *path, struct BrowserState *state)
         ctmp = mbox[n];
         mbox[n] = '\0';
         imap_qualify_path(buf, sizeof(buf), &mx, mbox);
-        state->folder = safe_strdup(buf);
+        state->folder = mutt_str_strdup(buf);
       }
       mbox[n] = ctmp;
     }
@@ -290,11 +318,11 @@ int imap_browse(char *path, struct BrowserState *state)
       /* folder may be "/" */
       snprintf(relpath, sizeof(relpath), "%c", n < 0 ? '\0' : idata->delim);
       if (showparents)
-        imap_add_folder(idata->delim, relpath, 1, 0, state, 1);
+        add_folder(idata->delim, relpath, 1, 0, state, 1);
       if (!state->folder)
       {
         imap_qualify_path(buf, sizeof(buf), &mx, relpath);
-        state->folder = safe_strdup(buf);
+        state->folder = mutt_str_strdup(buf);
       }
     }
   }
@@ -303,10 +331,10 @@ int imap_browse(char *path, struct BrowserState *state)
   if (!state->folder)
   {
     imap_qualify_path(buf, sizeof(buf), &mx, NULL);
-    state->folder = safe_strdup(buf);
+    state->folder = mutt_str_strdup(buf);
   }
 
-  mutt_debug(3, "imap_browse: Quoting mailbox scan: %s -> ", mbox);
+  mutt_debug(3, "Quoting mailbox scan: %s -> ", mbox);
   snprintf(buf, sizeof(buf), "%s%%", mbox);
   imap_munge_mbox_name(idata, munged_mbox, sizeof(munged_mbox), buf);
   mutt_debug(3, "%s\n", munged_mbox);
@@ -337,6 +365,9 @@ fail:
 
 /**
  * imap_mailbox_create - Create a new IMAP mailbox
+ * @param folder Mailbox to create
+ * @retval  0 Success
+ * @retval -1 Failure
  *
  * Prompt for a new mailbox name, and try to create it
  */
@@ -349,22 +380,21 @@ int imap_mailbox_create(const char *folder)
 
   if (imap_parse_path(folder, &mx) < 0)
   {
-    mutt_debug(1, "imap_mailbox_create: Bad starting path %s\n", folder);
+    mutt_debug(1, "Bad starting path %s\n", folder);
     return -1;
   }
 
   idata = imap_conn_find(&mx.account, MUTT_IMAP_CONN_NONEW);
   if (!idata)
   {
-    mutt_debug(1, "imap_mailbox_create: Couldn't find open connection to %s\n",
-               mx.account.host);
+    mutt_debug(1, "Couldn't find open connection to %s\n", mx.account.host);
     goto fail;
   }
 
-  strfcpy(buf, NONULL(mx.mbox), sizeof(buf));
+  mutt_str_strfcpy(buf, NONULL(mx.mbox), sizeof(buf));
 
   /* append a delimiter if necessary */
-  n = mutt_strlen(buf);
+  n = mutt_str_strlen(buf);
   if (n && (n < sizeof(buf) - 1) && (buf[n - 1] != idata->delim))
   {
     buf[n++] = idata->delim;
@@ -374,7 +404,7 @@ int imap_mailbox_create(const char *folder)
   if (mutt_get_field(_("Create mailbox: "), buf, sizeof(buf), MUTT_FILE) < 0)
     goto fail;
 
-  if (!mutt_strlen(buf))
+  if (!mutt_str_strlen(buf))
   {
     mutt_error(_("Mailbox must have a name."));
     mutt_sleep(1);
@@ -395,6 +425,14 @@ fail:
   return -1;
 }
 
+/**
+ * imap_mailbox_rename - Rename a mailbox
+ * @param mailbox Mailbox to rename
+ * @retval  0 Success
+ * @retval -1 Failure
+ *
+ * The user will be prompted for a new name.
+ */
 int imap_mailbox_rename(const char *mailbox)
 {
   struct ImapData *idata = NULL;
@@ -404,15 +442,14 @@ int imap_mailbox_rename(const char *mailbox)
 
   if (imap_parse_path(mailbox, &mx) < 0)
   {
-    mutt_debug(1, "imap_mailbox_rename: Bad source mailbox %s\n", mailbox);
+    mutt_debug(1, "Bad source mailbox %s\n", mailbox);
     return -1;
   }
 
   idata = imap_conn_find(&mx.account, MUTT_IMAP_CONN_NONEW);
   if (!idata)
   {
-    mutt_debug(1, "imap_mailbox_rename: Couldn't find open connection to %s\n",
-               mx.account.host);
+    mutt_debug(1, "Couldn't find open connection to %s\n", mx.account.host);
     goto fail;
   }
 
@@ -423,12 +460,12 @@ int imap_mailbox_rename(const char *mailbox)
   }
 
   snprintf(buf, sizeof(buf), _("Rename mailbox %s to: "), mx.mbox);
-  strfcpy(newname, mx.mbox, sizeof(newname));
+  mutt_str_strfcpy(newname, mx.mbox, sizeof(newname));
 
   if (mutt_get_field(buf, newname, sizeof(newname), MUTT_FILE) < 0)
     goto fail;
 
-  if (!mutt_strlen(newname))
+  if (!mutt_str_strlen(newname))
   {
     mutt_error(_("Mailbox must have a name."));
     mutt_sleep(1);

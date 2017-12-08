@@ -4,7 +4,7 @@ dnl     autoreconf -i
 CFLAGS=$CFLAGS
 LDFLAGS=$LDFLAGS
 
-AC_INIT([NeoMutt], [20171027], [neomutt-devel@neomutt.org], [neomutt], [https://www.neomutt.org])
+AC_INIT([NeoMutt], [20171208], [neomutt-devel@neomutt.org], [neomutt], [https://www.neomutt.org])
 AC_CONFIG_SRCDIR(mutt.h)
 AC_CONFIG_AUX_DIR([.build-aux])
 AM_INIT_AUTOMAKE
@@ -258,27 +258,6 @@ AS_IF([test x$use_lua = "xyes"], [
 	LIBS="$LIBS $LUA_LIB"
 ])
 
-dnl --enable-notmuch
-AS_IF([test x$use_notmuch = "xyes"], [
-	AC_CHECK_LIB(notmuch, notmuch_database_open, [:],
-		AC_MSG_ERROR([Unable to find Notmuch library]))
-	AC_DEFINE(USE_NOTMUCH,1,[ Define if you want support for the notmuch. ])
-	MUTT_LIB_OBJECTS="$MUTT_LIB_OBJECTS mutt_notmuch.o"
-	LIBS="$LIBS -lnotmuch"
-
-	AC_MSG_CHECKING([for notmuch api version 3])
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-		[[#include <notmuch.h>]],
-		[[notmuch_database_open("/path", NOTMUCH_DATABASE_MODE_READ_ONLY, (notmuch_database_t**)NULL);]]
-	)], [
-		notmuch_api_3=yes
-		AC_DEFINE([NOTMUCH_API_3], 1, [Define to 1 if you have the notmuch api version 3.])
-	], [
-		notmuch_api_3=no
-	])
-	AC_MSG_RESULT([$notmuch_api_3])
-])
-
 dnl --with-mixmaster
 AS_IF([test "$with_mixmaster" != "no"], [
 	AS_IF([test -x "$with_mixmaster"], [MIXMASTER="$with_mixmaster"], [MIXMASTER="mixmaster"])
@@ -409,6 +388,7 @@ dnl --- ncurses
 		MUTT_LIB_OBJECTS="$MUTT_LIB_OBJECTS resize.o"
 	fi
 	AC_CHECK_FUNCS([use_extended_names])
+	CPPFLAGS="$CPPFLAGS -DNCURSES_WIDECHAR"
 fi
 
 AC_HEADER_STDC
@@ -532,10 +512,10 @@ AC_ARG_WITH(ssl, AS_HELP_STRING([--with-ssl@<:@=PFX@:>@],[Enable TLS support usi
 
 		AC_DEFINE(USE_SSL,1,[ Define if you want support for SSL. ])
 		AC_DEFINE(USE_SSL_OPENSSL,1,[ Define if you want support for SSL via OpenSSL. ])
-		MUTT_LIB_OBJECTS="$MUTT_LIB_OBJECTS mutt_ssl.o"
 		need_ssl=yes
 	fi
 ])
+AM_CONDITIONAL(USE_SSL_OPENSSL, test x$need_ssl = xyes)
 
 AC_ARG_WITH([gnutls], AS_HELP_STRING([--with-gnutls@<:@=PFX@:>@],[enable TLS support using gnutls]),
 	[gnutls_prefix="$withval"], [gnutls_prefix="no"])
@@ -563,10 +543,10 @@ if test "$gnutls_prefix" != "no" && test x"$need_ssl" != xyes; then
 		AC_DEFINE(USE_SSL, 1, [ Define if you want support for SSL. ])
 		AC_DEFINE(USE_SSL_GNUTLS, 1, [ Define if you want support for SSL via GNUTLS. ])
 
-		MUTT_LIB_OBJECTS="$MUTT_LIB_OBJECTS mutt_ssl_gnutls.o"
-		need_ssl=yes],
+		need_tls=yes],
 		[AC_MSG_ERROR([could not find libgnutls])])
 fi
+AM_CONDITIONAL(USE_SSL_GNUTLS, test x$need_tls = xyes)
 
 AC_ARG_WITH(sasl, AS_HELP_STRING([--with-sasl@<:@=PFX@:>@],[Use SASL network security library]),
 	[
@@ -581,8 +561,6 @@ AC_ARG_WITH(sasl, AS_HELP_STRING([--with-sasl@<:@=PFX@:>@],[Use SASL network sec
 		AC_SEARCH_LIBS(sasl_encode64, [$sasl_libs],,
 			AC_MSG_ERROR([could not find sasl lib]),)
 
-		MUTT_LIB_OBJECTS="$MUTT_LIB_OBJECTS mutt_sasl.o"
-
 		AC_DEFINE(USE_SASL,1,
 			[ Define if want to use the SASL library for POP/IMAP authentication. ])
 		need_sasl=yes
@@ -591,12 +569,6 @@ AC_ARG_WITH(sasl, AS_HELP_STRING([--with-sasl@<:@=PFX@:>@],[Use SASL network sec
 AM_CONDITIONAL(USE_SASL, test x$need_sasl = xyes)
 
 dnl -- end socket --
-
-AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Enable debugging support]),
-	[ if test x$enableval = xyes; then
-		AC_DEFINE(DEBUG,1,[ Define to enable debugging info. ])
-	fi
-])
 
 AC_ARG_ENABLE(flock, AS_HELP_STRING([--enable-flock],[Use flock() to lock files]),
 	[if test $enableval = yes; then
@@ -884,6 +856,27 @@ if test "x$with_idn" != "xno"; then
 	fi
 fi
 
+dnl --enable-notmuch
+AS_IF([test x$use_notmuch = "xyes"], [
+	AC_CHECK_LIB(notmuch, notmuch_database_open, [:],
+		AC_MSG_ERROR([Unable to find Notmuch library]))
+	AC_DEFINE(USE_NOTMUCH,1,[ Define if you want support for the notmuch. ])
+	MUTT_LIB_OBJECTS="$MUTT_LIB_OBJECTS mutt_notmuch.o"
+	LIBS="$LIBS -lnotmuch"
+
+	AC_MSG_CHECKING([for notmuch api version 3])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+		[[#include <notmuch.h>]],
+		[[notmuch_database_open("/path", NOTMUCH_DATABASE_MODE_READ_ONLY, (notmuch_database_t**)NULL);]]
+	)], [
+		notmuch_api_3=yes
+		AC_DEFINE([NOTMUCH_API_3], 1, [Define to 1 if you have the notmuch api version 3.])
+	], [
+		notmuch_api_3=no
+	])
+	AC_MSG_RESULT([$notmuch_api_3])
+])
+
 dnl -- locales --
 AC_CACHE_CHECK([for wchar_t functions], mutt_cv_wc_funcs,
 	mutt_cv_wc_funcs=no
@@ -948,7 +941,7 @@ if test x$full_doc != xno; then
 fi
 
 AC_CONFIG_FILES(Makefile contrib/Makefile doc/Makefile imap/Makefile
-	m4/Makefile po/Makefile.in hcache/Makefile ncrypt/Makefile lib/Makefile)
+	m4/Makefile po/Makefile.in hcache/Makefile ncrypt/Makefile mutt/Makefile conn/Makefile)
 AC_OUTPUT
 
 AC_MSG_NOTICE([Summary of build options:

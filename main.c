@@ -37,7 +37,8 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "lib/lib.h"
+#include "mutt/mutt.h"
+#include "conn/conn.h"
 #include "mutt.h"
 #include "address.h"
 #include "alias.h"
@@ -50,19 +51,16 @@
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_idna.h"
+#include "mutt_menu.h"
 #include "mutt_regex.h"
 #include "mutt_socket.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
 #include "protos.h"
-#include "rfc822.h"
 #include "url.h"
 #include "version.h"
 #ifdef USE_SIDEBAR
 #include "sidebar.h"
-#endif
-#ifdef USE_SASL
-#include "mutt_sasl.h"
 #endif
 #ifdef USE_IMAP
 #include "imap/imap.h"
@@ -103,9 +101,7 @@ static void usage(void)
          "  -D            print the value of all variables to stdout\n"
          "  -D -S         like -D, but hide the value of sensitive variables\n"
          "  -B            run in batch mode (do not start the ncurses UI)"));
-#ifdef DEBUG
   puts(_("  -d <level>    log debugging output to ~/.neomuttdebug0"));
-#endif
   puts(_(
          "  -E            edit the draft (-H) or include (-i) file\n"
          "  -e <command>  specify a command to be executed after initialization\n"
@@ -192,9 +188,9 @@ int main(int argc, char **argv, char **env)
 {
   char folder[_POSIX_PATH_MAX] = "";
   char *subject = NULL;
-  char *includeFile = NULL;
-  char *draftFile = NULL;
-  char *newMagic = NULL;
+  char *include_file = NULL;
+  char *draft_file = NULL;
+  char *new_magic = NULL;
   struct Header *msg = NULL;
   struct ListHead attach = STAILQ_HEAD_INITIALIZER(attach);
   struct ListHead commands = STAILQ_HEAD_INITIALIZER(commands);
@@ -249,9 +245,9 @@ int main(int argc, char **argv, char **env)
     int count = 0;
     for (srcp = env; srcp && *srcp; srcp++)
       count++;
-    envlist = safe_calloc(count + 1, sizeof(char *));
+    envlist = mutt_mem_calloc(count + 1, sizeof(char *));
     for (srcp = env, dstp = envlist; srcp && *srcp; srcp++, dstp++)
-      *dstp = safe_strdup(*srcp);
+      *dstp = mutt_str_strdup(*srcp);
   }
 
   for (optind = 1; optind < double_dash;)
@@ -272,7 +268,7 @@ int main(int argc, char **argv, char **env)
 
       /* non-option, either an attachment or address */
       if (!STAILQ_EMPTY(&attach))
-        mutt_list_insert_tail(&attach, safe_strdup(argv[optind]));
+        mutt_list_insert_tail(&attach, mutt_str_strdup(argv[optind]));
       else
         argv[nargc++] = argv[optind];
     }
@@ -283,19 +279,19 @@ int main(int argc, char **argv, char **env)
       switch (i)
       {
         case 'A':
-          mutt_list_insert_tail(&alias_queries, safe_strdup(optarg));
+          mutt_list_insert_tail(&alias_queries, mutt_str_strdup(optarg));
           break;
         case 'a':
-          mutt_list_insert_tail(&attach, safe_strdup(optarg));
+          mutt_list_insert_tail(&attach, mutt_str_strdup(optarg));
           break;
 
         case 'F':
           /* mutt_str_replace (&Muttrc, optarg); */
-          mutt_list_insert_tail(&Muttrc, safe_strdup(optarg));
+          mutt_list_insert_tail(&Muttrc, mutt_str_strdup(optarg));
           break;
 
         case 'f':
-          strfcpy(folder, optarg, sizeof(folder));
+          mutt_str_strfcpy(folder, optarg, sizeof(folder));
           explicit_folder = true;
           break;
 
@@ -304,11 +300,11 @@ int main(int argc, char **argv, char **env)
           if (!msg)
             msg = mutt_new_header();
           if (!msg->env)
-            msg->env = mutt_new_envelope();
+            msg->env = mutt_env_new();
           if (i == 'b')
-            msg->env->bcc = rfc822_parse_adrlist(msg->env->bcc, optarg);
+            msg->env->bcc = mutt_addr_parse_list(msg->env->bcc, optarg);
           else
-            msg->env->cc = rfc822_parse_adrlist(msg->env->cc, optarg);
+            msg->env->cc = mutt_addr_parse_list(msg->env->cc, optarg);
           break;
 
         case 'D':
@@ -320,17 +316,12 @@ int main(int argc, char **argv, char **env)
           break;
 
         case 'd':
-#ifdef DEBUG
-          if (mutt_atoi(optarg, &debuglevel_cmdline) < 0 || debuglevel_cmdline <= 0)
+          if (mutt_str_atoi(optarg, &debuglevel_cmdline) < 0 || debuglevel_cmdline <= 0)
           {
             fprintf(stderr, _("Error: value '%s' is invalid for -d.\n"), optarg);
             return 1;
           }
           printf(_("Debugging at level %d.\n"), debuglevel_cmdline);
-#else
-          printf("%s",
-                 _("DEBUG was not defined during compilation. -d Ignored.\n"));
-#endif
           break;
 
         case 'E':
@@ -338,29 +329,25 @@ int main(int argc, char **argv, char **env)
           break;
 
         case 'e':
-          mutt_list_insert_tail(&commands, safe_strdup(optarg));
+          mutt_list_insert_tail(&commands, mutt_str_strdup(optarg));
           break;
 
         case 'H':
-          draftFile = optarg;
+          draft_file = optarg;
           break;
 
         case 'i':
-          includeFile = optarg;
+          include_file = optarg;
           break;
 
         case 'l':
-#ifdef DEBUG
           debugfile_cmdline = optarg;
           printf(_("Debugging at file %s.\n"), debugfile_cmdline);
-#else
-          printf(_("DEBUG was not defined during compilation. -l Ignored.\n"));
-#endif
           break;
 
         case 'm':
           /* should take precedence over .neomuttrc setting, so save it for later */
-          newMagic = optarg;
+          new_magic = optarg;
           break;
 
         case 'n':
@@ -372,7 +359,7 @@ int main(int argc, char **argv, char **env)
           break;
 
         case 'Q':
-          mutt_list_insert_tail(&queries, safe_strdup(optarg));
+          mutt_list_insert_tail(&queries, mutt_str_strdup(optarg));
           break;
 
         case 'R':
@@ -405,8 +392,9 @@ int main(int argc, char **argv, char **env)
           char buf[LONG_STRING];
 
           snprintf(buf, sizeof(buf), "set news_server=%s", optarg);
-          mutt_list_insert_tail(&commands, safe_strdup(buf));
+          mutt_list_insert_tail(&commands, mutt_str_strdup(buf));
         }
+        /* fallthrough */
 
         case 'G': /* List of newsgroups */
           flags |= MUTT_SELECT | MUTT_NEWS;
@@ -473,13 +461,13 @@ int main(int argc, char **argv, char **env)
   /* Initialize crypto backends.  */
   crypt_init();
 
-  if (newMagic)
-    mx_set_magic(newMagic);
+  if (new_magic)
+    mx_set_magic(new_magic);
 
   if (!STAILQ_EMPTY(&queries))
   {
     for (; optind < argc; optind++)
-      mutt_list_insert_tail(&queries, safe_strdup(argv[optind]));
+      mutt_list_insert_tail(&queries, mutt_str_strdup(argv[optind]));
     return mutt_query_variables(&queries);
   }
   if (dump_variables)
@@ -487,10 +475,10 @@ int main(int argc, char **argv, char **env)
 
   if (!STAILQ_EMPTY(&alias_queries))
   {
-    int rv = 0;
+    int rc = 0;
     struct Address *a = NULL;
     for (; optind < argc; optind++)
-      mutt_list_insert_tail(&alias_queries, safe_strdup(argv[optind]));
+      mutt_list_insert_tail(&alias_queries, mutt_str_strdup(argv[optind]));
     struct ListNode *np;
     STAILQ_FOREACH(np, &alias_queries, entries)
     {
@@ -502,12 +490,12 @@ int main(int argc, char **argv, char **env)
       }
       else
       {
-        rv = 1;
+        rc = 1;
         printf("%s\n", np->data);
       }
     }
     mutt_list_free(&alias_queries);
-    return rv;
+    return rc;
   }
 
   if (!option(OPT_NO_CURSES))
@@ -525,7 +513,7 @@ int main(int argc, char **argv, char **env)
     char fpath[_POSIX_PATH_MAX];
     char msg2[STRING];
 
-    strfcpy(fpath, Folder, sizeof(fpath));
+    mutt_str_strfcpy(fpath, Folder, sizeof(fpath));
     mutt_expand_path(fpath, sizeof(fpath));
     bool skip = false;
 #ifdef USE_IMAP
@@ -557,7 +545,7 @@ int main(int argc, char **argv, char **env)
     mutt_free_windows();
     mutt_endwin(NULL);
   }
-  else if (subject || msg || sendflags || draftFile || includeFile ||
+  else if (subject || msg || sendflags || draft_file || include_file ||
            !STAILQ_EMPTY(&attach) || optind < argc)
   {
     FILE *fin = NULL;
@@ -574,7 +562,7 @@ int main(int argc, char **argv, char **env)
     if (!msg)
       msg = mutt_new_header();
     if (!msg->env)
-      msg->env = mutt_new_envelope();
+      msg->env = mutt_env_new();
 
     for (i = optind; i < argc; i++)
     {
@@ -589,10 +577,10 @@ int main(int argc, char **argv, char **env)
         }
       }
       else
-        msg->env->to = rfc822_parse_adrlist(msg->env->to, argv[i]);
+        msg->env->to = mutt_addr_parse_list(msg->env->to, argv[i]);
     }
 
-    if (!draftFile && option(OPT_AUTOEDIT) && !msg->env->to && !msg->env->cc)
+    if (!draft_file && option(OPT_AUTOEDIT) && !msg->env->to && !msg->env->cc)
     {
       if (!option(OPT_NO_CURSES))
         mutt_endwin(NULL);
@@ -601,15 +589,15 @@ int main(int argc, char **argv, char **env)
     }
 
     if (subject)
-      msg->env->subject = safe_strdup(subject);
+      msg->env->subject = mutt_str_strdup(subject);
 
-    if (draftFile)
+    if (draft_file)
     {
-      infile = draftFile;
-      includeFile = NULL;
+      infile = draft_file;
+      include_file = NULL;
     }
-    else if (includeFile)
-      infile = includeFile;
+    else if (include_file)
+      infile = include_file;
     else
       edit_infile = false;
 
@@ -618,7 +606,7 @@ int main(int argc, char **argv, char **env)
       /* Prepare fin and expanded_infile. */
       if (infile)
       {
-        if (mutt_strcmp("-", infile) == 0)
+        if (mutt_str_strcmp("-", infile) == 0)
         {
           if (edit_infile)
           {
@@ -629,7 +617,7 @@ int main(int argc, char **argv, char **env)
         }
         else
         {
-          strfcpy(expanded_infile, infile, sizeof(expanded_infile));
+          mutt_str_strfcpy(expanded_infile, infile, sizeof(expanded_infile));
           mutt_expand_path(expanded_infile, sizeof(expanded_infile));
           fin = fopen(expanded_infile, "r");
           if (!fin)
@@ -643,33 +631,33 @@ int main(int argc, char **argv, char **env)
       }
 
       /* Copy input to a tempfile, and re-point fin to the tempfile.
-       * Note: stdin is always copied to a tempfile, ensuring draftFile
+       * Note: stdin is always copied to a tempfile, ensuring draft_file
        * can stat and get the correct st_size below.
        */
       if (!edit_infile)
       {
         mutt_mktemp(buf, sizeof(buf));
-        tempfile = safe_strdup(buf);
+        tempfile = mutt_str_strdup(buf);
 
-        fout = safe_fopen(tempfile, "w");
+        fout = mutt_file_fopen(tempfile, "w");
         if (!fout)
         {
           if (!option(OPT_NO_CURSES))
             mutt_endwin(NULL);
           perror(tempfile);
-          safe_fclose(&fin);
+          mutt_file_fclose(&fin);
           FREE(&tempfile);
           exit(1);
         }
         if (fin)
         {
-          mutt_copy_stream(fin, fout);
+          mutt_file_copy_stream(fin, fout);
           if (fin != stdin)
-            safe_fclose(&fin);
+            mutt_file_fclose(&fin);
         }
         else if (bodytext)
           fputs(bodytext, fout);
-        safe_fclose(&fout);
+        mutt_file_fclose(&fout);
 
         fin = fopen(tempfile, "r");
         if (!fin)
@@ -682,16 +670,16 @@ int main(int argc, char **argv, char **env)
         }
       }
       /* If editing the infile, keep it around afterwards so
-       * it doesn't get unlinked, and we can rebuild the draftFile
+       * it doesn't get unlinked, and we can rebuild the draft_file
        */
       else
         sendflags |= SENDNOFREEHEADER;
 
-      /* Parse the draftFile into the full Header/Body structure.
+      /* Parse the draft_file into the full Header/Body structure.
        * Set SENDDRAFTFILE so ci_send_message doesn't overwrite
        * our msg->content.
        */
-      if (draftFile)
+      if (draft_file)
       {
         struct Header *context_hdr = NULL;
         struct Envelope *opts_env = msg->env;
@@ -707,7 +695,7 @@ int main(int argc, char **argv, char **env)
         context_hdr->content = mutt_new_body();
         if (fstat(fileno(fin), &st))
         {
-          perror(draftFile);
+          perror(draft_file);
           exit(1);
         }
         context_hdr->content->length = st.st_size;
@@ -718,7 +706,7 @@ int main(int argc, char **argv, char **env)
         struct ListNode *np, *tmp;
         STAILQ_FOREACH_SAFE(np, &msg->env->userhdrs, entries, tmp)
         {
-          if (mutt_strncasecmp("X-Mutt-Resume-Draft:", np->data, 20) == 0)
+          if (mutt_str_strncasecmp("X-Mutt-Resume-Draft:", np->data, 20) == 0)
           {
             if (option(OPT_RESUME_EDITED_DRAFT_FILES))
               set_option(OPT_RESUME_DRAFT_FILES);
@@ -729,27 +717,27 @@ int main(int argc, char **argv, char **env)
           }
         }
 
-        rfc822_append(&msg->env->to, opts_env->to, 0);
-        rfc822_append(&msg->env->cc, opts_env->cc, 0);
-        rfc822_append(&msg->env->bcc, opts_env->bcc, 0);
+        mutt_addr_append(&msg->env->to, opts_env->to, false);
+        mutt_addr_append(&msg->env->cc, opts_env->cc, false);
+        mutt_addr_append(&msg->env->bcc, opts_env->bcc, false);
         if (opts_env->subject)
           mutt_str_replace(&msg->env->subject, opts_env->subject);
 
-        mutt_free_envelope(&opts_env);
+        mutt_env_free(&opts_env);
         mutt_free_header(&context_hdr);
       }
-      /* Editing the includeFile: pass it directly in.
+      /* Editing the include_file: pass it directly in.
        * Note that SENDNOFREEHEADER is set above so it isn't unlinked.
        */
       else if (edit_infile)
         bodyfile = expanded_infile;
-      /* For bodytext and unedited includeFile: use the tempfile.
+      /* For bodytext and unedited include_file: use the tempfile.
        */
       else
         bodyfile = tempfile;
 
       if (fin)
-        safe_fclose(&fin);
+        mutt_file_fclose(&fin);
     }
 
     FREE(&bodytext);
@@ -787,9 +775,9 @@ int main(int argc, char **argv, char **env)
 
     if (edit_infile)
     {
-      if (includeFile)
+      if (include_file)
         msg->content->unlink = false;
-      else if (draftFile)
+      else if (draft_file)
       {
         if (truncate(expanded_infile, 0) == -1)
         {
@@ -798,7 +786,7 @@ int main(int argc, char **argv, char **env)
           perror(expanded_infile);
           exit(1);
         }
-        fout = safe_fopen(expanded_infile, "a");
+        fout = mutt_file_fopen(expanded_infile, "a");
         if (!fout)
         {
           if (!option(OPT_NO_CURSES))
@@ -827,16 +815,16 @@ int main(int argc, char **argv, char **env)
         {
           if (!option(OPT_NO_CURSES))
             mutt_endwin(NULL);
-          safe_fclose(&fout);
+          mutt_file_fclose(&fout);
           exit(1);
         }
-        safe_fclose(&fout);
+        mutt_file_fclose(&fout);
       }
 
       mutt_free_header(&msg);
     }
 
-    /* !edit_infile && draftFile will leave the tempfile around */
+    /* !edit_infile && draft_file will leave the tempfile around */
     if (tempfile)
     {
       unlink(tempfile);
@@ -883,7 +871,7 @@ int main(int argc, char **argv, char **env)
         exit(1);
       }
       folder[0] = 0;
-      mutt_select_file(folder, sizeof(folder), MUTT_SEL_FOLDER | MUTT_SEL_BUFFY);
+      mutt_select_file(folder, sizeof(folder), MUTT_SEL_FOLDER | MUTT_SEL_BUFFY, NULL, NULL);
       if (!folder[0])
       {
         mutt_endwin(NULL);
@@ -894,9 +882,9 @@ int main(int argc, char **argv, char **env)
     if (!folder[0])
     {
       if (SpoolFile)
-        strfcpy(folder, NONULL(SpoolFile), sizeof(folder));
+        mutt_str_strfcpy(folder, NONULL(SpoolFile), sizeof(folder));
       else if (Folder)
-        strfcpy(folder, NONULL(Folder), sizeof(folder));
+        mutt_str_strfcpy(folder, NONULL(Folder), sizeof(folder));
       /* else no folder */
     }
 

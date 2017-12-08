@@ -24,7 +24,7 @@
 #define _MUTT_GLOBALS_H
 
 #include <signal.h>
-#include "lib/lib.h"
+#include "mutt/mutt.h"
 #include "where.h"
 #include "mutt_regex.h"
 
@@ -46,14 +46,12 @@ WHERE struct Address *From;
 
 WHERE char *AliasFile;
 WHERE char *AliasFormat;
-WHERE char *AssumedCharset;
 WHERE char *AttachSep;
 WHERE char *Attribution;
 WHERE char *AttributionLocale;
 WHERE char *AttachCharset;
 WHERE char *AttachFormat;
 WHERE struct Regex AttachKeyword;
-WHERE char *Charset;
 WHERE char *ComposeFormat;
 WHERE char *ConfigCharset;
 WHERE char *ContentType;
@@ -105,8 +103,6 @@ WHERE char *MimeTypeQueryCommand;
 WHERE char *MessageFormat;
 
 #ifdef USE_SOCKET
-WHERE char *Preconnect;
-WHERE char *Tunnel;
 WHERE short NetInc;
 #endif /* USE_SOCKET */
 
@@ -167,16 +163,6 @@ WHERE char *SmtpUrl;
 #endif /* USE_SMTP */
 WHERE char *SpoolFile;
 WHERE char *SpamSeparator;
-#ifdef USE_SSL
-WHERE char *CertificateFile;
-WHERE char *SslClientCert;
-WHERE char *EntropyFile;
-WHERE char *SslCiphers;
-#ifdef USE_SSL_GNUTLS
-WHERE short SslMinDhPrimeBits;
-WHERE char *SslCaCertificatesFile;
-#endif
-#endif
 WHERE struct MbTable *StatusChars;
 WHERE char *StatusFormat;
 WHERE char *Tmpdir;
@@ -196,8 +182,6 @@ WHERE const char *GitVer;
 
 WHERE struct Hash *Groups;
 WHERE struct Hash *ReverseAliases;
-WHERE char *HiddenTags;
-WHERE struct Hash *TagTransforms;
 WHERE struct Hash *TagFormats;
 
 WHERE struct ListHead AutoViewList INITVAL(STAILQ_HEAD_INITIALIZER(AutoViewList));
@@ -236,12 +220,9 @@ WHERE short NntpPoll;
 WHERE short NntpContext;
 #endif
 
-#ifdef DEBUG
 WHERE short DebugLevel;
 WHERE char *DebugFile;
-#endif
 
-WHERE short ConnectTimeout;
 WHERE short History;
 WHERE short MenuContext;
 WHERE short PagerContext;
