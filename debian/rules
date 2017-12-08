@@ -53,7 +53,6 @@ override_dh_auto_configure:
 			--fmemopen			\
 			--gpgme				\
 			$(notmuch)			\
-			--logging			\
 			--lua				\
 			--mixmaster			\
 			--with-ui=ncurses		\

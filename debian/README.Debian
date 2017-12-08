@@ -2,7 +2,7 @@
 # Description:   How to build a Debian package from neomutt's git source
 # Author:        Elimar Riesebieter <riesebie@lxtec.de>
 # Created:       Sat, 15 Apr 2017 12:32:08 +0200
-# Last modified: Sun, 29 Oct 2017 08:32:55 +0100
+# Last modified: Fri, 08 Dec 2017 18:58:37 +0100
 # File:          /source/neomutt/git/neomutt/debian/README.Debian
 ###############################################################################
 
@@ -44,7 +44,6 @@ The default will build with:
 	--gpgme				\
 	--fmemopen			\
 	$(notmuch)			\
-	--logging			\
 	--lua				\
 	--mixmaster			\
 	--with-ui=ncurses		\
