@@ -1,12 +1,13 @@
-neomutt (1:20171027-1lxtec5) UNRELEASED; urgency=medium
+neomutt (1:20171027-1lxtec6) UNRELEASED; urgency=medium
 
   * Removed --logging from configure options
   * Bumped Standards to 4.1.2. No changes
   * Install /usr/libexec/neomutt/* /usr/lib/neomutt
   * Using new getmailname routine. Stashed Debian bug 0005-debian-
     specific-Md.etc_mailname_gethostbyname.patch
+  * Removed trailing whitespace from changelog
 
- -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 09 Dec 2017 09:28:54 +0100
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 09 Dec 2017 09:42:56 +0100
 
 neomutt (1:20171027-1lxtec1) unstable; urgency=medium
 
@@ -242,7 +243,7 @@ neomutt (1:20170128-1lxtec2) unstable; urgency=medium
 
 neomutt (1:20170128-1lxtec1) unstable; urgency=medium
 
-  * New upstream release 
+  * New upstream release
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 29 Jan 2017 09:28:24 +0100
 
@@ -375,7 +376,7 @@ neomutt (1:20160925-1lxtec1) unstable; urgency=medium
 
 neomutt (1:20160925-1lxtec1) unstable; urgency=medium
 
-  * Updated to latest neomutt commit 
+  * Updated to latest neomutt commit
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 25 Sep 2016 11:35:09 +0200
 
