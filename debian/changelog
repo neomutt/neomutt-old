@@ -1,10 +1,12 @@
-neomutt (1:20171027-1lxtec4) UNRELEASED; urgency=medium
+neomutt (1:20171027-1lxtec5) UNRELEASED; urgency=medium
 
   * Removed --logging from configure options
   * Bumped Standards to 4.1.2. No changes
   * Install /usr/libexec/neomutt/* /usr/lib/neomutt
+  * Using new getmailname routine. Stashed Debian bug 0005-debian-
+    specific-Md.etc_mailname_gethostbyname.patch
 
- -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 09 Dec 2017 09:25:37 +0100
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 09 Dec 2017 09:28:54 +0100
 
 neomutt (1:20171027-1lxtec1) unstable; urgency=medium
 
