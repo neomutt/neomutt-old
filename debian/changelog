@@ -1,5 +1,7 @@
-neomutt (1:20171027-1lxtec6) UNRELEASED; urgency=medium
+neomutt (1:20171208-1lxtec1) unstable; urgency=medium
 
+  * New upstream release neomutt-20171208.
+  * Adjusted versionpatches.
   * Removed --logging from configure options
   * Bumped Standards to 4.1.2. No changes
   * Install /usr/libexec/neomutt/* /usr/lib/neomutt
