@@ -2,7 +2,7 @@
 # Description:   How to build a Debian package from neomutt's git source
 # Author:        Elimar Riesebieter <riesebie@lxtec.de>
 # Created:       Sat, 15 Apr 2017 12:32:08 +0200
-# Last modified: Fri, 08 Dec 2017 18:58:37 +0100
+# Last modified: Sat, 16 Dec 2017 08:38:20 +0100
 # File:          /source/neomutt/git/neomutt/debian/README.Debian
 ###############################################################################
 
@@ -39,8 +39,9 @@ $ ls ../deb-packages/neomutt/
 
 The default will build with:
 
-./configure.autosetup			\
+./configure				\
 	--with-mailpath=/var/mail	\
+	--docdir=/usr/share/doc/neomutt	\
 	--gpgme				\
 	--fmemopen			\
 	$(notmuch)			\
@@ -52,7 +53,7 @@ The default will build with:
 	--sasl				\
 	$(hcache_db)
 
-Whereas hcache_db points to lmdb. You can change hcache_db by adjusting
+Whereas hcache_db points to qdbm. You can change hcache_db by adjusting
 debian/rules.
 
 To suite to your own settings adapt debian/rules accordingly. debian/control has
