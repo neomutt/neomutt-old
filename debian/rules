@@ -10,9 +10,9 @@ LDFLAGS+=-pie
 ###
 # header cache backend
 # HCACHE_DB := bdb
-HCACHE_DB := lmdb
+# HCACHE_DB := lmdb
 # HCACHE_DB := gdbm
-# HCACHE_DB := qdbm
+HCACHE_DB := qdbm
 # HCACHE_DB := tokyocabinet
 # HCACHE_DB := kyotocabinet
 ###
@@ -47,7 +47,7 @@ endif
 	dh $@ --without autoreconf
 
 override_dh_auto_configure:
-		./configure.autosetup			\
+		dh_auto_configure --			\
 			--with-mailpath=/var/mail	\
 			--docdir=/usr/share/doc/neomutt	\
 			--fmemopen			\

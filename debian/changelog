@@ -1,3 +1,9 @@
+neomutt (1:20171208-1lxtec2) UNRELEASED; urgency=medium
+
+  * Switched to qdbm as hcache
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 16 Dec 2017 08:32:56 +0100
+
 neomutt (1:20171208-1lxtec1) unstable; urgency=medium
 
   * New upstream release neomutt-20171208.
