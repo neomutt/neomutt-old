@@ -1,9 +1,10 @@
-neomutt (1:20171208-1lxtec4) UNRELEASED; urgency=medium
+neomutt (1:20171208-1lxtec5) UNRELEASED; urgency=medium
 
   * Switched to qdbm as hcache
   * Refreshed version patch
+  * Removed 0001-Set-version-info-to-lxtec.patch from patches/series
 
- -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 16 Dec 2017 08:35:55 +0100
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 16 Dec 2017 08:49:59 +0100
 
 neomutt (1:20171208-1lxtec1) unstable; urgency=medium
 
