@@ -83,7 +83,7 @@ static const char *There_are_no_messages = N_("There are no messages.");
 static const char *Mailbox_is_read_only = N_("Mailbox is read-only.");
 static const char *Function_not_permitted_in_attach_message_mode =
     N_("Function not permitted in attach-message mode.");
-static const char *No_visible = N_("No visible messages.");
+static const char *NoVisible = N_("No visible messages.");
 
 #define CHECK_IN_MAILBOX                                                       \
   if (!Context)                                                                \
@@ -111,7 +111,7 @@ static const char *No_visible = N_("No visible messages.");
   if (Context && menu->current >= Context->vcount)                             \
   {                                                                            \
     mutt_flushinp();                                                           \
-    mutt_error(_(No_visible));                                                 \
+    mutt_error(_(NoVisible));                                                 \
     break;                                                                     \
   }
 
@@ -700,11 +700,11 @@ int index_color(int index_no)
  */
 void mutt_draw_statusline(int cols, const char *buf, int buflen)
 {
-  int i = 0;
-  int offset = 0;
+  size_t i = 0;
+  size_t offset = 0;
   bool found = false;
-  int chunks = 0;
-  int len = 0;
+  size_t chunks = 0;
+  size_t len = 0;
 
   struct Syntax
   {
@@ -785,7 +785,7 @@ void mutt_draw_statusline(int cols, const char *buf, int buflen)
     if (len <= syntax[i].last)
       goto dsl_finish; /* no more room */
 
-    int next;
+    size_t next;
     if ((i + 1) == chunks)
     {
       next = len;
@@ -945,12 +945,6 @@ int mutt_index_menu(void)
     collapse_all(menu, 0);
     menu->redraw = REDRAW_FULL;
   }
-
-  /* On SIGWINCH, we clear the input buffer and redraw the screen.
-   * We don't want this to happening the first time we enter the loop.
-   * The startup hook puts commands into the keyboard buffer which we don't
-   * want to lose. */
-  SigWinch = 0;
 
   while (true)
   {

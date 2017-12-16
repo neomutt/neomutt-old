@@ -315,7 +315,7 @@ int mutt_write_mime_header(struct Body *a, FILE *f)
   char buffer[STRING];
   char *t = NULL;
   char *fn = NULL;
-  int len;
+  size_t len;
   int tmplen;
   int encode;
 
@@ -1613,7 +1613,7 @@ void mutt_write_address_list(struct Address *adr, FILE *fp, int linelen, int dis
   struct Address *tmp = NULL;
   char buf[LONG_STRING];
   int count = 0;
-  int len;
+  size_t len;
 
   while (adr)
   {
@@ -1653,7 +1653,7 @@ void mutt_write_address_list(struct Address *adr, FILE *fp, int linelen, int dis
 #define REF_INC 16
 
 /**
- * mutt_write_references - Add the message refrerences to a list
+ * mutt_write_references - Add the message references to a list
  *
  * need to write the list in reverse because they are stored in reverse order
  * when parsed to speed up threading
@@ -1682,8 +1682,7 @@ void mutt_write_references(const struct ListHead *r, FILE *f, size_t trim)
 
   for (size_t i = 0; i < length; ++i)
   {
-    if (i != 0)
-      fputc(' ', f);
+    fputc(' ', f);
     fputs(ref[i]->data, f);
     if (i != length - 1)
       fputc('\n', f);
@@ -3143,7 +3142,7 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
 done:
   /* We ran a folder hook for the destination mailbox,
    * now we run it for the user's current mailbox */
-  if (Context->path)
+  if (Context && Context->path)
     mutt_folder_hook(Context->path);
 
   return rc;

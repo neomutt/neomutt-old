@@ -252,7 +252,7 @@ static const char *sidebar_format_str(char *buf, size_t buflen, size_t col, int 
  * mutt_expando_format to do the actual work. mutt_expando_format will callback to
  * us using sidebar_format_str() for the sidebar specific formatting characters.
  */
-static void make_sidebar_entry(char *buf, unsigned int buflen, int width,
+static void make_sidebar_entry(char *buf, size_t buflen, int width,
                                char *box, struct SbEntry *sbe)
 {
   if (!buf || !box || !sbe)
@@ -276,7 +276,7 @@ static void make_sidebar_entry(char *buf, unsigned int buflen, int width,
   else if (w > width)
   {
     /* Truncate to fit */
-    int len = mutt_wstr_trunc(buf, buflen, width, NULL);
+    size_t len = mutt_wstr_trunc(buf, buflen, width, NULL);
     buf[len] = 0;
   }
 }
@@ -898,6 +898,18 @@ static void draw_sidebar(int num_rows, int num_cols, int div_width)
           sidebar_folder_name += (i + 1);
           break;
         }
+      }
+    }
+    else if ((SidebarComponentDepth > 0) && SidebarDelimChars)
+    {
+      sidebar_folder_name = b->path + maildir_is_prefix * (maildirlen + 1);
+      for (int i = 0; i < SidebarComponentDepth; i++)
+      {
+        char *chars_after_delim = strpbrk(sidebar_folder_name, SidebarDelimChars);
+        if (!chars_after_delim)
+          break;
+        else
+          sidebar_folder_name = chars_after_delim + 1;
       }
     }
     else

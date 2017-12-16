@@ -438,7 +438,7 @@ static void x509_fingerprint(char *s, int l, X509 *cert, const EVP_MD *(*hashfun
   }
   else
   {
-    for (int i = 0; i < (int) n; i++)
+    for (unsigned int i = 0; i < n; i++)
     {
       char ch[8];
       snprintf(ch, 8, "%02X%s", md[i], (i % 2 ? " " : ""));
@@ -947,7 +947,7 @@ static int ssl_cache_trusted_cert(X509 *c)
  * @retval true  User selected 'skip'
  * @retval false Otherwise
  */
-static int interactive_check_cert(X509 *cert, int idx, int len, SSL *ssl, int allow_always)
+static int interactive_check_cert(X509 *cert, int idx, size_t len, SSL *ssl, int allow_always)
 {
   static const int part[] = {
     NID_commonName,             /* CN */
@@ -1008,7 +1008,7 @@ static int interactive_check_cert(X509 *cert, int idx, int len, SSL *ssl, int al
   snprintf(menu->dialog[row++], SHORT_STRING, _("MD5 Fingerprint: %s"), buf);
 
   snprintf(title, sizeof(title),
-           _("SSL Certificate check (certificate %d of %d in chain)"), len - idx, len);
+           _("SSL Certificate check (certificate %zu of %zu in chain)"), len - idx, len);
   menu->title = title;
 
 /* The leaf/host certificate can't be skipped. */
@@ -1121,7 +1121,8 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 {
   char buf[STRING];
   const char *host = NULL;
-  int len, pos;
+  size_t len;
+  int pos;
   X509 *cert = NULL;
   SSL *ssl = NULL;
   int skip_mode;

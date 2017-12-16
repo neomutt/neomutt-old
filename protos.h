@@ -157,7 +157,7 @@ void mutt_check_rescore(struct Context *ctx);
 void mutt_clear_error(void);
 void mutt_clear_pager_position(void);
 void mutt_decode_attachment(struct Body *b, struct State *s);
-void mutt_decode_base64(struct State *s, long len, int istext, iconv_t cd);
+void mutt_decode_base64(struct State *s, size_t len, int istext, iconv_t cd);
 void mutt_default_save(char *path, size_t pathlen, struct Header *hdr);
 void mutt_display_address(struct Envelope *env);
 void mutt_draw_statusline(int cols, const char *buf, int buflen);
@@ -191,7 +191,7 @@ void mutt_free_color(int fg, int bg);
 void mutt_free_enter_state(struct EnterState **esp);
 void mutt_free_regex(struct Regex **pp);
 void mutt_help(int menu);
-void mutt_check_lookup_list(struct Body *b, char *type, int len);
+void mutt_check_lookup_list(struct Body *b, char *type, size_t len);
 void mutt_make_attribution(struct Context *ctx, struct Header *cur, FILE *out);
 void mutt_make_forward_subject(struct Envelope *env, struct Context *ctx, struct Header *cur);
 void mutt_make_help(char *d, size_t dlen, const char *txt, int menu, int op);
@@ -208,7 +208,7 @@ void mutt_perror_debug(const char *s);
 void mutt_prepare_envelope(struct Envelope *env, int final);
 void mutt_unprepare_envelope(struct Envelope *env);
 void mutt_pretty_mailbox(char *s, size_t buflen);
-void mutt_pretty_size(char *s, size_t len, LOFF_T n);
+void mutt_pretty_size(char *s, size_t len, size_t n);
 void mutt_pipe_message(struct Header *h);
 void mutt_print_message(struct Header *h);
 void mutt_query_exit(void);
@@ -374,7 +374,7 @@ int wcscasecmp(const wchar_t *a, const wchar_t *b);
 bool message_is_tagged(struct Context *ctx, int index);
 bool message_is_visible(struct Context *ctx, int index);
 
-int rfc822_write_address(char *buf, size_t buflen, struct Address *addr, int display);
+size_t rfc822_write_address(char *buf, size_t buflen, struct Address *addr, int display);
 void rfc822_write_address_single(char *buf, size_t buflen, struct Address *addr, int display);
 
 #endif /* _MUTT_PROTOS_H */

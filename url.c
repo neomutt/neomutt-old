@@ -284,7 +284,7 @@ void url_pct_encode(char *dst, size_t l, const char *src)
  */
 int url_tostring(struct Url *u, char *dest, size_t len, int flags)
 {
-  long l;
+  size_t l;
 
   if (u->scheme == U_UNKNOWN)
     return -1;
@@ -295,7 +295,8 @@ int url_tostring(struct Url *u, char *dest, size_t len, int flags)
   {
     if (!(flags & U_PATH))
       mutt_str_strcat(dest, len, "//");
-    len -= (l = strlen(dest));
+    l = strlen(dest);
+    len -= l;
     dest += l;
 
     if (u->user && (u->user[0] || !(flags & U_PATH)))
@@ -312,7 +313,8 @@ int url_tostring(struct Url *u, char *dest, size_t len, int flags)
       else
         snprintf(dest, len, "%s@", str);
 
-      len -= (l = strlen(dest));
+      l = strlen(dest);
+      len -= l;
       dest += l;
     }
 
@@ -321,7 +323,8 @@ int url_tostring(struct Url *u, char *dest, size_t len, int flags)
     else
       snprintf(dest, len, "%s", u->host);
 
-    len -= (l = strlen(dest));
+    l = strlen(dest);
+    len -= l;
     dest += l;
 
     if (u->port)
