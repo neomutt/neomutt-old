@@ -39,7 +39,6 @@
 #include "globals.h"
 #include "mbyte.h"
 #include "mime.h"
-#include "mutt_charset.h"
 #include "options.h"
 #include "parameter.h"
 #include "protos.h"
@@ -89,7 +88,8 @@ static char *rfc2231_get_charset(char *value, char *charset, size_t chslen)
   *t = '\0';
   mutt_str_strfcpy(charset, value, chslen);
 
-  if ((u = strchr(t + 1, '\'')))
+  u = strchr(t + 1, '\'');
+  if (u)
     return u + 1;
   else
     return t + 1;
@@ -177,7 +177,8 @@ static void rfc2231_join_continuations(struct Parameter **head, struct Rfc2231Pa
 
     mutt_str_strfcpy(attribute, par->attribute, sizeof(attribute));
 
-    if ((encoded = par->encoded))
+    encoded = par->encoded;
+    if (encoded != 0)
       valp = rfc2231_get_charset(par->value, charset, sizeof(charset));
     else
       valp = par->value;
@@ -195,12 +196,13 @@ static void rfc2231_join_continuations(struct Parameter **head, struct Rfc2231Pa
 
       q = par->next;
       rfc2231_free_parameter(&par);
-      if ((par = q))
+      par = q;
+      if (par)
         valp = par->value;
     } while (par && (strcmp(par->attribute, attribute) == 0));
 
     if (encoded)
-      mutt_convert_string(&value, charset, Charset, MUTT_ICONV_HOOK_FROM);
+      mutt_cs_convert_string(&value, charset, Charset, MUTT_ICONV_HOOK_FROM);
     *head = mutt_param_new();
     (*head)->attribute = mutt_str_strdup(attribute);
     (*head)->value = value;
@@ -243,7 +245,7 @@ void rfc2231_decode_parameters(struct Parameter **headp)
        * Internet Gateways.  So we actually decode it.
        */
 
-      if (option(OPT_RFC2047_PARAMETERS) && p->value && strstr(p->value, "=?"))
+      if (Rfc2047Parameters && p->value && strstr(p->value, "=?"))
         rfc2047_decode(&p->value);
       else if (AssumedCharset && *AssumedCharset)
         convert_nonmime_string(&p->value);
@@ -258,7 +260,7 @@ void rfc2231_decode_parameters(struct Parameter **headp)
 
       s = rfc2231_get_charset(p->value, charset, sizeof(charset));
       rfc2231_decode_one(p->value, s);
-      mutt_convert_string(&p->value, charset, Charset, MUTT_ICONV_HOOK_FROM);
+      mutt_cs_convert_string(&p->value, charset, Charset, MUTT_ICONV_HOOK_FROM);
       mutt_filter_unprintable(&p->value);
 
       *last = p;

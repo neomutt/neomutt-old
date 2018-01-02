@@ -149,7 +149,8 @@ static short mhs_set(struct MhSequences *mhs, int i, short f)
 static int mh_read_token(char *t, int *first, int *last)
 {
   char *p = NULL;
-  if ((p = strchr(t, '-')))
+  p = strchr(t, '-');
+  if (p)
   {
     *p++ = '\0';
     if (mutt_str_atoi(t, first) < 0 || mutt_str_atoi(p, last) < 0)
@@ -312,7 +313,7 @@ bool mh_buffy(struct Buffy *mailbox, bool check_stats)
 
   /* when $mail_check_recent is set and the .mh_sequences file hasn't changed
    * since the last mailbox visit, there is no "new mail" */
-  if (option(OPT_MAIL_CHECK_RECENT) && mh_sequences_changed(mailbox) <= 0)
+  if (MailCheckRecent && mh_sequences_changed(mailbox) <= 0)
   {
     rc = false;
     check_new = false;
@@ -344,7 +345,7 @@ bool mh_buffy(struct Buffy *mailbox, bool check_stats)
       {
         /* if the first unseen message we encounter was in the mailbox during the
            last visit, don't notify about it */
-        if (!option(OPT_MAIL_CHECK_RECENT) || mh_already_notified(mailbox, i) == 0)
+        if (!MailCheckRecent || mh_already_notified(mailbox, i) == 0)
         {
           mailbox->new = true;
           rc = true;
@@ -502,7 +503,8 @@ static void mh_update_sequences(struct Context *ctx)
   snprintf(sequences, sizeof(sequences), "%s/.mh_sequences", ctx->path);
 
   /* first, copy unknown sequences */
-  if ((ofp = fopen(sequences, "r")))
+  ofp = fopen(sequences, "r");
+  if (ofp)
   {
     while ((buf = mutt_file_read_line(buf, &s, ofp, &l, 0)))
     {
@@ -524,7 +526,8 @@ static void mh_update_sequences(struct Context *ctx)
     if (ctx->hdrs[l]->deleted)
       continue;
 
-    if ((p = strrchr(ctx->hdrs[l]->path, '/')))
+    p = strrchr(ctx->hdrs[l]->path, '/');
+    if (p)
       p++;
     else
       p = ctx->hdrs[l]->path;
@@ -600,7 +603,8 @@ static void mh_sequences_add_one(struct Context *ctx, int n, short unseen,
   snprintf(seq_flagged, sizeof(seq_flagged), "%s:", NONULL(MhSeqFlagged));
 
   snprintf(sequences, sizeof(sequences), "%s/.mh_sequences", ctx->path);
-  if ((ofp = fopen(sequences, "r")))
+  ofp = fopen(sequences, "r");
+  if (ofp)
   {
     while ((buf = mutt_file_read_line(buf, &sz, ofp, &line, 0)))
     {
@@ -650,7 +654,8 @@ static void mh_update_maildir(struct Maildir *md, struct MhSequences *mhs)
 
   for (; md; md = md->next)
   {
-    if ((p = strrchr(md->h->path, '/')))
+    p = strrchr(md->h->path, '/');
+    if (p)
       p++;
     else
       p = md->h->path;
@@ -730,7 +735,7 @@ void maildir_parse_flags(struct Header *h, const char *path)
           break;
 
         case 'T': /* trashed */
-          if (!h->flagged || !option(OPT_FLAG_SAFE))
+          if (!h->flagged || !FlagSafe)
           {
             h->trash = true;
             h->deleted = true;
@@ -849,7 +854,7 @@ static int maildir_parse_dir(struct Context *ctx, struct Maildir ***last,
   if (subdir)
   {
     snprintf(buf, sizeof(buf), "%s/%s", ctx->path, subdir);
-    is_old = option(OPT_MARK_OLD) ? (mutt_str_strcmp("cur", subdir) == 0) : false;
+    is_old = MarkOld ? (mutt_str_strcmp("cur", subdir) == 0) : false;
   }
   else
     mutt_str_strfcpy(buf, ctx->path, sizeof(buf));
@@ -1175,7 +1180,7 @@ static void maildir_delayed_parsing(struct Context *ctx, struct Maildir **md,
     snprintf(fn, sizeof(fn), "%s/%s", ctx->path, p->h->path);
 
 #ifdef USE_HCACHE
-    if (option(OPT_MAILDIR_HEADER_CACHE_VERIFY))
+    if (MaildirHeaderCacheVerify)
     {
       ret = stat(fn, &lastchanged);
     }
@@ -1598,7 +1603,8 @@ static int md_commit_message(struct Context *ctx, struct Message *msg, struct He
   mutt_str_strfcpy(subdir, s, 4);
 
   /* extract the flags */
-  if ((s = strchr(s, ':')))
+  s = strchr(s, ':');
+  if (s)
     mutt_str_strfcpy(suffix, s, sizeof(suffix));
   else
     suffix[0] = '\0';
@@ -1915,10 +1921,10 @@ int mh_sync_mailbox_message(struct Context *ctx, int msgno)
   char path[_POSIX_PATH_MAX], tmp[_POSIX_PATH_MAX];
   struct Header *h = ctx->hdrs[msgno];
 
-  if (h->deleted && (ctx->magic != MUTT_MAILDIR || !option(OPT_MAILDIR_TRASH)))
+  if (h->deleted && (ctx->magic != MUTT_MAILDIR || !MaildirTrash))
   {
     snprintf(path, sizeof(path), "%s/%s", ctx->path, h->path);
-    if (ctx->magic == MUTT_MAILDIR || (option(OPT_MH_PURGE) && ctx->magic == MUTT_MH))
+    if (ctx->magic == MUTT_MAILDIR || (MhPurge && ctx->magic == MUTT_MH))
     {
 #ifdef USE_HCACHE
       if (hc)
@@ -1950,8 +1956,8 @@ int mh_sync_mailbox_message(struct Context *ctx, int msgno)
     }
   }
   else if (h->changed || h->attach_del || h->xlabel_changed ||
-           (ctx->magic == MUTT_MAILDIR &&
-            (option(OPT_MAILDIR_TRASH) || h->trash) && (h->deleted != h->trash)))
+           (ctx->magic == MUTT_MAILDIR && (MaildirTrash || h->trash) &&
+            (h->deleted != h->trash)))
   {
     if (ctx->magic == MUTT_MAILDIR)
     {
@@ -1989,11 +1995,13 @@ static char *maildir_canon_filename(char *dest, const char *src, size_t l)
 {
   char *t = NULL, *u = NULL;
 
-  if ((t = strrchr(src, '/')))
+  t = strrchr(src, '/');
+  if (t)
     src = t + 1;
 
   mutt_str_strfcpy(dest, src, l);
-  if ((u = strrchr(dest, ':')))
+  u = strrchr(dest, ':');
+  if (u)
     *u = '\0';
 
   return dest;
@@ -2057,7 +2065,7 @@ static int maildir_check_mailbox(struct Context *ctx, int *index_hint)
   /* XXX seems like this check belongs in mx_check_mailbox()
    * rather than here.
    */
-  if (!option(OPT_CHECK_NEW))
+  if (!CheckNew)
     return 0;
 
   snprintf(buf, sizeof(buf), "%s/new", ctx->path);
@@ -2163,7 +2171,7 @@ static int maildir_check_mailbox(struct Context *ctx, int *index_hint)
   }
 
   /* destroy the file name hash */
-  mutt_hash_destroy(&fnames, NULL);
+  mutt_hash_destroy(&fnames);
 
   /* If we didn't just get new mail, update the tables. */
   if (occult)
@@ -2207,7 +2215,7 @@ static int mh_check_mailbox(struct Context *ctx, int *index_hint)
   int i;
   struct MhData *data = mh_data(ctx);
 
-  if (!option(OPT_CHECK_NEW))
+  if (!CheckNew)
     return 0;
 
   mutt_str_strfcpy(buf, ctx->path, sizeof(buf));
@@ -2270,8 +2278,8 @@ static int mh_check_mailbox(struct Context *ctx, int *index_hint)
   {
     ctx->hdrs[i]->active = false;
 
-    if ((p = mutt_hash_find(fnames, ctx->hdrs[i]->path)) && p->h &&
-        (mbox_strict_cmp_headers(ctx->hdrs[i], p->h)))
+    p = mutt_hash_find(fnames, ctx->hdrs[i]->path);
+    if (p && p->h && mbox_strict_cmp_headers(ctx->hdrs[i], p->h))
     {
       ctx->hdrs[i]->active = true;
       /* found the right message */
@@ -2287,7 +2295,7 @@ static int mh_check_mailbox(struct Context *ctx, int *index_hint)
 
   /* destroy the file name hash */
 
-  mutt_hash_destroy(&fnames, NULL);
+  mutt_hash_destroy(&fnames);
 
   /* If we didn't just get new mail, update the tables. */
   if (occult)
@@ -2365,7 +2373,7 @@ static int mh_sync_mailbox(struct Context *ctx, int *index_hint)
   {
     for (i = 0, j = 0; i < ctx->msgcount; i++)
     {
-      if (!ctx->hdrs[i]->deleted || (ctx->magic == MUTT_MAILDIR && option(OPT_MAILDIR_TRASH)))
+      if (!ctx->hdrs[i]->deleted || (ctx->magic == MUTT_MAILDIR && MaildirTrash))
         ctx->hdrs[i]->index = j++;
     }
   }
@@ -2480,8 +2488,8 @@ FILE *maildir_open_find_message(const char *folder, const char *msg, char **newn
 
   maildir_canon_filename(unique, msg, sizeof(unique));
 
-  if ((fp = md_open_find_message(folder, unique, new_hits > cur_hits ? "new" : "cur", newname)) ||
-      errno != ENOENT)
+  fp = md_open_find_message(folder, unique, new_hits > cur_hits ? "new" : "cur", newname);
+  if (fp || (errno != ENOENT))
   {
     if (new_hits < UINT_MAX && cur_hits < UINT_MAX)
     {
@@ -2491,8 +2499,8 @@ FILE *maildir_open_find_message(const char *folder, const char *msg, char **newn
 
     return fp;
   }
-  if ((fp = md_open_find_message(folder, unique, new_hits > cur_hits ? "cur" : "new", newname)) ||
-      errno != ENOENT)
+  fp = md_open_find_message(folder, unique, new_hits > cur_hits ? "cur" : "new", newname);
+  if (fp || (errno != ENOENT))
   {
     if (new_hits < UINT_MAX && cur_hits < UINT_MAX)
     {

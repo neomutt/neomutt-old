@@ -185,6 +185,7 @@ int mutt_compose_attachment(struct Body *a)
             if (!tfp)
             {
               mutt_perror(_("Failure to open file to strip headers."));
+              mutt_file_fclose(&fp);
               goto bailout;
             }
             mutt_file_copy_stream(fp, tfp);
@@ -498,8 +499,9 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
         goto return_error;
       }
 
-      if ((thepid = mutt_create_filter_fd(command, NULL, NULL, NULL, use_pipe ? tempfd : -1,
-                                          use_pager ? pagerfd : -1, -1)) == -1)
+      thepid = mutt_create_filter_fd(command, NULL, NULL, NULL, use_pipe ? tempfd : -1,
+                                     use_pager ? pagerfd : -1, -1);
+      if (thepid == -1)
       {
         if (pagerfd != -1)
           close(pagerfd);
@@ -521,7 +523,7 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
                    _("---Command: %-30.30s Attachment: %s"), command, type);
       }
 
-      if ((mutt_wait_filter(thepid) || (entry->needsterminal && option(OPT_WAIT_KEY))) && !use_pager)
+      if ((mutt_wait_filter(thepid) || (entry->needsterminal && WaitKey)) && !use_pager)
         mutt_any_key_to_continue(NULL);
 
       if (tempfd != -1)
@@ -536,7 +538,7 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
       if (rv == -1)
         mutt_debug(1, "Error running \"%s\"!", command);
 
-      if ((rv != 0) || (entry->needsterminal && option(OPT_WAIT_KEY)))
+      if ((rv != 0) || (entry->needsterminal && WaitKey))
         mutt_any_key_to_continue(NULL);
     }
   }
@@ -585,14 +587,14 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
     else
     {
       /* Use built-in handler */
-      set_option(OPT_VIEW_ATTACH); /* disable the "use 'v' to view this part"
+      OPT_VIEW_ATTACH = true; /* disable the "use 'v' to view this part"
                                    * message in case of error */
       if (mutt_decode_save_attachment(fp, a, pagerfile, MUTT_DISPLAY, 0))
       {
-        unset_option(OPT_VIEW_ATTACH);
+        OPT_VIEW_ATTACH = false;
         goto return_error;
       }
-      unset_option(OPT_VIEW_ATTACH);
+      OPT_VIEW_ATTACH = false;
     }
 
     if (a->description)
@@ -739,7 +741,7 @@ bail:
   if (mutt_wait_filter(thepid) != 0)
     rc = 0;
 
-  if (rc == 0 || option(OPT_WAIT_KEY))
+  if (rc == 0 || WaitKey)
     mutt_any_key_to_continue(NULL);
   return rc;
 }
@@ -1054,7 +1056,7 @@ int mutt_print_attachment(FILE *fp, struct Body *a)
       mutt_file_copy_stream(ifp, fpout);
       mutt_file_fclose(&fpout);
       mutt_file_fclose(&ifp);
-      if (mutt_wait_filter(thepid) || option(OPT_WAIT_KEY))
+      if (mutt_wait_filter(thepid) || WaitKey)
         mutt_any_key_to_continue(NULL);
     }
     else
@@ -1063,7 +1065,7 @@ int mutt_print_attachment(FILE *fp, struct Body *a)
       if (rc == -1)
         mutt_debug(1, "Error running \"%s\"!", command);
 
-      if ((rc != 0) || option(OPT_WAIT_KEY))
+      if ((rc != 0) || WaitKey)
         mutt_any_key_to_continue(NULL);
     }
 
@@ -1119,7 +1121,7 @@ int mutt_print_attachment(FILE *fp, struct Body *a)
       mutt_file_fclose(&fpout);
       mutt_file_fclose(&ifp);
 
-      if (mutt_wait_filter(thepid) != 0 || option(OPT_WAIT_KEY))
+      if (mutt_wait_filter(thepid) != 0 || WaitKey)
         mutt_any_key_to_continue(NULL);
       rc = 1;
     }

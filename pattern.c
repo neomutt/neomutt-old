@@ -23,9 +23,6 @@
 #include "config.h"
 #include <stddef.h>
 #include <ctype.h>
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 #include <limits.h>
 #include <regex.h>
 #include <stdarg.h>
@@ -40,6 +37,7 @@
 #include <wctype.h>
 #include "mutt/mutt.h"
 #include "mutt.h"
+#include "pattern.h"
 #include "address.h"
 #include "body.h"
 #include "context.h"
@@ -51,19 +49,20 @@
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
-#include "mutt_regex.h"
+#include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "opcodes.h"
 #include "options.h"
-#include "pattern.h"
 #include "protos.h"
 #include "state.h"
+#include "tags.h"
 #include "thread.h"
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#endif
 #ifdef USE_IMAP
 #include "imap/imap.h"
 #endif
-#include "mx.h"
-#include "tags.h"
 #ifdef USE_NOTMUCH
 #include "mutt_notmuch.h"
 #endif
@@ -101,7 +100,7 @@ static bool eat_regex(struct Pattern *pat, struct Buffer *s, struct Buffer *err)
   if (pat->stringmatch)
   {
     pat->p.str = mutt_str_strdup(buf.data);
-    pat->ign_case = mutt_which_case(buf.data) == REG_ICASE;
+    pat->ign_case = mutt_mb_is_lower(buf.data);
     FREE(&buf.data);
   }
   else if (pat->groupmatch)
@@ -112,8 +111,8 @@ static bool eat_regex(struct Pattern *pat, struct Buffer *s, struct Buffer *err)
   else
   {
     pat->p.regex = mutt_mem_malloc(sizeof(regex_t));
-    r = REGCOMP(pat->p.regex, buf.data,
-                REG_NEWLINE | REG_NOSUB | mutt_which_case(buf.data));
+    int flags = mutt_mb_is_lower(buf.data) ? REG_ICASE : 0;
+    r = REGCOMP(pat->p.regex, buf.data, REG_NEWLINE | REG_NOSUB | flags);
     if (r != 0)
     {
       regerror(r, pat->p.regex, errmsg, sizeof(errmsg));
@@ -881,36 +880,9 @@ static const struct PatternFlags
   { 0, 0, 0, NULL },
 };
 
-static struct Pattern *SearchPattern = NULL;     /* current search pattern */
-static char LastSearch[STRING] = { 0 };          /* last pattern searched for */
-static char LastSearchExpn[LONG_STRING] = { 0 }; /* expanded version of
-                                                    LastSearch */
-
-/**
- * mutt_which_case - Smart-case searching
- *
- * if no uppercase letters are given, do a case-insensitive search
- */
-int mutt_which_case(const char *s)
-{
-  wchar_t w;
-  mbstate_t mb;
-  size_t l;
-
-  memset(&mb, 0, sizeof(mb));
-
-  for (; (l = mbrtowc(&w, s, MB_CUR_MAX, &mb)) != 0; s += l)
-  {
-    if (l == (size_t) -2)
-      continue; /* shift sequences */
-    if (l == (size_t) -1)
-      return 0; /* error; assume case-sensitive */
-    if (iswalpha((wint_t) w) && iswupper((wint_t) w))
-      return 0; /* case-sensitive */
-  }
-
-  return REG_ICASE; /* case-insensitive */
-}
+static struct Pattern *SearchPattern = NULL; /**< current search pattern */
+static char LastSearch[STRING] = { 0 };      /**< last pattern searched for */
+static char LastSearchExpn[LONG_STRING] = { 0 }; /**< expanded version of LastSearch */
 
 static int patmatch(const struct Pattern *pat, const char *buf)
 {
@@ -943,7 +915,7 @@ static int msg_search(struct Context *ctx, struct Pattern *pat, int msgno)
   msg = mx_open_message(ctx, msgno);
   if (msg)
   {
-    if (option(OPT_THOROUGH_SEARCH))
+    if (ThoroughSearch)
     {
       /* decode the header / body */
       memset(&s, 0, sizeof(s));
@@ -1065,7 +1037,7 @@ static int msg_search(struct Context *ctx, struct Pattern *pat, int msgno)
 
     mx_close_message(ctx, &msg);
 
-    if (option(OPT_THOROUGH_SEARCH))
+    if (ThoroughSearch)
     {
       mutt_file_fclose(&fp);
 #ifdef USE_FMEMOPEN
@@ -1382,7 +1354,7 @@ static int perform_or(struct Pattern *pat, enum PatternExecFlag flags,
   return false;
 }
 
-static int match_adrlist(struct Pattern *pat, int match_personal, int n, ...)
+static int match_addrlist(struct Pattern *pat, int match_personal, int n, ...)
 {
   va_list ap;
 
@@ -1624,23 +1596,23 @@ int mutt_pattern_exec(struct Pattern *pat, enum PatternExecFlag flags,
     case MUTT_SENDER:
       if (!h->env)
         return 0;
-      return (pat->not ^ match_adrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 1,
-                                       h->env->sender));
+      return (pat->not ^ match_addrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 1,
+                                        h->env->sender));
     case MUTT_FROM:
       if (!h->env)
         return 0;
       return (pat->not ^
-              match_adrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 1, h->env->from));
+              match_addrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 1, h->env->from));
     case MUTT_TO:
       if (!h->env)
         return 0;
       return (pat->not ^
-              match_adrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 1, h->env->to));
+              match_addrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 1, h->env->to));
     case MUTT_CC:
       if (!h->env)
         return 0;
       return (pat->not ^
-              match_adrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 1, h->env->cc));
+              match_addrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 1, h->env->cc));
     case MUTT_SUBJECT:
       if (!h->env)
         return 0;
@@ -1663,14 +1635,14 @@ int mutt_pattern_exec(struct Pattern *pat, enum PatternExecFlag flags,
     case MUTT_ADDRESS:
       if (!h->env)
         return 0;
-      return (pat->not ^ match_adrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 4,
-                                       h->env->from, h->env->sender, h->env->to,
-                                       h->env->cc));
+      return (pat->not ^ match_addrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 4,
+                                        h->env->from, h->env->sender,
+                                        h->env->to, h->env->cc));
     case MUTT_RECIPIENT:
       if (!h->env)
         return 0;
-      return (pat->not ^ match_adrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 2,
-                                       h->env->to, h->env->cc));
+      return (pat->not ^ match_addrlist(pat, flags & MUTT_MATCH_FULL_ADDRESS, 2,
+                                        h->env->to, h->env->cc));
     case MUTT_LIST: /* known list, subscribed or not */
       if (!h->env)
         return 0;
@@ -2056,9 +2028,9 @@ int mutt_search_command(int cur, int op)
       return -1;
 
     if (op == OP_SEARCH || op == OP_SEARCH_NEXT)
-      unset_option(OPT_SEARCH_REVERSE);
+      OPT_SEARCH_REVERSE = false;
     else
-      set_option(OPT_SEARCH_REVERSE);
+      OPT_SEARCH_REVERSE = true;
 
     /* compare the *expanded* version of the search pattern in case
        $simple_search has changed while we were searching */
@@ -2069,7 +2041,7 @@ int mutt_search_command(int cur, int op)
     {
       struct Buffer err;
       mutt_buffer_init(&err);
-      set_option(OPT_SEARCH_INVALID);
+      OPT_SEARCH_INVALID = true;
       mutt_str_strfcpy(LastSearch, buf, sizeof(LastSearch));
       mutt_message(_("Compiling search pattern..."));
       mutt_pattern_free(&SearchPattern);
@@ -2087,7 +2059,7 @@ int mutt_search_command(int cur, int op)
     }
   }
 
-  if (option(OPT_SEARCH_INVALID))
+  if (OPT_SEARCH_INVALID)
   {
     for (int i = 0; i < Context->msgcount; i++)
       Context->hdrs[i]->searched = false;
@@ -2095,10 +2067,10 @@ int mutt_search_command(int cur, int op)
     if (Context->magic == MUTT_IMAP && imap_search(Context, SearchPattern) < 0)
       return -1;
 #endif
-    unset_option(OPT_SEARCH_INVALID);
+    OPT_SEARCH_INVALID = false;
   }
 
-  incr = (option(OPT_SEARCH_REVERSE)) ? -1 : 1;
+  incr = (OPT_SEARCH_REVERSE) ? -1 : 1;
   if (op == OP_SEARCH_OPPOSITE)
     incr = -incr;
 
@@ -2111,7 +2083,7 @@ int mutt_search_command(int cur, int op)
     if (i > Context->vcount - 1)
     {
       i = 0;
-      if (option(OPT_WRAP_SEARCH))
+      if (WrapSearch)
         msg = _("Search wrapped to top.");
       else
       {
@@ -2122,7 +2094,7 @@ int mutt_search_command(int cur, int op)
     else if (i < 0)
     {
       i = Context->vcount - 1;
-      if (option(OPT_WRAP_SEARCH))
+      if (WrapSearch)
         msg = _("Search wrapped to bottom.");
       else
       {
@@ -2147,8 +2119,9 @@ int mutt_search_command(int cur, int op)
     {
       /* remember that we've already searched this message */
       h->searched = true;
-      if ((h->matched = (mutt_pattern_exec(SearchPattern, MUTT_MATCH_FULL_ADDRESS,
-                                           Context, h, NULL) > 0)))
+      h->matched =
+          mutt_pattern_exec(SearchPattern, MUTT_MATCH_FULL_ADDRESS, Context, h, NULL);
+      if (h->matched > 0)
       {
         mutt_clear_error();
         if (msg && *msg)

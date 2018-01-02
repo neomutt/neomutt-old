@@ -37,7 +37,6 @@
 #include "mailbox.h"
 #include "mime.h"
 #include "mutt_curses.h"
-#include "mutt_idna.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
@@ -455,7 +454,7 @@ int mutt_copy_header(FILE *in, struct Header *h, FILE *out, int flags, const cha
   {
     /* Add some fake headers based on notmuch data */
     char *folder = nm_header_get_folder(h);
-    if (folder && !(option(OPT_WEED) && mutt_matches_ignore("folder")))
+    if (folder && !(Weed && mutt_matches_ignore("folder")))
     {
       char buf[LONG_STRING];
       mutt_str_strfcpy(buf, folder, sizeof(buf));
@@ -468,7 +467,7 @@ int mutt_copy_header(FILE *in, struct Header *h, FILE *out, int flags, const cha
   }
 #endif
   char *tags = driver_tags_get(&h->tags);
-  if (tags && !(option(OPT_WEED) && mutt_matches_ignore("tags")))
+  if (tags && !(Weed && mutt_matches_ignore("tags")))
   {
     fputs("Tags: ", out);
     fputs(tags, out);
@@ -559,7 +558,7 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
 
   if (flags & MUTT_CM_PREFIX)
   {
-    if (option(OPT_TEXT_FLOWED))
+    if (TextFlowed)
       mutt_str_strfcpy(prefix, ">", sizeof(prefix));
     else
       mutt_make_string_flags(prefix, sizeof(prefix), NONULL(IndentString), Context, hdr, 0);
@@ -910,7 +909,7 @@ static void format_address_header(char **h, struct Address *a)
     struct Address *tmp = a->next;
     a->next = NULL;
     *buf = *cbuf = *c2buf = '\0';
-    l = rfc822_write_address(buf, sizeof(buf), a, 0);
+    l = mutt_addr_write(buf, sizeof(buf), a, false);
     a->next = tmp;
 
     if (count && linelen + l > 74)
@@ -1028,7 +1027,7 @@ static int address_header_decode(char **h)
     return 0;
 
   mutt_addrlist_to_local(a);
-  rfc2047_decode_adrlist(a);
+  rfc2047_decode_addrlist(a);
   for (cur = a; cur; cur = cur->next)
     if (cur->personal)
       mutt_str_dequote_comment(cur->personal);

@@ -29,7 +29,6 @@
 #include "mutt/mutt.h"
 #include "history.h"
 #include "globals.h"
-#include "mutt_charset.h"
 #include "protos.h"
 
 /* This history ring grows from 0..History, with last marking the
@@ -140,7 +139,7 @@ void mutt_read_histfile(void)
     p = mutt_str_strdup(linebuf + read);
     if (p)
     {
-      mutt_convert_string(&p, "utf-8", Charset, 0);
+      mutt_cs_convert_string(&p, "utf-8", Charset, 0);
       mutt_history_add(hclass, p, false);
       FREE(&p);
     }
@@ -162,7 +161,7 @@ static int dup_hash_dec(struct Hash *dup_hash, char *s)
   count = (uintptr_t) elem->data;
   if (count <= 1)
   {
-    mutt_hash_delete(dup_hash, s, NULL, NULL);
+    mutt_hash_delete(dup_hash, s, NULL);
     return 0;
   }
 
@@ -205,7 +204,7 @@ static void shrink_histfile(void)
   if (!f)
     return;
 
-  if (option(OPT_HISTORY_REMOVE_DUPS))
+  if (HistoryRemoveDups)
     for (hclass = 0; hclass < HC_LAST; hclass++)
       dup_hashes[hclass] = mutt_hash_create(MAX(10, SaveHistory * 2), MUTT_HASH_STRDUP_KEYS);
 
@@ -222,8 +221,7 @@ static void shrink_histfile(void)
     if (hclass >= HC_LAST)
       continue;
     *p = '\0';
-    if (option(OPT_HISTORY_REMOVE_DUPS) &&
-        (dup_hash_inc(dup_hashes[hclass], linebuf + read) > 1))
+    if (HistoryRemoveDups && (dup_hash_inc(dup_hashes[hclass], linebuf + read) > 1))
     {
       regen_file = true;
       continue;
@@ -265,8 +263,7 @@ static void shrink_histfile(void)
       if (hclass >= HC_LAST)
         continue;
       *p = '\0';
-      if (option(OPT_HISTORY_REMOVE_DUPS) &&
-          (dup_hash_dec(dup_hashes[hclass], linebuf + read) > 0))
+      if (HistoryRemoveDups && (dup_hash_dec(dup_hashes[hclass], linebuf + read) > 0))
       {
         continue;
       }
@@ -290,9 +287,9 @@ cleanup:
     mutt_file_fclose(&tmp);
     unlink(tmpfname);
   }
-  if (option(OPT_HISTORY_REMOVE_DUPS))
+  if (HistoryRemoveDups)
     for (hclass = 0; hclass < HC_LAST; hclass++)
-      mutt_hash_destroy(&dup_hashes[hclass], NULL);
+      mutt_hash_destroy(&dup_hashes[hclass]);
 }
 
 static void save_history(enum HistoryClass hclass, const char *s)
@@ -312,7 +309,7 @@ static void save_history(enum HistoryClass hclass, const char *s)
   }
 
   tmp = mutt_str_strdup(s);
-  mutt_convert_string(&tmp, Charset, "utf-8", 0);
+  mutt_cs_convert_string(&tmp, Charset, "utf-8", 0);
 
   /* Format of a history item (1 line): "<histclass>:<string>|".
      We add a '|' in order to avoid lines ending with '\'. */
@@ -416,7 +413,7 @@ void mutt_history_add(enum HistoryClass hclass, const char *s, bool save)
      */
     if (*s != ' ' && (!h->hist[prev] || (mutt_str_strcmp(h->hist[prev], s) != 0)))
     {
-      if (option(OPT_HISTORY_REMOVE_DUPS))
+      if (HistoryRemoveDups)
         remove_history_dups(hclass, s);
       if (save && SaveHistory)
         save_history(hclass, s);

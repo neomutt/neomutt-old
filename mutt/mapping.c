@@ -32,6 +32,7 @@
  * | mutt_map_get_value() | Lookup the constant for a string
  */
 
+#include <stddef.h>
 #include "mapping.h"
 #include "string2.h"
 

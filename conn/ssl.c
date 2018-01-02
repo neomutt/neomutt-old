@@ -65,7 +65,6 @@
 #include "globals.h"
 #include "keymap.h"
 #include "mutt_account.h"
-#include "mutt_idna.h"
 #include "mutt_menu.h"
 #include "opcodes.h"
 #include "options.h"
@@ -180,7 +179,7 @@ static int ssl_set_verify_partial(SSL_CTX *ctx)
 #ifdef HAVE_SSL_PARTIAL_CHAIN
   X509_VERIFY_PARAM *param = NULL;
 
-  if (option(OPT_SSL_VERIFY_PARTIAL_CHAINS))
+  if (SslVerifyPartialChains)
   {
     param = X509_VERIFY_PARAM_new();
     if (param)
@@ -511,7 +510,7 @@ static bool compare_certificates(X509 *cert, X509 *peercert,
  */
 static bool check_certificate_expiration(X509 *peercert, bool silent)
 {
-  if (option(OPT_SSL_VERIFY_DATES) != MUTT_NO)
+  if (SslVerifyDates != MUTT_NO)
   {
     if (X509_cmp_current_time(X509_get_notBefore(peercert)) >= 0)
     {
@@ -829,7 +828,7 @@ static int check_host(X509 *x509cert, const char *hostname, char *err, size_t er
    * type DNS or the Common Name (CN). */
 
 #ifdef HAVE_LIBIDN
-  if (idna_to_ascii_lz(hostname, &hostname_ascii, 0) != IDNA_SUCCESS)
+  if (mutt_idna_to_ascii_lz(hostname, &hostname_ascii, 0) != 0)
   {
     hostname_ascii = mutt_str_strdup(hostname);
   }
@@ -839,7 +838,8 @@ static int check_host(X509 *x509cert, const char *hostname, char *err, size_t er
 
   /* Try the DNS subjectAltNames. */
   match_found = false;
-  if ((subj_alt_names = X509_get_ext_d2i(x509cert, NID_subject_alt_name, NULL, NULL)))
+  subj_alt_names = X509_get_ext_d2i(x509cert, NID_subject_alt_name, NULL, NULL);
+  if (subj_alt_names)
   {
     subj_alt_names_count = sk_GENERAL_NAME_num(subj_alt_names);
     for (int i = 0; i < subj_alt_names_count; i++)
@@ -1013,7 +1013,7 @@ static int interactive_check_cert(X509 *cert, int idx, size_t len, SSL *ssl, int
 
 /* The leaf/host certificate can't be skipped. */
 #ifdef HAVE_SSL_PARTIAL_CHAIN
-  if ((idx != 0) && (option(OPT_SSL_VERIFY_PARTIAL_CHAINS)))
+  if ((idx != 0) && SslVerifyPartialChains)
     ALLOW_SKIP = 1;
 #endif
 
@@ -1055,7 +1055,7 @@ static int interactive_check_cert(X509 *cert, int idx, size_t len, SSL *ssl, int
   menu->help = helpstr;
 
   done = 0;
-  set_option(OPT_IGNORE_MACRO_EVENTS);
+  OPT_IGNORE_MACRO_EVENTS = true;
   while (!done)
   {
     switch (mutt_menu_loop(menu))
@@ -1069,7 +1069,8 @@ static int interactive_check_cert(X509 *cert, int idx, size_t len, SSL *ssl, int
         if (!allow_always)
           break;
         done = 0;
-        if ((fp = fopen(CertificateFile, "a")))
+        fp = fopen(CertificateFile, "a");
+        if (fp)
         {
           if (PEM_write_X509(fp, cert))
             done = 1;
@@ -1085,7 +1086,7 @@ static int interactive_check_cert(X509 *cert, int idx, size_t len, SSL *ssl, int
           mutt_message(_("Certificate saved"));
           mutt_sleep(0);
         }
-      /* fall through */
+      /* fallthrough */
       case OP_MAX + 2: /* accept once */
         done = 2;
         SSL_set_ex_data(ssl, SkipModeExDataIndex, NULL);
@@ -1099,7 +1100,7 @@ static int interactive_check_cert(X509 *cert, int idx, size_t len, SSL *ssl, int
         break;
     }
   }
-  unset_option(OPT_IGNORE_MACRO_EVENTS);
+  OPT_IGNORE_MACRO_EVENTS = false;
   mutt_pop_current_menu(menu);
   mutt_menu_destroy(&menu);
   mutt_debug(2, "done=%d\n", done);
@@ -1167,7 +1168,7 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
    * a second time with preverify_ok = 1.  Don't show it or the user
    * will think their "s" key is broken.
    */
-  if (option(OPT_SSL_VERIFY_PARTIAL_CHAINS))
+  if (SslVerifyPartialChains)
   {
     if (skip_mode && preverify_ok && (pos == last_pos) && last_cert)
     {
@@ -1196,7 +1197,7 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 
   /* check hostname only for the leaf certificate */
   buf[0] = 0;
-  if (pos == 0 && option(OPT_SSL_VERIFY_HOST) != MUTT_NO)
+  if (pos == 0 && SslVerifyHost != MUTT_NO)
   {
     if (!check_host(cert, host, buf, sizeof(buf)))
     {
@@ -1340,7 +1341,7 @@ static int ssl_socket_open(struct Connection *conn)
   }
 
   /* disable SSL protocols as needed */
-  if (!option(OPT_SSL_USE_TLSV1))
+  if (!SslUseTlsv1)
   {
     SSL_CTX_set_options(data->ctx, SSL_OP_NO_TLSv1);
   }
@@ -1348,27 +1349,27 @@ static int ssl_socket_open(struct Connection *conn)
    * as Fedora 17 are on OpenSSL 1.0.0.
    */
 #ifdef SSL_OP_NO_TLSv1_1
-  if (!option(OPT_SSL_USE_TLSV1_1))
+  if (!SslUseTlsv11)
   {
     SSL_CTX_set_options(data->ctx, SSL_OP_NO_TLSv1_1);
   }
 #endif
 #ifdef SSL_OP_NO_TLSv1_2
-  if (!option(OPT_SSL_USE_TLSV1_2))
+  if (!SslUseTlsv12)
   {
     SSL_CTX_set_options(data->ctx, SSL_OP_NO_TLSv1_2);
   }
 #endif
-  if (!option(OPT_SSL_USE_SSLV2))
+  if (!SslUseSslv2)
   {
     SSL_CTX_set_options(data->ctx, SSL_OP_NO_SSLv2);
   }
-  if (!option(OPT_SSL_USE_SSLV3))
+  if (!SslUseSslv3)
   {
     SSL_CTX_set_options(data->ctx, SSL_OP_NO_SSLv3);
   }
 
-  if (option(OPT_SSL_USESYSTEMCERTS))
+  if (SslUsesystemcerts)
   {
     if (!SSL_CTX_set_default_verify_paths(data->ctx))
     {
@@ -1442,15 +1443,15 @@ int mutt_ssl_starttls(struct Connection *conn)
     goto bail_ssldata;
   }
 #ifdef SSL_OP_NO_TLSv1_2
-  if (!option(OPT_SSL_USE_TLSV1_2))
+  if (!SslUseTlsv12)
     ssl_options |= SSL_OP_NO_TLSv1_2;
 #endif
 #ifdef SSL_OP_NO_TLSv1_1
-  if (!option(OPT_SSL_USE_TLSV1_1))
+  if (!SslUseTlsv11)
     ssl_options |= SSL_OP_NO_TLSv1_1;
 #endif
 #ifdef SSL_OP_NO_TLSv1
-  if (!option(OPT_SSL_USE_TLSV1))
+  if (!SslUseTlsv1)
     ssl_options |= SSL_OP_NO_TLSv1;
 #endif
 /* these are always set */
@@ -1466,7 +1467,7 @@ int mutt_ssl_starttls(struct Connection *conn)
     goto bail_ctx;
   }
 
-  if (option(OPT_SSL_USESYSTEMCERTS))
+  if (SslUsesystemcerts)
   {
     if (!SSL_CTX_set_default_verify_paths(ssldata->ctx))
     {

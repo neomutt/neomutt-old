@@ -41,7 +41,6 @@
 #include "header.h"
 #include "mbtable.h"
 #include "mutt_curses.h"
-#include "mutt_idna.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
 #include "protos.h"
@@ -72,41 +71,41 @@ enum FlagChars
 
 bool mutt_is_mail_list(struct Address *addr)
 {
-  if (!mutt_match_regex_list(addr->mailbox, UnMailLists))
-    return mutt_match_regex_list(addr->mailbox, MailLists);
+  if (!mutt_regexlist_match(UnMailLists, addr->mailbox))
+    return mutt_regexlist_match(MailLists, addr->mailbox);
   return false;
 }
 
 bool mutt_is_subscribed_list(struct Address *addr)
 {
-  if (!mutt_match_regex_list(addr->mailbox, UnMailLists) &&
-      !mutt_match_regex_list(addr->mailbox, UnSubscribedLists))
+  if (!mutt_regexlist_match(UnMailLists, addr->mailbox) &&
+      !mutt_regexlist_match(UnSubscribedLists, addr->mailbox))
   {
-    return mutt_match_regex_list(addr->mailbox, SubscribedLists);
+    return mutt_regexlist_match(SubscribedLists, addr->mailbox);
   }
   return false;
 }
 
 /**
  * check_for_mailing_list - Search list of addresses for a mailing list
- * @param adr     List of addreses to search
+ * @param addr    List of addreses to search
  * @param pfx     Prefix string
  * @param buf     Buffer to store results
  * @param buflen  Buffer length
  * @retval 1 Mailing list found
  * @retval 0 No list found
  *
- * Search for a mailing list in the list of addresses pointed to by adr.
+ * Search for a mailing list in the list of addresses pointed to by addr.
  * If one is found, print pfx and the name of the list into buf.
  */
-static bool check_for_mailing_list(struct Address *adr, const char *pfx, char *buf, int buflen)
+static bool check_for_mailing_list(struct Address *addr, const char *pfx, char *buf, int buflen)
 {
-  for (; adr; adr = adr->next)
+  for (; addr; addr = addr->next)
   {
-    if (mutt_is_subscribed_list(adr))
+    if (mutt_is_subscribed_list(addr))
     {
       if (pfx && buf && buflen)
-        snprintf(buf, buflen, "%s%s", pfx, mutt_get_name(adr));
+        snprintf(buf, buflen, "%s%s", pfx, mutt_get_name(addr));
       return true;
     }
   }
@@ -119,14 +118,14 @@ static bool check_for_mailing_list(struct Address *adr, const char *pfx, char *b
  * If one is found, print the address of the list into buf, then return 1.
  * Otherwise, simply return 0.
  */
-static bool check_for_mailing_list_addr(struct Address *adr, char *buf, int buflen)
+static bool check_for_mailing_list_addr(struct Address *addr, char *buf, int buflen)
 {
-  for (; adr; adr = adr->next)
+  for (; addr; addr = addr->next)
   {
-    if (mutt_is_subscribed_list(adr))
+    if (mutt_is_subscribed_list(addr))
     {
       if (buf && buflen)
-        snprintf(buf, buflen, "%s", adr->mailbox);
+        snprintf(buf, buflen, "%s", addr->mailbox);
       return true;
     }
   }
@@ -392,7 +391,7 @@ static char *apply_subject_mods(struct Envelope *env)
   if (env->subject == NULL || *env->subject == '\0')
     return env->disp_subj = NULL;
 
-  env->disp_subj = mutt_apply_replace(NULL, 0, env->subject, SubjectRegexList);
+  env->disp_subj = mutt_replacelist_apply(SubjectRegexList, NULL, 0, env->subject);
   return env->disp_subj;
 }
 
@@ -562,7 +561,8 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
     case 'b':
       if (ctx)
       {
-        if ((p = strrchr(ctx->path, '/')))
+        p = strrchr(ctx->path, '/');
+        if (p)
           mutt_str_strfcpy(buf, p + 1, buflen);
         else
           mutt_str_strfcpy(buf, ctx->path, buflen);
@@ -795,7 +795,7 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
 
     case 'f':
       tmp[0] = 0;
-      rfc822_write_address(tmp, sizeof(tmp), hdr->env->from, 1);
+      mutt_addr_write(tmp, sizeof(tmp), hdr->env->from, true);
       mutt_format_s(buf, buflen, prec, tmp);
       break;
 
@@ -997,7 +997,7 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
       if (!optional)
       {
         make_from_addr(hdr->env, tmp, sizeof(tmp), 1);
-        if (!option(OPT_SAVE_ADDRESS) && (p = strpbrk(tmp, "%@")))
+        if (!SaveAddress && (p = strpbrk(tmp, "%@")))
           *p = 0;
         mutt_format_s(buf, buflen, prec, tmp);
       }
@@ -1020,7 +1020,7 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
 
     case 'r':
       tmp[0] = 0;
-      rfc822_write_address(tmp, sizeof(tmp), hdr->env->to, 1);
+      mutt_addr_write(tmp, sizeof(tmp), hdr->env->to, true);
       if (optional && tmp[0] == '\0')
         optional = 0;
       mutt_format_s(buf, buflen, prec, tmp);
@@ -1028,7 +1028,7 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
 
     case 'R':
       tmp[0] = 0;
-      rfc822_write_address(tmp, sizeof(tmp), hdr->env->cc, 1);
+      mutt_addr_write(tmp, sizeof(tmp), hdr->env->cc, true);
       if (optional && tmp[0] == '\0')
         optional = 0;
       mutt_format_s(buf, buflen, prec, tmp);
@@ -1114,7 +1114,8 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
       if (hdr->env->from && hdr->env->from->mailbox)
       {
         mutt_str_strfcpy(tmp, mutt_addr_for_display(hdr->env->from), sizeof(tmp));
-        if ((p = strpbrk(tmp, "%@")))
+        p = strpbrk(tmp, "%@");
+        if (p)
           *p = 0;
       }
       else
@@ -1134,7 +1135,8 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
       }
       else
         mutt_format_s(tmp, sizeof(tmp), prec, mutt_get_name(hdr->env->from));
-      if ((p = strpbrk(tmp, " %@")))
+      p = strpbrk(tmp, " %@");
+      if (p)
         *p = 0;
       mutt_format_s(buf, buflen, prec, tmp);
       break;

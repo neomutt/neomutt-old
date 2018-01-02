@@ -47,6 +47,7 @@
 #include "mutt/file.h"
 #include "mutt/memory.h"
 #include "mutt/message.h"
+#include "mutt/regex3.h"
 #include "mutt/string2.h"
 #include "mutt.h"
 #include "account.h"
@@ -55,7 +56,6 @@
 #include "keymap.h"
 #include "mutt_account.h"
 #include "mutt_menu.h"
-#include "mutt_regex.h"
 #include "opcodes.h"
 #include "options.h"
 #include "protos.h"
@@ -318,7 +318,8 @@ static int tls_check_stored_hostname(const gnutls_datum_t *cert, const char *hos
   regmatch_t pmatch[3];
 
   /* try checking against names stored in stored certs file */
-  if ((fp = fopen(CertificateFile, "r")))
+  fp = fopen(CertificateFile, "r");
+  if (fp)
   {
     if (REGCOMP(&preg,
                 "^#H ([a-zA-Z0-9_\\.-]+) ([0-9A-F]{4}( [0-9A-F]{4}){7})[ \t]*$",
@@ -468,7 +469,7 @@ static int tls_check_preauth(const gnutls_datum_t *certdata,
     return -1;
   }
 
-  if (option(OPT_SSL_VERIFY_DATES) != MUTT_NO)
+  if (SslVerifyDates != MUTT_NO)
   {
     if (gnutls_x509_crt_get_expiration_time(cert) < time(NULL))
       *certerr |= CERTERR_EXPIRED;
@@ -476,7 +477,7 @@ static int tls_check_preauth(const gnutls_datum_t *certdata,
       *certerr |= CERTERR_NOTYETVALID;
   }
 
-  if (chainidx == 0 && option(OPT_SSL_VERIFY_HOST) != MUTT_NO &&
+  if (chainidx == 0 && SslVerifyHost != MUTT_NO &&
       !gnutls_x509_crt_check_hostname(cert, hostname) &&
       !tls_check_stored_hostname(certdata, hostname))
     *certerr |= CERTERR_HOSTNAME;
@@ -817,7 +818,7 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
   menu->help = helpstr;
 
   done = 0;
-  set_option(OPT_IGNORE_MACRO_EVENTS);
+  OPT_IGNORE_MACRO_EVENTS = true;
   while (!done)
   {
     switch (mutt_menu_loop(menu))
@@ -829,7 +830,8 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
         break;
       case OP_MAX + 3: /* accept always */
         done = 0;
-        if ((fp = fopen(CertificateFile, "a")))
+        fp = fopen(CertificateFile, "a");
+        if (fp)
         {
           /* save hostname if necessary */
           if (certerr & CERTERR_HOSTNAME)
@@ -862,13 +864,13 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
           mutt_message(_("Certificate saved"));
           mutt_sleep(0);
         }
-      /* fall through */
+      /* fallthrough */
       case OP_MAX + 2: /* accept once */
         done = 2;
         break;
     }
   }
-  unset_option(OPT_IGNORE_MACRO_EVENTS);
+  OPT_IGNORE_MACRO_EVENTS = false;
   mutt_pop_current_menu(menu);
   mutt_menu_destroy(&menu);
   gnutls_x509_crt_deinit(cert);
@@ -1006,7 +1008,8 @@ static void tls_get_client_cert(struct Connection *conn)
   }
   cn += 3;
 
-  if ((cnend = strstr(dn, ",EMAIL=")))
+  cnend = strstr(dn, ",EMAIL=");
+  if (cnend)
     *cnend = '\0';
 
   /* if we are using a client cert, SASL may expect an external auth name */
@@ -1042,22 +1045,22 @@ static int tls_set_priority(struct TlsSockData *data)
   else
     mutt_str_strcat(priority, priority_size, "NORMAL");
 
-  if (!option(OPT_SSL_USE_TLSV1_2))
+  if (!SslUseTlsv12)
   {
     nproto--;
     mutt_str_strcat(priority, priority_size, ":-VERS-TLS1.2");
   }
-  if (!option(OPT_SSL_USE_TLSV1_1))
+  if (!SslUseTlsv11)
   {
     nproto--;
     mutt_str_strcat(priority, priority_size, ":-VERS-TLS1.1");
   }
-  if (!option(OPT_SSL_USE_TLSV1))
+  if (!SslUseTlsv1)
   {
     nproto--;
     mutt_str_strcat(priority, priority_size, ":-VERS-TLS1.0");
   }
-  if (!option(OPT_SSL_USE_SSLV3))
+  if (!SslUseSslv3)
   {
     nproto--;
     mutt_str_strcat(priority, priority_size, ":-VERS-SSL3.0");
@@ -1094,13 +1097,13 @@ static int tls_set_priority(struct TlsSockData *data)
 {
   size_t nproto = 0; /* number of tls/ssl protocols */
 
-  if (option(OPT_SSL_USE_TLSV1_2))
+  if (SslUseTlsv12)
     protocol_priority[nproto++] = GNUTLS_TLS1_2;
-  if (option(OPT_SSL_USE_TLSV1_1))
+  if (SslUseTlsv11)
     protocol_priority[nproto++] = GNUTLS_TLS1_1;
-  if (option(OPT_SSL_USE_TLSV1))
+  if (SslUseTlsv1)
     protocol_priority[nproto++] = GNUTLS_TLS1;
-  if (option(OPT_SSL_USE_SSLV3))
+  if (SslUseSslv3)
     protocol_priority[nproto++] = GNUTLS_SSL3;
   protocol_priority[nproto] = 0;
 
@@ -1172,7 +1175,8 @@ static int tls_negotiate(struct Connection *conn)
   gnutls_certificate_set_verify_flags(data->xcred, GNUTLS_VERIFY_DISABLE_TIME_CHECKS);
 #endif
 
-  if ((err = gnutls_init(&data->state, GNUTLS_CLIENT)))
+  err = gnutls_init(&data->state, GNUTLS_CLIENT);
+  if (err)
   {
     mutt_error("gnutls_handshake: %s", gnutls_strerror(err));
     mutt_sleep(2);
@@ -1233,7 +1237,7 @@ static int tls_negotiate(struct Connection *conn)
 
   tls_get_client_cert(conn);
 
-  if (!option(OPT_NO_CURSES))
+  if (!OPT_NO_CURSES)
   {
     mutt_message(_("SSL/TLS connection using %s (%s/%s/%s)"),
                  gnutls_protocol_get_name(gnutls_protocol_get_version(data->state)),

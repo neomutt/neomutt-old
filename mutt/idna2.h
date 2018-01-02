@@ -1,9 +1,9 @@
 /**
  * @file
- * Connection Library
+ * Handling of international domain names
  *
  * @authors
- * Copyright (C) 2017 Richard Russon <rich@flatcap.org>
+ * Copyright (C) 2003,2005 Thomas Roessler <roessler@does-not-exist.org>
  *
  * @copyright
  * This program is free software: you can redistribute it and/or modify it under
@@ -20,35 +20,18 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @page conn Connection Library
- *
- * Manage external connections.
- *
- * -# @subpage conn_globals
- * -# @subpage conn_getdomain
- * -# @subpage conn_sasl
- * -# @subpage conn_sasl_plain
- * -# @subpage conn_socket
- * -# @subpage conn_ssl
- * -# @subpage conn_ssl_gnutls
- * -# @subpage conn_tunnel
- */
+#ifndef _MUTT_IDNA_H
+#define _MUTT_IDNA_H
 
-#ifndef _CONN_CONN_H
-#define _CONN_CONN_H
+#include <stdbool.h>
 
-#include "account.h"
-#include "conn_globals.h"
-#include "connection.h"
-#include "sasl_plain.h"
-#include "socket.h"
-#include "tunnel.h"
-#ifdef USE_SASL
-#include "sasl.h"
-#endif
-#ifdef USE_SSL
-#include "ssl.h"
-#endif
+extern bool IdnDecode;
+extern bool IdnEncode;
 
-#endif /* _CONN_CONN_H */
+#define MI_MAY_BE_IRREVERSIBLE (1 << 0)
+
+int   mutt_idna_to_ascii_lz(const char *input, char **output, int flags);
+char *mutt_idna_intl_to_local(const char *user, const char *domain, int flags);
+char *mutt_idna_local_to_intl(const char *user, const char *domain);
+
+#endif /* _MUTT_IDNA_H */

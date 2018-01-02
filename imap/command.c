@@ -76,7 +76,7 @@ static const char *const Capabilities[] = {
   "IMAP4",     "IMAP4rev1",     "STATUS",      "ACL",
   "NAMESPACE", "AUTH=CRAM-MD5", "AUTH=GSSAPI", "AUTH=ANONYMOUS",
   "STARTTLS",  "LOGINDISABLED", "IDLE",        "SASL-IR",
-  "ENABLE",    "X-GM-EXT1",     "X-GM-EXT-1",  NULL,
+  "ENABLE",    "X-GM-EXT-1",    "X-GM-EXT1",   NULL,
 };
 
 /**
@@ -376,7 +376,8 @@ static void cmd_parse_capability(struct ImapData *idata, char *s)
   mutt_debug(3, "Handling CAPABILITY\n");
 
   s = imap_next_word(s);
-  if ((bracket = strchr(s, ']')))
+  bracket = strchr(s, ']');
+  if (bracket)
     *bracket = '\0';
   FREE(&idata->capstr);
   idata->capstr = mutt_str_strdup(s);
@@ -494,7 +495,7 @@ static void cmd_parse_lsub(struct ImapData *idata, char *s)
     return;
   }
 
-  if (!option(OPT_IMAP_CHECK_SUBSCRIBED))
+  if (!ImapCheckSubscribed)
     return;
 
   idata->cmdtype = IMAP_CT_LIST;
@@ -735,7 +736,7 @@ static void cmd_parse_status(struct ImapData *idata, char *s)
         mutt_debug(3, "Found %s in buffy list (OV: %d ON: %d U: %d)\n", mailbox,
                    olduv, oldun, status->unseen);
 
-        if (option(OPT_MAIL_CHECK_RECENT))
+        if (MailCheckRecent)
         {
           if (olduv && olduv == status->uidvalidity)
           {
@@ -890,7 +891,7 @@ static int cmd_handle_untagged(struct ImapData *idata)
 
     return -1;
   }
-  else if (option(OPT_IMAP_SERVERNOISE) && (mutt_str_strncasecmp("NO", s, 2) == 0))
+  else if (ImapServernoise && (mutt_str_strncasecmp("NO", s, 2) == 0))
   {
     mutt_debug(2, "Handling untagged NO\n");
 

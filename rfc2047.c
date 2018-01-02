@@ -32,7 +32,6 @@
 #include "globals.h"
 #include "mbyte.h"
 #include "mime.h"
-#include "mutt_charset.h"
 #include "options.h"
 #include "protos.h"
 
@@ -61,7 +60,7 @@ static size_t convert_string(const char *f, size_t flen, const char *from,
   size_t obl, n;
   int e;
 
-  cd = mutt_iconv_open(to, from, 0);
+  cd = mutt_cs_iconv_open(to, from, 0);
   if (cd == (iconv_t)(-1))
     return (size_t)(-1);
   obl = 4 * flen + 1;
@@ -117,8 +116,8 @@ int convert_nonmime_string(char **ps)
       return 0;
     }
   }
-  mutt_convert_string(ps, (const char *) mutt_cs_get_default_charset(), Charset,
-                      MUTT_ICONV_HOOK_FROM);
+  mutt_cs_convert_string(ps, (const char *) mutt_cs_get_default_charset(),
+                         Charset, MUTT_ICONV_HOOK_FROM);
   return -1;
 }
 
@@ -277,7 +276,7 @@ static size_t try_block(const char *d, size_t dlen, const char *fromcode,
 
   if (fromcode)
   {
-    cd = mutt_iconv_open(tocode, fromcode, 0);
+    cd = mutt_cs_iconv_open(tocode, fromcode, 0);
     assert(cd != (iconv_t)(-1));
     ib = d;
     ibl = dlen;
@@ -357,7 +356,7 @@ static size_t encode_block(char *s, char *d, size_t dlen, const char *fromcode,
 
   if (fromcode)
   {
-    cd = mutt_iconv_open(tocode, fromcode, 0);
+    cd = mutt_cs_iconv_open(tocode, fromcode, 0);
     assert(cd != (iconv_t)(-1));
     ib = d;
     ibl = dlen;
@@ -483,7 +482,8 @@ static int rfc2047_encode(const char *d, size_t dlen, int col, const char *fromc
   tocode = fromcode;
   if (icode)
   {
-    if ((tocode1 = mutt_choose_charset(icode, charsets, u, ulen, 0, 0)))
+    tocode1 = mutt_choose_charset(icode, charsets, u, ulen, 0, 0);
+    if (tocode1)
       tocode = tocode1;
     else
     {
@@ -633,7 +633,7 @@ void rfc2047_encode_string(char **pd, int encode_specials, int col)
   *pd = e;
 }
 
-void rfc2047_encode_adrlist(struct Address *addr, const char *tag)
+void rfc2047_encode_addrlist(struct Address *addr, const char *tag)
 {
   struct Address *ptr = addr;
   int col = tag ? strlen(tag) + 2 : 32;
@@ -677,7 +677,8 @@ static int rfc2047_decode_word(char *d, const char *s, size_t len)
       case 2:
         /* ignore language specification a la RFC2231 */
         t = pp1;
-        if ((t1 = memchr(pp, '*', t - pp)))
+        t1 = memchr(pp, '*', t - pp);
+        if (t1)
           t = t1;
         charset = mutt_str_substr_dup(pp, t);
         break;
@@ -736,7 +737,7 @@ static int rfc2047_decode_word(char *d, const char *s, size_t len)
   }
 
   if (charset)
-    mutt_convert_string(&d0, charset, Charset, MUTT_ICONV_HOOK_FROM);
+    mutt_cs_convert_string(&d0, charset, Charset, MUTT_ICONV_HOOK_FROM);
   mutt_filter_unprintable(&d0);
   mutt_str_strfcpy(d, d0, len);
   rc = 0;
@@ -808,7 +809,7 @@ void rfc2047_decode(char **pd)
     if (!p)
     {
       /* no encoded words */
-      if (option(OPT_IGNORE_LINEAR_WHITE_SPACE))
+      if (IgnoreLinearWhiteSpace)
       {
         n = mutt_str_strlen(s);
         if (found_encoded && (m = mutt_str_lws_len(s, n)) != 0)
@@ -847,7 +848,7 @@ void rfc2047_decode(char **pd)
       n = (size_t)(p - s);
       /* ignore spaces between encoded word
        * and linear-white-space between encoded word and *text */
-      if (option(OPT_IGNORE_LINEAR_WHITE_SPACE))
+      if (IgnoreLinearWhiteSpace)
       {
         if (found_encoded && (m = mutt_str_lws_len(s, n)) != 0)
         {
@@ -905,7 +906,7 @@ void rfc2047_decode(char **pd)
   mutt_str_adjust(pd);
 }
 
-void rfc2047_decode_adrlist(struct Address *a)
+void rfc2047_decode_addrlist(struct Address *a)
 {
   while (a)
   {

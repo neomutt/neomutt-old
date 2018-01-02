@@ -33,9 +33,6 @@
 #include <gpg-error.h>
 #include <gpgme.h>
 #include <langinfo.h>
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 #include <limits.h>
 #include <locale.h>
 #include <stdbool.h>
@@ -57,7 +54,6 @@
 #include "header.h"
 #include "keymap.h"
 #include "mime.h"
-#include "mutt_charset.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
 #include "ncrypt.h"
@@ -68,6 +64,9 @@
 #include "protos.h"
 #include "sort.h"
 #include "state.h"
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#endif
 
 /* Values used for comparing addresses. */
 #define CRYPT_KV_VALID 1
@@ -180,7 +179,7 @@ static void print_utf8(FILE *fp, const char *buf, size_t len)
   /* fromcode "utf-8" is sure, so we don't want
    * charset-hook corrections: flags must be 0.
    */
-  mutt_convert_string(&tstr, "utf-8", Charset, 0);
+  mutt_cs_convert_string(&tstr, "utf-8", Charset, 0);
   fputs(tstr, fp);
   FREE(&tstr);
 }
@@ -202,7 +201,7 @@ static const char *crypt_keyid(struct CryptKeyInfo *k)
   if (k->kobj && k->kobj->subkeys)
   {
     s = k->kobj->subkeys->keyid;
-    if ((!option(OPT_PGP_LONG_IDS)) && (strlen(s) == 16))
+    if ((!PgpLongIds) && (strlen(s) == 16))
       /* Return only the short keyID.  */
       s += 8;
   }
@@ -883,7 +882,7 @@ static char *encrypt_gpgme_object(gpgme_data_t plaintext, gpgme_key_t *rset,
       return NULL;
     }
 
-    if (option(OPT_CRYPT_USE_PKA))
+    if (CryptUsePka)
     {
       err = set_pka_sig_notation(ctx);
       if (err)
@@ -1010,7 +1009,7 @@ static struct Body *sign_message(struct Body *a, int use_smime)
     return NULL;
   }
 
-  if (option(OPT_CRYPT_USE_PKA))
+  if (CryptUsePka)
   {
     err = set_pka_sig_notation(ctx);
     if (err)
@@ -1343,7 +1342,7 @@ static int show_sig_summary(unsigned long sum, gpgme_ctx_t ctx, gpgme_key_t key,
     state_puts("\n", s);
   }
 
-  if (option(OPT_CRYPT_USE_PKA))
+  if (CryptUsePka)
   {
     if (sig->pka_trust == 1 && sig->pka_address)
     {
@@ -2227,7 +2226,8 @@ static int pgp_gpgme_extract_keys(gpgme_data_t keydata, FILE **fp, int dryrun)
   err = gpgme_op_keylist_start(tmpctx, NULL, 0);
   while (!err)
   {
-    if ((err = gpgme_op_keylist_next(tmpctx, &key)))
+    err = gpgme_op_keylist_next(tmpctx, &key);
+    if (err)
       break;
     uid = key->uids;
     subkey = key->subkeys;
@@ -2370,7 +2370,8 @@ int pgp_gpgme_check_traditional(FILE *fp, struct Body *b, int just_one)
       rc = (pgp_gpgme_check_traditional(fp, b->parts, 0) || rc);
     else if (b->type == TYPETEXT)
     {
-      if ((r = mutt_is_application_pgp(b)))
+      r = mutt_is_application_pgp(b);
+      if (r != 0)
         rc = (rc || r);
       else
         rc = (pgp_check_traditional_one_body(fp, b) || rc);
@@ -2434,7 +2435,7 @@ static void copy_clearsigned(gpgme_data_t data, struct State *s, char *charset)
 {
   char buf[HUGE_STRING];
   bool complete, armor_header;
-  FGETCONV *fc = NULL;
+  struct FgetConv *fc = NULL;
   char *fname = NULL;
   FILE *fp = NULL;
 
@@ -2451,7 +2452,7 @@ static void copy_clearsigned(gpgme_data_t data, struct State *s, char *charset)
    * be a wrong label, so we want the ability to do corrections via
    * charset-hooks. Therefore we set flags to MUTT_ICONV_HOOK_FROM.
    */
-  fc = fgetconv_open(fp, charset, Charset, MUTT_ICONV_HOOK_FROM);
+  fc = mutt_cs_fgetconv_open(fp, charset, Charset, MUTT_ICONV_HOOK_FROM);
 
   for (complete = true, armor_header = true; mutt_cs_fgetconvs(buf, sizeof(buf), fc) != NULL;
        complete = (strchr(buf, '\n') != NULL))
@@ -2673,10 +2674,10 @@ int pgp_gpgme_application_handler(struct Body *m, struct State *s)
       }
       else if (pgpout)
       {
-        FGETCONV *fc = NULL;
+        struct FgetConv *fc = NULL;
         int c;
         rewind(pgpout);
-        fc = fgetconv_open(pgpout, "utf-8", Charset, 0);
+        fc = mutt_cs_fgetconv_open(pgpout, "utf-8", Charset, 0);
         while ((c = mutt_cs_fgetconv(fc)) != EOF)
         {
           state_putc(c, s);
@@ -3161,7 +3162,8 @@ static int compare_key_address(const void *a, const void *b)
   struct CryptKeyInfo **t = (struct CryptKeyInfo **) b;
   int r;
 
-  if ((r = mutt_str_strcasecmp((*s)->uid, (*t)->uid)))
+  r = mutt_str_strcasecmp((*s)->uid, (*t)->uid);
+  if (r != 0)
     return r > 0;
   else
     return (mutt_str_strcasecmp(crypt_fpr_or_lkeyid(*s), crypt_fpr_or_lkeyid(*t)) > 0);
@@ -3182,7 +3184,8 @@ static int compare_keyid(const void *a, const void *b)
   struct CryptKeyInfo **t = (struct CryptKeyInfo **) b;
   int r;
 
-  if ((r = mutt_str_strcasecmp(crypt_fpr_or_lkeyid(*s), crypt_fpr_or_lkeyid(*t))))
+  r = mutt_str_strcasecmp(crypt_fpr_or_lkeyid(*s), crypt_fpr_or_lkeyid(*t));
+  if (r != 0)
     return r > 0;
   else
     return (mutt_str_strcasecmp((*s)->uid, (*t)->uid) > 0);
@@ -3233,12 +3236,14 @@ static int compare_key_trust(const void *a, const void *b)
   unsigned long ts = 0, tt = 0;
   int r;
 
-  if ((r = (((*s)->flags & (KEYFLAG_RESTRICTIONS)) - ((*t)->flags & (KEYFLAG_RESTRICTIONS)))))
+  r = (((*s)->flags & (KEYFLAG_RESTRICTIONS)) - ((*t)->flags & (KEYFLAG_RESTRICTIONS)));
+  if (r != 0)
     return r > 0;
 
   ts = (*s)->validity;
   tt = (*t)->validity;
-  if ((r = (tt - ts)))
+  r = (tt - ts);
+  if (r != 0)
     return r < 0;
 
   if ((*s)->kobj->subkeys)
@@ -3257,7 +3262,8 @@ static int compare_key_trust(const void *a, const void *b)
   if (ts < tt)
     return 0;
 
-  if ((r = mutt_str_strcasecmp((*s)->uid, (*t)->uid)))
+  r = mutt_str_strcasecmp((*s)->uid, (*t)->uid);
+  if (r != 0)
     return r > 0;
   return (mutt_str_strcasecmp(crypt_fpr_or_lkeyid((*s)), crypt_fpr_or_lkeyid((*t))) > 0);
 }
@@ -3541,23 +3547,38 @@ static unsigned int key_check_cap(gpgme_key_t key, enum KeyCap cap)
     case KEY_CAP_CAN_ENCRYPT:
       ret = key->can_encrypt;
       if (ret == 0)
+      {
         for (subkey = key->subkeys; subkey; subkey = subkey->next)
-          if ((ret = subkey->can_encrypt))
+        {
+          ret = subkey->can_encrypt;
+          if (ret != 0)
             break;
+        }
+      }
       break;
     case KEY_CAP_CAN_SIGN:
       ret = key->can_sign;
       if (ret == 0)
+      {
         for (subkey = key->subkeys; subkey; subkey = subkey->next)
-          if ((ret = subkey->can_sign))
+        {
+          ret = subkey->can_sign;
+          if (ret != 0)
             break;
+        }
+      }
       break;
     case KEY_CAP_CAN_CERTIFY:
       ret = key->can_certify;
       if (ret == 0)
+      {
         for (subkey = key->subkeys; subkey; subkey = subkey->next)
-          if ((ret = subkey->can_certify))
+        {
+          ret = subkey->can_certify;
+          if (ret != 0)
             break;
+        }
+      }
       break;
   }
 
@@ -3706,7 +3727,6 @@ static void print_key_info(gpgme_key_t key, FILE *fp)
   {
     /* L10N: value in Key Usage: field */
     fprintf(fp, "%s%s", delim, _("certification"));
-    delim = _(", ");
   }
   putc('\n', fp);
 
@@ -3842,7 +3862,6 @@ static void print_key_info(gpgme_key_t key, FILE *fp)
       if (subkey->can_certify)
       {
         fprintf(fp, "%s%s", delim, _("certification"));
-        delim = _(", ");
       }
       putc('\n', fp);
     }
@@ -4179,7 +4198,7 @@ static struct CryptKeyInfo *crypt_select_key(struct CryptKeyInfo *keys,
   key_table = NULL;
   for (k = keys; k; k = k->next)
   {
-    if (!option(OPT_PGP_SHOW_UNUSABLE) && (k->flags & KEYFLAG_CANTUSE))
+    if (!PgpShowUnusable && (k->flags & KEYFLAG_CANTUSE))
     {
       unusable = true;
       continue;
@@ -4285,7 +4304,7 @@ static struct CryptKeyInfo *crypt_select_key(struct CryptKeyInfo *keys,
       case OP_GENERIC_SELECT_ENTRY:
         /* FIXME make error reporting more verbose - this should be
              easy because gpgme provides more information */
-        if (option(OPT_PGP_CHECK_TRUST))
+        if (OPT_PGP_CHECK_TRUST)
         {
           if (!crypt_key_is_valid(key_table[menu->current]))
           {
@@ -4295,9 +4314,8 @@ static struct CryptKeyInfo *crypt_select_key(struct CryptKeyInfo *keys,
           }
         }
 
-        if (option(OPT_PGP_CHECK_TRUST) &&
-            (!crypt_id_is_valid(key_table[menu->current]) ||
-             !crypt_id_is_strong(key_table[menu->current])))
+        if (OPT_PGP_CHECK_TRUST && (!crypt_id_is_valid(key_table[menu->current]) ||
+                                    !crypt_id_is_strong(key_table[menu->current])))
         {
           const char *warn_s = NULL;
           char buf2[LONG_STRING];
@@ -4600,7 +4618,8 @@ static struct CryptKeyInfo *crypt_ask_for_key(char *tag, char *whatfor, short ab
       }
     }
 
-    if ((key = crypt_getkeybystr(resp, abilities, app, forced_valid)))
+    key = crypt_getkeybystr(resp, abilities, app, forced_valid);
+    if (key)
       return key;
 
     mutt_error(_("No matching keys found for \"%s\""), resp);
@@ -4616,7 +4635,7 @@ static struct CryptKeyInfo *crypt_ask_for_key(char *tag, char *whatfor, short ab
  * If oppenc_mode is true, only keys that can be determined without prompting
  * will be used.
  */
-static char *find_keys(struct Address *adrlist, unsigned int app, int oppenc_mode)
+static char *find_keys(struct Address *addrlist, unsigned int app, int oppenc_mode)
 {
   struct ListHead crypt_hook_list = STAILQ_HEAD_INITIALIZER(crypt_hook_list);
   struct ListNode *crypt_hook = NULL;
@@ -4634,7 +4653,7 @@ static char *find_keys(struct Address *adrlist, unsigned int app, int oppenc_mod
   int r;
   bool key_selected;
 
-  for (p = adrlist; p; p = p->next)
+  for (p = addrlist; p; p = p->next)
   {
     key_selected = false;
     mutt_crypt_hook(&crypt_hook_list, p);
@@ -4649,7 +4668,7 @@ static char *find_keys(struct Address *adrlist, unsigned int app, int oppenc_mod
       {
         crypt_hook_val = crypt_hook->data;
         r = MUTT_YES;
-        if (!oppenc_mode && option(OPT_CRYPT_CONFIRMHOOK))
+        if (!oppenc_mode && CryptConfirmhook)
         {
           snprintf(buf, sizeof(buf), _("Use keyID = \"%s\" for %s?"),
                    crypt_hook_val, p->mailbox);
@@ -4739,14 +4758,14 @@ static char *find_keys(struct Address *adrlist, unsigned int app, int oppenc_mod
   return keylist;
 }
 
-char *pgp_gpgme_findkeys(struct Address *adrlist, int oppenc_mode)
+char *pgp_gpgme_findkeys(struct Address *addrlist, int oppenc_mode)
 {
-  return find_keys(adrlist, APPLICATION_PGP, oppenc_mode);
+  return find_keys(addrlist, APPLICATION_PGP, oppenc_mode);
 }
 
-char *smime_gpgme_findkeys(struct Address *adrlist, int oppenc_mode)
+char *smime_gpgme_findkeys(struct Address *addrlist, int oppenc_mode)
 {
-  return find_keys(adrlist, APPLICATION_SMIME, oppenc_mode);
+  return find_keys(addrlist, APPLICATION_SMIME, oppenc_mode);
 }
 
 #ifdef HAVE_GPGME_OP_EXPORT_KEYS
@@ -4761,7 +4780,7 @@ struct Body *pgp_gpgme_make_key_attachment(char *tempf)
   char buf[LONG_STRING];
   struct stat sb;
 
-  unset_option(OPT_PGP_CHECK_TRUST);
+  OPT_PGP_CHECK_TRUST = false;
 
   key = crypt_ask_for_key(_("Please enter the key ID: "), NULL, 0, APPLICATION_PGP, NULL);
   if (!key)
@@ -4879,7 +4898,7 @@ static int gpgme_send_menu(struct Header *msg, int is_smime)
    * NOTE: "Signing" and "Clearing" only adjust the sign bit, so we have different
    *       letter choices for those.
    */
-  if (option(OPT_CRYPT_OPPORTUNISTIC_ENCRYPT) && (msg->security & OPPENCRYPT))
+  if (CryptOpportunisticEncrypt && (msg->security & OPPENCRYPT))
   {
     if (is_smime)
     {
@@ -4904,7 +4923,7 @@ static int gpgme_send_menu(struct Header *msg, int is_smime)
    * Opportunistic encryption option is set, but is toggled off
    * for this message.
    */
-  else if (option(OPT_CRYPT_OPPORTUNISTIC_ENCRYPT))
+  else if (CryptOpportunisticEncrypt)
   {
     if (is_smime)
     {
@@ -4970,8 +4989,9 @@ static int gpgme_send_menu(struct Header *msg, int is_smime)
         break;
 
       case 'a': /* sign (a)s */
-        if ((p = crypt_ask_for_key(_("Sign as: "), NULL, KEYFLAG_CANSIGN,
-                                   is_smime ? APPLICATION_SMIME : APPLICATION_PGP, NULL)))
+        p = crypt_ask_for_key(_("Sign as: "), NULL, KEYFLAG_CANSIGN,
+                              is_smime ? APPLICATION_SMIME : APPLICATION_PGP, NULL);
+        if (p)
         {
           snprintf(input_signas, sizeof(input_signas), "0x%s", crypt_fpr_or_lkeyid(p));
           mutt_str_replace(is_smime ? &SmimeDefaultKey : &PgpSignAs, input_signas);

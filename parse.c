@@ -37,8 +37,6 @@
 #include "header.h"
 #include "mailbox.h"
 #include "mime.h"
-#include "mutt_charset.h"
-#include "mutt_regex.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
 #include "parameter.h"
@@ -325,18 +323,21 @@ void mutt_parse_content_type(char *s, struct Body *ct)
     /* Some pre-RFC1521 gateways still use the "name=filename" convention,
      * but if a filename has already been set in the content-disposition,
      * let that take precedence, and don't set it here */
-    if ((pc = mutt_param_get("name", ct->parameter)) && !ct->filename)
+    pc = mutt_param_get("name", ct->parameter);
+    if (pc && !ct->filename)
       ct->filename = mutt_str_strdup(pc);
 
 #ifdef SUN_ATTACHMENT
     /* this is deep and utter perversion */
-    if ((pc = mutt_param_get("conversions", ct->parameter)))
+    pc = mutt_param_get("conversions", ct->parameter);
+    if (pc)
       ct->encoding = mutt_check_encoding(pc);
 #endif
   }
 
   /* Now get the subtype */
-  if ((subtype = strchr(s, '/')))
+  subtype = strchr(s, '/');
+  if (subtype)
   {
     *subtype++ = '\0';
     for (pc = subtype; *pc && !ISSPACE(*pc) && *pc != ';'; pc++)
@@ -410,9 +411,11 @@ static void parse_content_disposition(const char *s, struct Body *ct)
   if (s)
   {
     s = mutt_str_skip_email_wsp(s + 1);
-    if ((s = mutt_param_get("filename", (parms = parse_parameters(s)))))
+    s = mutt_param_get("filename", (parms = parse_parameters(s)));
+    if (s)
       mutt_str_replace(&ct->filename, s);
-    if ((s = mutt_param_get("name", parms)))
+    s = mutt_param_get("name", parms);
+    if (s)
       ct->form_name = mutt_str_strdup(s);
     mutt_param_free(&parms);
   }
@@ -439,7 +442,8 @@ struct Body *mutt_read_mime_header(FILE *fp, int digest)
   while (*(line = mutt_read_rfc822_line(fp, line, &linelen)) != 0)
   {
     /* Find the value of the current header */
-    if ((c = strchr(line, ':')))
+    c = strchr(line, ':');
+    if (c)
     {
       *c = 0;
       c = mutt_str_skip_email_wsp(c + 1);
@@ -745,7 +749,8 @@ void mutt_parse_mime_message(struct Context *ctx, struct Header *cur)
     if (cur->content->parts)
       break; /* The message was parsed earlier. */
 
-    if ((msg = mx_open_message(ctx, cur->msgno)))
+    msg = mx_open_message(ctx, cur->msgno);
+    if (msg)
     {
       mutt_parse_part(msg->fp, cur->content);
 
@@ -1036,7 +1041,7 @@ int mutt_parse_rfc822_line(struct Envelope *e, struct Header *hdr, char *line,
                 hdr->replied = true;
                 break;
               case 'O':
-                hdr->old = option(OPT_MARK_OLD) ? true : false;
+                hdr->old = MarkOld ? true : false;
                 break;
               case 'R':
                 hdr->read = true;
@@ -1126,7 +1131,7 @@ int mutt_parse_rfc822_line(struct Envelope *e, struct Header *hdr, char *line,
     /* restore the original line */
     line[strlen(line)] = ':';
 
-    if (!(weed && option(OPT_WEED) && mutt_matches_ignore(line)))
+    if (!(weed && Weed && mutt_matches_ignore(line)))
     {
       struct ListNode *np = mutt_list_insert_tail(&e->userhdrs, mutt_str_strdup(line));
       if (do_2047)
@@ -1205,9 +1210,9 @@ struct Envelope *mutt_read_rfc822_header(FILE *f, struct Header *hdr,
 
     *buf = '\0';
 
-    if (mutt_match_spam_list(line, SpamList, buf, sizeof(buf)))
+    if (mutt_replacelist_match(SpamList, buf, sizeof(buf), line))
     {
-      if (!mutt_match_regex_list(line, NoSpamList))
+      if (!mutt_regexlist_match(NoSpamList, line))
       {
         /* if spam tag already exists, figure out how to amend it */
         if (e->spam && *buf)
@@ -1261,15 +1266,15 @@ struct Envelope *mutt_read_rfc822_header(FILE *f, struct Header *hdr,
     hdr->content->offset = ftello(f);
 
     /* do RFC2047 decoding */
-    rfc2047_decode_adrlist(e->from);
-    rfc2047_decode_adrlist(e->to);
-    rfc2047_decode_adrlist(e->cc);
-    rfc2047_decode_adrlist(e->bcc);
-    rfc2047_decode_adrlist(e->reply_to);
-    rfc2047_decode_adrlist(e->mail_followup_to);
-    rfc2047_decode_adrlist(e->return_path);
-    rfc2047_decode_adrlist(e->sender);
-    rfc2047_decode_adrlist(e->x_original_to);
+    rfc2047_decode_addrlist(e->from);
+    rfc2047_decode_addrlist(e->to);
+    rfc2047_decode_addrlist(e->cc);
+    rfc2047_decode_addrlist(e->bcc);
+    rfc2047_decode_addrlist(e->reply_to);
+    rfc2047_decode_addrlist(e->mail_followup_to);
+    rfc2047_decode_addrlist(e->return_path);
+    rfc2047_decode_addrlist(e->sender);
+    rfc2047_decode_addrlist(e->x_original_to);
 
     if (e->subject)
     {
@@ -1277,7 +1282,7 @@ struct Envelope *mutt_read_rfc822_header(FILE *f, struct Header *hdr,
 
       rfc2047_decode(&e->subject);
 
-      if (regexec(ReplyRegexp.regex, e->subject, 1, pmatch, 0) == 0)
+      if (ReplyRegexp && (regexec(ReplyRegexp->regex, e->subject, 1, pmatch, 0) == 0))
         e->real_subj = e->subject + pmatch[0].rm_eo;
       else
         e->real_subj = e->subject;

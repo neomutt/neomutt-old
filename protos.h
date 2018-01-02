@@ -43,12 +43,10 @@ struct Context;
 struct EnterState;
 struct Envelope;
 struct Header;
+struct ListHead;
 struct Parameter;
-struct Regex;
-struct ReplaceList;
 struct RegexList;
 struct State;
-struct ListHead;
 
 struct stat;
 struct passwd;
@@ -94,9 +92,7 @@ int mutt_parse_virtual_mailboxes(struct Buffer *path, struct Buffer *s, unsigned
 
 FILE *mutt_open_read(const char *path, pid_t *thepid);
 
-void set_quadoption(int opt, int flag);
 int query_quadoption(int opt, const char *prompt);
-int quadoption(int opt);
 
 char *mutt_extract_message_id(const char *s, const char **saveptr);
 
@@ -125,14 +121,12 @@ const char *attach_format_str(char *buf, size_t buflen, size_t col, int cols,
                             const char *if_str, const char *else_str,
                             unsigned long data, enum FormatFlag flags);
 
-char *mutt_charset_hook(const char *chs);
-char *mutt_iconv_hook(const char *chs);
 char *mutt_expand_path(char *s, size_t slen);
 char *mutt_expand_path_regex(char *s, size_t slen, int regex);
 char *mutt_find_hook(int type, const char *pat);
 char *mutt_gecos_name(char *dest, size_t destlen, struct passwd *pw);
 char *mutt_get_body_charset(char *d, size_t dlen, struct Body *b);
-void mutt_crypt_hook(struct ListHead *list, struct Address *adr);
+void mutt_crypt_hook(struct ListHead *list, struct Address *addr);
 void mutt_timeout_hook(void);
 void mutt_startup_shutdown_hook(int type);
 int mutt_set_xdg_path(enum XdgType type, char *buf, size_t bufsize);
@@ -140,8 +134,6 @@ int mutt_set_xdg_path(enum XdgType type, char *buf, size_t bufsize);
 const char *mutt_make_version(void);
 
 const char *mutt_fqdn(short may_hide_host);
-
-struct Regex *mutt_compile_regex(const char *s, int flags);
 
 void mutt_account_hook(const char *url);
 void mutt_add_to_reference_headers(struct Envelope *env, struct Envelope *curenv);
@@ -189,7 +181,6 @@ void mutt_forward_intro(struct Context *ctx, struct Header *cur, FILE *fp);
 void mutt_forward_trailer(struct Context *ctx, struct Header *cur, FILE *fp);
 void mutt_free_color(int fg, int bg);
 void mutt_free_enter_state(struct EnterState **esp);
-void mutt_free_regex(struct Regex **pp);
 void mutt_help(int menu);
 void mutt_check_lookup_list(struct Body *b, char *type, size_t len);
 void mutt_make_attribution(struct Context *ctx, struct Header *cur, FILE *out);
@@ -230,8 +221,7 @@ void mutt_tag_set_flag(int flag, int bf);
 void mutt_update_encoding(struct Body *a);
 void mutt_version(void);
 void mutt_view_attachments(struct Header *hdr);
-void mutt_write_address_list(struct Address *adr, FILE *fp, int linelen, int display);
-int mutt_add_to_regex_list(struct RegexList **list, const char *s, int flags, struct Buffer *err);
+void mutt_write_address_list(struct Address *addr, FILE *fp, int linelen, bool display);
 bool mutt_addr_is_user(struct Address *addr);
 int mutt_addwch(wchar_t wc);
 int mutt_alias_complete(char *s, size_t buflen);
@@ -240,7 +230,6 @@ void mutt_alias_delete_reverse(struct Alias *t);
 int mutt_alloc_color(int fg, int bg);
 int mutt_combine_color(int fg_attr, int bg_attr);
 int mutt_any_key_to_continue(const char *s);
-char *mutt_apply_replace(char *dbuf, size_t dlen, char *sbuf, struct ReplaceList *rlist);
 int mutt_buffy_check(bool force);
 int mutt_buffy_notify(void);
 int mutt_builtin_editor(const char *path, struct Header *msg, struct Header *cur);
@@ -294,8 +283,6 @@ bool mutt_is_message_type(int type, const char *subtype);
 bool mutt_is_subscribed_list(struct Address *addr);
 bool mutt_is_text_part(struct Body *b);
 int mutt_lookup_mime_type(struct Body *att, const char *path);
-bool mutt_match_regex_list(const char *s, struct RegexList *l);
-bool mutt_match_spam_list(const char *s, struct ReplaceList *l, char *text, int textsize);
 int mutt_multi_choice(char *prompt, char *letters);
 bool mutt_needs_mailcap(struct Body *m);
 int mutt_num_postponed(int force);
@@ -374,7 +361,7 @@ int wcscasecmp(const wchar_t *a, const wchar_t *b);
 bool message_is_tagged(struct Context *ctx, int index);
 bool message_is_visible(struct Context *ctx, int index);
 
-size_t rfc822_write_address(char *buf, size_t buflen, struct Address *addr, int display);
-void rfc822_write_address_single(char *buf, size_t buflen, struct Address *addr, int display);
+int mutt_addrlist_to_intl(struct Address *a, char **err);
+int mutt_addrlist_to_local(struct Address *a);
 
 #endif /* _MUTT_PROTOS_H */
