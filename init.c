@@ -2801,9 +2801,17 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
                  (*((short *) MuttVars[idx].var) & SORT_LAST) ? "last-" : "", p);
         return 0;
       }
-      CHECK_PAGER;
+
       s->dptr++;
       mutt_extract_token(tmp, s, 0);
+
+      /* If we're running a hook, silently ignore changes to the sorting */
+      if (mutt_hook_is_active() && (CurrentMenu == MENU_PAGER) && (idx >= 0) &&
+          (MuttVars[idx].flags & R_RESORT))
+      {
+        return 0;
+      }
+      CHECK_PAGER;
 
       if (parse_sort((short *) MuttVars[idx].var, tmp->data, map, err) == -1)
       {

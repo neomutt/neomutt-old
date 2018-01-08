@@ -648,3 +648,8 @@ void mutt_startup_shutdown_hook(int type)
   }
   FREE(&token.data);
 }
+
+bool mutt_hook_is_active(void)
+{
+  return (current_hook_type > 0);
+}
