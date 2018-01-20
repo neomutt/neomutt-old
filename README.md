@@ -5,6 +5,26 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2017-12-15
+
+These NeoMutt branches have been archived since NeoMutt 2017-12-15
+
+- [testing/testing](https://github.com/neomutt/neomutt-old/tree/testing/testing)
+
+  Functional and unit testing framework in lua https://github.com/neomutt/neomutt/issues/415
+
+- [testing/testing-bdd-for-c](https://github.com/neomutt/neomutt-old/tree/testing/testing-bdd-for-c)
+
+  Unit test backend using BDD-For-C (only) https://github.com/neomutt/neomutt/issues/431
+
+- [testing/testing-luajit](https://github.com/neomutt/neomutt-old/tree/testing/testing-luajit)
+
+  Another lua unit testing strategy
+
+- [testing/unit-test](https://github.com/neomutt/neomutt-old/tree/testing/unit-test)
+
+  Another C unit testing strategy
+
 ## NeoMutt 2017-10-27
 
 These NeoMutt branches are based on NeoMutt 2017-10-27
