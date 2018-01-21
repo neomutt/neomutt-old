@@ -33,9 +33,8 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-#include <wchar.h>
-#include <wctype.h>
 #include "mutt/mutt.h"
+#include "conn/conn.h"
 #include "mutt.h"
 #include "pattern.h"
 #include "address.h"
@@ -57,9 +56,6 @@
 #include "state.h"
 #include "tags.h"
 #include "thread.h"
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 #ifdef USE_IMAP
 #include "imap/imap.h"
 #endif
@@ -1896,6 +1892,7 @@ int mutt_pattern_func(int op, char *prompt)
   struct Pattern *pat = NULL;
   char buf[LONG_STRING] = "", *simple = NULL;
   struct Buffer err;
+  int rc = -1;
   struct Progress progress;
 
   mutt_str_strfcpy(buf, NONULL(Context->pattern), sizeof(buf));
@@ -1914,15 +1911,13 @@ int mutt_pattern_func(int op, char *prompt)
   pat = mutt_pattern_comp(buf, MUTT_FULL_MSG, &err);
   if (!pat)
   {
-    FREE(&simple);
     mutt_error("%s", err.data);
-    FREE(&err.data);
-    return -1;
+    goto bail;
   }
 
 #ifdef USE_IMAP
   if (Context->magic == MUTT_IMAP && imap_search(Context, pat) < 0)
-    return -1;
+    goto bail;
 #endif
 
   mutt_progress_init(&progress, _("Executing command on matching messages..."),
@@ -2001,11 +1996,15 @@ int mutt_pattern_func(int op, char *prompt)
       Context->limit_pattern = mutt_pattern_comp(buf, MUTT_FULL_MSG, &err);
     }
   }
+
+  rc = 0;
+
+bail:
   FREE(&simple);
   mutt_pattern_free(&pat);
   FREE(&err.data);
 
-  return 0;
+  return rc;
 }
 
 int mutt_search_command(int cur, int op)
@@ -2055,6 +2054,7 @@ int mutt_search_command(int cur, int op)
         LastSearch[0] = '\0';
         return -1;
       }
+      FREE(&err.data);
       mutt_clear_error();
     }
   }

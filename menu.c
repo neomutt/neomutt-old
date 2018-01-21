@@ -32,7 +32,6 @@
 #include "context.h"
 #include "globals.h"
 #include "keymap.h"
-#include "mbyte.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
 #include "opcodes.h"
@@ -40,12 +39,11 @@
 #include "pattern.h"
 #include "protos.h"
 #include "tags.h"
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 #ifdef USE_SIDEBAR
 #include "sidebar.h"
 #endif
+
+struct Header;
 
 char *SearchBuffers[MENU_MAX];
 
@@ -104,6 +102,9 @@ static void print_enriched_string(int index, int attr, unsigned char *s, int do_
   size_t k;
   size_t n = mutt_str_strlen((char *) s);
   mbstate_t mbstate;
+
+  if (!stdscr)
+    return;
 
   memset(&mbstate, 0, sizeof(mbstate));
   while (*s)
@@ -621,7 +622,9 @@ static void menu_length_jump(struct Menu *menu, int jumplen)
       /* need to move the cursor? */
       if ((DIRECTION *
            (tmp = (menu->current - (menu->top + (neg ? (menu->pagelen - 1) - c : c))))) < 0)
+      {
         menu->current -= tmp;
+      }
 
       menu->redraw = REDRAW_INDEX;
     }
@@ -631,8 +634,10 @@ static void menu_length_jump(struct Menu *menu, int jumplen)
       menu->redraw = REDRAW_MOTION;
     }
     else
+    {
       mutt_error(neg ? _("You are on the first page.") :
                        _("You are on the last page."));
+    }
 
     menu->current = MIN(menu->current, menu->max - 1);
     menu->current = MAX(menu->current, 0);

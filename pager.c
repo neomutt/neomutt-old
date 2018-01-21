@@ -45,14 +45,12 @@
 #include "header.h"
 #include "keymap.h"
 #include "mailbox.h"
-#include "mbyte.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "opcodes.h"
 #include "options.h"
-#include "pattern.h"
 #include "protos.h"
 #include "sort.h"
 #ifdef USE_SIDEBAR
@@ -60,9 +58,6 @@
 #endif
 #ifdef USE_NNTP
 #include "nntp.h"
-#endif
-#ifdef ENABLE_NLS
-#include <libintl.h>
 #endif
 
 #define ISHEADER(x) ((x) == MT_COLOR_HEADER || (x) == MT_COLOR_HDEFAULT)
@@ -1268,7 +1263,7 @@ static int format_line(struct Line **line_info, int n, unsigned char *buf, int f
         mutt_debug(3, "skip zero-width character U+%04X\n", (unsigned short) wc);
         continue;
       }
-      if (is_display_corrupting_utf8(wc))
+      if (mutt_mb_is_display_corrupting_utf8(wc))
       {
         mutt_debug(3, "filtered U+%04X\n", (unsigned short) wc);
         continue;
@@ -1490,11 +1485,16 @@ static int display_line(FILE *f, LOFF_T *last_pos, struct Line **line_info,
         (*last)--;
       goto out;
     }
-    if (QuoteRegexp && regexec(QuoteRegexp->regex, (char *) fmt, 1, pmatch, 0) != 0)
+    if (QuoteRegexp && regexec(QuoteRegexp->regex, (char *) fmt, 1, pmatch, 0) == 0)
+    {
+      (*line_info)[n].quote =
+          classify_quote(quote_list, (char *) fmt + pmatch[0].rm_so,
+                        pmatch[0].rm_eo - pmatch[0].rm_so, force_redraw, q_level);
+    }
+    else
+    {
       goto out;
-    (*line_info)[n].quote =
-        classify_quote(quote_list, (char *) fmt + pmatch[0].rm_so,
-                       pmatch[0].rm_eo - pmatch[0].rm_so, force_redraw, q_level);
+    }
   }
 
   if ((flags & MUTT_SEARCH) && !(*line_info)[n].continuation &&
@@ -1577,9 +1577,11 @@ static int display_line(FILE *f, LOFF_T *last_pos, struct Line **line_info,
         cnt = ch + 1;
     }
     if (!(flags & MUTT_PAGER_NSKIP))
+    {
       /* skip leading blanks on the next line too */
       while (*buf_ptr == ' ' || *buf_ptr == '\t')
         buf_ptr++;
+    }
   }
 
   if (*buf_ptr == '\r')

@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <wctype.h>
+#include "mutt.h"
 #include "format_flags.h"
 #include "options.h"
 
@@ -199,7 +200,6 @@ void mutt_perror_debug(const char *s);
 void mutt_prepare_envelope(struct Envelope *env, int final);
 void mutt_unprepare_envelope(struct Envelope *env);
 void mutt_pretty_mailbox(char *s, size_t buflen);
-void mutt_pretty_size(char *s, size_t len, size_t n);
 void mutt_pipe_message(struct Header *h);
 void mutt_print_message(struct Header *h);
 void mutt_query_exit(void);
@@ -243,6 +243,7 @@ int mutt_check_overwrite(const char *attname, const char *path, char *fname,
 int mutt_check_traditional_pgp(struct Header *h, int *redraw);
 int mutt_command_complete(char *buffer, size_t len, int pos, int numtabs);
 int mutt_var_value_complete(char *buffer, size_t len, int pos);
+void myvar_set(const char *var, const char *val);
 #ifdef USE_NOTMUCH
 bool mutt_nm_query_complete(char *buffer, size_t len, int pos, int numtabs);
 bool mutt_nm_tag_complete(char *buffer, size_t len, int numtabs);

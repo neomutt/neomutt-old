@@ -35,7 +35,6 @@
 #include "globals.h"
 #include "header.h"
 #include "mailbox.h"
-#include "mime.h"
 #include "mutt_curses.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
@@ -175,7 +174,7 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
         if (flags & CH_DECODE)
         {
           if (!address_header_decode(&this_one))
-            rfc2047_decode(&this_one);
+            mutt_rfc2047_decode(&this_one);
           this_one_len = mutt_str_strlen(this_one);
 
           /* Convert CRLF line endings to LF */
@@ -292,7 +291,7 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
     if (flags & CH_DECODE)
     {
       if (!address_header_decode(&this_one))
-        rfc2047_decode(&this_one);
+        mutt_rfc2047_decode(&this_one);
       this_one_len = mutt_str_strlen(this_one);
     }
 
@@ -393,7 +392,7 @@ int mutt_copy_header(FILE *in, struct Header *h, FILE *out, int flags, const cha
     fputs("MIME-Version: 1.0\n", out);
     fputs("Content-Transfer-Encoding: 8bit\n", out);
     fputs("Content-Type: text/plain; charset=", out);
-    mutt_cs_canonical_charset(chsbuf, sizeof(chsbuf),
+    mutt_ch_canonical_charset(chsbuf, sizeof(chsbuf),
                               Charset ? Charset : "us-ascii");
     mutt_addr_cat(buffer, sizeof(buffer), chsbuf, MimeSpecials);
     fputs(buffer, out);
@@ -643,7 +642,9 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
 
     if (mutt_copy_header(fpin, hdr, fpout, chflags,
                          (chflags & CH_PREFIX) ? prefix : NULL) == -1)
+    {
       return -1;
+    }
 
     new_offset = ftello(fpout);
   }

@@ -23,7 +23,6 @@
 #include "config.h"
 #include <ctype.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <pwd.h>
@@ -51,7 +50,6 @@
 #include "keymap.h"
 #include "mailbox.h"
 #include "mbtable.h"
-#include "mbyte.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
 #include "mx.h"
@@ -87,7 +85,7 @@ struct MyVar
 
 static struct MyVar *MyVars;
 
-static void myvar_set(const char *var, const char *val)
+void myvar_set(const char *var, const char *val)
 {
   struct MyVar **cur = NULL;
 
@@ -183,7 +181,8 @@ static int parse_regex(int idx, struct Buffer *tmp, struct Buffer *err)
   }
   else
   {
-    ptr = mutt_mem_calloc(1, sizeof(struct Regex *));
+    ptr = mutt_mem_calloc(1, sizeof(struct Regex));
+    *(struct Regex **) MuttVars[idx].var = ptr;
   }
 
   bool not = false;
@@ -292,6 +291,7 @@ bool mutt_option_get(const char *s, struct Option *opt)
       memset(opt, 0, sizeof(*opt));
       opt->name = s;
       opt->type = DT_STRING;
+      opt->initial = (intptr_t) mv;
     }
     return true;
   }
@@ -411,11 +411,12 @@ int mutt_option_set(const struct Option *val, struct Buffer *err)
               struct Envelope *e = Context->hdrs[i]->env;
               if (e && e->subject)
               {
-                e->real_subj =
-                    (ReplyRegexp &&
-                     (regexec(ReplyRegexp->regex, e->subject, 1, pmatch, 0))) ?
-                        e->subject :
-                        e->subject + pmatch[0].rm_eo;
+                e->real_subj = e->subject;
+                if (ReplyRegexp &&
+                    (regexec(ReplyRegexp->regex, e->subject, 1, pmatch, 0) == 0))
+                {
+                  e->subject += pmatch[0].rm_eo;
+                }
               }
             }
           }
@@ -703,7 +704,7 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
       }
       if (var)
       {
-        if ((env = getenv(var)) || (env = myvar_get(var)))
+        if ((env = mutt_str_getenv(var)) || (env = myvar_get(var)))
           mutt_buffer_addstr(dest, env);
         else if ((idx = mutt_option_index(var)) != -1)
         {
@@ -2132,7 +2133,7 @@ static int check_charset(struct Option *opt, const char *val)
   {
     if (!*p)
       continue;
-    if (!mutt_cs_check_charset(p, strict))
+    if (!mutt_ch_check_charset(p, strict))
     {
       rc = -1;
       break;
@@ -2453,7 +2454,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
           restore_default(&MuttVars[idx]);
       }
     }
-    else if (!myvar && DTYPE(MuttVars[idx].type) == DT_BOOL)
+    else if (!myvar && (idx >= 0) && DTYPE(MuttVars[idx].type) == DT_BOOL)
     {
       if (*s->dptr == '=')
       {
@@ -2494,9 +2495,10 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
       else
         *(bool *) MuttVars[idx].var = true;
     }
-    else if (myvar || DTYPE(MuttVars[idx].type) == DT_STRING ||
-             DTYPE(MuttVars[idx].type) == DT_PATH || DTYPE(MuttVars[idx].type) == DT_ADDRESS ||
-             DTYPE(MuttVars[idx].type) == DT_MBTABLE)
+    else if (myvar || ((idx >= 0) && ((DTYPE(MuttVars[idx].type) == DT_STRING) ||
+                                      (DTYPE(MuttVars[idx].type) == DT_PATH) ||
+                                      (DTYPE(MuttVars[idx].type) == DT_ADDRESS) ||
+                                      (DTYPE(MuttVars[idx].type) == DT_MBTABLE))))
     {
       if (unset)
       {
@@ -2577,7 +2579,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
           FREE(&myvar);
           myvar = "don't resort";
         }
-        else if (DTYPE(MuttVars[idx].type) == DT_PATH)
+        else if ((idx >= 0) && DTYPE(MuttVars[idx].type) == DT_PATH)
         {
           if (mutt_str_strcmp(MuttVars[idx].name, "debug_file") == 0 && debugfile_cmdline)
           {
@@ -2595,7 +2597,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
           if (mutt_str_strcmp(MuttVars[idx].name, "debug_file") == 0)
             restart_debug();
         }
-        else if (DTYPE(MuttVars[idx].type) == DT_STRING)
+        else if ((idx >= 0) && DTYPE(MuttVars[idx].type) == DT_STRING)
         {
           if ((strstr(MuttVars[idx].name, "charset") &&
                check_charset(&MuttVars[idx], tmp->data) < 0) |
@@ -2611,7 +2613,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
           FREE((void *) MuttVars[idx].var);
           *((char **) MuttVars[idx].var) = mutt_str_strdup(tmp->data);
           if (mutt_str_strcmp(MuttVars[idx].name, "charset") == 0)
-            mutt_set_charset(Charset);
+            mutt_ch_set_charset(Charset);
 
           if ((mutt_str_strcmp(MuttVars[idx].name,
                                "show_multipart_alternative") == 0) &&
@@ -3036,7 +3038,7 @@ static int source_rc(const char *rcfile_path, struct Buffer *err)
       currentline = mutt_str_strdup(linebuf);
       if (!currentline)
         continue;
-      mutt_cs_convert_string(&currentline, ConfigCharset, Charset, 0);
+      mutt_ch_convert_string(&currentline, ConfigCharset, Charset, 0);
     }
     else
       currentline = linebuf;
@@ -3310,8 +3312,10 @@ int mutt_command_complete(char *buffer, size_t len, int pos, int numtabs)
     if (numtabs == 1 && NumMatched == 2)
       snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
     else if (numtabs > 1 && NumMatched > 2)
+    {
       /* cycle thru all the matches */
       snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
+    }
 
     /* return the completed command */
     strncpy(buffer, Completed, len - spaces);
@@ -3365,8 +3369,10 @@ int mutt_command_complete(char *buffer, size_t len, int pos, int numtabs)
     if (numtabs == 1 && NumMatched == 2)
       snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
     else if (numtabs > 1 && NumMatched > 2)
+    {
       /* cycle thru all the matches */
       snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
+    }
 
     strncpy(pt, Completed, buffer + len - pt - spaces);
   }
@@ -3411,8 +3417,10 @@ int mutt_command_complete(char *buffer, size_t len, int pos, int numtabs)
     if (numtabs == 1 && NumMatched == 2)
       snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
     else if (numtabs > 1 && NumMatched > 2)
+    {
       /* cycle thru all the matches */
       snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
+    }
 
     strncpy(pt, Completed, buffer + len - pt - spaces);
   }
@@ -3565,8 +3573,10 @@ bool mutt_nm_query_complete(char *buffer, size_t len, int pos, int numtabs)
     if (numtabs == 1 && NumMatched == 2)
       snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
     else if (numtabs > 1 && NumMatched > 2)
+    {
       /* cycle thru all the matches */
       snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
+    }
 
     /* return the completed query */
     strncpy(pt, Completed, buffer + len - pt - spaces);
@@ -3618,8 +3628,10 @@ bool mutt_nm_tag_complete(char *buffer, size_t len, int numtabs)
   if (numtabs == 1 && NumMatched == 2)
     snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
   else if (numtabs > 1 && NumMatched > 2)
+  {
     /* cycle thru all the matches */
     snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
+  }
 
   /* return the completed query */
   strncpy(pt, Completed, buffer + len - pt);
@@ -3867,7 +3879,8 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
 {
   struct passwd *pw = NULL;
   struct utsname utsname;
-  char *p, buffer[STRING];
+  const char *p = NULL;
+  char buffer[STRING];
   int need_pause = 0;
   struct Buffer err;
 
@@ -3890,7 +3903,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
 
   /* on one of the systems I use, getcwd() does not return the same prefix
      as is listed in the passwd file */
-  p = getenv("HOME");
+  p = mutt_str_getenv("HOME");
   if (p)
     HomeDir = mutt_str_strdup(p);
 
@@ -3916,7 +3929,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
       fputs(_("unable to determine home directory"), stderr);
       exit(1);
     }
-    p = getenv("USER");
+    p = mutt_str_getenv("USER");
     if (p)
       Username = mutt_str_strdup(p);
     else
@@ -3925,7 +3938,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
       fputs(_("unable to determine username"), stderr);
       exit(1);
     }
-    Shell = mutt_str_strdup((p = getenv("SHELL")) ? p : "/bin/sh");
+    Shell = mutt_str_strdup((p = mutt_str_getenv("SHELL")) ? p : "/bin/sh");
   }
 
   /* Start up debugging mode if requested from cmdline */
@@ -3996,7 +4009,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
 #endif
 
 #ifdef USE_NNTP
-  p = getenv("NNTPSERVER");
+  p = mutt_str_getenv("NNTPSERVER");
   if (p)
   {
     FREE(&NewsServer);
@@ -4009,10 +4022,10 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
   }
 #endif
 
-  p = getenv("MAIL");
+  p = mutt_str_getenv("MAIL");
   if (p)
     SpoolFile = mutt_str_strdup(p);
-  else if ((p = getenv("MAILDIR")))
+  else if ((p = mutt_str_getenv("MAILDIR")))
     SpoolFile = mutt_str_strdup(p);
   else
   {
@@ -4024,7 +4037,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
     SpoolFile = mutt_str_strdup(buffer);
   }
 
-  p = getenv("MAILCAPS");
+  p = mutt_str_getenv("MAILCAPS");
   if (p)
     MailcapPath = mutt_str_strdup(p);
   else
@@ -4035,19 +4048,19 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
         "/mailcap:/etc/mailcap:/usr/etc/mailcap:/usr/local/etc/mailcap");
   }
 
-  Tmpdir = mutt_str_strdup((p = getenv("TMPDIR")) ? p : "/tmp");
+  Tmpdir = mutt_str_strdup((p = mutt_str_getenv("TMPDIR")) ? p : "/tmp");
 
-  p = getenv("VISUAL");
+  p = mutt_str_getenv("VISUAL");
   if (!p)
   {
-    p = getenv("EDITOR");
+    p = mutt_str_getenv("EDITOR");
     if (!p)
       p = "/usr/bin/editor";
   }
   Editor = mutt_str_strdup(p);
   Visual = mutt_str_strdup(p);
 
-  p = getenv("REPLYTO");
+  p = mutt_str_getenv("REPLYTO");
   if (p)
   {
     struct Buffer buf, token;
@@ -4063,12 +4076,12 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
     FREE(&token.data);
   }
 
-  p = getenv("EMAIL");
+  p = mutt_str_getenv("EMAIL");
   if (p)
     From = mutt_addr_parse_list(NULL, p);
 
-  mutt_cs_set_langinfo_charset();
-  mutt_set_charset(Charset);
+  mutt_ch_set_langinfo_charset();
+  mutt_ch_set_charset(Charset);
 
   Matches = mutt_mem_calloc(MatchesListsize, sizeof(char *));
 
@@ -4083,8 +4096,8 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
 
 #ifndef LOCALES_HACK
   /* Do we have a locale definition? */
-  if (((p = getenv("LC_ALL")) != NULL && p[0]) || ((p = getenv("LANG")) != NULL && p[0]) ||
-      ((p = getenv("LC_CTYPE")) != NULL && p[0]))
+  if (((p = mutt_str_getenv("LC_ALL")) != NULL && p[0]) || ((p = mutt_str_getenv("LANG")) != NULL && p[0]) ||
+      ((p = mutt_str_getenv("LC_CTYPE")) != NULL && p[0]))
   {
     OPT_LOCALES = true;
   }
@@ -4115,7 +4128,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
 
   if (STAILQ_EMPTY(&Muttrc))
   {
-    char *xdg_cfg_home = getenv("XDG_CONFIG_HOME");
+    const char *xdg_cfg_home = mutt_str_getenv("XDG_CONFIG_HOME");
 
     if (!xdg_cfg_home && HomeDir)
     {
@@ -4512,8 +4525,10 @@ int mutt_label_complete(char *buffer, size_t len, int numtabs)
   if (numtabs == 1 && NumMatched == 2)
     snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
   else if (numtabs > 1 && NumMatched > 2)
+  {
     /* cycle thru all the matches */
     snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
+  }
 
   /* return the completed label */
   strncpy(buffer, Completed, len - spaces);

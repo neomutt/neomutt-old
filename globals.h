@@ -96,17 +96,6 @@ WHERE int CurrentMenu;
 WHERE struct Alias *Aliases;
 WHERE struct ListHead UserHeader INITVAL(STAILQ_HEAD_INITIALIZER(UserHeader));
 
-#ifdef MAIN_C
-const char *const BodyTypes[] = {
-    "x-unknown", "audio",     "application", "image", "message",
-    "model",     "multipart", "text",        "video", "*",
-};
-const char *const BodyEncodings[] = {
-    "x-unknown", "7bit",   "8bit",        "quoted-printable",
-    "base64",    "binary", "x-uuencoded",
-};
-#endif
-
 /* All the variables below are backing for config items */
 
 WHERE struct Address *EnvelopeFromAddress;
@@ -282,6 +271,7 @@ WHERE short ImapPollTimeout;
 /* -- formerly in pgp.h -- */
 WHERE struct Regex *PgpGoodSign;
 WHERE struct Regex *PgpDecryptionOkay;
+WHERE char *PgpDefaultKey;
 WHERE char *PgpSignAs;
 WHERE short PgpTimeout;
 WHERE char *PgpEntryFormat;
@@ -298,10 +288,10 @@ WHERE char *PgpVerifyKeyCommand;
 WHERE char *PgpListSecringCommand;
 WHERE char *PgpListPubringCommand;
 WHERE char *PgpGetkeysCommand;
-WHERE char *PgpSelfEncryptAs;
 
 /* -- formerly in smime.h -- */
 WHERE char *SmimeDefaultKey;
+WHERE char *SmimeSignAs;
 WHERE short SmimeTimeout;
 WHERE char *SmimeCertificates;
 WHERE char *SmimeKeys;
@@ -318,7 +308,6 @@ WHERE char *SmimePk7outCommand;
 WHERE char *SmimeGetCertCommand;
 WHERE char *SmimeImportCertCommand;
 WHERE char *SmimeGetCertEmailCommand;
-WHERE char *SmimeSelfEncryptAs;
 
 #ifdef USE_NOTMUCH
 WHERE int NmOpenTimeout;

@@ -44,7 +44,6 @@
 #include "header.h"
 #include "keymap.h"
 #include "mailbox.h"
-#include "mime.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
 #include "mx.h"
@@ -53,17 +52,12 @@
 #include "options.h"
 #include "protos.h"
 #include "sort.h"
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 #ifdef MIXMASTER
 #include "remailer.h"
 #endif
 #ifdef USE_NNTP
 #include "nntp.h"
 #endif
-
-struct Address;
 
 static const char *There_are_no_attachments = N_("There are no attachments.");
 
@@ -310,7 +304,7 @@ static void redraw_crypt_lines(struct Header *msg)
     SETCOLOR(MT_COLOR_COMPOSE_HEADER);
     printw("%*s", HeaderPadding[HDR_CRYPTINFO], _(Prompts[HDR_CRYPTINFO]));
     NORMAL_COLOR;
-    printw("%s", SmimeDefaultKey ? SmimeDefaultKey : _("<default>"));
+    printw("%s", SmimeSignAs ? SmimeSignAs : _("<default>"));
   }
 
   if ((WithCrypto & APPLICATION_SMIME) && (msg->security & APPLICATION_SMIME) &&
@@ -734,7 +728,7 @@ static const char *compose_format_str(char *buf, size_t buflen, size_t col, int 
 
     case 'l': /* approx length of current message in bytes */
       snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-      mutt_pretty_size(tmp, sizeof(tmp), menu ? cum_attachs_size(menu) : 0);
+      mutt_str_pretty_size(tmp, sizeof(tmp), menu ? cum_attachs_size(menu) : 0);
       snprintf(buf, buflen, fmt, tmp);
       break;
 
@@ -1604,6 +1598,11 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
       case OP_COMPOSE_PGP_MENU:
         if (!(WithCrypto & APPLICATION_PGP))
           break;
+        if (!crypt_has_module_backend(APPLICATION_PGP))
+        {
+          mutt_error(_("No PGP backend configured"));
+          break;
+        }
         if ((WithCrypto & APPLICATION_SMIME) && (msg->security & APPLICATION_SMIME))
         {
           if (msg->security & (ENCRYPT | SIGN))
@@ -1633,6 +1632,11 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
       case OP_COMPOSE_SMIME_MENU:
         if (!(WithCrypto & APPLICATION_SMIME))
           break;
+        if (!crypt_has_module_backend(APPLICATION_SMIME))
+        {
+          mutt_error(_("No S/MIME backend configured"));
+          break;
+        }
 
         if ((WithCrypto & APPLICATION_PGP) && (msg->security & APPLICATION_PGP))
         {

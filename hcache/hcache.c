@@ -56,7 +56,6 @@
 #include "hcache.h"
 #include "hcache/hcversion.h"
 #include "header.h"
-#include "mbyte.h"
 #include "parameter.h"
 #include "protos.h"
 #include "tags.h"
@@ -180,7 +179,7 @@ static unsigned char *dump_char_size(char *c, unsigned char *d, int *off,
   if (convert && !mutt_str_is_ascii(c, size))
   {
     p = mutt_str_substr_dup(c, c + size);
-    if (mutt_cs_convert_string(&p, Charset, "utf-8", 0) == 0)
+    if (mutt_ch_convert_string(&p, Charset, "utf-8", 0) == 0)
     {
       c = p;
       size = mutt_str_strlen(c) + 1;
@@ -219,7 +218,7 @@ static void restore_char(char **c, const unsigned char *d, int *off, bool conver
   if (convert && !mutt_str_is_ascii(*c, size))
   {
     char *tmp = mutt_str_strdup(*c);
-    if (mutt_cs_convert_string(&tmp, "utf-8", Charset, 0) == 0)
+    if (mutt_ch_convert_string(&tmp, "utf-8", Charset, 0) == 0)
     {
       mutt_str_replace(c, tmp);
     }
@@ -487,7 +486,7 @@ static void restore_envelope(struct Envelope *e, const unsigned char *d, int *of
   restore_char(&e->subject, d, off, convert);
   restore_int((unsigned int *) (&real_subj_off), d, off);
 
-  if (0 <= real_subj_off)
+  if (real_subj_off >= 0)
     e->real_subj = e->subject + real_subj_off;
   else
     e->real_subj = NULL;

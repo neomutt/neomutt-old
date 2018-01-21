@@ -21,7 +21,6 @@
  */
 
 #include "config.h"
-#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <grp.h>
@@ -48,7 +47,6 @@
 #include "globals.h"
 #include "keymap.h"
 #include "mailbox.h"
-#include "mbyte.h"
 #include "mutt_account.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
@@ -58,9 +56,6 @@
 #include "protos.h"
 #include "sort.h"
 #include "url.h"
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 #ifdef USE_IMAP
 #include "imap/imap.h"
 #endif
@@ -485,7 +480,7 @@ static const char *folder_format_str(char *buf, size_t buflen, size_t col, int c
     case 's':
       if (folder->ff->local)
       {
-        mutt_pretty_size(fn, sizeof(fn), folder->ff->size);
+        mutt_str_pretty_size(fn, sizeof(fn), folder->ff->size);
         snprintf(fmt, sizeof(fmt), "%%%ss", prec);
         snprintf(buf, buflen, fmt, fn);
       }
@@ -576,8 +571,8 @@ static const char *group_index_format_str(char *buf, size_t buflen, size_t col, 
       {
         char *desc = mutt_str_strdup(folder->ff->nd->desc);
         if (NewsgroupsCharset && *NewsgroupsCharset)
-          mutt_cs_convert_string(&desc, NewsgroupsCharset, Charset, MUTT_ICONV_HOOK_FROM);
-        mutt_filter_unprintable(&desc);
+          mutt_ch_convert_string(&desc, NewsgroupsCharset, Charset, MUTT_ICONV_HOOK_FROM);
+        mutt_mb_filter_unprintable(&desc);
 
         snprintf(fmt, sizeof(fmt), "%%%ss", prec);
         snprintf(buf, buflen, fmt, desc);
@@ -800,7 +795,10 @@ static int examine_directory(struct Menu *menu, struct BrowserState *state,
       if (lstat(buffer, &s) == -1)
         continue;
 
-      if ((!S_ISREG(s.st_mode)) && (!S_ISDIR(s.st_mode)) && (!S_ISLNK(s.st_mode)))
+      /* No size for directories or symlinks */
+      if (S_ISDIR(s.st_mode) || S_ISLNK(s.st_mode))
+        s.st_size = 0;
+      else if (!S_ISREG(s.st_mode))
         continue;
 
       tmp = Incoming;
@@ -864,7 +862,9 @@ static int examine_mailboxes(struct Menu *menu, struct BrowserState *state)
       struct NntpData *nntp_data = nserv->groups_list[i];
       if (nntp_data && (nntp_data->new || (nntp_data->subscribed &&
                                            (nntp_data->unread || !ShowOnlyUnread))))
+      {
         add_folder(menu, state, nntp_data->group, NULL, NULL, NULL, nntp_data);
+      }
     }
   }
   else
@@ -1648,7 +1648,12 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
           struct ImapMbox mx;
           int nentry = menu->current;
 
-          imap_parse_path(state.entry[nentry].name, &mx);
+          if (imap_parse_path(state.entry[nentry].name, &mx) < 0)
+          {
+            mutt_debug(1, "imap_parse_path failed\n");
+            mutt_error(_("Mailbox deletion failed."));
+            break;
+          }
           if (!mx.mbox)
           {
             mutt_error(_("Cannot delete root folder"));

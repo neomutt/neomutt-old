@@ -31,17 +31,15 @@
 
 #include "config.h"
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "mutt/mutt.h"
 #include "rfc2231.h"
 #include "globals.h"
-#include "mbyte.h"
-#include "mime.h"
 #include "options.h"
 #include "parameter.h"
-#include "protos.h"
 #include "rfc2047.h"
 
 /**
@@ -202,7 +200,7 @@ static void rfc2231_join_continuations(struct Parameter **head, struct Rfc2231Pa
     } while (par && (strcmp(par->attribute, attribute) == 0));
 
     if (encoded)
-      mutt_cs_convert_string(&value, charset, Charset, MUTT_ICONV_HOOK_FROM);
+      mutt_ch_convert_string(&value, charset, Charset, MUTT_ICONV_HOOK_FROM);
     *head = mutt_param_new();
     (*head)->attribute = mutt_str_strdup(attribute);
     (*head)->value = value;
@@ -246,9 +244,9 @@ void rfc2231_decode_parameters(struct Parameter **headp)
        */
 
       if (Rfc2047Parameters && p->value && strstr(p->value, "=?"))
-        rfc2047_decode(&p->value);
+        mutt_rfc2047_decode(&p->value);
       else if (AssumedCharset && *AssumedCharset)
-        convert_nonmime_string(&p->value);
+        mutt_ch_convert_nonmime_string(&p->value);
 
       *last = p;
       last = &p->next;
@@ -260,8 +258,8 @@ void rfc2231_decode_parameters(struct Parameter **headp)
 
       s = rfc2231_get_charset(p->value, charset, sizeof(charset));
       rfc2231_decode_one(p->value, s);
-      mutt_cs_convert_string(&p->value, charset, Charset, MUTT_ICONV_HOOK_FROM);
-      mutt_filter_unprintable(&p->value);
+      mutt_ch_convert_string(&p->value, charset, Charset, MUTT_ICONV_HOOK_FROM);
+      mutt_mb_filter_unprintable(&p->value);
 
       *last = p;
       last = &p->next;
@@ -327,7 +325,7 @@ int rfc2231_encode_string(char **pd)
     return 0;
 
   if (!Charset || !SendCharset ||
-      !(charset = mutt_choose_charset(Charset, SendCharset, *pd, strlen(*pd), &d, &dlen)))
+      !(charset = mutt_ch_choose(Charset, SendCharset, *pd, strlen(*pd), &d, &dlen)))
   {
     charset = mutt_str_strdup(Charset ? Charset : "unknown-8bit");
     FREE(&d);
@@ -335,7 +333,7 @@ int rfc2231_encode_string(char **pd)
     dlen = strlen(d);
   }
 
-  if (!mutt_cs_is_us_ascii(charset))
+  if (!mutt_ch_is_us_ascii(charset))
     encode = 1;
 
   for (s = d, slen = dlen; slen; s++, slen--)

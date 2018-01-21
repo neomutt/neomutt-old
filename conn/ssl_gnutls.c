@@ -38,17 +38,10 @@
 #include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
-#include "mutt/date.h"
-#include "mutt/debug.h"
-#include "mutt/file.h"
-#include "mutt/memory.h"
-#include "mutt/message.h"
-#include "mutt/regex3.h"
-#include "mutt/string2.h"
+#include "mutt/mutt.h"
 #include "mutt.h"
 #include "account.h"
 #include "conn_globals.h"
@@ -662,30 +655,42 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
   buflen = sizeof(dn_common_name);
   if (gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_X520_COMMON_NAME, 0, 0,
                                     dn_common_name, &buflen) != 0)
+  {
     dn_common_name[0] = '\0';
+  }
   buflen = sizeof(dn_email);
   if (gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_PKCS9_EMAIL, 0, 0, dn_email, &buflen) != 0)
     dn_email[0] = '\0';
   buflen = sizeof(dn_organization);
   if (gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_X520_ORGANIZATION_NAME, 0,
                                     0, dn_organization, &buflen) != 0)
+  {
     dn_organization[0] = '\0';
+  }
   buflen = sizeof(dn_organizational_unit);
   if (gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME,
                                     0, 0, dn_organizational_unit, &buflen) != 0)
+  {
     dn_organizational_unit[0] = '\0';
+  }
   buflen = sizeof(dn_locality);
   if (gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_X520_LOCALITY_NAME, 0, 0,
                                     dn_locality, &buflen) != 0)
+  {
     dn_locality[0] = '\0';
+  }
   buflen = sizeof(dn_province);
   if (gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME,
                                     0, 0, dn_province, &buflen) != 0)
+  {
     dn_province[0] = '\0';
+  }
   buflen = sizeof(dn_country);
   if (gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_X520_COUNTRY_NAME, 0, 0,
                                     dn_country, &buflen) != 0)
+  {
     dn_country[0] = '\0';
+  }
 
   snprintf(menu->dialog[row++], SHORT_STRING, "   %s  %s", dn_common_name, dn_email);
   snprintf(menu->dialog[row++], SHORT_STRING, "   %s", dn_organization);
@@ -700,31 +705,45 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
   buflen = sizeof(dn_common_name);
   if (gnutls_x509_crt_get_issuer_dn_by_oid(cert, GNUTLS_OID_X520_COMMON_NAME, 0,
                                            0, dn_common_name, &buflen) != 0)
+  {
     dn_common_name[0] = '\0';
+  }
   buflen = sizeof(dn_email);
   if (gnutls_x509_crt_get_issuer_dn_by_oid(cert, GNUTLS_OID_PKCS9_EMAIL, 0, 0,
                                            dn_email, &buflen) != 0)
+  {
     dn_email[0] = '\0';
+  }
   buflen = sizeof(dn_organization);
   if (gnutls_x509_crt_get_issuer_dn_by_oid(cert, GNUTLS_OID_X520_ORGANIZATION_NAME,
                                            0, 0, dn_organization, &buflen) != 0)
+  {
     dn_organization[0] = '\0';
+  }
   buflen = sizeof(dn_organizational_unit);
   if (gnutls_x509_crt_get_issuer_dn_by_oid(cert, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME,
                                            0, 0, dn_organizational_unit, &buflen) != 0)
+  {
     dn_organizational_unit[0] = '\0';
+  }
   buflen = sizeof(dn_locality);
   if (gnutls_x509_crt_get_issuer_dn_by_oid(cert, GNUTLS_OID_X520_LOCALITY_NAME,
                                            0, 0, dn_locality, &buflen) != 0)
+  {
     dn_locality[0] = '\0';
+  }
   buflen = sizeof(dn_province);
   if (gnutls_x509_crt_get_issuer_dn_by_oid(cert, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME,
                                            0, 0, dn_province, &buflen) != 0)
+  {
     dn_province[0] = '\0';
+  }
   buflen = sizeof(dn_country);
   if (gnutls_x509_crt_get_issuer_dn_by_oid(cert, GNUTLS_OID_X520_COUNTRY_NAME,
                                            0, 0, dn_country, &buflen) != 0)
+  {
     dn_country[0] = '\0';
+  }
 
   snprintf(menu->dialog[row++], SHORT_STRING, "   %s  %s", dn_common_name, dn_email);
   snprintf(menu->dialog[row++], SHORT_STRING, "   %s", dn_organization);
@@ -830,7 +849,7 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
         break;
       case OP_MAX + 3: /* accept always */
         done = 0;
-        fp = fopen(CertificateFile, "a");
+        fp = mutt_file_fopen(CertificateFile, "a");
         if (fp)
         {
           /* save hostname if necessary */

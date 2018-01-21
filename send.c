@@ -21,7 +21,6 @@
  */
 
 #include "config.h"
-#include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <locale.h>
@@ -44,7 +43,6 @@
 #include "globals.h"
 #include "header.h"
 #include "mailbox.h"
-#include "mime.h"
 #include "mutt_curses.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
@@ -266,7 +264,9 @@ static int edit_envelope(struct Envelope *en, int flags)
       return -1;
     if (ReplyWithXorig && (flags & (SENDREPLY | SENDLISTREPLY | SENDGROUPREPLY)) &&
         (edit_address(&en->from, "From: ") == -1))
+    {
       return -1;
+    }
   }
 
   if (en->subject)
@@ -1135,7 +1135,7 @@ void mutt_encode_descriptions(struct Body *b, short recurse)
   {
     if (t->description)
     {
-      rfc2047_encode_string32(&t->description);
+      mutt_rfc2047_encode_32(&t->description, SendCharset);
     }
     if (recurse && t->parts)
       mutt_encode_descriptions(t->parts, recurse);
@@ -1151,7 +1151,7 @@ static void decode_descriptions(struct Body *b)
   {
     if (t->description)
     {
-      rfc2047_decode(&t->description);
+      mutt_rfc2047_decode(&t->description);
     }
     if (t->parts)
       decode_descriptions(t->parts);
@@ -1290,7 +1290,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
   char *pgpkeylist = NULL;
   /* save current value of "pgp_sign_as"  and "smime_default_key" */
   char *pgp_signas = NULL;
-  char *smime_default_key = NULL;
+  char *smime_signas = NULL;
   char *tag = NULL, *err = NULL;
   char *ctype = NULL;
   char *finalpath = NULL;
@@ -1322,7 +1322,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
     if (WithCrypto & APPLICATION_PGP)
       pgp_signas = mutt_str_strdup(PgpSignAs);
     if (WithCrypto & APPLICATION_SMIME)
-      smime_default_key = mutt_str_strdup(SmimeDefaultKey);
+      smime_signas = mutt_str_strdup(SmimeSignAs);
   }
 
   /* Delay expansion of aliases until absolutely necessary--shouldn't
@@ -1771,6 +1771,18 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
       msg->security = 0;
   }
 
+  /* Deal with the corner case where the crypto module backend is not available.
+   * This can happen if configured without pgp/smime and with gpgme, but
+   * $crypt_use_gpgme is unset.
+   */
+  if (msg->security && !crypt_has_module_backend(msg->security))
+  {
+    mutt_error(_(
+        "No crypto backend configured.  Disabling message security setting."));
+    mutt_sleep(1);
+    msg->security = 0;
+  }
+
   /* specify a default fcc.  if we are in batchmode, only save a copy of
    * the message if the value of $copy is yes or ask-yes */
 
@@ -1823,9 +1835,9 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
         char *encrypt_as = NULL;
 
         if ((WithCrypto & APPLICATION_PGP) && (msg->security & APPLICATION_PGP))
-          encrypt_as = PgpSelfEncryptAs;
+          encrypt_as = PgpDefaultKey;
         else if ((WithCrypto & APPLICATION_SMIME) && (msg->security & APPLICATION_SMIME))
-          encrypt_as = SmimeSelfEncryptAs;
+          encrypt_as = SmimeDefaultKey;
         if (!(encrypt_as && *encrypt_as))
           encrypt_as = PostponeEncryptAs;
 
@@ -2189,8 +2201,8 @@ cleanup:
     }
     if (WithCrypto & APPLICATION_SMIME)
     {
-      FREE(&SmimeDefaultKey);
-      SmimeDefaultKey = smime_default_key;
+      FREE(&SmimeSignAs);
+      SmimeSignAs = smime_signas;
     }
   }
 

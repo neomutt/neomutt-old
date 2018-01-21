@@ -42,7 +42,6 @@
 #include "mutt.h"
 #include "filter.h"
 #include "globals.h"
-#include "mime.h"
 #include "ncrypt.h"
 #include "options.h"
 #include "pgpinvoke.h"
@@ -89,7 +88,7 @@ static void fix_uid(char *uid)
   }
   *d = '\0';
 
-  if (chs && (cd = mutt_cs_iconv_open(chs, "utf-8", 0)) != (iconv_t) -1)
+  if (chs && (cd = mutt_ch_iconv_open(chs, "utf-8", 0)) != (iconv_t) -1)
   {
     int n = s - uid + 1; /* chars available in original buffer */
     char *buf = NULL;

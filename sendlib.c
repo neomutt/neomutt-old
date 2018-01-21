@@ -21,8 +21,6 @@
  */
 
 #include "config.h"
-#include <stddef.h>
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <iconv.h>
@@ -37,7 +35,6 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
-#include <wchar.h>
 #include "mutt/mutt.h"
 #include "mutt.h"
 #include "address.h"
@@ -52,7 +49,6 @@
 #include "globals.h"
 #include "header.h"
 #include "mailbox.h"
-#include "mime.h"
 #include "mutt_curses.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
@@ -81,14 +77,12 @@
 #include <assert.h>
 #endif
 
-const char MimeSpecials[] = "@.,;:<>[]\\\"()?/= \t";
-
 static void encode_quoted(struct FgetConv *fc, FILE *fout, int istext)
 {
   int c, linelen = 0;
   char line[77], savechar;
 
-  while ((c = mutt_cs_fgetconv(fc)) != EOF)
+  while ((c = mutt_ch_fgetconv(fc)) != EOF)
   {
     /* Wrap the line if needed. */
     if (linelen == 76 && ((istext && c != '\n') || !istext))
@@ -277,7 +271,7 @@ static void encode_base64(struct FgetConv *fc, FILE *fout, int istext)
 
   b64_init(&ctx);
 
-  while ((ch = mutt_cs_fgetconv(fc)) != EOF)
+  while ((ch = mutt_ch_fgetconv(fc)) != EOF)
   {
     if (SigInt == 1)
     {
@@ -297,7 +291,7 @@ static void encode_8bit(struct FgetConv *fc, FILE *fout)
 {
   int ch;
 
-  while ((ch = mutt_cs_fgetconv(fc)) != EOF)
+  while ((ch = mutt_ch_fgetconv(fc)) != EOF)
   {
     if (SigInt == 1)
     {
@@ -473,10 +467,10 @@ int mutt_write_mime_body(struct Body *a, FILE *f)
   }
 
   if (a->type == TYPETEXT && (!a->noconv))
-    fc = mutt_cs_fgetconv_open(
+    fc = mutt_ch_fgetconv_open(
         fpin, a->charset, mutt_get_body_charset(send_charset, sizeof(send_charset), a), 0);
   else
-    fc = mutt_cs_fgetconv_open(fpin, 0, 0, 0);
+    fc = mutt_ch_fgetconv_open(fpin, 0, 0, 0);
 
   mutt_sig_allow_interrupt(1);
   if (a->encoding == ENCQUOTEDPRINTABLE)
@@ -489,7 +483,7 @@ int mutt_write_mime_body(struct Body *a, FILE *f)
     mutt_file_copy_stream(fpin, f);
   mutt_sig_allow_interrupt(0);
 
-  mutt_cs_fgetconv_close(&fc);
+  mutt_ch_fgetconv_close(&fc);
   mutt_file_fclose(&fpin);
 
   if (SigInt == 1)
@@ -687,7 +681,7 @@ static size_t convert_file_to(FILE *file, const char *fromcode, int ncodes,
   struct ContentState *states = NULL;
   size_t *score = NULL;
 
-  cd1 = mutt_cs_iconv_open("utf-8", fromcode, 0);
+  cd1 = mutt_ch_iconv_open("utf-8", fromcode, 0);
   if (cd1 == (iconv_t)(-1))
     return -1;
 
@@ -699,7 +693,7 @@ static size_t convert_file_to(FILE *file, const char *fromcode, int ncodes,
   for (int i = 0; i < ncodes; i++)
   {
     if (mutt_str_strcasecmp(tocodes[i], "utf-8") != 0)
-      cd[i] = mutt_cs_iconv_open(tocodes[i], "utf-8", 0);
+      cd[i] = mutt_ch_iconv_open(tocodes[i], "utf-8", 0);
     else
     {
       /* Special case for conversion to UTF-8 */
@@ -752,13 +746,17 @@ static size_t convert_file_to(FILE *file, const char *fromcode, int ncodes,
         }
       }
       else if (cd[i] == (iconv_t)(-1) && score[i] == (size_t)(-1))
+      {
         /* Special case for conversion to UTF-8 */
         update_content_info(&infos[i], &states[i], bufu, ubl1);
+      }
     }
 
     if (ibl)
+    {
       /* Save unused input */
       memmove(bufi, ib, ibl);
+    }
     else if (!ubl1 && ib < bufi + sizeof(bufi))
     {
       ret = 0;
@@ -948,7 +946,7 @@ struct Content *mutt_get_content_info(const char *fname, struct Body *b)
     {
       if (!chs)
       {
-        mutt_cs_canonical_charset(chsbuf, sizeof(chsbuf), tocode);
+        mutt_ch_canonical_charset(chsbuf, sizeof(chsbuf), tocode);
         mutt_param_set("charset", chsbuf, &b->parameter);
       }
       FREE(&b->charset);
@@ -969,7 +967,7 @@ struct Content *mutt_get_content_info(const char *fname, struct Body *b)
   if (b != NULL && b->type == TYPETEXT && (!b->noconv && !b->force_charset))
     mutt_param_set("charset",
                    (!info->hibin ? "us-ascii" :
-                                   Charset && !mutt_cs_is_us_ascii(Charset) ? Charset : "unknown-8bit"),
+                                   Charset && !mutt_ch_is_us_ascii(Charset) ? Charset : "unknown-8bit"),
                    &b->parameter);
 
   return info;
@@ -1318,7 +1316,7 @@ char *mutt_get_body_charset(char *d, size_t dlen, struct Body *b)
     p = mutt_param_get("charset", b->parameter);
 
   if (p)
-    mutt_cs_canonical_charset(d, dlen, NONULL(p));
+    mutt_ch_canonical_charset(d, dlen, p);
   else
     mutt_str_strfcpy(d, "us-ascii", dlen);
 
@@ -1336,7 +1334,7 @@ void mutt_update_encoding(struct Body *a)
   char chsbuf[STRING];
 
   /* override noconv when it's us-ascii */
-  if (mutt_cs_is_us_ascii(mutt_get_body_charset(chsbuf, sizeof(chsbuf), a)))
+  if (mutt_ch_is_us_ascii(mutt_get_body_charset(chsbuf, sizeof(chsbuf), a)))
     a->noconv = false;
 
   if (!a->force_charset && !a->noconv)
@@ -2211,7 +2209,7 @@ static void encode_headers(struct ListHead *h)
     if (!tmp)
       continue;
 
-    rfc2047_encode_string32(&tmp);
+    mutt_rfc2047_encode_32(&tmp, SendCharset);
     mutt_mem_realloc(&np->data, mutt_str_strlen(np->data) + 2 + mutt_str_strlen(tmp) + 1);
 
     sprintf(np->data + i, ": %s", NONULL(tmp));
@@ -2689,7 +2687,7 @@ void mutt_prepare_envelope(struct Envelope *env, int final)
     if (!OPT_NEWS_SEND || MimeSubject)
 #endif
     {
-      rfc2047_encode_string32(&env->subject);
+      mutt_rfc2047_encode_32(&env->subject, SendCharset);
     }
   encode_headers(&env->userhdrs);
 }
@@ -2699,7 +2697,7 @@ void mutt_unprepare_envelope(struct Envelope *env)
   struct ListNode *item;
   STAILQ_FOREACH(item, &env->userhdrs, entries)
   {
-    rfc2047_decode(&item->data);
+    mutt_rfc2047_decode(&item->data);
   }
 
   mutt_addr_free(&env->mail_followup_to);
@@ -2710,7 +2708,7 @@ void mutt_unprepare_envelope(struct Envelope *env)
   rfc2047_decode_addrlist(env->bcc);
   rfc2047_decode_addrlist(env->from);
   rfc2047_decode_addrlist(env->reply_to);
-  rfc2047_decode(&env->subject);
+  mutt_rfc2047_decode(&env->subject);
 }
 
 static int bounce_message(FILE *fp, struct Header *h, struct Address *to,
@@ -3049,8 +3047,8 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
     if (hdr->security & SIGN)
     {
       fputc('S', msg->fp);
-      if (SmimeDefaultKey && *SmimeDefaultKey)
-        fprintf(msg->fp, "<%s>", SmimeDefaultKey);
+      if (SmimeSignAs && *SmimeSignAs)
+        fprintf(msg->fp, "<%s>", SmimeSignAs);
     }
     if (hdr->security & INLINE)
       fputc('I', msg->fp);

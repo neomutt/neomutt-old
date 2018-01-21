@@ -22,7 +22,6 @@
 
 #include "config.h"
 #include <stddef.h>
-#include <ctype.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -31,7 +30,6 @@
 #include "mutt/mutt.h"
 #include "globals.h"
 #include "keymap.h"
-#include "mbyte.h"
 #include "mutt_curses.h"
 #include "opcodes.h"
 #include "options.h"
@@ -142,7 +140,7 @@ static int print_macro(FILE *f, int maxwidth, const char **macro)
     }
     else if (wc < 0x20 || wc == 0x7f)
     {
-      if (2 > n)
+      if (n < 2)
         break;
       n -= 2;
       if (wc == '\033')
@@ -158,7 +156,7 @@ static int print_macro(FILE *f, int maxwidth, const char **macro)
     }
     else
     {
-      if (1 > n)
+      if (n < 1)
         break;
       n -= 1;
       fprintf(f, "?");
@@ -218,15 +216,14 @@ static void format_line(FILE *f, int ismacro, const char *t1, const char *t2, co
 {
   int col;
   int col_a, col_b;
-  int split;
+  bool split;
   int n;
 
   fputs(t1, f);
 
-  /* don't try to press string into one line with less than 40 characters.
-     The double parenthesis avoids a gcc warning, sigh ... */
-  split = MuttIndexWindow->cols;
-  if (split < 40)
+  /* don't try to press string into one line with less than 40 characters. */
+  split = (MuttIndexWindow->cols < 40);
+  if (split)
   {
     col_a = col = 0;
     col_b = LONG_STRING;

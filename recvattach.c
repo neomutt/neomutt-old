@@ -40,7 +40,6 @@
 #include "header.h"
 #include "keymap.h"
 #include "mailbox.h"
-#include "mime.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
 #include "mx.h"
@@ -50,9 +49,6 @@
 #include "protos.h"
 #include "rfc1524.h"
 #include "state.h"
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 
 static void mutt_update_recvattach_menu(struct AttachCtx *actx, struct Menu *menu, int init);
 
@@ -108,7 +104,7 @@ void mutt_update_tree(struct AttachCtx *actx)
   {
     rindex = actx->v2r[vindex];
     actx->idx[rindex]->num = vindex;
-    if (2 * (actx->idx[rindex]->level + 2) < sizeof(buf))
+    if ((2 * (actx->idx[rindex]->level + 2)) < sizeof(buf))
     {
       if (actx->idx[rindex]->level)
       {
@@ -130,7 +126,7 @@ void mutt_update_tree(struct AttachCtx *actx)
     else
       actx->idx[rindex]->tree = mutt_str_strdup(buf);
 
-    if (2 * (actx->idx[rindex]->level + 2) < sizeof(buf) && actx->idx[rindex]->level)
+    if ((2 * (actx->idx[rindex]->level + 2)) < sizeof(buf) && actx->idx[rindex]->level)
     {
       s = buf + 2 * (actx->idx[rindex]->level - 1);
       *s++ = (actx->idx[rindex]->content->next) ? '\005' : '\006';
@@ -348,7 +344,7 @@ const char *attach_format_str(char *buf, size_t buflen, size_t col, int cols,
 
       if (!optional)
       {
-        mutt_pretty_size(tmp, sizeof(tmp), l);
+        mutt_str_pretty_size(tmp, sizeof(tmp), l);
         mutt_format_s(buf, buflen, prec, tmp);
       }
       else if (l == 0)

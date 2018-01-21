@@ -64,6 +64,7 @@
  */
 
 #include "config.h"
+#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -75,7 +76,6 @@
 #include <string.h>
 #include <sys/file.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <utime.h>
 #include "file.h"
@@ -555,6 +555,9 @@ int mutt_file_open(const char *path, int flags)
  */
 FILE *mutt_file_fopen(const char *path, const char *mode)
 {
+  if (!path || !mode)
+    return NULL;
+
   if (mode[0] == 'w')
   {
     int fd;

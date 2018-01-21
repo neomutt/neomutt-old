@@ -23,7 +23,7 @@
 
 #include "config.h"
 #include <stddef.h>
-#include <limits.h>
+#include <stdbool.h>
 #include <string.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -33,10 +33,8 @@
 #include "globals.h"
 #include "history.h"
 #include "keymap.h"
-#include "mbyte.h"
 #include "mutt_curses.h"
 #include "opcodes.h"
-#include "options.h"
 #include "protos.h"
 
 /**
@@ -320,7 +318,9 @@ int mutt_enter_string_full(char *buf, size_t buflen, int col, int flags, int mul
             state->curpos++;
             while (state->curpos < state->lastchar &&
                    COMB_CHAR(state->wbuf[state->curpos]))
+            {
               state->curpos++;
+            }
           }
           break;
 
@@ -345,7 +345,9 @@ int mutt_enter_string_full(char *buf, size_t buflen, int col, int flags, int mul
               state->curpos++;
             while (state->curpos < state->lastchar &&
                    !iswspace(state->wbuf[state->curpos]))
+            {
               state->curpos++;
+            }
           }
           break;
 

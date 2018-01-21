@@ -36,7 +36,6 @@
 #include "globals.h"
 #include "header.h"
 #include "mailbox.h"
-#include "mime.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
 #include "parameter.h"
@@ -45,7 +44,6 @@
 #include "rfc2231.h"
 #include "url.h"
 
-struct Address;
 struct Context;
 
 /**
@@ -389,7 +387,7 @@ void mutt_parse_content_type(char *s, struct Body *ct)
     if (!pc)
       mutt_param_set("charset",
                      (AssumedCharset && *AssumedCharset) ?
-                         (const char *) mutt_cs_get_default_charset() :
+                         (const char *) mutt_ch_get_default_charset() :
                          "us-ascii",
                      &ct->parameter);
   }
@@ -470,7 +468,7 @@ struct Body *mutt_read_mime_header(FILE *fp, int digest)
       else if (mutt_str_strcasecmp("description", line + 8) == 0)
       {
         mutt_str_replace(&p->description, c);
-        rfc2047_decode(&p->description);
+        mutt_rfc2047_decode(&p->description);
       }
     }
 #ifdef SUN_ATTACHMENT
@@ -485,7 +483,7 @@ struct Body *mutt_read_mime_header(FILE *fp, int digest)
       else if (mutt_str_strcasecmp("data-description", line + 6) == 0)
       {
         mutt_str_replace(&p->description, c);
-        rfc2047_decode(&p->description);
+        mutt_rfc2047_decode(&p->description);
       }
     }
 #endif
@@ -618,9 +616,12 @@ struct Body *mutt_parse_multipart(FILE *fp, const char *boundary, LOFF_T end_off
           last->length = 0;
       }
 
-      /* Remove any trailing whitespace, up to the length of the boundary */
-      for (size_t i = len - 1; ISSPACE(buffer[i]) && i >= blen + 2; i--)
-        buffer[i] = 0;
+      if (len > 0)
+      {
+        /* Remove any trailing whitespace, up to the length of the boundary */
+        for (size_t i = len - 1; ISSPACE(buffer[i]) && i >= blen + 2; i--)
+          buffer[i] = 0;
+      }
 
       /* Check for the end boundary */
       if (mutt_str_strcmp(buffer + blen + 2, "--") == 0)
@@ -720,11 +721,15 @@ char *mutt_extract_message_id(const char *s, const char **saveptr)
 
     /* some idiotic clients break their message-ids between lines */
     if (s == p)
+    {
       /* step past another whitespace */
       s = p + 1;
+    }
     else if (o)
+    {
       /* more than two lines, give up */
       s = o = onull = NULL;
+    }
     else
     {
       /* remember the first line, start looking for the second */
@@ -827,7 +832,7 @@ int mutt_parse_rfc822_line(struct Envelope *e, struct Header *hdr, char *line,
           if (hdr)
           {
             mutt_str_replace(&hdr->content->description, p);
-            rfc2047_decode(&hdr->content->description);
+            mutt_rfc2047_decode(&hdr->content->description);
           }
           matched = 1;
         }
@@ -1135,7 +1140,7 @@ int mutt_parse_rfc822_line(struct Envelope *e, struct Header *hdr, char *line,
     {
       struct ListNode *np = mutt_list_insert_tail(&e->userhdrs, mutt_str_strdup(line));
       if (do_2047)
-        rfc2047_decode(&np->data);
+        mutt_rfc2047_decode(&np->data);
     }
   }
 
@@ -1280,7 +1285,7 @@ struct Envelope *mutt_read_rfc822_header(FILE *f, struct Header *hdr,
     {
       regmatch_t pmatch[1];
 
-      rfc2047_decode(&e->subject);
+      mutt_rfc2047_decode(&e->subject);
 
       if (ReplyRegexp && (regexec(ReplyRegexp->regex, e->subject, 1, pmatch, 0) == 0))
         e->real_subj = e->subject + pmatch[0].rm_eo;

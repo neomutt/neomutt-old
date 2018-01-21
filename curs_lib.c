@@ -44,16 +44,12 @@
 #include "enter_state.h"
 #include "globals.h"
 #include "header.h"
-#include "mbyte.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
 #include "opcodes.h"
 #include "options.h"
 #include "pager.h"
 #include "protos.h"
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 #ifdef HAVE_ISWBLANK
 #include <wctype.h>
 #endif
@@ -465,7 +461,7 @@ void mutt_progress_init(struct Progress *progress, const char *msg,
   if (progress->size)
   {
     if (progress->flags & MUTT_PROGRESS_SIZE)
-      mutt_pretty_size(progress->sizestr, sizeof(progress->sizestr), progress->size);
+      mutt_str_pretty_size(progress->sizestr, sizeof(progress->sizestr), progress->size);
     else
       snprintf(progress->sizestr, sizeof(progress->sizestr), "%zu", progress->size);
   }
@@ -582,7 +578,7 @@ void mutt_progress_update(struct Progress *progress, long pos, int percent)
     if (progress->flags & MUTT_PROGRESS_SIZE)
     {
       pos = pos / (progress->inc << 10) * (progress->inc << 10);
-      mutt_pretty_size(posstr, sizeof(posstr), pos);
+      mutt_str_pretty_size(posstr, sizeof(posstr), pos);
     }
     else
       snprintf(posstr, sizeof(posstr), "%ld", pos);
@@ -759,6 +755,9 @@ int mutt_window_mvprintw(struct MuttWindow *win, int row, int col, const char *f
  */
 void mutt_window_clrtoeol(struct MuttWindow *win)
 {
+  if (!win || !stdscr)
+    return;
+
   int row, col, curcol;
 
   if (win->col_offset + win->cols == COLS)
@@ -936,7 +935,9 @@ int mutt_enter_fname_full(const char *prompt, char *buf, size_t blen, int buffy,
     mutt_unget_event(ch.op ? 0 : ch.ch, ch.op ? ch.op : 0);
     if (mutt_get_field_full(pc, buf, blen, (buffy ? MUTT_EFILE : MUTT_FILE) | MUTT_CLEAR,
                             multiple, files, numfiles) != 0)
+    {
       buf[0] = '\0';
+    }
     FREE(&pc);
 #ifdef USE_NOTMUCH
     if ((flags & MUTT_SEL_VFOLDER) && buf[0] && (strncmp(buf, "notmuch://", 10) != 0))

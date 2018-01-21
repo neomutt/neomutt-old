@@ -53,7 +53,6 @@
 #include "globals.h"
 #include "header.h"
 #include "keymap.h"
-#include "mime.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
 #include "ncrypt.h"
@@ -64,9 +63,6 @@
 #include "protos.h"
 #include "sort.h"
 #include "state.h"
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 
 /* Values used for comparing addresses. */
 #define CRYPT_KV_VALID 1
@@ -179,7 +175,7 @@ static void print_utf8(FILE *fp, const char *buf, size_t len)
   /* fromcode "utf-8" is sure, so we don't want
    * charset-hook corrections: flags must be 0.
    */
-  mutt_cs_convert_string(&tstr, "utf-8", Charset, 0);
+  mutt_ch_convert_string(&tstr, "utf-8", Charset, 0);
   fputs(tstr, fp);
   FREE(&tstr);
 }
@@ -202,8 +198,10 @@ static const char *crypt_keyid(struct CryptKeyInfo *k)
   {
     s = k->kobj->subkeys->keyid;
     if ((!PgpLongIds) && (strlen(s) == 16))
+    {
       /* Return only the short keyID.  */
       s += 8;
+    }
   }
 
   return s;
@@ -1804,6 +1802,8 @@ static struct Body *decrypt_part(struct Body *a, struct State *s, FILE *fpout,
   ctx = create_gpgme_context(is_smime);
 
 restart:
+  if (a->length < 0)
+    return NULL;
   /* Make a data object from the body, create context etc. */
   ciphertext = file_to_data_object(s->fpin, a->offset, a->length);
   if (!ciphertext)
@@ -2452,9 +2452,9 @@ static void copy_clearsigned(gpgme_data_t data, struct State *s, char *charset)
    * be a wrong label, so we want the ability to do corrections via
    * charset-hooks. Therefore we set flags to MUTT_ICONV_HOOK_FROM.
    */
-  fc = mutt_cs_fgetconv_open(fp, charset, Charset, MUTT_ICONV_HOOK_FROM);
+  fc = mutt_ch_fgetconv_open(fp, charset, Charset, MUTT_ICONV_HOOK_FROM);
 
-  for (complete = true, armor_header = true; mutt_cs_fgetconvs(buf, sizeof(buf), fc) != NULL;
+  for (complete = true, armor_header = true; mutt_ch_fgetconvs(buf, sizeof(buf), fc) != NULL;
        complete = (strchr(buf, '\n') != NULL))
   {
     if (!complete)
@@ -2483,7 +2483,7 @@ static void copy_clearsigned(gpgme_data_t data, struct State *s, char *charset)
       state_puts(buf, s);
   }
 
-  mutt_cs_fgetconv_close(&fc);
+  mutt_ch_fgetconv_close(&fc);
   mutt_file_fclose(&fp);
 }
 
@@ -2677,14 +2677,14 @@ int pgp_gpgme_application_handler(struct Body *m, struct State *s)
         struct FgetConv *fc = NULL;
         int c;
         rewind(pgpout);
-        fc = mutt_cs_fgetconv_open(pgpout, "utf-8", Charset, 0);
-        while ((c = mutt_cs_fgetconv(fc)) != EOF)
+        fc = mutt_ch_fgetconv_open(pgpout, "utf-8", Charset, 0);
+        while ((c = mutt_ch_fgetconv(fc)) != EOF)
         {
           state_putc(c, s);
           if (c == '\n' && s->prefix)
             state_puts(s->prefix, s);
         }
-        mutt_cs_fgetconv_close(&fc);
+        mutt_ch_fgetconv_close(&fc);
       }
 
       if (s->flags & MUTT_DISPLAY)
@@ -3742,8 +3742,8 @@ static void print_key_info(gpgme_key_t key, FILE *fp)
         putc(s[1], fp);
         putc(s[2], fp);
         putc(s[3], fp);
-        putc(is_pgp ? ' ' : ':', fp);
-        if (is_pgp && i == 4)
+        putc(' ', fp);
+        if (i == 4)
           putc(' ', fp);
       }
     }
@@ -5082,8 +5082,8 @@ static int verify_sender(struct Header *h)
       for (uid = key->uids; uid && rc; uid = uid->next)
       {
         uid_length = strlen(uid->email);
-        if (1 && (uid->email[0] == '<') && (uid->email[uid_length - 1] == '>') &&
-            (uid_length == sender_length + 2))
+        if ((uid->email[0] == '<') && (uid->email[uid_length - 1] == '>') &&
+            (uid_length == (sender_length + 2)))
         {
           const char *at_sign = strchr(uid->email + 1, '@');
           if (!at_sign)

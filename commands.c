@@ -23,15 +23,14 @@
 
 #include "config.h"
 #include <errno.h>
-#include <fcntl.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include "mutt/mutt.h"
+#include "conn/conn.h"
 #include "mutt.h"
 #include "address.h"
 #include "alias.h"
@@ -46,7 +45,6 @@
 #include "header.h"
 #include "keymap.h"
 #include "mailbox.h"
-#include "mime.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
 #include "mx.h"
@@ -56,9 +54,6 @@
 #include "parameter.h"
 #include "protos.h"
 #include "sort.h"
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#endif
 #ifdef USE_IMAP
 #include "imap/imap.h"
 #endif
@@ -527,7 +522,9 @@ void mutt_print_message(struct Header *h)
 
   if (query_quadoption(Print,
                        h ? _("Print message?") : _("Print tagged messages?")) != MUTT_YES)
+  {
     return;
+  }
 
   if (pipe_message(h, PrintCommand, PrintDecode, 1, PrintSplit, "\f") == 0)
     mutt_message(h ? _("Message printed") : _("Messages printed"));

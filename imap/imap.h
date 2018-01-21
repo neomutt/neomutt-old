@@ -4,7 +4,7 @@
  *
  * @authors
  * Copyright (C) 1996-1998 Michael R. Elkins <me@mutt.org>
- * Copyright (C) 2000-2007 Brendan Cully <brendan@kublai.com>
+ * Copyright (C) 2000-2007,2017 Brendan Cully <brendan@kublai.com>
  *
  * @copyright
  * This program is free software: you can redistribute it and/or modify it under
@@ -44,15 +44,16 @@
 #ifndef _IMAP_IMAP_H
 #define _IMAP_IMAP_H
 
+#include "conn/conn.h"
+#include "mutt_account.h"
 #include <stddef.h>
 #include <sys/types.h>
-#include "mutt_account.h"
 
-struct Header;
-struct Pattern;
-struct Context;
-struct Message;
 struct BrowserState;
+struct Context;
+struct Header;
+struct Message;
+struct Pattern;
 
 /**
  * struct ImapMbox - An IMAP mailbox

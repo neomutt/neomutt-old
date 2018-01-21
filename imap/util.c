@@ -69,6 +69,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,7 +79,6 @@
 #include "imap_private.h"
 #include "mutt/mutt.h"
 #include "conn/conn.h"
-#include "mutt.h"
 #include "bcache.h"
 #include "context.h"
 #include "globals.h"
@@ -681,7 +681,9 @@ char *imap_fix_path(struct ImapData *idata, const char *mailbox, char *path, siz
 
       while (*mailbox && ((ImapDelimChars && strchr(ImapDelimChars, *mailbox)) ||
                           (delim && *mailbox == delim)))
+      {
         mailbox++;
+      }
       path[i] = delim;
     }
     else
@@ -737,7 +739,7 @@ void imap_cachepath(struct ImapData *idata, const char *mailbox, char *dest, siz
  * @retval  0 Success
  * @retval -1 Failure
  */
-int imap_get_literal_count(const char *buf, long *bytes)
+int imap_get_literal_count(const char *buf, unsigned int *bytes)
 {
   char *pc = NULL;
   char *pn = NULL;
@@ -750,7 +752,8 @@ int imap_get_literal_count(const char *buf, long *bytes)
   while (isdigit((unsigned char) *pc))
     pc++;
   *pc = '\0';
-  *bytes = atoi(pn);
+  if (mutt_str_atoui(pn, bytes) < 0)
+    return -1;
 
   return 0;
 }

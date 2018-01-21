@@ -394,7 +394,9 @@ static struct PgpKeyInfo *pgp_parse_pgp3_key(unsigned char *buf, size_t l)
   {
     for (id = 0, i = SHA_DIGEST_LENGTH - 8 + k * 4;
          i < SHA_DIGEST_LENGTH + (k - 1) * 4; i++)
+    {
       id = (id << 8) + digest[i];
+    }
 
     snprintf((char *) scratch + k * 8, sizeof(scratch) - k * 8, "%08lX", id);
   }
@@ -842,7 +844,8 @@ int main(int argc, char *const argv[])
   short secring = 0;
 
   const char *tmp_kring = NULL;
-  char *env_pgppath = NULL, *env_home = NULL;
+  const char *env_pgppath = NULL;
+  const char *env_home = NULL;
 
   char pgppath[_POSIX_PATH_MAX];
   char kring[_POSIX_PATH_MAX];
@@ -896,10 +899,10 @@ int main(int argc, char *const argv[])
     mutt_str_strfcpy(kring, tmp_kring, sizeof(kring));
   else
   {
-    env_pgppath = getenv("PGPPATH");
+    env_pgppath = mutt_str_getenv("PGPPATH");
     if (env_pgppath)
       mutt_str_strfcpy(pgppath, env_pgppath, sizeof(pgppath));
-    else if ((env_home = getenv("HOME")))
+    else if ((env_home = mutt_str_getenv("HOME")))
       snprintf(pgppath, sizeof(pgppath), "%s/.pgp", env_home);
     else
     {
