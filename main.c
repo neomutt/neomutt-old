@@ -349,6 +349,27 @@ static int start_curses(void)
     mutt_error(_("Error initializing terminal"));
     return 1;
   }
+  /* slang requires the signal handlers to be set after initializing */
+
+  for (size_t k = 0; k < 23; k++)
+  {
+    move(k, 0);
+    refresh();
+    for (size_t j = 0; j < 80; j++)
+    {
+      printf("\033[38;2;%ld;%ld;%ldm", 255 - (j * 3), k * 11, j * 3);
+      fflush(stdout);
+      waddch(stdscr, '@');
+      refresh();
+    }
+  }
+  printf("\033[0m");
+  move(23, 0);
+  refresh();
+  mutt_any_key_to_continue("RGB Colour, press any key...");
+  endwin();
+  exit(1);
+
   mutt_signal_init();
   mutt_colors_init();
   keypad(stdscr, true);
