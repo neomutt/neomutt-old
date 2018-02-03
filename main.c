@@ -385,6 +385,51 @@ static int start_curses(void)
   move(23, 0);
   refresh();
   mutt_any_key_to_continue("RGB Colour, press any key...");
+  erase();
+  refresh();
+
+  for (size_t c = 0; c < 4; c++)
+  {
+    int attrs[] = { 1, 2, 3, 4, 7, 8, 9 };
+    for (size_t a = 0; a < mutt_array_size(attrs) * 3; a++)
+    {
+      move(a, c * 20);
+      refresh();
+
+      if (c > 1)
+      {
+        int r = rand() % 256;
+        int g = rand() % 256;
+        int b = rand() % 256;
+        printf("\033[38;2;%d;%d;%dm", r, g, b);
+        r = rand() % 256;
+        g = rand() % 256;
+        b = rand() % 256;
+        printf("\033[48;2;%d;%d;%dm", r, g, b);
+      }
+
+      if (c & 1)
+      {
+        int a1 = rand() % mutt_array_size(attrs);
+        int a2 = rand() % mutt_array_size(attrs);
+        printf("\033[%d;%dm", attrs[a1], attrs[a2]);
+      }
+      else
+      {
+        printf("\033[%dm", attrs[a % mutt_array_size(attrs)]);
+      }
+      fflush(stdout);
+      waddstr(stdscr, "ABCDEFGHIJKLMNOPQR");
+      refresh();
+      printf("\033[0m");
+      fflush(stdout);
+    }
+  }
+
+  move(23, 0);
+  refresh();
+  mutt_any_key_to_continue("Attr; 2 Attrs; RGB Colour + Attr; RGB Colour + 2 Attrs, press any key...");
+
   endwin();
   exit(1);
 
