@@ -369,6 +369,9 @@ static int start_curses(void)
     return 1;
   }
 
+  setbuf(stdout, NULL); /* don't buffer the debugging output! */
+  srand(time(NULL));    /* set the random seed */
+
   for (size_t k = 0; k < 23; k++)
   {
     move(k, 0);
@@ -376,7 +379,6 @@ static int start_curses(void)
     for (size_t j = 0; j < 80; j++)
     {
       printf("\033[38;2;%ld;%ld;%ldm", 255 - (j * 3), k * 11, j * 3);
-      fflush(stdout);
       waddch(stdscr, '@');
       refresh();
     }
@@ -418,11 +420,9 @@ static int start_curses(void)
       {
         printf("\033[%dm", attrs[a % mutt_array_size(attrs)]);
       }
-      fflush(stdout);
       waddstr(stdscr, "ABCDEFGHIJKLMNOPQR");
       refresh();
       printf("\033[0m");
-      fflush(stdout);
     }
   }
 
@@ -448,11 +448,9 @@ static int start_curses(void)
   move(5, 0);
   refresh();
   printf("\033]8;id=%d;%s\007", id, url);
-  fflush(stdout);
   waddstr(stdscr, url);
   refresh();
   printf("\033]8;;\007");
-  fflush(stdout);
 
   id = 66;
   url = "http://example.com/?cherry";
@@ -461,11 +459,9 @@ static int start_curses(void)
   move(8, 0);
   refresh();
   printf("\033]8;id=%d;%s\007", id, url);
-  fflush(stdout);
   waddstr(stdscr, "hello world");
   refresh();
   printf("\033]8;;\007");
-  fflush(stdout);
 
   id = 88;
   url = "http://example.com/?damson&becke&bull&carey&malcom&merciel&vinge&woolf";
@@ -484,13 +480,11 @@ static int start_curses(void)
   move(15, 0);
   refresh();
   printf("\033]8;id=%d;%s\007", id, url);
-  fflush(stdout);
   waddnstr(stdscr, url, 40);
   move(16, 0);
   waddnstr(stdscr, url + 40, 40);
   refresh();
   printf("\033]8;;\007");
-  fflush(stdout);
 
   id = 99;
   url = "http://example.com/?fig&coe&brothers&cooper&kleiser&bull";
@@ -500,11 +494,9 @@ static int start_curses(void)
   refresh();
 
   printf("\033]8;id=%d;%s\007", id, url);
-  fflush(stdout);
   waddstr(stdscr, url);
   refresh();
   printf("\033]8;;\007");
-  fflush(stdout);
 
   WINDOW *w = newwin(3, 46, 19, 8);
   box(w, 0, 0);
