@@ -429,6 +429,93 @@ static int start_curses(void)
   move(23, 0);
   refresh();
   mutt_any_key_to_continue("Attr; 2 Attrs; RGB Colour + Attr; RGB Colour + 2 Attrs, press any key...");
+  erase();
+  refresh();
+
+  int id;
+  char *url = NULL;
+
+  move(1, 0);
+  waddstr(stdscr, "simple link unmarked");
+  move(2, 0);
+  waddstr(stdscr, "http://example.com/?apple");
+  refresh();
+
+  id = 42;
+  url = "http://example.com/?banana";
+  move(4, 0);
+  waddstr(stdscr, "simple link marked");
+  move(5, 0);
+  refresh();
+  printf("\033]8;id=%d;%s\007", id, url);
+  fflush(stdout);
+  waddstr(stdscr, url);
+  refresh();
+  printf("\033]8;;\007");
+  fflush(stdout);
+
+  id = 66;
+  url = "http://example.com/?cherry";
+  move(7, 0);
+  waddstr(stdscr, "simple link marked with alt text");
+  move(8, 0);
+  refresh();
+  printf("\033]8;id=%d;%s\007", id, url);
+  fflush(stdout);
+  waddstr(stdscr, "hello world");
+  refresh();
+  printf("\033]8;;\007");
+  fflush(stdout);
+
+  id = 88;
+  url = "http://example.com/?damson&becke&bull&carey&malcom&merciel&vinge&woolf";
+  move(10, 0);
+  waddstr(stdscr, "wrapped link unmarked");
+  move(11, 0);
+  waddnstr(stdscr, url, 40);
+  move(12, 0);
+  waddnstr(stdscr, url + 40, 40);
+  refresh();
+
+  id = 88;
+  url = "http://example.com/?endive&atkins&prentice&colfer&durrell&bernieres&emerson";
+  move(14, 0);
+  waddstr(stdscr, "wrapped link marked");
+  move(15, 0);
+  refresh();
+  printf("\033]8;id=%d;%s\007", id, url);
+  fflush(stdout);
+  waddnstr(stdscr, url, 40);
+  move(16, 0);
+  waddnstr(stdscr, url + 40, 40);
+  refresh();
+  printf("\033]8;;\007");
+  fflush(stdout);
+
+  id = 99;
+  url = "http://example.com/?fig&coe&brothers&cooper&kleiser&bull";
+  move(18, 0);
+  waddstr(stdscr, "obscured link marked");
+  move(20, 0);
+  refresh();
+
+  printf("\033]8;id=%d;%s\007", id, url);
+  fflush(stdout);
+  waddstr(stdscr, url);
+  refresh();
+  printf("\033]8;;\007");
+  fflush(stdout);
+
+  WINDOW *w = newwin(3, 46, 19, 8);
+  box(w, 0, 0);
+  wmove(w, 1, 1);
+  waddstr(w, "Pop-up Window that obscures most of the link");
+  wrefresh(w);
+  delwin(w);
+
+  move(23, 0);
+  refresh();
+  mutt_any_key_to_continue("Hyperlinks, press any key...");
 
   endwin();
   exit(1);
