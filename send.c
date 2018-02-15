@@ -46,7 +46,6 @@
 #include "mutt_curses.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
-#include "parameter.h"
 #include "pattern.h"
 #include "protos.h"
 #include "rfc2047.h"
@@ -1135,7 +1134,7 @@ void mutt_encode_descriptions(struct Body *b, short recurse)
   {
     if (t->description)
     {
-      mutt_rfc2047_encode_32(&t->description, SendCharset);
+      mutt_rfc2047_encode(&t->description, NULL, sizeof("Content-Description:"), SendCharset);
     }
     if (recurse && t->parts)
       mutt_encode_descriptions(t->parts, recurse);
@@ -1238,7 +1237,7 @@ static int is_reply(struct Header *reply, struct Header *orig)
 static int search_attach_keyword(char *filename)
 {
   /* Search for the regex in AttachKeyword within a file */
-  if (!AttachKeyword || !QuoteRegexp)
+  if (!AttachKeyword || !AttachKeyword->regex || !QuoteRegex || !QuoteRegex->regex)
     return 0;
 
   FILE *attf = mutt_file_fopen(filename, "r");
@@ -1250,7 +1249,7 @@ static int search_attach_keyword(char *filename)
   while (!feof(attf))
   {
     fgets(inputline, LONG_STRING, attf);
-    if (regexec(QuoteRegexp->regex, inputline, 0, NULL, 0) != 0 &&
+    if (regexec(QuoteRegex->regex, inputline, 0, NULL, 0) != 0 &&
         regexec(AttachKeyword->regex, inputline, 0, NULL, 0) == 0)
     {
       found = 1;
@@ -1534,7 +1533,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
       if (TextFlowed && msg->content->type == TYPETEXT &&
           (mutt_str_strcasecmp(msg->content->subtype, "plain") == 0))
       {
-        mutt_param_set("format", "flowed", &msg->content->parameter);
+        mutt_param_set(&msg->content->parameter, "format", "flowed");
       }
     }
 
@@ -1648,7 +1647,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
       if (TextFlowed && msg->content->type == TYPETEXT &&
           (mutt_str_strcasecmp("plain", msg->content->subtype) == 0))
       {
-        char *p = mutt_param_get("format", msg->content->parameter);
+        char *p = mutt_param_get(&msg->content->parameter, "format");
         if (mutt_str_strcasecmp("flowed", NONULL(p)) != 0)
           rfc3676_space_stuff(msg);
       }

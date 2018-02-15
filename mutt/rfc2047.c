@@ -658,12 +658,15 @@ void mutt_rfc2047_encode(char **pd, const char *specials, int col, const char *c
  */
 void mutt_rfc2047_decode(char **pd)
 {
+  if (!pd || !*pd)
+    return;
+
   struct Buffer buf = { 0 }; /* Output buffer                          */
   char *s = *pd;             /* Read pointer                           */
   char *beg;                 /* Begin of encoded word                  */
   enum ContentEncoding enc;  /* ENCBASE64 or ENCQUOTEDPRINTABLE        */
   char *charset;             /* Which charset                          */
-  size_t charsetlen;         /* Lenght of the charset                  */
+  size_t charsetlen;         /* Length of the charset                  */
   char *text;                /* Encoded text                           */
   size_t textlen;            /* Length of encoded text                 */
 
@@ -745,5 +748,4 @@ void mutt_rfc2047_decode(char **pd)
 
   mutt_buffer_addch(&buf, '\0');
   *pd = buf.data;
-  return;
 }

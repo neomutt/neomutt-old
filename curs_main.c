@@ -1093,7 +1093,6 @@ int mutt_index_menu(void)
                          MuttIndexWindow->cols - 1);
       mutt_refresh();
 
-#if defined(USE_SLANG_CURSES) || defined(HAVE_RESIZETERM)
       if (SigWinch)
       {
         mutt_flushinp();
@@ -1107,7 +1106,6 @@ int mutt_index_menu(void)
         clearok(stdscr, true);
         continue;
       }
-#endif
 
       op = km_dokey(MENU_MAIN);
 
@@ -2418,7 +2416,7 @@ int mutt_index_menu(void)
       case OP_DECRYPT_SAVE:
         if (!WithCrypto)
           break;
-      /* fall thru */
+      /* fallthrough */
       case OP_COPY_MESSAGE:
       case OP_SAVE:
       case OP_DECODE_COPY:

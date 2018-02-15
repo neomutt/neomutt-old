@@ -33,6 +33,7 @@
 #include "buffy.h"
 #include "globals.h"
 #include "group.h"
+#include "history.h"
 #include "mutt_commands.h"
 #include "mutt_options.h"
 #include "mutt/mutt.h"
@@ -2828,7 +2829,7 @@ struct Option MuttVars[] = {
   ** have no effect, and if it is set to \fIask-yes\fP or \fIask-no\fP, you are
   ** prompted for confirmation when you try to quit.
   */
-  { "quote_regexp",     DT_REGEX,   R_PAGER, UL &QuoteRegexp, UL "^([ \t]*[|>:}#])+" },
+  { "quote_regex",     DT_REGEX,   R_PAGER, UL &QuoteRegex, UL "^([ \t]*[|>:}#])+" },
   /*
   ** .pp
   ** A regular expression used in the internal pager to determine quoted
@@ -2929,12 +2930,12 @@ struct Option MuttVars[] = {
   ** .pp
   ** Also see $$wrap.
   */
-  { "reply_regexp",     DT_REGEX,   R_INDEX|R_RESORT, UL &ReplyRegexp, UL "^(re([\\[0-9\\]+])*|aw):[ \t]*" },
+  { "reply_regex",     DT_REGEX,   R_INDEX|R_RESORT, UL &ReplyRegex, UL "^((re|aw|sv)(\\[[0-9]+\\])*:[ \t]*)*" },
   /*
   ** .pp
   ** A regular expression used to recognize reply messages when threading
-  ** and replying. The default value corresponds to the English "Re:" and
-  ** the German "Aw:".
+  ** and replying. The default value corresponds to the English "Re:", the
+  ** German "Aw:" and the Swedish "Sv:".
   */
   { "reply_self",       DT_BOOL, R_NONE, UL &ReplySelf, 0 },
   /*
@@ -3422,7 +3423,7 @@ struct Option MuttVars[] = {
   /*
   ** .pp
   ** The \fIpager\fP uses this variable to catch some common false
-  ** positives of $$quote_regexp, most notably smileys and not consider
+  ** positives of $$quote_regex, most notably smileys and not consider
   ** a line quoted text if it also matches $$smileys. This mostly
   ** happens at the beginning of a line.
   */
@@ -4426,6 +4427,8 @@ struct Option MuttVars[] = {
   { "pgp_verify_sig",         DT_SYNONYM, R_NONE, UL "crypt_verify_sig",         0 },
   { "post_indent_str",        DT_SYNONYM, R_NONE, UL "post_indent_string",       0 },
   { "print_cmd",              DT_SYNONYM, R_NONE, UL "print_command",            0 },
+  { "quote_regexp",           DT_SYNONYM, R_NONE, UL "quote_regex",              0 },
+  { "reply_regexp",           DT_SYNONYM, R_NONE, UL "reply_regex",              0 },
   { "smime_self_encrypt_as",  DT_SYNONYM, R_NONE, UL "smime_default_key",        0 },
   { "xterm_icon",             DT_SYNONYM, R_NONE, UL "ts_icon_format",           0 },
   { "xterm_set_titles",       DT_SYNONYM, R_NONE, UL "ts_enabled",               0 },

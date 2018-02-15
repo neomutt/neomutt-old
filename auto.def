@@ -6,6 +6,8 @@ if {![catch {exec uname} out] && $out eq {Linux}} {
   define defaultprefix /usr
 }
 
+autosetup-require-version 0.6.8
+
 # Standard autosetup modules and our own modules
 use system cc cc-lib mutt-gettext mutt-iconv
 
@@ -16,7 +18,7 @@ define PACKAGE_VERSION  "20171215"
 define BUGS_ADDRESS     "neomutt-devel@neomutt.org"
 
 # Subdirectories that contain additional Makefile.autosetup files
-set subdirs {po doc contrib}
+set subdirs {po doc contrib test}
 ###############################################################################
 
 ###############################################################################
@@ -322,6 +324,15 @@ if {[get-define want-doc]} {
   if {![cc-check-progs xsltproc]} {
     user-error "Unable to find xsltproc"
   }
+
+  msg-checking "Checking for DocBook DTDs..."
+  set res [exec xmlcatalog --shell << {public "-//OASIS//DTD DocBook XML V4.2//EN"}]
+  if {[string match {> No entry*} $res]} {
+    msg-result "no"
+    user-error "Install DocBook DTDs or './configure --disable-doc'"
+  }
+  msg-result "yes"
+
   define BUILD_DOC
 }
 if {[get-define want-full-doc]} {define MAKEDOC_FULL}
@@ -491,7 +502,7 @@ switch [opt-val with-ui ncurses] {
       if {![cc-check-function-in-lib tgetent $ncurses_lib]} {
         cc-check-function-in-lib tgetent tinfo
       }
-      foreach f {start_color typeahead bkgdset curs_set meta use_default_colors resizeterm} {
+      foreach f {start_color typeahead bkgdset curs_set meta use_default_colors} {
         cc-check-function-in-lib $f $ncurses_lib
       }
       cc-check-functions use_extended_names
@@ -514,7 +525,6 @@ switch [opt-val with-ui ncurses] {
     }
     define USE_SLANG_CURSES
     define-feature COLOR
-    define-feature RESIZETERM
   }
 
   default {

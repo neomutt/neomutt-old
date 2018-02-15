@@ -168,7 +168,6 @@ struct AnsiAttr
 
 static short InHelp = 0;
 
-#if defined(USE_SLANG_CURSES) || defined(HAVE_RESIZETERM)
 /**
  * struct Resize - Keep track of screen resizing
  */
@@ -178,7 +177,6 @@ static struct Resize
   int search_compiled;
   int search_back;
 } *Resize = NULL;
-#endif
 
 #define NUM_SIG_LINES 4
 
@@ -841,9 +839,9 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
   }
   else if (check_sig(buf, line_info, n - 1) == 0)
     line_info[n].type = MT_COLOR_SIGNATURE;
-  else if (QuoteRegexp && regexec(QuoteRegexp->regex, buf, 1, pmatch, 0) == 0)
+  else if (QuoteRegex && QuoteRegex->regex && regexec(QuoteRegex->regex, buf, 1, pmatch, 0) == 0)
   {
-    if (Smileys && (regexec(Smileys->regex, buf, 1, smatch, 0) == 0))
+    if (Smileys && Smileys->regex && (regexec(Smileys->regex, buf, 1, smatch, 0) == 0))
     {
       if (smatch[0].rm_so > 0)
       {
@@ -853,7 +851,7 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
         c = buf[smatch[0].rm_so];
         buf[smatch[0].rm_so] = 0;
 
-        if (QuoteRegexp && regexec(QuoteRegexp->regex, buf, 1, pmatch, 0) == 0)
+        if (regexec(QuoteRegex->regex, buf, 1, pmatch, 0) == 0)
         {
           if (q_classify && line_info[n].quote == NULL)
             line_info[n].quote = classify_quote(quote_list, buf + pmatch[0].rm_so,
@@ -1258,6 +1256,7 @@ static int format_line(struct Line **line_info, int n, unsigned char *buf, int f
 
     if (Charset_is_utf8)
     {
+      /* zero width space, zero width no-break space */
       if (wc == 0x200B || wc == 0xFEFF)
       {
         mutt_debug(3, "skip zero-width character U+%04X\n", (unsigned short) wc);
@@ -1315,10 +1314,14 @@ static int format_line(struct Line **line_info, int n, unsigned char *buf, int f
       last_special = special;
     }
 
+    /* no-break space, narrow no-break space */
     if (IsWPrint(wc) || (Charset_is_utf8 && (wc == 0x00A0 || wc == 0x202F)))
     {
       if (wc == ' ')
+      {
         space = ch;
+      }
+      /* no-break space, narrow no-break space */
       else if (Charset_is_utf8 && (wc == 0x00A0 || wc == 0x202F))
       {
         /* Convert non-breaking space to normal space. The local variable
@@ -1485,7 +1488,7 @@ static int display_line(FILE *f, LOFF_T *last_pos, struct Line **line_info,
         (*last)--;
       goto out;
     }
-    if (QuoteRegexp && regexec(QuoteRegexp->regex, (char *) fmt, 1, pmatch, 0) == 0)
+    if (QuoteRegex && QuoteRegex->regex && regexec(QuoteRegex->regex, (char *) fmt, 1, pmatch, 0) == 0)
     {
       (*line_info)[n].quote =
           classify_quote(quote_list, (char *) fmt + pmatch[0].rm_so,
@@ -1738,18 +1741,14 @@ static void pager_menu_redraw(struct Menu *pager_menu)
   struct PagerRedrawData *rd = pager_menu->redraw_data;
   int i, j;
   char buffer[LONG_STRING];
-#if defined(USE_SLANG_CURSES) || defined(HAVE_RESIZETERM)
   int err;
-#endif
 
   if (!rd)
     return;
 
   if (pager_menu->redraw & REDRAW_FULL)
   {
-#if !(defined(USE_SLANG_CURSES) || defined(HAVE_RESIZETERM))
     mutt_reflow_windows();
-#endif
     NORMAL_COLOR;
     /* clear() doesn't optimize screen redraws */
     move(0, 0);
@@ -1805,7 +1804,6 @@ static void pager_menu_redraw(struct Menu *pager_menu)
       NORMAL_COLOR;
     }
 
-#if defined(USE_SLANG_CURSES) || defined(HAVE_RESIZETERM)
     if (Resize)
     {
       rd->search_compiled = Resize->search_compiled;
@@ -1830,7 +1828,6 @@ static void pager_menu_redraw(struct Menu *pager_menu)
 
       FREE(&Resize);
     }
-#endif
 
     if (IsHeader(rd->extra) && PagerIndexLines)
     {
@@ -2244,7 +2241,6 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
       }
     }
 
-#if defined(USE_SLANG_CURSES) || defined(HAVE_RESIZETERM)
     if (SigWinch)
     {
       SigWinch = 0;
@@ -2276,7 +2272,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
       }
       continue;
     }
-#endif
+
     if (ch < 0)
     {
       ch = 0;

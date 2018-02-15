@@ -168,62 +168,28 @@ static int toggle_quadoption(int opt)
 
 static int parse_regex(int idx, struct Buffer *tmp, struct Buffer *err)
 {
-  int e, flags = 0;
-  const char *p = NULL;
-  regex_t *rx = NULL;
-  struct Regex *ptr = *(struct Regex **) MuttVars[idx].var;
+  struct Regex **ptr = (struct Regex **) MuttVars[idx].var;
 
-  if (ptr)
+  if (*ptr)
   {
     /* Same pattern as we already have */
-    if (mutt_str_strcmp(ptr->pattern, tmp->data) == 0)
+    if (mutt_str_strcmp((*ptr)->pattern, tmp->data) == 0)
       return 0;
   }
-  else
+
+  if (mutt_buffer_is_empty(tmp))
   {
-    ptr = mutt_mem_calloc(1, sizeof(struct Regex));
-    *(struct Regex **) MuttVars[idx].var = ptr;
-  }
-
-  bool not = false;
-
-  /* Should we use smart case matching? */
-  if (((MuttVars[idx].flags & DT_REGEX_MATCH_CASE) == 0) && mutt_mb_is_lower(tmp->data))
-    flags |= REG_ICASE;
-
-  p = tmp->data;
-  /* Is a prefix of '!' allowed? */
-  if ((MuttVars[idx].flags & DT_REGEX_ALLOW_NOT) != 0)
-  {
-    if (*p == '!')
-    {
-      not = true;
-      p++;
-    }
-  }
-
-  rx = mutt_mem_malloc(sizeof(regex_t));
-  e = REGCOMP(rx, p, flags);
-  if (e != 0)
-  {
-    regerror(e, rx, err->data, err->dsize);
-    FREE(&rx);
+    mutt_regex_free(ptr);
     return 0;
   }
 
-  /* get here only if everything went smoothly */
-  if (ptr->pattern)
-  {
-    FREE(&ptr->pattern);
-    regfree((regex_t *) ptr->regex);
-    FREE(&ptr->regex);
-  }
+  struct Regex *rnew = mutt_regex_create(tmp->data, MuttVars[idx].type, err);
+  if (!rnew)
+    return 1;
 
-  ptr->pattern = mutt_str_strdup(tmp->data);
-  ptr->regex = rx;
-  ptr->not = not;
-
-  return 1;
+  mutt_regex_free(ptr);
+  *ptr = rnew;
+  return 0;
 }
 
 int query_quadoption(int opt, const char *prompt)
@@ -400,9 +366,9 @@ int mutt_option_set(const struct Option *val, struct Buffer *err)
 
         if (parse_regex(idx, &tmp, &err2))
         {
-          /* $reply_regexp and $alternates require special treatment */
+          /* $reply_regex and $alternates require special treatment */
           if (Context && Context->msgcount &&
-              (mutt_str_strcmp(MuttVars[idx].name, "reply_regexp") == 0))
+              (mutt_str_strcmp(MuttVars[idx].name, "reply_regex") == 0))
           {
             regmatch_t pmatch[1];
 
@@ -412,8 +378,8 @@ int mutt_option_set(const struct Option *val, struct Buffer *err)
               if (e && e->subject)
               {
                 e->real_subj = e->subject;
-                if (ReplyRegexp &&
-                    (regexec(ReplyRegexp->regex, e->subject, 1, pmatch, 0) == 0))
+                if (ReplyRegex && ReplyRegex->regex &&
+                    (regexec(ReplyRegex->regex, e->subject, 1, pmatch, 0) == 0))
                 {
                   e->subject += pmatch[0].rm_eo;
                 }
@@ -727,21 +693,13 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
 
 static void free_opt(struct Option *p)
 {
-  struct Regex **pp = NULL;
-
   switch (DTYPE(p->type))
   {
     case DT_ADDRESS:
       mutt_addr_free((struct Address **) p->var);
       break;
     case DT_REGEX:
-      pp = (struct Regex **) p->var;
-      FREE(&(*pp)->pattern);
-      if ((*pp)->regex)
-      {
-        regfree((*pp)->regex);
-        FREE(&(*pp)->regex);
-      }
+      mutt_regex_free((struct Regex **) p->var);
       break;
     case DT_PATH:
     case DT_STRING:
@@ -1924,9 +1882,9 @@ static void set_default(struct Option *p)
       break;
     case DT_REGEX:
     {
-      struct Regex *pp = (struct Regex *) p->var;
-      if (!p->initial && pp->pattern)
-        p->initial = (unsigned long) mutt_str_strdup(pp->pattern);
+      struct Regex **ptr = (struct Regex **) p->var;
+      if (!p->initial && *ptr && (*ptr)->pattern)
+        p->initial = (unsigned long) mutt_str_strdup((*ptr)->pattern);
       break;
     }
   }
@@ -1982,53 +1940,14 @@ static void restore_default(struct Option *p)
       break;
     case DT_REGEX:
     {
-      struct Regex **pp = (struct Regex **) p->var;
-      if (*pp)
-      {
-        FREE(&(*pp)->pattern);
-        if ((*pp)->regex)
-        {
-          regfree((*pp)->regex);
-          FREE(&(*pp)->regex);
-        }
-      }
-      else
-      {
-        *pp = mutt_mem_calloc(1, sizeof(struct Regex));
-      }
+      struct Regex **ptr = (struct Regex **) p->var;
 
-      if (p->initial)
-      {
-        int flags = 0;
-        char *s = (char *) p->initial;
+      if (*ptr)
+        mutt_regex_free(ptr);
 
-        (*pp)->regex = mutt_mem_calloc(1, sizeof(regex_t));
-        (*pp)->pattern = mutt_str_strdup((char *) p->initial);
-        if ((mutt_str_strcmp(p->name, "mask") != 0) &&
-            (mutt_mb_is_lower((const char *) p->initial)))
-        {
-          flags |= REG_ICASE;
-        }
-        if ((mutt_str_strcmp(p->name, "mask") == 0) && *s == '!')
-        {
-          s++;
-          (*pp)->not = true;
-        }
-        int rc = REGCOMP((*pp)->regex, s, flags);
-        if (rc != 0)
-        {
-          char msgbuf[STRING];
-          regerror(rc, (*pp)->regex, msgbuf, sizeof(msgbuf));
-          fprintf(stderr, _("restore_default(%s): error in regex: %s\n"),
-                  p->name, (*pp)->pattern);
-          fprintf(stderr, "%s\n", msgbuf);
-          mutt_sleep(0);
-          FREE(&(*pp)->pattern);
-          FREE(&(*pp)->regex);
-        }
-      }
+      *ptr = mutt_regex_create((const char *) p->initial, p->type, NULL);
+      break;
     }
-    break;
   }
 
   if (p->flags & R_INDEX)
@@ -2454,7 +2373,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
           restore_default(&MuttVars[idx]);
       }
     }
-    else if (!myvar && (idx >= 0) && DTYPE(MuttVars[idx].type) == DT_BOOL)
+    else if (!myvar && (idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_BOOL))
     {
       if (*s->dptr == '=')
       {
@@ -2579,7 +2498,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
           FREE(&myvar);
           myvar = "don't resort";
         }
-        else if ((idx >= 0) && DTYPE(MuttVars[idx].type) == DT_PATH)
+        else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_PATH))
         {
           if (mutt_str_strcmp(MuttVars[idx].name, "debug_file") == 0 && debugfile_cmdline)
           {
@@ -2597,7 +2516,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
           if (mutt_str_strcmp(MuttVars[idx].name, "debug_file") == 0)
             restart_debug();
         }
-        else if ((idx >= 0) && DTYPE(MuttVars[idx].type) == DT_STRING)
+        else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_STRING))
         {
           if ((strstr(MuttVars[idx].name, "charset") &&
                check_charset(&MuttVars[idx], tmp->data) < 0) |
@@ -2638,7 +2557,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
         }
       }
     }
-    else if (DTYPE(MuttVars[idx].type) == DT_REGEX)
+    else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_REGEX))
     {
       if (query || *s->dptr != '=')
       {
@@ -2650,7 +2569,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
       }
 
       if (OPT_ATTACH_MSG &&
-          (mutt_str_strcmp(MuttVars[idx].name, "reply_regexp") == 0))
+          (mutt_str_strcmp(MuttVars[idx].name, "reply_regex") == 0))
       {
         snprintf(err->data, err->dsize,
                  "Operation not permitted when in attach-message mode.");
@@ -2666,9 +2585,9 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
 
       if (parse_regex(idx, tmp, err))
       {
-        /* $reply_regexp and $alternates require special treatment */
+        /* $reply_regex and $alternates require special treatment */
         if (Context && Context->msgcount &&
-            (mutt_str_strcmp(MuttVars[idx].name, "reply_regexp") == 0))
+            (mutt_str_strcmp(MuttVars[idx].name, "reply_regex") == 0))
         {
           regmatch_t pmatch[1];
 
@@ -2677,8 +2596,8 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
             struct Envelope *e = Context->hdrs[i]->env;
             if (e && e->subject)
             {
-              e->real_subj = (ReplyRegexp &&
-                              (regexec(ReplyRegexp->regex, e->subject, 1, pmatch, 0))) ?
+              e->real_subj = (ReplyRegex && ReplyRegex->regex &&
+                              (regexec(ReplyRegex->regex, e->subject, 1, pmatch, 0))) ?
                                  e->subject :
                                  e->subject + pmatch[0].rm_eo;
             }
@@ -2769,7 +2688,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
       {
         if (*ptr < 0)
           *ptr = 0;
-        mutt_init_history();
+        mutt_hist_init();
       }
       else if (mutt_str_strcmp(MuttVars[idx].name, "debug_level") == 0)
       {
@@ -3313,7 +3232,7 @@ int mutt_command_complete(char *buffer, size_t len, int pos, int numtabs)
       snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
     else if (numtabs > 1 && NumMatched > 2)
     {
-      /* cycle thru all the matches */
+      /* cycle through all the matches */
       snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
     }
 
@@ -3370,7 +3289,7 @@ int mutt_command_complete(char *buffer, size_t len, int pos, int numtabs)
       snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
     else if (numtabs > 1 && NumMatched > 2)
     {
-      /* cycle thru all the matches */
+      /* cycle through all the matches */
       snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
     }
 
@@ -3418,7 +3337,7 @@ int mutt_command_complete(char *buffer, size_t len, int pos, int numtabs)
       snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
     else if (numtabs > 1 && NumMatched > 2)
     {
-      /* cycle thru all the matches */
+      /* cycle through all the matches */
       snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
     }
 
@@ -3574,7 +3493,7 @@ bool mutt_nm_query_complete(char *buffer, size_t len, int pos, int numtabs)
       snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
     else if (numtabs > 1 && NumMatched > 2)
     {
-      /* cycle thru all the matches */
+      /* cycle through all the matches */
       snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
     }
 
@@ -3629,7 +3548,7 @@ bool mutt_nm_tag_complete(char *buffer, size_t len, int numtabs)
     snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
   else if (numtabs > 1 && NumMatched > 2)
   {
-    /* cycle thru all the matches */
+    /* cycle through all the matches */
     snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
   }
 
@@ -3647,12 +3566,17 @@ int var_to_string(int idx, char *val, size_t len)
 
   tmp[0] = '\0';
 
-  if ((DTYPE(MuttVars[idx].type) == DT_STRING) ||
-      (DTYPE(MuttVars[idx].type) == DT_PATH) || (DTYPE(MuttVars[idx].type) == DT_REGEX))
+  if ((DTYPE(MuttVars[idx].type) == DT_STRING) || (DTYPE(MuttVars[idx].type) == DT_PATH))
   {
     mutt_str_strfcpy(tmp, NONULL(*((char **) MuttVars[idx].var)), sizeof(tmp));
     if (DTYPE(MuttVars[idx].type) == DT_PATH)
       mutt_pretty_mailbox(tmp, sizeof(tmp));
+  }
+  else if (DTYPE(MuttVars[idx].type) == DT_REGEX)
+  {
+    struct Regex *r = *(struct Regex **) MuttVars[idx].var;
+    if (r)
+      mutt_str_strfcpy(tmp, NONULL(r->pattern), sizeof(tmp));
   }
   else if (DTYPE(MuttVars[idx].type) == DT_MBTABLE)
   {
@@ -4109,7 +4033,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
     Suspend = false;
 #endif
 
-  mutt_init_history();
+  mutt_hist_init();
 
   /* RFC2368, "4. Unsafe headers"
    * The creator of a mailto URL cannot expect the resolver of a URL to
@@ -4228,7 +4152,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
 
   mutt_file_mkdir(Tmpdir, S_IRWXU);
 
-  mutt_read_histfile();
+  mutt_hist_read_file();
 
 #ifdef USE_NOTMUCH
   if (VirtualSpoolfile)
@@ -4526,7 +4450,7 @@ int mutt_label_complete(char *buffer, size_t len, int numtabs)
     snprintf(Completed, sizeof(Completed), "%s", Matches[0]);
   else if (numtabs > 1 && NumMatched > 2)
   {
-    /* cycle thru all the matches */
+    /* cycle through all the matches */
     snprintf(Completed, sizeof(Completed), "%s", Matches[(numtabs - 2) % NumMatched]);
   }
 

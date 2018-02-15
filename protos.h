@@ -33,6 +33,7 @@
 #include <time.h>
 #include <wctype.h>
 #include "mutt.h"
+#include "mutt/mutt.h"
 #include "format_flags.h"
 #include "options.h"
 
@@ -85,7 +86,7 @@ void mutt_free_opts(void);
 int mutt_system(const char *cmd);
 
 void mutt_parse_content_type(char *s, struct Body *ct);
-void mutt_generate_boundary(struct Parameter **parm);
+void mutt_generate_boundary(struct ParameterList *parm);
 
 #ifdef USE_NOTMUCH
 int mutt_parse_virtual_mailboxes(struct Buffer *path, struct Buffer *s, unsigned long data, struct Buffer *err);
@@ -339,6 +340,7 @@ int mutt_save_confirm(const char *s, struct stat *st);
 
 void mutt_browser_select_dir(char *f);
 void mutt_get_parent_path(char *output, char *path, size_t olen);
+size_t mutt_realpath(char *buf);
 
 #define MUTT_RANDTAG_LEN (16)
 void mutt_rand_base32(void *out, size_t len);

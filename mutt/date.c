@@ -25,12 +25,6 @@
  *
  * Some commonly used time and date functions.
  *
- * | Data                      | Description
- * | :------------------------ | :--------------------------------------------------
- * | #Months                   | Months of the year (abbreviated)
- * | #TimeZones                | Lookup table of Time Zones
- * | #Weekdays                 | Day of the week (abbreviated)
- *
  * | Function                   | Description
  * | :------------------------- | :--------------------------------------------------
  * | mutt_date_check_month()    | Is the string a valid month name
@@ -39,6 +33,7 @@
  * | mutt_date_make_date()      | Write a date in RFC822 format to a buffer
  * | mutt_date_make_imap()      | Format date in IMAP style: DD-MMM-YYYY HH:MM:SS +ZZzz
  * | mutt_date_make_time()      | Convert `struct tm` to `time_t`
+ * | mutt_date_make_tls()       | Format date in TLS certificate verification style
  * | mutt_date_normalize_time() | Fix the contents of a struct tm
  * | mutt_date_parse_date()     | Parse a date string in RFC822 format
  * | mutt_date_parse_imap()     | Parse date of the form: DD-MMM-YYYY HH:MM:SS +ZZzz
@@ -52,6 +47,7 @@
 #include <time.h>
 #include "date.h"
 #include "debug.h"
+#include "memory.h"
 #include "string2.h"
 
 /* theoretically time_t can be float but it is integer on most (if not all) systems */
@@ -61,28 +57,29 @@
   (1970 + (((((TIME_T_MAX - 59) / 60) - 59) / 60) - 23) / 24 / 366)
 #define TM_YEAR_MIN (1970 - (TM_YEAR_MAX - 1970) - 1)
 
+// clang-format off
+
 /**
  * Weekdays - Day of the week (abbreviated)
  */
-const char *const Weekdays[] = {
+static const char *const Weekdays[] = {
   "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
 };
 
 /**
  * Months - Months of the year (abbreviated)
  */
-const char *const Months[] = {
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-  "Aug", "Sep", "Oct", "Nov", "Dec", "ERR",
+static const char *const Months[] = {
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-// clang-format off
 /**
  * TimeZones - Lookup table of Time Zones
  *
  * @note Keep in alphabetical order
  */
-const struct Tz TimeZones[] = {
+static const struct Tz TimeZones[] = {
   { "aat",   1,  0, true  }, /* Atlantic Africa Time */
   { "adt",   4,  0, false }, /* Arabia DST */
   { "ast",   3,  0, false }, /* Arabia */
@@ -254,7 +251,7 @@ time_t mutt_date_make_time(struct tm *t, int local)
 {
   time_t g;
 
-  static const int AccumDaysPerMonth[12] = {
+  static const int AccumDaysPerMonth[mutt_array_size(Months)] = {
     0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334,
   };
 
@@ -276,7 +273,7 @@ time_t mutt_date_make_time(struct tm *t, int local)
     return TIME_T_MAX;
 
   /* Compute the number of days since January 1 in the same year */
-  g = AccumDaysPerMonth[t->tm_mon % 12];
+  g = AccumDaysPerMonth[t->tm_mon % mutt_array_size(Months)];
 
   /* The leap years are 1972 and every 4. year until 2096,
    * but this algorithm will fail after year 2099 */
@@ -318,7 +315,7 @@ time_t mutt_date_make_time(struct tm *t, int local)
  */
 void mutt_date_normalize_time(struct tm *tm)
 {
-  static const char DaysPerMonth[12] = {
+  static const char DaysPerMonth[mutt_array_size(Months)] = {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
   };
   int leap;
@@ -419,7 +416,7 @@ char *mutt_date_make_date(char *buf, size_t buflen)
  */
 int mutt_date_check_month(const char *s)
 {
-  for (int i = 0; i < 12; i++)
+  for (int i = 0; i < mutt_array_size(Months); i++)
     if (mutt_str_strncasecmp(s, Months[i], 3) == 0)
       return i;
 
@@ -439,7 +436,7 @@ bool mutt_date_is_day_name(const char *s)
   if ((strlen(s) < 3) || !*(s + 3) || !ISSPACE(*(s + 3)))
     return false;
 
-  for (int i = 0; i < 7; i++)
+  for (int i = 0; i < mutt_array_size(Weekdays); i++)
     if (mutt_str_strncasecmp(s, Weekdays[i], 3) == 0)
       return true;
 
@@ -558,8 +555,7 @@ time_t mutt_date_parse_date(const char *s, struct Tz *tz_out)
           struct Tz *tz = NULL;
 
           /* This is safe to do: A pointer to a struct equals a pointer to its first element */
-          tz = bsearch(ptz, TimeZones, sizeof(TimeZones) / sizeof(struct Tz),
-                       sizeof(struct Tz),
+          tz = bsearch(ptz, TimeZones, mutt_array_size(TimeZones), sizeof(struct Tz),
                        (int (*)(const void *, const void *)) mutt_str_strcasecmp);
 
           if (tz)
@@ -629,6 +625,25 @@ int mutt_date_make_imap(char *buf, size_t buflen, time_t timestamp)
   return snprintf(buf, buflen, "%02d-%s-%d %02d:%02d:%02d %+03d%02d", tm->tm_mday,
                   Months[tm->tm_mon], tm->tm_year + 1900, tm->tm_hour, tm->tm_min,
                   tm->tm_sec, (int) tz / 60, (int) abs((int) tz) % 60);
+}
+
+/**
+ * mutt_date_make_tls - Format date in TLS certificate verification style
+ * @param buf       Buffer to store the results
+ * @param buflen    Length of buffer
+ * @param timestamp Time to format
+ * @retval int Number of characters written to buf
+ *
+ * e.g., Mar 17 16:40:46 2016 UTC. The time is always in UTC.
+ *
+ * Caller should provide a buffer of at least 27 bytes.
+ */
+int mutt_date_make_tls(char *buf, size_t buflen, time_t timestamp)
+{
+  struct tm *tm = gmtime(&timestamp);
+  return snprintf(buf, buflen, "%s, %d %s %d %02d:%02d:%02d UTC",
+                  Weekdays[tm->tm_wday], tm->tm_mday, Months[tm->tm_mon],
+                  tm->tm_year + 1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
 }
 
 /**

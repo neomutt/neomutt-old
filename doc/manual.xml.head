@@ -2254,7 +2254,7 @@ color sidebar_divider   color8  default
             <anchor id="toggle-quoted" />(default: T)</term>
             <listitem>
               <para>The pager uses the
-              <link linkend="quote-regexp">$quote_regexp</link> variable to
+              <link linkend="quote-regex">$quote_regex</link> variable to
               detect quoted text when displaying the body of the message. This
               function toggles the display of the quoted material in the
               message. It is particularly useful when being interested in just
@@ -4053,7 +4053,7 @@ folder-hook work "set sort=threads"
         </listitem>
         <listitem>
           <para>quoted (text matching
-          <link linkend="quote-regexp">$quote_regexp</link> in the body of a
+          <link linkend="quote-regex">$quote_regex</link> in the body of a
           message)</para>
         </listitem>
         <listitem>
@@ -4666,7 +4666,9 @@ unignore posted-to:
       <para>NeoMutt provides a number of advanced features for handling (possibly
       many) folders and new mail within them, please refer to
       <xref linkend="new-mail" />for details (including in what situations and
-      how often NeoMutt checks for new mail).</para>
+      how often NeoMutt checks for new mail).  Additionally,
+      <link linkend="new-mail-command">$new_mail_command</link> can be used
+      to run a command when new mail is detected.</para>
       <para>The
       <quote>unmailboxes</quote> command is used to remove a token from the list
       of folders which receive mail. Use
@@ -10746,7 +10748,7 @@ set smime_default_key = "SMIME-KEY"
         certain keyword but there are no attachments added. This is meant to
         ensure that the user does not forget to attach a file after promising
         to do so in the mail.  The attachment keyword will not be scanned in
-        text matched by <link linkend="quote-regexp">$quote_regexp</link>.
+        text matched by <link linkend="quote-regex">$quote_regex</link>.
         </para>
       </sect2>
 

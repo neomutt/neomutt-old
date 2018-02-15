@@ -40,7 +40,6 @@
 #include "body.h"
 #include "globals.h"
 #include "options.h"
-#include "parameter.h"
 #include "protos.h"
 
 /**
@@ -93,7 +92,7 @@ int rfc1524_expand_command(struct Body *a, char *filename, char *type, char *com
           param[z++] = command[x++];
         param[z] = '\0';
 
-        pvalue2 = mutt_param_get(param, a->parameter);
+        pvalue2 = mutt_param_get(&a->parameter, param);
         mutt_str_strfcpy(pvalue, NONULL(pvalue2), sizeof(pvalue));
         if (MailcapSanitize)
           mutt_file_sanitize_filename(pvalue, 0);
@@ -558,7 +557,7 @@ int rfc1524_expand_filename(char *nametemplate, char *oldfile, char *newfile, si
       if (lmatch)
         *left = 0;
       else
-        mutt_str_strnfcpy(left, nametemplate, sizeof(left), i);
+        mutt_str_strnfcpy(left, nametemplate, i, sizeof(left));
 
       if (rmatch)
         *right = 0;

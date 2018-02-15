@@ -53,7 +53,6 @@
 #include "mutt_curses.h"
 #include "ncrypt.h"
 #include "options.h"
-#include "parameter.h"
 #include "pgpinvoke.h"
 #include "pgplib.h"
 #include "pgpmicalg.h"
@@ -188,7 +187,7 @@ static int pgp_copy_checksig(FILE *fpin, FILE *fpout)
 {
   int rc = -1;
 
-  if (PgpGoodSign)
+  if (PgpGoodSign && PgpGoodSign->regex)
   {
     char *line = NULL;
     int lineno = 0;
@@ -232,7 +231,7 @@ static int pgp_check_decryption_okay(FILE *fpin)
 {
   int rc = -1;
 
-  if (PgpDecryptionOkay)
+  if (PgpDecryptionOkay && PgpDecryptionOkay->regex)
   {
     char *line = NULL;
     int lineno = 0;
@@ -666,13 +665,13 @@ static int pgp_check_traditional_one_body(FILE *fp, struct Body *b)
 
   /* fix the content type */
 
-  mutt_param_set("format", "fixed", &b->parameter);
+  mutt_param_set(&b->parameter, "format", "fixed");
   if (enc)
-    mutt_param_set("x-action", "pgp-encrypted", &b->parameter);
+    mutt_param_set(&b->parameter, "x-action", "pgp-encrypted");
   else if (sgn)
-    mutt_param_set("x-action", "pgp-signed", &b->parameter);
+    mutt_param_set(&b->parameter, "x-action", "pgp-signed");
   else if (key)
-    mutt_param_set("x-action", "pgp-keys", &b->parameter);
+    mutt_param_set(&b->parameter, "x-action", "pgp-keys");
 
   return 1;
 }
@@ -1209,8 +1208,8 @@ struct Body *pgp_sign_message(struct Body *a)
   t->disposition = DISPINLINE;
 
   mutt_generate_boundary(&t->parameter);
-  mutt_param_set("protocol", "application/pgp-signature", &t->parameter);
-  mutt_param_set("micalg", pgp_micalg(sigfile), &t->parameter);
+  mutt_param_set(&t->parameter, "protocol", "application/pgp-signature");
+  mutt_param_set(&t->parameter, "micalg", pgp_micalg(sigfile));
 
   t->parts = a;
   a = t;
@@ -1224,7 +1223,7 @@ struct Body *pgp_sign_message(struct Body *a)
   t->disposition = DISPNONE;
   t->encoding = ENC7BIT;
   t->unlink = true; /* ok to remove this file after sending. */
-  mutt_param_set("name", "signature.asc", &t->parameter);
+  mutt_param_set(&t->parameter, "name", "signature.asc");
 
   return a;
 }
@@ -1465,7 +1464,7 @@ struct Body *pgp_encrypt_message(struct Body *a, char *keylist, int sign)
   t->disposition = DISPINLINE;
 
   mutt_generate_boundary(&t->parameter);
-  mutt_param_set("protocol", "application/pgp-encrypted", &t->parameter);
+  mutt_param_set(&t->parameter, "protocol", "application/pgp-encrypted");
 
   t->parts = mutt_new_body();
   t->parts->type = TYPEAPPLICATION;
@@ -1643,8 +1642,8 @@ struct Body *pgp_traditional_encryptsign(struct Body *a, int flags, char *keylis
   b->type = TYPETEXT;
   b->subtype = mutt_str_strdup("plain");
 
-  mutt_param_set("x-action", flags & ENCRYPT ? "pgp-encrypted" : "pgp-signed", &b->parameter);
-  mutt_param_set("charset", send_charset, &b->parameter);
+  mutt_param_set(&b->parameter, "x-action", flags & ENCRYPT ? "pgp-encrypted" : "pgp-signed");
+  mutt_param_set(&b->parameter, "charset", send_charset);
 
   b->filename = mutt_str_strdup(pgpoutfile);
 

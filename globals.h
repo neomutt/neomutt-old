@@ -127,7 +127,6 @@ WHERE char *ForwardFormat;
 WHERE char *Hostname;
 WHERE struct MbTable *FromChars;
 WHERE char *IndexFormat;
-WHERE char *HistoryFile;
 
 #ifdef USE_IMAP
 WHERE char *ImapAuthenticators;
@@ -238,13 +237,11 @@ WHERE short NntpContext;
 WHERE short DebugLevel;
 WHERE char *DebugFile;
 
-WHERE short History;
 WHERE short MenuContext;
 WHERE short PagerContext;
 WHERE short PagerIndexLines;
 WHERE short ReadInc;
 WHERE short ReflowWrap;
-WHERE short SaveHistory;
 WHERE short SendmailWait;
 WHERE short SleepTime;
 WHERE short SkipQuotedOffset;
@@ -327,8 +324,8 @@ WHERE char *NmQueryWindowCurrentSearch;
 /* These variables are backing for config items */
 WHERE struct Regex *GecosMask;
 WHERE struct Regex *Mask;
-WHERE struct Regex *QuoteRegexp;
-WHERE struct Regex *ReplyRegexp;
+WHERE struct Regex *QuoteRegex;
+WHERE struct Regex *ReplyRegex;
 WHERE struct Regex *Smileys;
 
 #endif /* _MUTT_GLOBALS_H */

@@ -672,19 +672,22 @@ void mutt_str_remove_trailing_ws(char *s)
 
 /**
  * mutt_str_strfcpy - Copy a string into a buffer (guaranteeing NUL-termination)
- * @param dest Buffer for the result
- * @param src  String to copy
- * @param dlen Length of buffer
- * @retval ptr Destination buffer
+ * @param dest  Buffer for the result
+ * @param src   String to copy
+ * @param dsize Destination buffer size
+ * @retval len Destination string length
  */
-char *mutt_str_strfcpy(char *dest, const char *src, size_t dlen)
+size_t mutt_str_strfcpy(char *dest, const char *src, size_t dsize)
 {
+  if (dsize == 0)
+    return 0;
+
   char *dest0 = dest;
-  while ((--dlen > 0) && (*src != '\0'))
+  while ((--dsize > 0) && (*src != '\0'))
     *dest++ = *src++;
 
   *dest = '\0';
-  return dest0;
+  return dest - dest0;
 }
 
 /**
@@ -714,17 +717,15 @@ int mutt_str_is_email_wsp(char c)
 
 /**
  * mutt_str_strnfcpy - Copy a limited string into a buffer (guaranteeing NUL-termination)
- * @param dest Buffer for the result
- * @param src  String to copy
- * @param size Maximum number of characters to copy
- * @param dlen Length of buffer
- * @retval ptr Destination buffer
+ * @param dest  Buffer for the result
+ * @param src   String to copy
+ * @param n     Maximum number of characters to copy
+ * @param dsize Destination buffer size
+ * @retval len Destination string length
  */
-char *mutt_str_strnfcpy(char *dest, char *src, size_t size, size_t dlen)
+size_t mutt_str_strnfcpy(char *dest, const char *src, size_t n, size_t dsize)
 {
-  if (dlen > size)
-    dlen = size - 1;
-  return mutt_str_strfcpy(dest, src, dlen);
+  return mutt_str_strfcpy(dest, src, MIN(n + 1, dsize));
 }
 
 /**
@@ -741,7 +742,7 @@ size_t mutt_str_lws_len(const char *s, size_t n)
   const char *p = s;
   size_t len = n;
 
-  if (n <= 0)
+  if (n == 0)
     return 0;
 
   for (; p < (s + n); p++)
@@ -753,7 +754,7 @@ size_t mutt_str_lws_len(const char *s, size_t n)
     }
   }
 
-  if (strchr("\r\n", *(p - 1))) /* LWS doesn't end with CRLF */
+  if (len != 0 && strchr("\r\n", *(p - 1))) /* LWS doesn't end with CRLF */
     len = 0;
   return len;
 }
