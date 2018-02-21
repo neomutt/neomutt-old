@@ -10,20 +10,34 @@ They have simply been moved to keep the main repository tidier.
 These NeoMutt branches have been archived since NeoMutt 2017-12-15
 
 - [testing/testing](https://github.com/neomutt/neomutt-old/tree/testing/testing)
-
   Functional and unit testing framework in lua https://github.com/neomutt/neomutt/issues/415
 
 - [testing/testing-bdd-for-c](https://github.com/neomutt/neomutt-old/tree/testing/testing-bdd-for-c)
-
   Unit test backend using BDD-For-C (only) https://github.com/neomutt/neomutt/issues/431
 
 - [testing/testing-luajit](https://github.com/neomutt/neomutt-old/tree/testing/testing-luajit)
-
   Another lua unit testing strategy
 
 - [testing/unit-test](https://github.com/neomutt/neomutt-old/tree/testing/unit-test)
-
   Another C unit testing strategy
+
+- [lolcat](https://github.com/neomutt/neomutt-old/tree/lolcat)
+  Test colours and attributes (working around curses limitations)
+
+- [notifications](https://github.com/neomutt/neomutt-old/tree/notifications)
+  Notification framework
+
+- [record-folder-hook](https://github.com/neomutt/neomutt-old/tree/record-folder-hook)
+  Workaround for calling `folder-hook` for `$record` folders
+
+- [split-mailboxes](https://github.com/neomutt/neomutt-old/tree/split-mailboxes)
+  Put each mailbox type in a separate directory
+
+- [unused-macro](https://github.com/neomutt/neomutt-old/tree/unused-macro)
+  Mark function parameters with `__attribute__((__unused__))`
+
+- [usr1](https://github.com/neomutt/neomutt-old/tree/usr1)
+  Hooks for `SIGUSR1`, `SIGUSR2` https://github.com/neomutt/neomutt/issues/922
 
 ## NeoMutt 2017-10-27
 
