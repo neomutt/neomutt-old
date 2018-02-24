@@ -7,4 +7,3 @@ debian/extra/samples/*
 debian/tmp/etc/neomuttrc
 debian/tmp/usr/share/doc/neomutt/samples/*
 doc/neomuttrc*
-doc/neomutt-syntax.vim

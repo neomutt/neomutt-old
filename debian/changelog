@@ -1,3 +1,19 @@
+neomutt (1:20180223-1lxtec1) unstable; urgency=medium
+
+  * New upstream release neomutt-20180223.
+  * Switched to lmdb as hcache. qdbm is orphaned in Debian.
+  * Don't install neomutt-syntax.vim anymore. Distributed directly from vim.
+  * Refreshed version patch.
+  * Removed old-patches from debian/patches.
+  * Declare compliance with Debian Policy 4.1.3. (No changes needed.)
+  * Switch to debhelper compatibility level 11.
+    + Update versioned debhelper build-depency accordingly.
+    + Use technique described in #887390 to workaround incompatibility
+      between dh v11 and autosetup.
+  * Use encrypted transport protocol for version URI in copyright.
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sat, 24 Feb 2018 09:46:11 +0100
+
 neomutt (1:20171215-1lxtec1) unstable; urgency=medium
 
   * New upstream release neomutt-20171215

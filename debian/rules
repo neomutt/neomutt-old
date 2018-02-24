@@ -10,9 +10,8 @@ LDFLAGS+=-pie
 ###
 # header cache backend
 # HCACHE_DB := bdb
-# HCACHE_DB := lmdb
+HCACHE_DB := lmdb
 # HCACHE_DB := gdbm
-HCACHE_DB := qdbm
 # HCACHE_DB := tokyocabinet
 # HCACHE_DB := kyotocabinet
 ###
@@ -33,9 +32,6 @@ endif
 ifeq ($(HCACHE_DB),gdbm)
     hcache_db := --gdbm
 endif
-ifeq ($(HCACHE_DB),qdbm)
-    hcache_db := --qdbm
-endif
 ifeq ($(HCACHE_DB),tokyocabinet)
     hcache_db := --tokyocabinet
 endif
@@ -47,7 +43,7 @@ endif
 	dh $@ --without autoreconf
 
 override_dh_auto_configure:
-		dh_auto_configure --			\
+		DH_COMPAT=10 dh_auto_configure --	\
 			--with-mailpath=/var/mail	\
 			--docdir=/usr/share/doc/neomutt	\
 			--libexecdir=/usr/lib		\

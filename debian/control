@@ -3,7 +3,7 @@ Section: mail
 Priority: optional
 Maintainer: Elimar Riesebieter <riesebie@lxtec.de>
 Build-Depends: clang-5.0,
-               debhelper (>= 10),
+               debhelper (>= 11),
                dh-lua,
                docbook-xml,
                docbook-xsl,
@@ -13,16 +13,16 @@ Build-Depends: clang-5.0,
                libgpgme-dev,
                libidn11-dev,
                libkrb5-dev,
+               liblmdb-dev,
                libncurses5-dev,
                libncursesw5-dev,
                libnotmuch-dev [!alpha !hppa !hurd-i386 !powerpcspe !ppc64 !sh4 !sparc64],
-               libqdbm-dev,
                libsasl2-dev,
                pkg-config,
                w3m,
                xsltproc,
                zlib1g-dev
-Standards-Version: 4.1.2
+Standards-Version: 4.1.3
 Homepage: https://www.neomutt.org/
 
 Package: neomutt-common
