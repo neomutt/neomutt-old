@@ -27,14 +27,14 @@
  *
  * | Function                  | Description
  * | :------------------------ | :------------------------------------------
+ * | mutt_regex_compile()      | Create an Regex from a string
+ * | mutt_regex_create()       | Create an Regex from a string
+ * | mutt_regex_free()         | Free a Regex object
  * | mutt_regexlist_add()      | Compile a regex string and add it to a list
  * | mutt_regexlist_free()     | Free a RegexList object
  * | mutt_regexlist_match()    | Does a string match any Regex in the list?
  * | mutt_regexlist_new()      | Create a new RegexList
  * | mutt_regexlist_remove()   | Remove a Regex from a list
- * | mutt_regex_compile()      | Create an Regex from a string
- * | mutt_regex_create()       | Create an Regex from a string
- * | mutt_regex_free()         | Free a Regex object
  * | mutt_replacelist_add()    | Add a pattern and a template to a list
  * | mutt_replacelist_apply()  | Apply replacements to a buffer
  * | mutt_replacelist_free()   | Free a ReplaceList object
@@ -175,12 +175,9 @@ int mutt_regexlist_add(struct RegexList **rl, const char *str, int flags, struct
     t = mutt_regexlist_new();
     t->regex = rx;
     if (last)
-    {
       last->next = t;
-      last = last->next;
-    }
     else
-      *rl = last = t;
+      *rl = t;
   }
   else /* duplicate */
     mutt_regex_free(&rx);
@@ -220,7 +217,7 @@ bool mutt_regexlist_match(struct RegexList *rl, const char *str)
 
   for (; rl; rl = rl->next)
   {
-    if (!rl->regex || rl->regex->regex)
+    if (!rl->regex || !rl->regex->regex)
       continue;
     if (regexec(rl->regex->regex, str, (size_t) 0, (regmatch_t *) 0, (int) 0) == 0)
     {
@@ -369,8 +366,9 @@ int mutt_replacelist_add(struct ReplaceList **rl, const char *pat,
 
   if (t->nmatch > t->regex->regex->re_nsub)
   {
-    snprintf(err->data, err->dsize, "%s", _("Not enough subexpressions for "
-                                            "template"));
+    snprintf(err->data, err->dsize, "%s",
+             _("Not enough subexpressions for "
+               "template"));
     mutt_replacelist_remove(rl, pat);
     return -1;
   }

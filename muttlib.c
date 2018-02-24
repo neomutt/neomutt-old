@@ -66,12 +66,13 @@
 #endif
 
 static const char *xdg_env_vars[] = {
-      [XDG_CONFIG_HOME] = "XDG_CONFIG_HOME",
-      [XDG_CONFIG_DIRS] = "XDG_CONFIG_DIRS",
+  [XDG_CONFIG_HOME] = "XDG_CONFIG_HOME",
+  [XDG_CONFIG_DIRS] = "XDG_CONFIG_DIRS",
 };
 
 static const char *xdg_defaults[] = {
-      [XDG_CONFIG_HOME] = "~/.config", [XDG_CONFIG_DIRS] = "/etc/xdg",
+  [XDG_CONFIG_HOME] = "~/.config",
+  [XDG_CONFIG_DIRS] = "/etc/xdg",
 };
 
 /**
@@ -205,7 +206,7 @@ char *mutt_expand_path_regex(char *s, size_t slen, int regex)
       }
       break;
 
-      /* elm compatibility, @ expands alias to user name */
+        /* elm compatibility, @ expands alias to user name */
 
       case '@':
       {
@@ -474,8 +475,9 @@ void mutt_mktemp_full(char *s, size_t slen, const char *prefix,
                       NONULL(prefix), NONULL(ShortHostname), (int) getuid(),
                       (int) getpid(), mutt_rand64(), suffix ? "." : "", NONULL(suffix));
   if (n >= slen)
-    mutt_debug(1, "%s:%d: ERROR: insufficient buffer space to hold temporary "
-                  "filename! slen=%zu but need %zu\n",
+    mutt_debug(1,
+               "%s:%d: ERROR: insufficient buffer space to hold temporary "
+               "filename! slen=%zu but need %zu\n",
                src, line, slen, n);
   mutt_debug(3, "%s:%d: mutt_mktemp returns \"%s\".\n", src, line, s);
   if (unlink(s) && errno != ENOENT)
@@ -1116,9 +1118,6 @@ void mutt_expando_format(char *buf, size_t buflen, size_t col, int cols, const c
             len = mutt_wstr_trunc(tmp, buflen - wlen, cols - col, NULL);
           memcpy(wptr, tmp, len);
           wptr += len;
-          wlen += len;
-          col += wid;
-          src += pl;
         }
         break; /* skip rest of input */
       }
@@ -1144,7 +1143,6 @@ void mutt_expando_format(char *buf, size_t buflen, size_t col, int cols, const c
             col += pw;
             c--;
           }
-          src += pl;
         }
         break; /* skip rest of input */
       }
@@ -1593,4 +1591,3 @@ int mutt_inbox_cmp(const char *a, const char *b)
 
   return 0;
 }
-

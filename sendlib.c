@@ -336,7 +336,8 @@ int mutt_write_mime_header(struct Body *a, FILE *f)
        * even when they aren't needed.
        */
 
-      if ((mutt_str_strcasecmp(np->attribute, "boundary") == 0) && (strcmp(buffer, tmp) == 0))
+      if ((mutt_str_strcasecmp(np->attribute, "boundary") == 0) &&
+          (strcmp(buffer, tmp) == 0))
         snprintf(buffer, sizeof(buffer), "\"%s\"", tmp);
 
       FREE(&tmp);
@@ -967,8 +968,7 @@ struct Content *mutt_get_content_info(const char *fname, struct Body *b)
   if (b != NULL && b->type == TYPETEXT && (!b->noconv && !b->force_charset))
     mutt_param_set(&b->parameter, "charset",
                    (!info->hibin ? "us-ascii" :
-                                   Charset && !mutt_ch_is_us_ascii(Charset)
-                                   ? Charset : "unknown-8bit"));
+                                   Charset && !mutt_ch_is_us_ascii(Charset) ? Charset : "unknown-8bit"));
 
   return info;
 }
@@ -2948,7 +2948,9 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
   if (post)
     set_noconv_flags(hdr->content, 1);
 
+#ifdef RECORD_FOLDER_HOOK
   mutt_folder_hook(path);
+#endif
   if (mx_open_mailbox(path, MUTT_APPEND | MUTT_QUIET, &f) == NULL)
   {
     mutt_debug(1, "unable to open mailbox %s in append-mode, aborting.\n", path);
@@ -3139,10 +3141,12 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
     set_noconv_flags(hdr->content, 0);
 
 done:
+#ifdef RECORD_FOLDER_HOOK
   /* We ran a folder hook for the destination mailbox,
    * now we run it for the user's current mailbox */
   if (Context && Context->path)
     mutt_folder_hook(Context->path);
+#endif
 
   return rc;
 }

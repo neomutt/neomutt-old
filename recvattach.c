@@ -826,12 +826,11 @@ static void print_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag,
 
 void mutt_print_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag, struct Body *top)
 {
-  struct State state;
+  struct State state = { 0 };
 
   pid_t thepid;
-  if (query_quadoption(Print,
-                       tag ? _("Print tagged attachment(s)?") :
-                             _("Print attachment?")) != MUTT_YES)
+  if (query_quadoption(Print, tag ? _("Print tagged attachment(s)?") :
+                                    _("Print attachment?")) != MUTT_YES)
     return;
 
   if (!AttachSplit)
@@ -839,7 +838,6 @@ void mutt_print_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag, stru
     if (!can_print(actx, top, tag))
       return;
     mutt_endwin(NULL);
-    memset(&state, 0, sizeof(struct State));
     thepid = mutt_create_filter(NONULL(PrintCommand), &state.fpout, NULL, NULL);
     print_attachment_list(actx, fp, tag, top, &state);
     mutt_file_fclose(&state.fpout);
@@ -909,7 +907,7 @@ int mutt_attach_display_loop(struct Menu *menu, int op, struct Header *hdr,
     {
       case OP_DISPLAY_HEADERS:
         Weed = !Weed;
-      /* fallthrough */
+        /* fallthrough */
 
       case OP_VIEW_ATTACH:
         op = mutt_view_attachment(CURATTACH->fp, CURATTACH->content, MUTT_REGULAR, hdr, actx);

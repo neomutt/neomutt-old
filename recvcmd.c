@@ -231,8 +231,7 @@ void mutt_attach_bounce(FILE *fp, struct AttachCtx *actx, struct Body *cur)
   if (!ret)
     mutt_message(p ? _("Message bounced.") : _("Messages bounced."));
   else
-    mutt_error(p ? _("Error bouncing message!") :
-                   _("Error bouncing messages!"));
+    mutt_error(p ? _("Error bouncing message!") : _("Error bouncing messages!"));
 
   mutt_addr_free(&addr);
 }
@@ -503,7 +502,6 @@ static void attach_forward_bodies(FILE *fp, struct Header *hdr, struct AttachCtx
     {
       if (mutt_copy_body(fp, last, cur) == -1)
         goto bail;
-      last = &((*last)->next);
     }
   }
   else

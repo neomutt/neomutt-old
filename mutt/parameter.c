@@ -113,7 +113,7 @@ char *mutt_param_get(const struct ParameterList *p, const char *s)
  * @note If a matching Parameter isn't found a new one will be allocated.
  *       The new Parameter will be inserted at the front of the list.
  */
-void mutt_param_set(struct ParameterList* p, const char *attribute, const char *value)
+void mutt_param_set(struct ParameterList *p, const char *attribute, const char *value)
 {
   if (!p)
     return;
@@ -142,7 +142,7 @@ void mutt_param_set(struct ParameterList* p, const char *attribute, const char *
 
 /**
  * mutt_param_delete - Delete a matching Parameter
- * @param[in[  p         ParameterList
+ * @param[in]  p         ParameterList
  * @param[in]  attribute Attribute to match
  */
 void mutt_param_delete(struct ParameterList *p, const char *attribute)

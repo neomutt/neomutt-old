@@ -42,6 +42,7 @@
  * | mutt_str_lws_len()            | Measure the linear-white-space at the beginning of a string
  * | mutt_str_lws_rlen()           | Measure the linear-white-space at the end of a string
  * | mutt_str_next_word()          | Find the next word in a string
+ * | mutt_str_pretty_size()        | Display an abbreviated size, e.g. 3.4K
  * | mutt_str_remove_trailing_ws() | Trim trailing whitespace from a string
  * | mutt_str_replace()            | Replace one string with another
  * | mutt_str_rstrnstr()           | Find last instance of a substring
@@ -252,10 +253,10 @@ int mutt_str_atoi(const char *str, int *dst)
  * mutt_str_atoui - Convert ASCII string to an unsigned integer
  * @param[in]  str String to read
  * @param[out] dst Store the result
- * @retval  1 Successful conversion, with trailing characters 
- * @retval  0 Successful conversion                           
- * @retval -1 Invalid input                                   
- * @retval -2 Input out of range                              
+ * @retval  1 Successful conversion, with trailing characters
+ * @retval  0 Successful conversion
+ * @retval -1 Invalid input
+ * @retval -2 Input out of range
  *
  * @note
  * This function's return value differs from the other functions.
@@ -284,9 +285,9 @@ int mutt_str_atoui(const char *str, unsigned int *dst)
  * mutt_str_atoul - Convert ASCII string to an unsigned long
  * @param[in]  str String to read
  * @param[out] dst Store the result
- * @retval  1 Successful conversion, with trailing characters 
- * @retval  0 Successful conversion                           
- * @retval -1 Invalid input                                   
+ * @retval  1 Successful conversion, with trailing characters
+ * @retval  0 Successful conversion
+ * @retval -1 Invalid input
  *
  * @note
  * This function's return value differs from the other functions.
@@ -986,7 +987,7 @@ const char *mutt_str_getenv(const char *name)
 
   const char *val = getenv(name);
   if (val && (val[0] != '\0'))
-      return val;
+    return val;
 
   return NULL;
 }

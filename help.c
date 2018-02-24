@@ -225,7 +225,7 @@ static void format_line(FILE *f, int ismacro, const char *t1, const char *t2, co
   split = (MuttIndexWindow->cols < 40);
   if (split)
   {
-    col_a = col = 0;
+    col = 0;
     col_b = LONG_STRING;
     fputc('\n', f);
   }
@@ -321,8 +321,7 @@ static void dump_menu(FILE *f, int menu)
       {
         b = help_lookup_function(map->op, menu);
         format_line(f, 0, buf, b ? b->name : "UNKNOWN",
-                    b ? _(HelpStrings[b->op]) :
-                        _("ERROR: please report this bug"));
+                    b ? _(HelpStrings[b->op]) : _("ERROR: please report this bug"));
       }
     }
   }
