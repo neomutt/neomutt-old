@@ -1,3 +1,9 @@
+neomutt (1:20180223-1lxtec3) unstable; urgency=medium
+
+  * Added libxml2-utils to BuildDepends.
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 09 Mar 2018 00:21:29 +0100
+
 neomutt (1:20180223-1lxtec2) unstable; urgency=medium
 
   * Update to latest autosetup. runstatedir is now known to configure
