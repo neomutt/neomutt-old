@@ -24,10 +24,6 @@
  * @page conn_getdomain DNS lookups
  *
  * DNS lookups
- *
- * | Function           | Description
- * | :----------------- | :-----------------------------------
- * | getdnsdomainname() | Lookup the host's name using DNS
  */
 
 #include "config.h"
@@ -36,7 +32,7 @@
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
-#include "mutt/debug.h"
+#include "mutt/logging.h"
 #include "mutt/memory.h"
 #include "mutt/string2.h"
 
@@ -70,7 +66,6 @@ int getdnsdomainname(char *d, size_t len)
    * If it takes longer, the system is mis-configured and the network is not
    * working properly, so...
    */
-  int status;
   struct timespec timeout = { 0, 100000000 };
   struct gaicb *reqs[1];
   reqs[0] = mutt_mem_calloc(1, sizeof(*reqs[0]));
@@ -79,7 +74,7 @@ int getdnsdomainname(char *d, size_t len)
   if (getaddrinfo_a(GAI_NOWAIT, reqs, 1, NULL) == 0)
   {
     gai_suspend((const struct gaicb *const *) reqs, 1, &timeout);
-    status = gai_error(reqs[0]);
+    const int status = gai_error(reqs[0]);
     if (status == 0)
       h = reqs[0]->ar_result;
     else if (status == EAI_INPROGRESS)
@@ -110,7 +105,7 @@ int getdnsdomainname(char *d, size_t len)
   {
     mutt_str_strfcpy(d, ++p, len);
     rc = 0;
-    mutt_debug(1, "%s\n", d);
+    mutt_debug(1, "Hostname: %s\n", d);
     freeaddrinfo(h);
   }
 

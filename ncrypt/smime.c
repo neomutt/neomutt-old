@@ -757,7 +757,6 @@ static struct SmimeKey *smime_ask_for_key(char *prompt, short abilities, short p
       return key;
 
     mutt_error(_("No matching keys found for \"%s\""), resp);
-    mutt_sleep(0);
   }
 }
 
@@ -771,12 +770,12 @@ static void getkeys(char *mailbox)
 {
   struct SmimeKey *key = NULL;
   char *k = NULL;
-  char buf[STRING];
 
   key = smime_get_key_by_addr(mailbox, KEYFLAG_CANENCRYPT, 0, 1);
 
   if (!key)
   {
+    char buf[STRING];
     snprintf(buf, sizeof(buf), _("Enter keyID for %s: "), mailbox);
     key = smime_ask_for_key(buf, KEYFLAG_CANENCRYPT, 0);
   }
@@ -879,13 +878,12 @@ char *smime_find_keys(struct Address *addrlist, int oppenc_mode)
 
   for (p = addrlist; p; p = p->next)
   {
-    char buf[LONG_STRING];
-
     q = p;
 
     key = smime_get_key_by_addr(q->mailbox, KEYFLAG_CANENCRYPT, 1, !oppenc_mode);
     if (!key && !oppenc_mode)
     {
+      char buf[LONG_STRING];
       snprintf(buf, sizeof(buf), _("Enter keyID for %s: "), q->mailbox);
       key = smime_ask_for_key(buf, KEYFLAG_CANENCRYPT, 1);
     }
@@ -968,7 +966,7 @@ static int smime_handle_cert_email(char *certificate, char *mailbox, int copy,
 
   if (rc == -1)
   {
-    mutt_endwin(NULL);
+    mutt_endwin();
     mutt_file_copy_stream(fperr, stdout);
     mutt_any_key_to_continue(_("Error: unable to create OpenSSL subprocess!"));
     rc = 1;
@@ -1113,7 +1111,7 @@ static char *smime_extract_certificate(char *infile)
 static char *smime_extract_signer_certificate(char *infile)
 {
   FILE *fpout = NULL, *fperr = NULL;
-  char pk7out[_POSIX_PATH_MAX], certfile[_POSIX_PATH_MAX];
+  char certfile[_POSIX_PATH_MAX];
   char tmpfname[_POSIX_PATH_MAX];
   pid_t thepid;
   int empty;
@@ -1145,7 +1143,6 @@ static char *smime_extract_signer_certificate(char *infile)
     mutt_any_key_to_continue(_("Error: unable to create OpenSSL subprocess!"));
     mutt_file_fclose(&fperr);
     mutt_file_fclose(&fpout);
-    mutt_file_unlink(pk7out);
     mutt_file_unlink(certfile);
     return NULL;
   }
@@ -1159,7 +1156,7 @@ static char *smime_extract_signer_certificate(char *infile)
   empty = (fgetc(fpout) == EOF);
   if (empty)
   {
-    mutt_endwin(NULL);
+    mutt_endwin();
     mutt_file_copy_stream(fperr, stdout);
     mutt_any_key_to_continue(NULL);
     mutt_file_fclose(&fpout);
@@ -1214,11 +1211,11 @@ void smime_invoke_import(char *infile, char *mailbox)
     }
   }
 
-  mutt_endwin(NULL);
+  mutt_endwin();
   certfile = smime_extract_certificate(infile);
   if (certfile)
   {
-    mutt_endwin(NULL);
+    mutt_endwin();
 
     thepid = smime_invoke(&smimein, NULL, NULL, -1, fileno(fpout), fileno(fperr), certfile,
                           NULL, NULL, NULL, NULL, NULL, NULL, SmimeImportCertCommand);
@@ -1463,15 +1460,13 @@ struct Body *smime_build_smime_entity(struct Body *a, char *certlist)
  */
 static char *openssl_md_to_smime_micalg(char *md)
 {
-  char *micalg = NULL;
-  size_t l;
-
   if (!md)
     return 0;
 
+  char *micalg = NULL;
   if (mutt_str_strncasecmp("sha", md, 3) == 0)
   {
-    l = strlen(md) + 2;
+    const size_t l = strlen(md) + 2;
     micalg = mutt_mem_malloc(l);
     snprintf(micalg, l, "sha-%s", md + 3);
   }
@@ -1756,12 +1751,8 @@ int smime_verify_one(struct Body *sigbdy, struct State *s, const char *tempfile)
  */
 static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *out_file)
 {
-  size_t len = 0;
-  int c;
-  char buf[HUGE_STRING];
   char outfile[_POSIX_PATH_MAX], errfile[_POSIX_PATH_MAX];
   char tmpfname[_POSIX_PATH_MAX];
-  char tmptmpfname[_POSIX_PATH_MAX];
   FILE *smimeout = NULL, *smimein = NULL, *smimeerr = NULL;
   FILE *tmpfp = NULL, *tmpfp_buffer = NULL, *fpout = NULL;
   struct stat info;
@@ -1850,7 +1841,7 @@ static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *o
     fflush(smimeerr);
     rewind(smimeerr);
 
-    c = fgetc(smimeerr);
+    const int c = fgetc(smimeerr);
     if (c != EOF)
     {
       ungetc(c, smimeerr);
@@ -1873,6 +1864,7 @@ static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *o
     fflush(smimeout);
     rewind(smimeout);
 
+    char tmptmpfname[_POSIX_PATH_MAX];
     if (out_file)
       fpout = out_file;
     else
@@ -1887,9 +1879,10 @@ static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *o
         return NULL;
       }
     }
+    char buf[HUGE_STRING];
     while (fgets(buf, sizeof(buf) - 1, smimeout) != NULL)
     {
-      len = mutt_str_strlen(buf);
+      const size_t len = mutt_str_strlen(buf);
       if (len > 1 && buf[len - 2] == '\r')
       {
         buf[len - 2] = '\n';
@@ -2103,10 +2096,10 @@ int smime_send_menu(struct Header *msg)
           switch (mutt_multi_choice(_("Choose algorithm family:"
                                       " 1: DES, 2: RC2, 3: AES,"
                                       " or (c)lear? "),
-                                    _("drac")))
+                                    _("123c")))
           {
             case 1:
-              switch (choice = mutt_multi_choice(_("1: DES, 2: Triple-DES "), _("dt")))
+              switch (choice = mutt_multi_choice(_("1: DES, 2: Triple-DES "), _("12")))
               {
                 case 1:
                   mutt_str_replace(&SmimeEncryptWith, "des");
@@ -2119,7 +2112,7 @@ int smime_send_menu(struct Header *msg)
 
             case 2:
               switch (choice = mutt_multi_choice(
-                          _("1: RC2-40, 2: RC2-64, 3: RC2-128 "), _("468")))
+                          _("1: RC2-40, 2: RC2-64, 3: RC2-128 "), _("123")))
               {
                 case 1:
                   mutt_str_replace(&SmimeEncryptWith, "rc2-40");
@@ -2135,7 +2128,7 @@ int smime_send_menu(struct Header *msg)
 
             case 3:
               switch (choice = mutt_multi_choice(
-                          _("1: AES128, 2: AES192, 3: AES256 "), _("895")))
+                          _("1: AES128, 2: AES192, 3: AES256 "), _("123")))
               {
                 case 1:
                   mutt_str_replace(&SmimeEncryptWith, "aes128");

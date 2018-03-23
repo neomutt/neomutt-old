@@ -22,12 +22,10 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * This file contains all of the PGP routines necessary to sign, encrypt,
- * verify and decrypt PGP messages in either the new PGP/MIME format, or
- * in the older Application/Pgp format.  It also contains some code to
- * cache the user's passphrase for repeat use when decrypting or signing
- * a message.
+/* This file contains all of the PGP routines necessary to sign, encrypt,
+ * verify and decrypt PGP messages in either the new PGP/MIME format, or in the
+ * older Application/Pgp format.  It also contains some code to cache the
+ * user's passphrase for repeat use when decrypting or signing a message.
  */
 
 #include "config.h"
@@ -507,7 +505,6 @@ int pgp_application_pgp_handler(struct Body *m, struct State *s)
         if (could_not_decrypt && !(s->flags & MUTT_DISPLAY))
         {
           mutt_error(_("Could not decrypt PGP message"));
-          mutt_sleep(1);
           rc = -1;
           goto out;
         }
@@ -704,7 +701,6 @@ int pgp_verify_one(struct Body *sigbdy, struct State *s, const char *tempfile)
   FILE *fp = NULL, *pgpout = NULL, *pgperr = NULL;
   pid_t thepid;
   int badsig = -1;
-  int rv;
 
   snprintf(sigfile, sizeof(sigfile), "%s.asc", tempfile);
 
@@ -743,7 +739,7 @@ int pgp_verify_one(struct Body *sigbdy, struct State *s, const char *tempfile)
     if (pgp_copy_checksig(pgperr, s->fpout) >= 0)
       badsig = 0;
 
-    rv = mutt_wait_filter(thepid);
+    const int rv = mutt_wait_filter(thepid);
     if (rv)
       badsig = -1;
 
@@ -802,7 +798,7 @@ void pgp_extract_keys_from_attachment_list(FILE *fp, int tag, struct Body *top)
     return;
   }
 
-  mutt_endwin(NULL);
+  mutt_endwin();
   OPT_DONT_HANDLE_PGP_KEYS = true;
 
   for (; top; top = top->next)
@@ -827,7 +823,6 @@ static struct Body *pgp_decrypt_part(struct Body *a, struct State *s,
   FILE *pgpin = NULL, *pgpout = NULL, *pgperr = NULL, *pgptmp = NULL;
   struct stat info;
   struct Body *tattach = NULL;
-  size_t len;
   char pgperrfile[_POSIX_PATH_MAX];
   char pgptmpfile[_POSIX_PATH_MAX];
   pid_t thepid;
@@ -883,7 +878,7 @@ static struct Body *pgp_decrypt_part(struct Body *a, struct State *s,
    */
   while (fgets(buf, sizeof(buf) - 1, pgpout) != NULL)
   {
-    len = mutt_str_strlen(buf);
+    size_t len = mutt_str_strlen(buf);
     if (len > 1 && buf[len - 2] == '\r')
       strcpy(buf + len - 2, "\n");
     fputs(buf, fpout);
@@ -1086,7 +1081,6 @@ int pgp_encrypted_handler(struct Body *a, struct State *s)
   else
   {
     mutt_error(_("Could not decrypt PGP message"));
-    mutt_sleep(2);
     /* void the passphrase, even if it's not necessarily the problem */
     pgp_void_passphrase();
     rc = -1;
@@ -1660,7 +1654,6 @@ struct Body *pgp_traditional_encryptsign(struct Body *a, int flags, char *keylis
 int pgp_send_menu(struct Header *msg)
 {
   struct PgpKeyInfo *p = NULL;
-  char input_signas[SHORT_STRING];
   char *prompt = NULL, *letters = NULL, *choices = NULL;
   char promptbuf[LONG_STRING];
   int choice;
@@ -1680,13 +1673,13 @@ int pgp_send_menu(struct Header *msg)
   char *mime_inline = NULL;
   if (msg->security & INLINE)
   {
-    /* L10N: These next string MUST have the same highlighted letter
+    /* L10N: The next string MUST have the same highlighted letter
              One of them will appear in each of the three strings marked "(inline"), below. */
     mime_inline = _("PGP/M(i)ME");
   }
   else
   {
-    /* L10N: These previous string MUST have the same highlighted letter
+    /* L10N: The previous string MUST have the same highlighted letter
              One of them will appear in each of the three strings marked "(inline"), below. */
     mime_inline = _("(i)nline");
   }
@@ -1805,6 +1798,7 @@ int pgp_send_menu(struct Header *msg)
         p = pgp_ask_for_key(_("Sign as: "), NULL, 0, PGP_SECRING);
         if (p)
         {
+          char input_signas[SHORT_STRING];
           snprintf(input_signas, sizeof(input_signas), "0x%s", pgp_fpr_or_lkeyid(p));
           mutt_str_replace(&PgpSignAs, input_signas);
           pgp_free_key(&p);

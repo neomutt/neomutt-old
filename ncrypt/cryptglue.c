@@ -21,16 +21,15 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
-   This file dispatches the generic crypto functions to the
-   implemented backend or provides dummy stubs.  Note, that some
-   generic functions are handled in crypt.c.
-*/
+/* This file dispatches the generic crypto functions to the implemented backend
+ * or provides dummy stubs.  Note, that some generic functions are handled in
+ * crypt.c.
+ */
 
-/* Note: This file has been changed to make use of the new module
-   system.  Consequently there's a 1:1 mapping between the functions
-   contained in this file and the functions implemented by the crypto
-   modules.  */
+/* Note: This file has been changed to make use of the new module system.
+ * Consequently there's a 1:1 mapping between the functions contained in this
+ * file and the functions implemented by the crypto modules.
+ */
 
 #include "config.h"
 #include <stdio.h>
@@ -120,22 +119,22 @@ void crypt_init(void)
  */
 void crypt_invoke_message(int type)
 {
-  if ((WithCrypto & APPLICATION_PGP) && (type & APPLICATION_PGP))
+  if (((WithCrypto & APPLICATION_PGP) != 0) && (type & APPLICATION_PGP))
     mutt_message(_("Invoking PGP..."));
-  else if ((WithCrypto & APPLICATION_SMIME) && (type & APPLICATION_SMIME))
+  else if (((WithCrypto & APPLICATION_SMIME) != 0) && (type & APPLICATION_SMIME))
     mutt_message(_("Invoking S/MIME..."));
 }
 
 /* Returns 1 if a module backend is registered for the type */
 int crypt_has_module_backend(int type)
 {
-  if ((WithCrypto & APPLICATION_PGP) && (type & APPLICATION_PGP) &&
+  if (((WithCrypto & APPLICATION_PGP) != 0) && (type & APPLICATION_PGP) &&
       crypto_module_lookup(APPLICATION_PGP))
   {
     return 1;
   }
 
-  if ((WithCrypto & APPLICATION_SMIME) && (type & APPLICATION_SMIME) &&
+  if (((WithCrypto & APPLICATION_SMIME) != 0) && (type & APPLICATION_SMIME) &&
       crypto_module_lookup(APPLICATION_SMIME))
   {
     return 1;

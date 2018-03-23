@@ -85,7 +85,7 @@ int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
 
     if (!MoreArgs(s))
     {
-      mutt_str_strfcpy(err->data, _("too few arguments"), err->dsize);
+      mutt_buffer_printf(err, _("%s: too few arguments"), buf->data);
       goto error;
     }
   }
@@ -98,13 +98,13 @@ int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
 
   if (!command.data)
   {
-    mutt_str_strfcpy(err->data, _("too few arguments"), err->dsize);
+    mutt_buffer_printf(err, _("%s: too few arguments"), buf->data);
     goto error;
   }
 
   if (MoreArgs(s))
   {
-    mutt_str_strfcpy(err->data, _("too many arguments"), err->dsize);
+    mutt_buffer_printf(err, _("%s: too many arguments"), buf->data);
     goto error;
   }
 
@@ -365,7 +365,6 @@ void mutt_folder_hook(const char *path)
         {
           mutt_error("%s", err.data);
           FREE(&token.data);
-          mutt_sleep(1); /* pause a moment to let the user see the error */
           current_hook_type = 0;
           FREE(&err.data);
 
@@ -425,7 +424,6 @@ void mutt_message_hook(struct Context *ctx, struct Header *hdr, int type)
         {
           FREE(&token.data);
           mutt_error("%s", err.data);
-          mutt_sleep(1);
           current_hook_type = 0;
           FREE(&err.data);
 
@@ -475,7 +473,6 @@ void mutt_default_save(char *path, size_t pathlen, struct Header *hdr)
   *path = '\0';
   if (addr_hook(path, pathlen, MUTT_SAVEHOOK, Context, hdr) != 0)
   {
-    char tmp[_POSIX_PATH_MAX];
     struct Address *addr = NULL;
     struct Envelope *env = hdr->env;
     bool from_me = mutt_addr_is_user(env->from);
@@ -492,6 +489,7 @@ void mutt_default_save(char *path, size_t pathlen, struct Header *hdr)
       addr = NULL;
     if (addr)
     {
+      char tmp[_POSIX_PATH_MAX];
       mutt_safe_path(tmp, sizeof(tmp), addr);
       snprintf(path, pathlen, "=%s", tmp);
     }
@@ -500,15 +498,13 @@ void mutt_default_save(char *path, size_t pathlen, struct Header *hdr)
 
 void mutt_select_fcc(char *path, size_t pathlen, struct Header *hdr)
 {
-  struct Address *addr = NULL;
-  char buf[_POSIX_PATH_MAX];
-  struct Envelope *env = hdr->env;
-
   if (addr_hook(path, pathlen, MUTT_FCCHOOK, NULL, hdr) != 0)
   {
+    struct Envelope *env = hdr->env;
     if ((SaveName || ForceName) && (env->to || env->cc || env->bcc))
     {
-      addr = env->to ? env->to : (env->cc ? env->cc : env->bcc);
+      struct Address *addr = env->to ? env->to : (env->cc ? env->cc : env->bcc);
+      char buf[_POSIX_PATH_MAX];
       mutt_safe_path(buf, sizeof(buf), addr);
       mutt_file_concat_path(path, NONULL(Folder), buf, pathlen);
       if (!ForceName && mx_access(path, W_OK) != 0)
@@ -573,7 +569,6 @@ void mutt_account_hook(const char *url)
         FREE(&token.data);
         mutt_error("%s", err.data);
         FREE(&err.data);
-        mutt_sleep(1);
 
         inhook = false;
         return;
@@ -607,7 +602,6 @@ void mutt_timeout_hook(void)
     if (mutt_parse_rc_line(hook->command, &token, &err) == -1)
     {
       mutt_error("%s", err.data);
-      mutt_sleep(1);
 
       /* The hooks should be independent of each other, so even though this on
        * failed, we'll carry on with the others. */
@@ -642,7 +636,6 @@ void mutt_startup_shutdown_hook(int type)
     if (mutt_parse_rc_line(hook->command, &token, &err) == -1)
     {
       mutt_error("%s", err.data);
-      mutt_sleep(1);
     }
   }
   FREE(&token.data);

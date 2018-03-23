@@ -112,40 +112,40 @@ static void convert_to_state(iconv_t cd, char *bufi, size_t *l, struct State *s)
 
 static void decode_xbit(struct State *s, long len, int istext, iconv_t cd)
 {
-  int c, ch;
+  if (!istext)
+  {
+    mutt_file_copy_bytes(s->fpin, s->fpout, len);
+    return;
+  }
+
+  state_set_prefix(s);
+
+  int c;
   char bufi[BUFI_SIZE];
   size_t l = 0;
-
-  if (istext)
+  while ((c = fgetc(s->fpin)) != EOF && len--)
   {
-    state_set_prefix(s);
-
-    while ((c = fgetc(s->fpin)) != EOF && len--)
+    if (c == '\r' && len)
     {
-      if (c == '\r' && len)
+      const int ch = fgetc(s->fpin);
+      if (ch == '\n')
       {
-        ch = fgetc(s->fpin);
-        if (ch == '\n')
-        {
-          c = ch;
-          len--;
-        }
-        else
-          ungetc(ch, s->fpin);
+        c = ch;
+        len--;
       }
-
-      bufi[l++] = c;
-      if (l == sizeof(bufi))
-        convert_to_state(cd, bufi, &l, s);
+      else
+        ungetc(ch, s->fpin);
     }
 
-    convert_to_state(cd, bufi, &l, s);
-    convert_to_state(cd, 0, 0, s);
-
-    state_reset_prefix(s);
+    bufi[l++] = c;
+    if (l == sizeof(bufi))
+      convert_to_state(cd, bufi, &l, s);
   }
-  else
-    mutt_file_copy_bytes(s->fpin, s->fpout, len);
+
+  convert_to_state(cd, bufi, &l, s);
+  convert_to_state(cd, 0, 0, s);
+
+  state_reset_prefix(s);
 }
 
 static int qp_decode_triple(char *s, char *d)
@@ -235,10 +235,7 @@ static void decode_quoted(struct State *s, long len, int istext, iconv_t cd)
   char line[STRING];
   char decline[2 * STRING];
   size_t l = 0;
-  size_t linelen; /* number of input bytes in `line' */
   size_t l3;
-
-  int last; /* store the last character in the input line */
 
   if (istext)
     state_set_prefix(s);
@@ -255,14 +252,14 @@ static void decode_quoted(struct State *s, long len, int istext, iconv_t cd)
     if (fgets(line, MIN((ssize_t) sizeof(line), len + 1), s->fpin) == NULL)
       break;
 
-    linelen = strlen(line);
+    size_t linelen = strlen(line);
     len -= linelen;
 
     /*
      * inspect the last character we read so we can tell if we got the
      * entire line.
      */
-    last = linelen ? line[linelen - 1] : 0;
+    const int last = linelen ? line[linelen - 1] : 0;
 
     /* chop trailing whitespace if we got the full line */
     if (last == '\n')
@@ -285,7 +282,7 @@ static void decode_quoted(struct State *s, long len, int istext, iconv_t cd)
 void mutt_decode_base64(struct State *s, size_t len, int istext, iconv_t cd)
 {
   char buf[5];
-  int c1, c2, c3, c4, ch, i;
+  int ch, i;
   char bufi[BUFI_SIZE];
   size_t l = 0;
 
@@ -312,20 +309,20 @@ void mutt_decode_base64(struct State *s, size_t len, int istext, iconv_t cd)
       break;
     }
 
-    c1 = base64val(buf[0]);
-    c2 = base64val(buf[1]);
+    const int c1 = base64val(buf[0]);
+    const int c2 = base64val(buf[1]);
     ch = (c1 << 2) | (c2 >> 4);
     bufi[l++] = ch;
 
     if (buf[2] == '=')
       break;
-    c3 = base64val(buf[2]);
+    const int c3 = base64val(buf[2]);
     ch = ((c2 & 0xf) << 4) | (c3 >> 2);
     bufi[l++] = ch;
 
     if (buf[3] == '=')
       break;
-    c4 = base64val(buf[3]);
+    const int c4 = base64val(buf[3]);
     ch = ((c3 & 0x3) << 6) | c4;
     bufi[l++] = ch;
 
@@ -349,7 +346,6 @@ static unsigned char decode_byte(char ch)
 static void decode_uuencoded(struct State *s, long len, int istext, iconv_t cd)
 {
   char tmps[SHORT_STRING];
-  char linelen, c, l, out;
   char *pt = NULL;
   char bufi[BUFI_SIZE];
   size_t k = 0;
@@ -373,13 +369,13 @@ static void decode_uuencoded(struct State *s, long len, int istext, iconv_t cd)
     if (mutt_str_strncmp(tmps, "end", 3) == 0)
       break;
     pt = tmps;
-    linelen = decode_byte(*pt);
+    const unsigned char linelen = decode_byte(*pt);
     pt++;
-    for (c = 0; c < linelen;)
+    for (unsigned char c = 0; c < linelen;)
     {
-      for (l = 2; l <= 6; l += 2)
+      for (char l = 2; l <= 6; l += 2)
       {
-        out = decode_byte(*pt) << l;
+        char out = decode_byte(*pt) << l;
         pt++;
         out |= (decode_byte(*pt) >> (6 - l));
         bufi[k++] = out;
@@ -471,7 +467,6 @@ struct EnrichedState
 static void enriched_wrap(struct EnrichedState *stte)
 {
   int x;
-  int extra;
 
   if (stte->line_len)
   {
@@ -507,8 +502,8 @@ static void enriched_wrap(struct EnrichedState *stte)
       }
     }
 
-    extra = stte->wrap_margin - stte->line_len - stte->indent_len -
-            (stte->tag_level[RICH_INDENT_RIGHT] * INDENT_SIZE);
+    const int extra = stte->wrap_margin - stte->line_len - stte->indent_len -
+                      (stte->tag_level[RICH_INDENT_RIGHT] * INDENT_SIZE);
     if (extra > 0)
     {
       if (stte->tag_level[RICH_CENTER])
@@ -912,7 +907,6 @@ static int is_mmnoask(const char *buf)
   char *p = NULL;
   const char *val = NULL;
   char tmp[LONG_STRING], *q = NULL;
-  int lng;
 
   val = mutt_str_getenv("MM_NOASK");
   if (val)
@@ -941,7 +935,7 @@ static int is_mmnoask(const char *buf)
       }
       else
       {
-        lng = mutt_str_strlen(p);
+        const int lng = mutt_str_strlen(p);
         if (buf[lng] == '/' && (mutt_str_strncasecmp(buf, p, lng) == 0))
           return 1;
       }
@@ -1009,10 +1003,8 @@ static int alternative_handler(struct Body *a, struct State *s)
 {
   struct Body *choice = NULL;
   struct Body *b = NULL;
-  int type = 0;
   bool mustfree = false;
   int rc = 0;
-  int count = 0;
 
   if (a->encoding == ENCBASE64 || a->encoding == ENCQUOTEDPRINTABLE || a->encoding == ENCUUENCODED)
   {
@@ -1094,6 +1086,7 @@ static int alternative_handler(struct Body *a, struct State *s)
       b = a->parts;
     else
       b = a;
+    int type = 0;
     while (b)
     {
       if (b->type == TYPETEXT)
@@ -1153,6 +1146,7 @@ static int alternative_handler(struct Body *a, struct State *s)
         b = a->parts;
       else
         b = a;
+      int count = 0;
       while (b)
       {
         if (choice != b)
@@ -1260,11 +1254,11 @@ int mutt_can_decode(struct Body *a)
         return 1;
     }
   }
-  else if (WithCrypto && a->type == TYPEAPPLICATION)
+  else if ((WithCrypto != 0) && a->type == TYPEAPPLICATION)
   {
-    if ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(a))
+    if (((WithCrypto & APPLICATION_PGP) != 0) && mutt_is_application_pgp(a))
       return 1;
-    if ((WithCrypto & APPLICATION_SMIME) && mutt_is_application_smime(a))
+    if (((WithCrypto & APPLICATION_SMIME) != 0) && mutt_is_application_smime(a))
       return 1;
   }
 
@@ -1501,13 +1495,13 @@ static int external_body_handler(struct Body *b, struct State *s)
     if (s->flags & (MUTT_DISPLAY | MUTT_PRINTING))
     {
       char *length = NULL;
-      char pretty_size[10];
 
       state_mark_attach(s);
       state_printf(s, _("[-- This %s/%s attachment "), TYPE(b->parts), b->parts->subtype);
       length = mutt_param_get(&b->parameter, "length");
       if (length)
       {
+        char pretty_size[10];
         mutt_str_pretty_size(pretty_size, sizeof(pretty_size), strtol(length, NULL, 10));
         state_printf(s, _("(size %s bytes) "), pretty_size);
       }
@@ -1580,23 +1574,27 @@ void mutt_decode_attachment(struct Body *b, struct State *s)
   switch (b->encoding)
   {
     case ENCQUOTEDPRINTABLE:
-      decode_quoted(
-          s, b->length,
-          istext || ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(b)), cd);
+      decode_quoted(s, b->length,
+                    istext || (((WithCrypto & APPLICATION_PGP) != 0) &&
+                               mutt_is_application_pgp(b)),
+                    cd);
       break;
     case ENCBASE64:
-      mutt_decode_base64(
-          s, b->length,
-          istext || ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(b)), cd);
+      mutt_decode_base64(s, b->length,
+                         istext || (((WithCrypto & APPLICATION_PGP) != 0) &&
+                                    mutt_is_application_pgp(b)),
+                         cd);
       break;
     case ENCUUENCODED:
-      decode_uuencoded(
-          s, b->length,
-          istext || ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(b)), cd);
+      decode_uuencoded(s, b->length,
+                       istext || (((WithCrypto & APPLICATION_PGP) != 0) &&
+                                  mutt_is_application_pgp(b)),
+                       cd);
       break;
     default:
       decode_xbit(s, b->length,
-                  istext || ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(b)),
+                  istext || (((WithCrypto & APPLICATION_PGP) != 0) &&
+                             mutt_is_application_pgp(b)),
                   cd);
       break;
   }
@@ -1638,12 +1636,8 @@ static int text_plain_handler(struct Body *b, struct State *s)
 static int run_decode_and_handler(struct Body *b, struct State *s,
                                   handler_t handler, int plaintext)
 {
-  int orig_type;
   char *save_prefix = NULL;
   FILE *fp = NULL;
-#ifndef USE_FMEMOPEN
-  char tempfile[_POSIX_PATH_MAX];
-#endif
   size_t tmplength = 0;
   LOFF_T tmpoffset = 0;
   int decode = 0;
@@ -1664,8 +1658,10 @@ static int run_decode_and_handler(struct Body *b, struct State *s,
                                                         * with 8bit encoding.
                                                         */
   {
-    orig_type = b->type;
-
+    const int orig_type = b->type;
+#ifndef USE_FMEMOPEN
+    char tempfile[_POSIX_PATH_MAX];
+#endif
     if (!plaintext)
     {
       /* decode to a tempfile, saving the original destination */
@@ -1825,7 +1821,7 @@ int mutt_body_handler(struct Body *b, struct State *s)
       /* avoid copying this part twice since removing the transfer-encoding is
        * the only operation needed.
        */
-      if ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(b))
+      if (((WithCrypto & APPLICATION_PGP) != 0) && mutt_is_application_pgp(b))
         handler = crypt_pgp_application_pgp_handler;
       else if (ReflowText &&
                (mutt_str_strcasecmp("flowed",
@@ -1861,7 +1857,7 @@ int mutt_body_handler(struct Body *b, struct State *s)
     {
       handler = alternative_handler;
     }
-    else if (WithCrypto && (mutt_str_strcasecmp("signed", b->subtype) == 0))
+    else if ((WithCrypto != 0) && (mutt_str_strcasecmp("signed", b->subtype) == 0))
     {
       p = mutt_param_get(&b->parameter, "protocol");
 
@@ -1888,16 +1884,16 @@ int mutt_body_handler(struct Body *b, struct State *s)
       b->encoding = ENC7BIT;
     }
   }
-  else if (WithCrypto && b->type == TYPEAPPLICATION)
+  else if ((WithCrypto != 0) && b->type == TYPEAPPLICATION)
   {
     if (OPT_DONT_HANDLE_PGP_KEYS && (mutt_str_strcasecmp("pgp-keys", b->subtype) == 0))
     {
       /* pass raw part through for key extraction */
       plaintext = true;
     }
-    else if ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(b))
+    else if (((WithCrypto & APPLICATION_PGP) != 0) && mutt_is_application_pgp(b))
       handler = crypt_pgp_application_pgp_handler;
-    else if ((WithCrypto & APPLICATION_SMIME) && mutt_is_application_smime(b))
+    else if (((WithCrypto & APPLICATION_SMIME) != 0) && mutt_is_application_smime(b))
       handler = crypt_smime_application_smime_handler;
   }
 

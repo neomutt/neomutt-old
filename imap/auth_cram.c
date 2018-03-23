@@ -24,10 +24,6 @@
  * @page imap_auth_cram IMAP CRAM-MD5 authentication method
  *
  * IMAP CRAM-MD5 authentication method
- *
- * | Function             | Description
- * | :------------------- | :-------------------------------------------------
- * | imap_auth_cram_md5() | Authenticate using CRAM-MD5
  */
 
 #include "config.h"
@@ -57,7 +53,6 @@ static void hmac_md5(const char *password, char *challenge, unsigned char *respo
   struct Md5Ctx ctx;
   unsigned char ipad[MD5_BLOCK_LEN], opad[MD5_BLOCK_LEN];
   unsigned char secret[MD5_BLOCK_LEN + 1];
-  unsigned char hash_passwd[MD5_DIGEST_LEN];
   size_t secret_len;
 
   secret_len = strlen(password);
@@ -66,6 +61,7 @@ static void hmac_md5(const char *password, char *challenge, unsigned char *respo
    * digests */
   if (secret_len > MD5_BLOCK_LEN)
   {
+    unsigned char hash_passwd[MD5_DIGEST_LEN];
     mutt_md5_bytes(password, secret_len, hash_passwd);
     mutt_str_strfcpy((char *) secret, (char *) hash_passwd, MD5_DIGEST_LEN);
     secret_len = MD5_DIGEST_LEN;
@@ -187,6 +183,5 @@ enum ImapAuthRes imap_auth_cram_md5(struct ImapData *idata, const char *method)
 
 bail:
   mutt_error(_("CRAM-MD5 authentication failed."));
-  mutt_sleep(2);
   return IMAP_AUTH_FAILURE;
 }

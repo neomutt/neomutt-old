@@ -82,7 +82,7 @@ int mutt_display_message(struct Header *cur)
   mutt_message_hook(Context, cur, MUTT_MESSAGEHOOK);
 
   /* see if crypto is needed for this message.  if so, we should exit curses */
-  if (WithCrypto && cur->security)
+  if ((WithCrypto != 0) && cur->security)
   {
     if (cur->security & ENCRYPT)
     {
@@ -193,7 +193,7 @@ int mutt_display_message(struct Header *cur)
   {
     struct Pager info;
 
-    if (WithCrypto && (cur->security & APPLICATION_SMIME) && (cmflags & MUTT_CM_VERIFY))
+    if ((WithCrypto != 0) && (cur->security & APPLICATION_SMIME) && (cmflags & MUTT_CM_VERIFY))
     {
       if (cur->security & GOODSIGN)
       {
@@ -208,7 +208,7 @@ int mutt_display_message(struct Header *cur)
         mutt_error(_("S/MIME signature could NOT be verified."));
     }
 
-    if (WithCrypto && (cur->security & APPLICATION_PGP) && (cmflags & MUTT_CM_VERIFY))
+    if ((WithCrypto != 0) && (cur->security & APPLICATION_PGP) && (cmflags & MUTT_CM_VERIFY))
     {
       if (cur->security & GOODSIGN)
         mutt_message(_("PGP signature successfully verified."));
@@ -228,7 +228,7 @@ int mutt_display_message(struct Header *cur)
   {
     int r;
 
-    mutt_endwin(NULL);
+    mutt_endwin();
     snprintf(buf, sizeof(buf), "%s %s", NONULL(Pager), tempfile);
     r = mutt_system(buf);
     if (r == -1)
@@ -266,7 +266,6 @@ void ci_bounce_message(struct Header *h)
     if (!h->env->from)
     {
       mutt_error(_("Warning: message contains no From: header"));
-      mutt_sleep(2);
     }
   }
   else if (Context)
@@ -276,7 +275,6 @@ void ci_bounce_message(struct Header *h)
       if (message_is_tagged(Context, rc) && !Context->hdrs[rc]->env->from)
       {
         mutt_error(_("Warning: message contains no From: header"));
-        mutt_sleep(2);
         break;
       }
     }
@@ -366,7 +364,7 @@ static void pipe_msg(struct Header *h, FILE *fp, int decode, int print)
 
   pipe_set_flags(decode, print, &cmflags, &chflags);
 
-  if (WithCrypto && decode && h->security & ENCRYPT)
+  if ((WithCrypto != 0) && decode && h->security & ENCRYPT)
   {
     if (!crypt_valid_passphrase(h->security))
       return;
@@ -395,13 +393,13 @@ static int pipe_message(struct Header *h, char *cmd, int decode, int print,
   {
     mutt_message_hook(Context, h, MUTT_MESSAGEHOOK);
 
-    if (WithCrypto && decode)
+    if ((WithCrypto != 0) && decode)
     {
       mutt_parse_mime_message(Context, h);
       if (h->security & ENCRYPT && !crypt_valid_passphrase(h->security))
         return 1;
     }
-    mutt_endwin(NULL);
+    mutt_endwin();
 
     thepid = mutt_create_filter(cmd, &fpout, NULL, NULL);
     if (thepid < 0)
@@ -419,7 +417,7 @@ static int pipe_message(struct Header *h, char *cmd, int decode, int print,
   else
   {
     /* handle tagged messages */
-    if (WithCrypto && decode)
+    if ((WithCrypto != 0) && decode)
     {
       for (int i = 0; i < Context->msgcount; i++)
       {
@@ -444,7 +442,7 @@ static int pipe_message(struct Header *h, char *cmd, int decode, int print,
           continue;
 
         mutt_message_hook(Context, Context->hdrs[i], MUTT_MESSAGEHOOK);
-        mutt_endwin(NULL);
+        mutt_endwin();
         thepid = mutt_create_filter(cmd, &fpout, NULL, NULL);
         if (thepid < 0)
         {
@@ -464,7 +462,7 @@ static int pipe_message(struct Header *h, char *cmd, int decode, int print,
     }
     else
     {
-      mutt_endwin(NULL);
+      mutt_endwin();
       thepid = mutt_create_filter(cmd, &fpout, NULL, NULL);
       if (thepid < 0)
       {
@@ -613,7 +611,7 @@ void mutt_shell_escape(void)
     if (buf[0])
     {
       mutt_window_clearline(MuttMessageWindow, 0);
-      mutt_endwin(NULL);
+      mutt_endwin();
       fflush(stdout);
       int rc = mutt_system(buf);
       if (rc == -1)
@@ -687,16 +685,17 @@ static void set_copy_flags(struct Header *hdr, int decode, int decrypt,
   *cmflags = 0;
   *chflags = CH_UPDATE_LEN;
 
-  if (WithCrypto && !decode && decrypt && (hdr->security & ENCRYPT))
+  if ((WithCrypto != 0) && !decode && decrypt && (hdr->security & ENCRYPT))
   {
-    if ((WithCrypto & APPLICATION_PGP) && mutt_is_multipart_encrypted(hdr->content))
+    if (((WithCrypto & APPLICATION_PGP) != 0) && mutt_is_multipart_encrypted(hdr->content))
     {
       *chflags = CH_NONEWLINE | CH_XMIT | CH_MIME;
       *cmflags = MUTT_CM_DECODE_PGP;
     }
-    else if ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(hdr->content) & ENCRYPT)
+    else if (((WithCrypto & APPLICATION_PGP) != 0) &&
+             mutt_is_application_pgp(hdr->content) & ENCRYPT)
       decode = 1;
-    else if ((WithCrypto & APPLICATION_SMIME) &&
+    else if (((WithCrypto & APPLICATION_SMIME) != 0) &&
              mutt_is_application_smime(hdr->content) & ENCRYPT)
     {
       *chflags = CH_NONEWLINE | CH_XMIT | CH_MIME;
@@ -755,7 +754,6 @@ int mutt_save_message_ctx(struct Header *h, int delete, int decode, int decrypt,
  */
 int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
 {
-  int need_buffy_cleanup;
   int need_passphrase = 0, app = 0;
   char prompt[SHORT_STRING], buf[_POSIX_PATH_MAX];
   struct Context ctx;
@@ -829,7 +827,8 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
   if (mutt_save_confirm(buf, &st) != 0)
     return -1;
 
-  if (WithCrypto && need_passphrase && (decode || decrypt) && !crypt_valid_passphrase(app))
+  if ((WithCrypto != 0) && need_passphrase && (decode || decrypt) &&
+      !crypt_valid_passphrase(app))
     return -1;
 
   mutt_message(_("Copying to %s..."), buf);
@@ -923,7 +922,7 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
       }
     }
 
-    need_buffy_cleanup = (ctx.magic == MUTT_MBOX || ctx.magic == MUTT_MMDF);
+    const int need_buffy_cleanup = (ctx.magic == MUTT_MBOX || ctx.magic == MUTT_MMDF);
 
     mx_close_mailbox(&ctx, NULL);
 
@@ -1037,7 +1036,7 @@ int mutt_edit_content_type(struct Header *h, struct Body *b, FILE *fp)
     mutt_parse_part(fp, b);
   }
 
-  if (WithCrypto && h)
+  if ((WithCrypto != 0) && h)
   {
     if (h->content == b)
       h->security = 0;

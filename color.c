@@ -245,10 +245,6 @@ int mutt_alloc_color(int fg, int bg)
   struct ColorList *p = ColorList;
   int i;
 
-#ifdef USE_SLANG_CURSES
-  char fgc[SHORT_STRING], bgc[SHORT_STRING];
-#endif
-
   /* check to see if this color is already allocated to save space */
   while (p)
   {
@@ -291,8 +287,11 @@ int mutt_alloc_color(int fg, int bg)
 
 #ifdef USE_SLANG_CURSES
   if (fg == COLOR_DEFAULT || bg == COLOR_DEFAULT)
+  {
+    char fgc[SHORT_STRING], bgc[SHORT_STRING];
     SLtt_set_color(i, NULL, get_color_name(fgc, sizeof(fgc), fg),
                    get_color_name(bgc, sizeof(bgc), bg));
+  }
   else
 #elif defined(HAVE_USE_DEFAULT_COLORS)
   if (fg == COLOR_DEFAULT)
@@ -385,12 +384,18 @@ void mutt_free_color(int fg, int bg)
 static int parse_color_name(const char *s, int *col, int *attr, int is_fg, struct Buffer *err)
 {
   char *eptr = NULL;
-  int is_bright = 0;
+  int is_alert = 0, is_bright = 0;
 
   if (mutt_str_strncasecmp(s, "bright", 6) == 0)
   {
     is_bright = 1;
     s += 6;
+  }
+  else if (mutt_str_strncasecmp(s, "alert", 5) == 0)
+  {
+    is_alert = 1;
+    is_bright = 1;
+    s += 5;
   }
 
   /* allow aliases for xterm color resources */
@@ -412,7 +417,12 @@ static int parse_color_name(const char *s, int *col, int *attr, int is_fg, struc
 
   if (is_bright)
   {
-    if (is_fg)
+    if (is_alert)
+    {
+      *attr |= A_BOLD;
+      *attr |= A_BLINK;
+    }
+    else if (is_fg)
     {
       *attr |= A_BOLD;
     }
@@ -564,7 +574,11 @@ static int parse_uncolor(struct Buffer *buf, struct Buffer *s, unsigned long dat
   else if (object == MT_COLOR_INDEX_TAG)
     do_uncolor(buf, s, &ColorIndexTagList, &do_cache, parse_uncolor);
 
-  if (do_cache && !OPT_NO_CURSES)
+  bool is_index = ((object == MT_COLOR_INDEX) || (object == MT_COLOR_INDEX_AUTHOR) ||
+                   (object == MT_COLOR_INDEX_FLAGS) || (object == MT_COLOR_INDEX_SUBJECT) ||
+                   (object == MT_COLOR_INDEX_TAG));
+
+  if (is_index && do_cache && !OPT_NO_CURSES)
   {
     mutt_set_menu_redraw_full(MENU_MAIN);
     /* force re-caching of index colors */
@@ -633,12 +647,10 @@ static int add_pattern(struct ColorLineHead *top, const char *s, int sensitive, 
   }
   else
   {
-    int r;
-    char buf[LONG_STRING];
-
     tmp = new_color_line();
     if (is_index)
     {
+      char buf[LONG_STRING];
       mutt_str_strfcpy(buf, NONULL(s), sizeof(buf));
       mutt_check_simple(buf, sizeof(buf), NONULL(SimpleSearch));
       tmp->color_pattern = mutt_pattern_comp(buf, MUTT_FULL_MSG, err);
@@ -647,9 +659,6 @@ static int add_pattern(struct ColorLineHead *top, const char *s, int sensitive, 
         free_color_line(tmp, 1);
         return -1;
       }
-      /* force re-caching of index colors */
-      for (int i = 0; Context && i < Context->msgcount; i++)
-        Context->hdrs[i]->pair = 0;
     }
     else
     {
@@ -659,7 +668,7 @@ static int add_pattern(struct ColorLineHead *top, const char *s, int sensitive, 
       else
         flags = REG_ICASE;
 
-      r = REGCOMP(&tmp->regex, s, flags);
+      const int r = REGCOMP(&tmp->regex, s, flags);
       if (r != 0)
       {
         regerror(r, &tmp->regex, err->data, err->dsize);
@@ -681,18 +690,22 @@ static int add_pattern(struct ColorLineHead *top, const char *s, int sensitive, 
     STAILQ_INSERT_HEAD(top, tmp, entries);
   }
 
+  /* force re-caching of index colors */
+  if (is_index)
+  {
+    for (int i = 0; Context && i < Context->msgcount; i++)
+      Context->hdrs[i]->pair = 0;
+  }
+
   return 0;
 }
 
 static int parse_object(struct Buffer *buf, struct Buffer *s, int *o, int *ql,
                         struct Buffer *err)
 {
-  int q_level = 0;
-  char *eptr = NULL;
-
   if (!MoreArgs(s))
   {
-    mutt_str_strfcpy(err->data, _("Missing arguments."), err->dsize);
+    mutt_buffer_printf(err, _("%s: too few arguments"), "color");
     return -1;
   }
 
@@ -701,8 +714,9 @@ static int parse_object(struct Buffer *buf, struct Buffer *s, int *o, int *ql,
   {
     if (buf->data[6])
     {
+      char *eptr = NULL;
       *ql = strtol(buf->data + 6, &eptr, 10);
-      if (*eptr || q_level < 0)
+      if (*eptr || *ql < 0)
       {
         snprintf(err->data, err->dsize, _("%s: no such object"), buf->data);
         return -1;
@@ -717,7 +731,7 @@ static int parse_object(struct Buffer *buf, struct Buffer *s, int *o, int *ql,
   {
     if (!MoreArgs(s))
     {
-      mutt_str_strfcpy(err->data, _("Missing arguments."), err->dsize);
+      mutt_buffer_printf(err, _("%s: too few arguments"), "color");
       return -1;
     }
 
@@ -749,7 +763,7 @@ static int parse_color_pair(struct Buffer *buf, struct Buffer *s, int *fg,
 {
   if (!MoreArgs(s))
   {
-    mutt_str_strfcpy(err->data, _("color: too few arguments"), err->dsize);
+    mutt_buffer_printf(err, _("%s: too few arguments"), "color");
     return -1;
   }
 
@@ -760,7 +774,7 @@ static int parse_color_pair(struct Buffer *buf, struct Buffer *s, int *fg,
 
   if (!MoreArgs(s))
   {
-    mutt_str_strfcpy(err->data, _("color: too few arguments"), err->dsize);
+    mutt_buffer_printf(err, _("%s: too few arguments"), "color");
     return -1;
   }
 
@@ -784,7 +798,7 @@ static int parse_attr_spec(struct Buffer *buf, struct Buffer *s, int *fg,
 
   if (!MoreArgs(s))
   {
-    mutt_str_strfcpy(err->data, _("mono: too few arguments"), err->dsize);
+    mutt_buffer_printf(err, _("%s: too few arguments"), "mono");
     return -1;
   }
 
@@ -828,7 +842,7 @@ static int fgbgattr_to_color(int fg, int bg, int attr)
  *        mono  OBJECT ATTR [ REGEX ]
  */
 static int parse_color(struct Buffer *buf, struct Buffer *s, struct Buffer *err,
-                       parser_callback_t callback, bool dry_run)
+                       parser_callback_t callback, bool dry_run, bool color)
 {
   int object = 0, attr = 0, fg = 0, bg = 0, q_level = 0;
   int r = 0, match = 0;
@@ -848,7 +862,7 @@ static int parse_color(struct Buffer *buf, struct Buffer *s, struct Buffer *err,
   {
     if (!MoreArgs(s))
     {
-      mutt_str_strfcpy(err->data, _("too few arguments"), err->dsize);
+      mutt_buffer_printf(err, _("%s: too few arguments"), color ? "color" : "mono");
       return -1;
     }
 
@@ -857,7 +871,7 @@ static int parse_color(struct Buffer *buf, struct Buffer *s, struct Buffer *err,
 
   if (MoreArgs(s) && (object != MT_COLOR_STATUS))
   {
-    mutt_str_strfcpy(err->data, _("too many arguments"), err->dsize);
+    mutt_buffer_printf(err, _("%s: too many arguments"), color ? "color" : "mono");
     return -1;
   }
 
@@ -914,7 +928,7 @@ static int parse_color(struct Buffer *buf, struct Buffer *s, struct Buffer *err,
 
     if (MoreArgs(s))
     {
-      mutt_str_strfcpy(err->data, _("too many arguments"), err->dsize);
+      mutt_buffer_printf(err, _("%s: too many arguments"), color ? "color" : "mono");
       return -1;
     }
 
@@ -989,7 +1003,7 @@ int mutt_parse_color(struct Buffer *buf, struct Buffer *s, unsigned long data,
   if (OPT_NO_CURSES || !has_colors())
     dry_run = true;
 
-  return parse_color(buf, s, err, parse_color_pair, dry_run);
+  return parse_color(buf, s, err, parse_color_pair, dry_run, true);
 }
 
 #endif
@@ -1007,5 +1021,5 @@ int mutt_parse_mono(struct Buffer *buf, struct Buffer *s, unsigned long data,
     dry_run = true;
 #endif
 
-  return parse_color(buf, s, err, parse_attr_spec, dry_run);
+  return parse_color(buf, s, err, parse_attr_spec, dry_run, false);
 }

@@ -24,43 +24,6 @@
  * @page file File management functions
  *
  * Commonly used file/dir management routines.
- *
- * | Function                      | Description
- * | :---------------------------- | :-----------------------------------------------------------
- * | mutt_file_basename()          | Find the last component for a pathname
- * | mutt_file_check_empty()       | Is the mailbox empty
- * | mutt_file_chmod()             | Set permissions of a file
- * | mutt_file_chmod_add()         | Add permissions to a file
- * | mutt_file_chmod_add_stat()    | Add permissions to a file
- * | mutt_file_chmod_rm()          | Remove permissions from a file
- * | mutt_file_chmod_rm_stat()     | Remove permissions from a file
- * | mutt_file_concat_path()       | Join a directory name and a filename
- * | mutt_file_concatn_path()      | Concatenate directory and filename
- * | mutt_file_copy_bytes()        | Copy some content from one file to another
- * | mutt_file_copy_stream()       | Copy the contents of one file into another
- * | mutt_file_decrease_mtime()    | Decrease a file's modification time by 1 second
- * | mutt_file_dirname()           | Return a path up to, but not including, the final '/'
- * | mutt_file_fclose()            | Close a FILE handle (and NULL the pointer)
- * | mutt_file_fopen()             | Call fopen() safely
- * | mutt_file_fsync_close()       | Flush the data, before closing a file (and NULL the pointer)
- * | mutt_file_lock()              | (try to) lock a file
- * | mutt_file_mkdir()             | Recursively create directories
- * | mutt_file_open()              | Open a file
- * | mutt_file_quote_filename()    | Quote a filename to survive the shell's quoting rules
- * | mutt_file_read_keyword()      | Read a keyword from a file
- * | mutt_file_read_line()         | Read a line from a file
- * | mutt_file_rename()            | Rename a file
- * | mutt_file_rmtree()            | Recursively remove a directory
- * | mutt_file_safe_rename()       | NFS-safe renaming of files
- * | mutt_file_sanitize_filename() | Replace unsafe characters in a filename
- * | mutt_file_sanitize_regex()    | Escape any regex-magic characters in a string
- * | mutt_file_set_mtime()         | Set the modification time of one file from another
- * | mutt_file_symlink()           | Create a symlink
- * | mutt_file_to_absolute_path()  | Convert relative filepath to an absolute path
- * | mutt_file_touch_atime()       | Set the access time to current time
- * | mutt_file_unlink()            | Delete a file, carefully
- * | mutt_file_unlink_empty()      | Delete a file if it's empty
- * | mutt_file_unlock()            | Unlock a file previously locked by mutt_file_lock()
  */
 
 #include "config.h"
@@ -79,7 +42,7 @@
 #include <unistd.h>
 #include <utime.h>
 #include "file.h"
-#include "debug.h"
+#include "logging.h"
 #include "memory.h"
 #include "message.h"
 #include "string2.h"
@@ -227,38 +190,39 @@ int mutt_file_fsync_close(FILE **f)
  */
 void mutt_file_unlink(const char *s)
 {
-  int fd;
-  FILE *f = NULL;
-  struct stat sb, sb2;
-  char buf[2048];
-
+  struct stat sb;
   /* Defend against symlink attacks */
 
-  if ((lstat(s, &sb) == 0) && S_ISREG(sb.st_mode))
+  const bool is_regular_file = (lstat(s, &sb) == 0) && S_ISREG(sb.st_mode);
+  if (!is_regular_file)
   {
-    fd = open(s, O_RDWR | O_NOFOLLOW);
-    if (fd < 0)
-      return;
+    return;
+  }
 
-    if ((fstat(fd, &sb2) != 0) || !S_ISREG(sb2.st_mode) ||
-        (sb.st_dev != sb2.st_dev) || (sb.st_ino != sb2.st_ino))
-    {
-      close(fd);
-      return;
-    }
+  const int fd = open(s, O_RDWR | O_NOFOLLOW);
+  if (fd < 0)
+    return;
 
-    f = fdopen(fd, "r+");
-    if (f)
+  struct stat sb2;
+  if ((fstat(fd, &sb2) != 0) || !S_ISREG(sb2.st_mode) ||
+      (sb.st_dev != sb2.st_dev) || (sb.st_ino != sb2.st_ino))
+  {
+    close(fd);
+    return;
+  }
+
+  FILE *f = fdopen(fd, "r+");
+  if (f)
+  {
+    unlink(s);
+    char buf[2048];
+    memset(buf, 0, sizeof(buf));
+    while (sb.st_size > 0)
     {
-      unlink(s);
-      memset(buf, 0, sizeof(buf));
-      while (sb.st_size > 0)
-      {
-        fwrite(buf, 1, MIN(sizeof(buf), sb.st_size), f);
-        sb.st_size -= MIN(sizeof(buf), sb.st_size);
-      }
-      mutt_file_fclose(&f);
+      fwrite(buf, 1, MIN(sizeof(buf), sb.st_size), f);
+      sb.st_size -= MIN(sizeof(buf), sb.st_size);
     }
+    mutt_file_fclose(&f);
   }
 }
 
@@ -272,12 +236,10 @@ void mutt_file_unlink(const char *s)
  */
 int mutt_file_copy_bytes(FILE *in, FILE *out, size_t size)
 {
-  char buf[2048];
-  size_t chunk;
-
   while (size > 0)
   {
-    chunk = (size > sizeof(buf)) ? sizeof(buf) : size;
+    char buf[2048];
+    size_t chunk = (size > sizeof(buf)) ? sizeof(buf) : size;
     chunk = fread(buf, 1, chunk, in);
     if (chunk < 1)
       break;

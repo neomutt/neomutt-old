@@ -29,15 +29,6 @@
  *
  * @note RFC3548 obsoletes RFC2045.
  * @note RFC4648 obsoletes RFC3548.
- *
- * | Data              | Description
- * | :---------------- | :--------------------------------------------------
- * | #Index64          | Lookup table for Base64 encoding characters
- *
- * | Function          | Description
- * | :---------------- | :-------------------------------------------------
- * | mutt_b64_decode() | Convert null-terminated base64 string to raw bytes
- * | mutt_b64_encode() | Convert raw bytes to null-terminated base64 string
  */
 
 #include "config.h"
@@ -138,17 +129,17 @@ size_t mutt_b64_encode(char *out, const char *cin, size_t len, size_t olen)
 int mutt_b64_decode(char *out, const char *in)
 {
   int len = 0;
-  unsigned char digit1, digit2, digit3, digit4;
+  unsigned char digit4;
 
   do
   {
-    digit1 = in[0];
+    const unsigned char digit1 = in[0];
     if ((digit1 > 127) || (base64val(digit1) == BAD))
       return -1;
-    digit2 = in[1];
+    const unsigned char digit2 = in[1];
     if ((digit2 > 127) || (base64val(digit2) == BAD))
       return -1;
-    digit3 = in[2];
+    const unsigned char digit3 = in[2];
     if ((digit3 > 127) || ((digit3 != '=') && (base64val(digit3) == BAD)))
       return -1;
     digit4 = in[3];

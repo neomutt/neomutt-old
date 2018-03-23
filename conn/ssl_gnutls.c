@@ -25,11 +25,6 @@
  * @page conn_ssl_gnutls Handling of GnuTLS encryption
  *
  * Handling of GnuTLS encryption
- *
- * | Function                | Description
- * | :---------------------- | :-----------------------------------
- * | mutt_ssl_socket_setup() | Set up SSL socket mulitplexor
- * | mutt_ssl_starttls()     | Set up TLS multiplexor
  */
 
 #include "config.h"
@@ -92,7 +87,6 @@ static int tls_init(void)
   if (err < 0)
   {
     mutt_error("gnutls_global_init: %s", gnutls_strerror(err));
-    mutt_sleep(2);
     return -1;
   }
 
@@ -116,7 +110,6 @@ static int tls_socket_read(struct Connection *conn, char *buf, size_t len)
   if (!data)
   {
     mutt_error(_("Error: no TLS socket open"));
-    mutt_sleep(2);
     return -1;
   }
 
@@ -126,7 +119,6 @@ static int tls_socket_read(struct Connection *conn, char *buf, size_t len)
     if ((rc < 0 && gnutls_error_is_fatal(rc) == 1) || rc == GNUTLS_E_INTERRUPTED)
     {
       mutt_error("tls_socket_read (%s)", gnutls_strerror(rc));
-      mutt_sleep(2);
       return -1;
     }
   } while (rc == GNUTLS_E_AGAIN);
@@ -145,25 +137,22 @@ static int tls_socket_read(struct Connection *conn, char *buf, size_t len)
 static int tls_socket_write(struct Connection *conn, const char *buf, size_t len)
 {
   struct TlsSockData *data = conn->sockdata;
-  int ret;
   size_t sent = 0;
 
   if (!data)
   {
     mutt_error(_("Error: no TLS socket open"));
-    mutt_sleep(2);
     return -1;
   }
 
   do
   {
-    ret = gnutls_record_send(data->state, buf + sent, len - sent);
+    const int ret = gnutls_record_send(data->state, buf + sent, len - sent);
     if (ret < 0)
     {
       if (gnutls_error_is_fatal(ret) == 1 || ret == GNUTLS_E_INTERRUPTED)
       {
         mutt_error("tls_socket_write (%s)", gnutls_strerror(ret));
-        mutt_sleep(4);
         return -1;
       }
       return ret;
@@ -241,13 +230,11 @@ static gnutls_certificate_status_t tls_verify_peers(gnutls_session_t tlsstate)
   if (status == GNUTLS_E_NO_CERTIFICATE_FOUND)
   {
     mutt_error(_("Unable to get certificate from peer"));
-    mutt_sleep(2);
     return 0;
   }
   if (verify_ret < 0)
   {
     mutt_error(_("Certificate verification error (%s)"), gnutls_strerror(status));
-    mutt_sleep(2);
     return 0;
   }
 
@@ -255,7 +242,6 @@ static gnutls_certificate_status_t tls_verify_peers(gnutls_session_t tlsstate)
   if (gnutls_certificate_type_get(tlsstate) != GNUTLS_CRT_X509)
   {
     mutt_error(_("Certificate is not X.509"));
-    mutt_sleep(2);
     return 0;
   }
 
@@ -302,7 +288,6 @@ static void tls_fingerprint(gnutls_digest_algorithm_t algo, char *s, int l,
  */
 static int tls_check_stored_hostname(const gnutls_datum_t *cert, const char *hostname)
 {
-  char buf[80];
   FILE *fp = NULL;
   char *linestr = NULL;
   size_t linestrsize;
@@ -321,6 +306,7 @@ static int tls_check_stored_hostname(const gnutls_datum_t *cert, const char *hos
       return 0;
     }
 
+    char buf[80];
     buf[0] = '\0';
     tls_fingerprint(GNUTLS_DIG_MD5, buf, sizeof(buf), cert);
     while ((linestr = mutt_file_read_line(linestr, &linestrsize, fp, &linenum, 0)) != NULL)
@@ -362,7 +348,6 @@ static int tls_compare_certificates(const gnutls_datum_t *peercert)
   gnutls_datum_t cert;
   unsigned char *ptr = NULL;
   FILE *fd1 = NULL;
-  int ret;
   gnutls_datum_t b64_data;
   unsigned char *b64_data_data = NULL;
   struct stat filestat;
@@ -386,7 +371,7 @@ static int tls_compare_certificates(const gnutls_datum_t *peercert)
 
   do
   {
-    ret = gnutls_pem_base64_decode_alloc(NULL, &b64_data, &cert);
+    const int ret = gnutls_pem_base64_decode_alloc(NULL, &b64_data, &cert);
     if (ret != 0)
     {
       FREE(&b64_data_data);
@@ -449,14 +434,12 @@ static int tls_check_preauth(const gnutls_datum_t *certdata,
   if (gnutls_x509_crt_init(&cert) < 0)
   {
     mutt_error(_("Error initialising gnutls certificate data"));
-    mutt_sleep(2);
     return -1;
   }
 
   if (gnutls_x509_crt_import(cert, certdata, GNUTLS_X509_FMT_DER) < 0)
   {
     mutt_error(_("Error processing certificate data"));
-    mutt_sleep(2);
     gnutls_x509_crt_deinit(cert);
     return -1;
   }
@@ -599,7 +582,6 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
     {
       mutt_error(_("Warning: Server certificate was signed using an insecure "
                    "algorithm"));
-      mutt_sleep(2);
     }
     return 0;
   }
@@ -608,14 +590,12 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
   if (gnutls_x509_crt_init(&cert) < 0)
   {
     mutt_error(_("Error initialising gnutls certificate data"));
-    mutt_sleep(2);
     return 0;
   }
 
   if (gnutls_x509_crt_import(cert, certdata, GNUTLS_X509_FMT_DER) < 0)
   {
     mutt_error(_("Error processing certificate data"));
-    mutt_sleep(2);
     gnutls_x509_crt_deinit(cert);
     return 0;
   }
@@ -855,7 +835,6 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
         if (!done)
         {
           mutt_error(_("Warning: Couldn't save certificate"));
-          mutt_sleep(2);
         }
         else
         {
@@ -895,7 +874,6 @@ static int tls_check_certificate(struct Connection *conn)
   if (gnutls_auth_get_type(state) != GNUTLS_CRD_CERTIFICATE)
   {
     mutt_error(_("Unable to get certificate from peer"));
-    mutt_sleep(2);
     return 0;
   }
 
@@ -905,7 +883,6 @@ static int tls_check_certificate(struct Connection *conn)
   if (!cert_list)
   {
     mutt_error(_("Unable to get certificate from peer"));
-    mutt_sleep(2);
     return 0;
   }
 
@@ -1075,7 +1052,6 @@ static int tls_set_priority(struct TlsSockData *data)
   if (err < 0)
   {
     mutt_error("gnutls_priority_set_direct(%s): %s", priority, gnutls_strerror(err));
-    mutt_sleep(2);
     FREE(&priority);
     return -1;
   }
@@ -1115,7 +1091,6 @@ static int tls_set_priority(struct TlsSockData *data)
   {
     mutt_error(
         _("Explicit ciphersuite selection via $ssl_ciphers not supported"));
-    mutt_sleep(2);
   }
 
   /* We use default priorities (see gnutls documentation),
@@ -1147,7 +1122,6 @@ static int tls_negotiate(struct Connection *conn)
   {
     FREE(&conn->sockdata);
     mutt_error("gnutls_certificate_allocate_credentials: %s", gnutls_strerror(err));
-    mutt_sleep(2);
     return -1;
   }
 
@@ -1177,7 +1151,6 @@ static int tls_negotiate(struct Connection *conn)
   if (err)
   {
     mutt_error("gnutls_handshake: %s", gnutls_strerror(err));
-    mutt_sleep(2);
     goto fail;
   }
 
@@ -1188,7 +1161,6 @@ static int tls_negotiate(struct Connection *conn)
                              mutt_str_strlen(conn->account.host)))
   {
     mutt_error(_("Warning: unable to set TLS SNI host name"));
-    mutt_sleep(1);
   }
 
   if (tls_set_priority(data) < 0)
@@ -1222,7 +1194,6 @@ static int tls_negotiate(struct Connection *conn)
     {
       mutt_error("gnutls_handshake: %s", gnutls_strerror(err));
     }
-    mutt_sleep(2);
     goto fail;
   }
 

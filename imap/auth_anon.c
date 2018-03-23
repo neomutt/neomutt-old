@@ -24,10 +24,6 @@
  * @page imap_auth_anon IMAP anonymous authentication method
  *
  * IMAP anonymous authentication method
- *
- * | Function           | Description
- * | :----------------- | :-------------------------------------------------
- * | imap_auth_anon()   | Authenticate anonymously
  */
 
 #include "config.h"
@@ -93,6 +89,5 @@ enum ImapAuthRes imap_auth_anon(struct ImapData *idata, const char *method)
 
 bail:
   mutt_error(_("Anonymous authentication failed."));
-  mutt_sleep(2);
   return IMAP_AUTH_FAILURE;
 }

@@ -14,7 +14,7 @@ use system cc cc-lib mutt-gettext mutt-iconv
 ###############################################################################
 # Names and versions
 define PACKAGE          "neomutt"
-define PACKAGE_VERSION  "20180223"
+define PACKAGE_VERSION  "20180323"
 define BUGS_ADDRESS     "neomutt-devel@neomutt.org"
 
 # Subdirectories that contain additional Makefile.autosetup files
@@ -85,6 +85,8 @@ options {
   with-qdbm:path            => "Location of QDBM"
   tokyocabinet=0            => "Use TokyoCabinet for the header cache"
   with-tokyocabinet:path    => "Location of TokyoCabinet"
+# System
+  with-sysroot:path         => "Target system root"
 # Enable all options
   everything=0              => "Enable all options"
 }
@@ -108,7 +110,7 @@ if {1} {
   # relative --enable-opt to true. This allows "--with-opt=/usr" to be used as
   # a shortcut for "--opt --with-opt=/usr".
   foreach opt {
-    bdb gdbm gnutls gpgme gss homespool idn kyotocabinet lmdb lua mixmaster 
+    bdb gdbm gnutls gpgme gss homespool idn kyotocabinet lmdb lua mixmaster
     ncurses nls notmuch qdbm sasl slang ssl tokyocabinet
   } {
     if {[opt-val with-$opt] ne {}} {
@@ -186,6 +188,7 @@ if {1} {
     user-error "C99 is required"
   }
   define-append CFLAGS_FOR_BUILD -std=c99
+  define LDFLAGS_FOR_BUILD {}
 
   # Check for tools and programs
   cc-check-tools ar ranlib strip
@@ -293,12 +296,12 @@ define USE_SOCKET
 define SUN_ATTACHMENT
 ###############################################################################
 
-set prefix [get-define prefix]
+set prefix [opt-val with-sysroot][get-define prefix]
 
 ###############################################################################
 # Everything
 if {[get-define want-everything]} {
-  foreach opt {gpgme pgp smime notmuch lua tokyocabinet kyotocabinet bdb 
+  foreach opt {gpgme pgp smime notmuch lua tokyocabinet kyotocabinet bdb
                gdbm qdbm lmdb} {
     define want-$opt
     append conf_options "--$opt "

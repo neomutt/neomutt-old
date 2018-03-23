@@ -81,7 +81,7 @@ static const char *Obtaining =
        "02110-1301, USA.\n");
 
 static const char *ReachingUs =
-    N_("To learn more about NeoMutt, visit: http://www.neomutt.org/\n"
+    N_("To learn more about NeoMutt, visit: https://www.neomutt.org\n"
        "If you find a bug in NeoMutt, please raise an issue at:\n"
        "    https://github.com/neomutt/neomutt/issues\n"
        "or send an email to: <neomutt-devel@neomutt.org>\n");
@@ -89,9 +89,9 @@ static const char *ReachingUs =
 // clang-format off
 static const char *Notice =
     N_("Copyright (C) 1996-2016 Michael R. Elkins and others.\n"
-       "NeoMutt comes with ABSOLUTELY NO WARRANTY; for details type `neomutt -vv'.\n"
+       "NeoMutt comes with ABSOLUTELY NO WARRANTY; for details type 'neomutt -vv'.\n"
        "NeoMutt is free software, and you are welcome to redistribute it\n"
-       "under certain conditions; type `neomutt -vv' for details.\n");
+       "under certain conditions; type 'neomutt -vv' for details.\n");
 // clang-format on
 
 /**
@@ -291,13 +291,13 @@ static struct CompileOptions comp_opts[] = {
  */
 static void print_compile_options(struct CompileOptions *co)
 {
-  size_t len, used = 2;
+  size_t used = 2;
   bool tty = stdout ? isatty(fileno(stdout)) : false;
 
   printf("  ");
   for (int i = 0; co[i].name; i++)
   {
-    len = strlen(co[i].name) + 2; /* +/- and a space */
+    const size_t len = strlen(co[i].name) + 2; /* +/- and a space */
     if ((used + len) > SCREEN_WIDTH)
     {
       used = 2;
@@ -398,10 +398,10 @@ void print_version(void)
   rstrip_in_place((char *) cc_cflags);
   printf("\nCompilation CFLAGS: %s\n", (char *) cc_cflags);
 
-  puts(_("\nDefault options:"));
+  printf("\n%s\n", _("Default options:"));
   print_compile_options(comp_opts_default);
 
-  puts(_("\nCompile options:"));
+  printf("\n%s\n", _("Compile options:"));
   print_compile_options(comp_opts);
 
 #ifdef DOMAIN

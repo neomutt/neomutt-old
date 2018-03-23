@@ -152,8 +152,6 @@ static bool first_mailing_list(char *buf, size_t buflen, struct Address *a)
  */
 static size_t add_index_color(char *buf, size_t buflen, enum FormatFlag flags, char color)
 {
-  size_t len;
-
   /* only add color markers if we are operating on main index entries. */
   if (!(flags & MUTT_FORMAT_INDEX))
     return 0;
@@ -164,7 +162,7 @@ static size_t add_index_color(char *buf, size_t buflen, enum FormatFlag flags, c
 
   if (color == MT_COLOR_INDEX)
   { /* buf might be uninitialized other cases */
-    len = mutt_str_strlen(buf);
+    const size_t len = mutt_str_strlen(buf);
     buf += len;
     buflen -= len;
   }
@@ -483,11 +481,10 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
   struct Context *ctx = NULL;
   char fmt[SHORT_STRING], tmp[LONG_STRING], *p, *tags = NULL;
   char *wch = NULL;
-  int do_locales, i;
+  int i;
   int optional = (flags & MUTT_FORMAT_OPTIONAL);
   int threads = ((Sort & SORT_MASK) == SORT_THREADS);
   int is_index = (flags & MUTT_FORMAT_INDEX);
-  size_t len;
   size_t colorlen;
 
   hdr = hfi->hdr;
@@ -596,7 +593,7 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
         const char *cp = NULL;
         struct tm *tm = NULL;
         time_t T;
-        int j = 0, invert = 0;
+        int j = 0;
 
         if (optional && ((op == '[') || (op == '(')))
         {
@@ -606,6 +603,7 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
           T -= (op == '(') ? hdr->received : hdr->date_sent;
 
           is = (char *) prec;
+          int invert = 0;
           if (*is == '>')
           {
             invert = 1;
@@ -692,6 +690,7 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
         p = buf;
 
         cp = (op == 'd' || op == 'D') ? (NONULL(DateFormat)) : src;
+        int do_locales;
         if (*cp == '!')
         {
           do_locales = 0;
@@ -700,7 +699,7 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
         else
           do_locales = 1;
 
-        len = buflen - 1;
+        size_t len = buflen - 1;
         while (len > 0 && (((op == 'd' || op == 'D') && *cp) ||
                            (op == '{' && *cp != '}') || (op == '[' && *cp != ']') ||
                            (op == '(' && *cp != ')') || (op == '<' && *cp != '>')))
@@ -1245,13 +1244,13 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
       else if (src[0] == 'c') /* crypto */
       {
         char *ch = NULL;
-        if (WithCrypto && (hdr->security & GOODSIGN))
+        if ((WithCrypto != 0) && (hdr->security & GOODSIGN))
           ch = "S";
-        else if (WithCrypto && (hdr->security & ENCRYPT))
+        else if ((WithCrypto != 0) && (hdr->security & ENCRYPT))
           ch = "P";
-        else if (WithCrypto && (hdr->security & SIGN))
+        else if ((WithCrypto != 0) && (hdr->security & SIGN))
           ch = "s";
-        else if ((WithCrypto & APPLICATION_PGP) && (hdr->security & PGPKEY))
+        else if (((WithCrypto & APPLICATION_PGP) != 0) && (hdr->security & PGPKEY))
           ch = "K";
         else
           ch = " ";
@@ -1309,13 +1308,13 @@ static const char *index_format_str(char *buf, size_t buflen, size_t col, int co
         second = get_nth_wchar(FlagChars, FlagCharDeleted);
       else if (hdr->attach_del)
         second = get_nth_wchar(FlagChars, FlagCharDeletedAttach);
-      else if (WithCrypto && (hdr->security & GOODSIGN))
+      else if ((WithCrypto != 0) && (hdr->security & GOODSIGN))
         second = "S";
-      else if (WithCrypto && (hdr->security & ENCRYPT))
+      else if ((WithCrypto != 0) && (hdr->security & ENCRYPT))
         second = "P";
-      else if (WithCrypto && (hdr->security & SIGN))
+      else if ((WithCrypto != 0) && (hdr->security & SIGN))
         second = "s";
-      else if ((WithCrypto & APPLICATION_PGP) && (hdr->security & PGPKEY))
+      else if (((WithCrypto & APPLICATION_PGP) != 0) && (hdr->security & PGPKEY))
         second = "K";
       else
         second = " ";

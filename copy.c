@@ -256,7 +256,7 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
           ++x;
           if (mutt_str_strncasecmp(buf, np->data, mutt_str_strlen(np->data)) == 0)
           {
-            mutt_debug(2, "Reorder: %s matches %s\n", np->data, buf);
+            mutt_debug(2, "Reorder: %s matches %s", np->data, buf);
             break;
           }
         }
@@ -376,8 +376,6 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
  */
 int mutt_copy_header(FILE *in, struct Header *h, FILE *out, int flags, const char *prefix)
 {
-  char buffer[SHORT_STRING];
-
   if (h->env)
     flags |= (h->env->irt_changed ? CH_UPDATE_IRT : 0) |
              (h->env->refs_changed ? CH_UPDATE_REFS : 0);
@@ -388,6 +386,7 @@ int mutt_copy_header(FILE *in, struct Header *h, FILE *out, int flags, const cha
   if (flags & CH_TXTPLAIN)
   {
     char chsbuf[SHORT_STRING];
+    char buffer[SHORT_STRING];
     fputs("MIME-Version: 1.0\n", out);
     fputs("Content-Transfer-Encoding: 8bit\n", out);
     fputs("Content-Type: text/plain; charset=", out);
@@ -501,14 +500,13 @@ int mutt_copy_header(FILE *in, struct Header *h, FILE *out, int flags, const cha
 static int count_delete_lines(FILE *fp, struct Body *b, LOFF_T *length, size_t datelen)
 {
   int dellines = 0;
-  int ch;
 
   if (b->deleted)
   {
     fseeko(fp, b->offset, SEEK_SET);
     for (long l = b->length; l; l--)
     {
-      ch = getc(fp);
+      const int ch = getc(fp);
       if (ch == EOF)
         break;
       if (ch == '\n')
@@ -612,7 +610,6 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
       {
         mutt_error("The length calculation was wrong by %ld bytes", fail);
         new_length += fail;
-        mutt_sleep(1);
       }
 
       /* Update original message if we are sync'ing a mailfolder */
@@ -666,17 +663,17 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
     if (flags & MUTT_CM_REPLYING)
       s.flags |= MUTT_REPLYING;
 
-    if (WithCrypto && flags & MUTT_CM_VERIFY)
+    if ((WithCrypto != 0) && flags & MUTT_CM_VERIFY)
       s.flags |= MUTT_VERIFY;
 
     rc = mutt_body_handler(body, &s);
   }
-  else if (WithCrypto && (flags & MUTT_CM_DECODE_CRYPT) && (hdr->security & ENCRYPT))
+  else if ((WithCrypto != 0) && (flags & MUTT_CM_DECODE_CRYPT) && (hdr->security & ENCRYPT))
   {
     struct Body *cur = NULL;
     FILE *fp = NULL;
 
-    if ((WithCrypto & APPLICATION_PGP) && (flags & MUTT_CM_DECODE_PGP) &&
+    if (((WithCrypto & APPLICATION_PGP) != 0) && (flags & MUTT_CM_DECODE_PGP) &&
         (hdr->security & APPLICATION_PGP) && hdr->content->type == TYPEMULTIPART)
     {
       if (crypt_pgp_decrypt_mime(fpin, &fp, hdr->content, &cur))
@@ -684,7 +681,7 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
       fputs("MIME-Version: 1.0\n", fpout);
     }
 
-    if ((WithCrypto & APPLICATION_SMIME) && (flags & MUTT_CM_DECODE_SMIME) &&
+    if (((WithCrypto & APPLICATION_SMIME) != 0) && (flags & MUTT_CM_DECODE_SMIME) &&
         (hdr->security & APPLICATION_SMIME) && hdr->content->type == TYPEAPPLICATION)
     {
       if (crypt_smime_decrypt_mime(fpin, &fp, hdr->content, &cur))
@@ -896,7 +893,7 @@ static void format_address_header(char **h, struct Address *a)
   char cbuf[STRING];
   char c2buf[STRING];
   char *p = NULL;
-  size_t l, linelen, buflen, cbuflen, c2buflen, plen;
+  size_t linelen, buflen, plen;
 
   linelen = mutt_str_strlen(*h);
   plen = linelen;
@@ -908,7 +905,7 @@ static void format_address_header(char **h, struct Address *a)
     struct Address *tmp = a->next;
     a->next = NULL;
     *buf = *cbuf = *c2buf = '\0';
-    l = mutt_addr_write(buf, sizeof(buf), a, false);
+    const size_t l = mutt_addr_write(buf, sizeof(buf), a, false);
     a->next = tmp;
 
     if (count && linelen + l > 74)
@@ -932,8 +929,8 @@ static void format_address_header(char **h, struct Address *a)
       strcpy(c2buf, ",");
     }
 
-    cbuflen = mutt_str_strlen(cbuf);
-    c2buflen = mutt_str_strlen(c2buf);
+    const size_t cbuflen = mutt_str_strlen(cbuf);
+    const size_t c2buflen = mutt_str_strlen(c2buf);
     buflen += l + cbuflen + c2buflen;
     mutt_mem_realloc(h, buflen);
     p = *h;

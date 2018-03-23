@@ -466,7 +466,6 @@ static gpgme_ctx_t create_gpgme_context(int for_smime)
   if (err)
   {
     mutt_error(_("error creating gpgme context: %s\n"), gpgme_strerror(err));
-    sleep(2);
     mutt_exit(1);
   }
 
@@ -476,7 +475,6 @@ static gpgme_ctx_t create_gpgme_context(int for_smime)
     if (err)
     {
       mutt_error(_("error enabling CMS protocol: %s\n"), gpgme_strerror(err));
-      sleep(2);
       mutt_exit(1);
     }
   }
@@ -498,7 +496,6 @@ static gpgme_data_t create_gpgme_data(void)
   if (err)
   {
     mutt_error(_("error creating gpgme data object: %s\n"), gpgme_strerror(err));
-    sleep(2);
     mutt_exit(1);
   }
   return data;
@@ -695,7 +692,7 @@ static char *data_object_to_tempfile(gpgme_data_t data, char *tempf, FILE **ret_
 
 static void free_recipient_set(gpgme_key_t **p_rset)
 {
-  gpgme_key_t *rset, k;
+  gpgme_key_t *rset;
 
   if (!p_rset)
     return;
@@ -706,7 +703,7 @@ static void free_recipient_set(gpgme_key_t **p_rset)
 
   while (*rset)
   {
-    k = *rset;
+    gpgme_key_t k = *rset;
     gpgme_key_unref(k);
     rset++;
   }
@@ -724,7 +721,6 @@ static gpgme_key_t *create_recipient_set(const char *keylist, gpgme_protocol_t p
   int err;
   const char *s = NULL;
   char buf[100];
-  int i;
   gpgme_key_t *rset = NULL;
   unsigned int rset_n = 0;
   gpgme_key_t key = NULL;
@@ -741,6 +737,7 @@ static gpgme_key_t *create_recipient_set(const char *keylist, gpgme_protocol_t p
     {
       while (*s == ' ')
         s++;
+      int i;
       for (i = 0; *s && *s != ' ' && i < sizeof(buf) - 1;)
         buf[i++] = *s++;
       buf[i] = 0;
@@ -765,7 +762,7 @@ static gpgme_key_t *create_recipient_set(const char *keylist, gpgme_protocol_t p
           rset[rset_n++] = key;
         else
         {
-          mutt_error(_("error adding recipient `%s': %s\n"), buf, gpgme_strerror(err));
+          mutt_error(_("error adding recipient '%s': %s\n"), buf, gpgme_strerror(err));
           rset[rset_n] = NULL;
           free_recipient_set(&rset);
           gpgme_release(context);
@@ -806,7 +803,7 @@ static int set_signer(gpgme_ctx_t ctx, int for_smime)
   if (err)
   {
     gpgme_release(listctx);
-    mutt_error(_("secret key `%s' not found: %s\n"), signid, gpgme_strerror(err));
+    mutt_error(_("secret key '%s' not found: %s\n"), signid, gpgme_strerror(err));
     return -1;
   }
   err = gpgme_op_keylist_next(listctx, &key2);
@@ -815,7 +812,7 @@ static int set_signer(gpgme_ctx_t ctx, int for_smime)
     gpgme_key_unref(key);
     gpgme_key_unref(key2);
     gpgme_release(listctx);
-    mutt_error(_("ambiguous specification of secret key `%s'\n"), signid);
+    mutt_error(_("ambiguous specification of secret key '%s'\n"), signid);
     return -1;
   }
   gpgme_op_keylist_end(listctx);
@@ -826,7 +823,7 @@ static int set_signer(gpgme_ctx_t ctx, int for_smime)
   gpgme_key_unref(key);
   if (err)
   {
-    mutt_error(_("error setting secret key `%s': %s\n"), signid, gpgme_strerror(err));
+    mutt_error(_("error setting secret key '%s': %s\n"), signid, gpgme_strerror(err));
     return -1;
   }
   return 0;
@@ -841,7 +838,6 @@ static gpgme_error_t set_pka_sig_notation(gpgme_ctx_t ctx)
   if (err)
   {
     mutt_error(_("error setting PKA signature notation: %s\n"), gpgme_strerror(err));
-    mutt_sleep(2);
   }
 
   return err;
@@ -1452,15 +1448,14 @@ static void print_smime_keyinfo(const char *msg, gpgme_signature_t sig,
                                 gpgme_key_t key, struct State *s)
 {
   int msgwid;
-  gpgme_user_id_t uids = NULL;
-  bool aka = false;
 
   state_puts(msg, s);
   state_puts(" ", s);
   /* key is NULL when not present in the user's keyring */
   if (key)
   {
-    for (uids = key->uids; uids; uids = uids->next)
+    bool aka = false;
+    for (gpgme_user_id_t uids = key->uids; uids; uids = uids->next)
     {
       if (uids->revoked)
         continue;
@@ -1516,13 +1511,10 @@ static int show_one_sig_status(gpgme_ctx_t ctx, int idx, struct State *s)
 {
   const char *fpr = NULL;
   gpgme_key_t key = NULL;
-  int i;
   bool anybad = false, anywarn = false;
-  unsigned int sum;
   gpgme_verify_result_t result;
   gpgme_signature_t sig;
   gpgme_error_t err = GPG_ERR_NO_ERROR;
-  char buf[LONG_STRING];
 
   result = gpgme_op_verify_result(ctx);
   if (result)
@@ -1530,7 +1522,7 @@ static int show_one_sig_status(gpgme_ctx_t ctx, int idx, struct State *s)
     /* FIXME: this code should use a static variable and remember
          the current position in the list of signatures, IMHO.
          -moritz.  */
-
+    int i;
     for (i = 0, sig = result->signatures; sig && (i < idx); i++, sig = sig->next)
       ;
     if (!sig)
@@ -1543,7 +1535,7 @@ static int show_one_sig_status(gpgme_ctx_t ctx, int idx, struct State *s)
     }
 
     fpr = sig->fpr;
-    sum = sig->summary;
+    const unsigned int sum = sig->summary;
 
     if (gpg_err_code(sig->status) != GPG_ERR_NO_ERROR)
       anybad = true;
@@ -1571,6 +1563,7 @@ static int show_one_sig_status(gpgme_ctx_t ctx, int idx, struct State *s)
       ; /* No state information so no way to print anything. */
     else if (err)
     {
+      char buf[LONG_STRING];
       snprintf(buf, sizeof(buf), _("Error getting key information for KeyID %s: %s\n"),
                fpr, gpgme_strerror(err));
       state_puts(buf, s);
@@ -1674,8 +1667,6 @@ static int verify_one(struct Body *sigbdy, struct State *s, const char *tempfile
   }
   else
   { /* Verification succeeded, see what the result is. */
-    int res, idx;
-    int anybad = 0;
     gpgme_verify_result_t verify_result;
 
     if (signature_key)
@@ -1687,7 +1678,9 @@ static int verify_one(struct Body *sigbdy, struct State *s, const char *tempfile
     verify_result = gpgme_op_verify_result(ctx);
     if (verify_result && verify_result->signatures)
     {
-      for (idx = 0; (res = show_one_sig_status(ctx, idx, s)) != -1; idx++)
+      int anybad = 0;
+      int res;
+      for (int idx = 0; (res = show_one_sig_status(ctx, idx, s)) != -1; idx++)
       {
         if (res == 1)
           anybad = 1;
@@ -1704,14 +1697,13 @@ static int verify_one(struct Body *sigbdy, struct State *s, const char *tempfile
     gpgme_verify_result_t result;
     gpgme_sig_notation_t notation;
     gpgme_signature_t sig;
-    int non_pka_notations;
 
     result = gpgme_op_verify_result(ctx);
     if (result)
     {
       for (sig = result->signatures; sig; sig = sig->next)
       {
-        non_pka_notations = 0;
+        int non_pka_notations = 0;
         for (notation = sig->notations; notation; notation = notation->next)
           if (!is_pka_notation(notation))
             non_pka_notations++;
@@ -2396,14 +2388,12 @@ void pgp_gpgme_invoke_import(const char *fname)
   {
     mutt_file_fclose(&in);
     mutt_error(_("error allocating data object: %s\n"), gpgme_strerror(err));
-    mutt_sleep(1);
     return;
   }
 
   if (pgp_gpgme_extract_keys(keydata, &out, 0))
   {
     mutt_error(_("Error extracting key data!\n"));
-    mutt_sleep(1);
   }
   gpgme_data_release(keydata);
   mutt_file_fclose(&in);
@@ -2559,7 +2549,6 @@ int pgp_gpgme_application_handler(struct Body *m, struct State *s)
       }
       else if (!clearsign || (s->flags & MUTT_VERIFY))
       {
-        bool sig_stat = false;
         gpgme_data_t plaintext;
         gpgme_ctx_t ctx;
 
@@ -2594,6 +2583,7 @@ int pgp_gpgme_application_handler(struct Body *m, struct State *s)
         }
         else
         { /* Decryption/Verification succeeded */
+          bool sig_stat = false;
           char *tmpfname = NULL;
 
           {
@@ -2794,7 +2784,6 @@ int pgp_gpgme_encrypted_handler(struct Body *a, struct State *s)
   else
   {
     mutt_error(_("Could not decrypt PGP message"));
-    mutt_sleep(2);
     rc = -1;
   }
 
@@ -2931,7 +2920,6 @@ static const char *crypt_format_str(char *buf, size_t buflen, size_t col, int co
   int kflags = 0;
   int optional = (flags & MUTT_FORMAT_OPTIONAL);
   const char *s = NULL;
-  unsigned long val;
 
   entry = (struct CryptEntry *) data;
   key = entry->key;
@@ -2990,6 +2978,7 @@ static const char *crypt_format_str(char *buf, size_t buflen, size_t col, int co
       if (!optional)
       {
         snprintf(fmt, sizeof(fmt), "%%%slu", prec);
+        unsigned long val;
         if (key->kobj->subkeys)
           val = key->kobj->subkeys->length;
         else
@@ -3623,14 +3612,13 @@ static void print_key_info(gpgme_key_t key, FILE *fp)
   int is_pgp = 0;
   gpgme_user_id_t uid = NULL;
   static int max_header_width = 0;
-  int width;
 
   if (!max_header_width)
   {
     for (int i = 0; i < KIP_END; i++)
     {
       KeyInfoPadding[i] = mutt_str_strlen(_(KeyInfoPrompts[i]));
-      width = mutt_strwidth(_(KeyInfoPrompts[i]));
+      const int width = mutt_strwidth(_(KeyInfoPrompts[i]));
       if (max_header_width < width)
         max_header_width = width;
       KeyInfoPadding[i] -= width;
@@ -4209,7 +4197,6 @@ static struct CryptKeyInfo *crypt_select_key(struct CryptKeyInfo *keys,
   if (!i && unusable)
   {
     mutt_error(_("All matching keys are marked expired/revoked."));
-    mutt_sleep(1);
     return NULL;
   }
 
@@ -4403,7 +4390,7 @@ static struct CryptKeyInfo *crypt_getkeybyaddr(struct Address *a,
 
   for (k = keys; k; k = k->next)
   {
-    mutt_debug(5, "  looking at key: %s `%.15s'\n", crypt_keyid(k), k->uid);
+    mutt_debug(5, "  looking at key: %s '%.15s'\n", crypt_keyid(k), k->uid);
 
     if (abilities && !(k->flags & abilities))
     {
@@ -4616,7 +4603,6 @@ static struct CryptKeyInfo *crypt_ask_for_key(char *tag, char *whatfor, short ab
       return key;
 
     mutt_error(_("No matching keys found for \"%s\""), resp);
-    mutt_sleep(0);
   }
   /* not reached */
 }
@@ -4788,7 +4774,6 @@ struct Body *pgp_gpgme_make_key_attachment(char *tempf)
   if (err != GPG_ERR_NO_ERROR)
   {
     mutt_error(_("Error exporting key: %s\n"), gpgme_strerror(err));
-    mutt_sleep(1);
     goto bail;
   }
 
@@ -4877,7 +4862,6 @@ void smime_gpgme_init(void)
 static int gpgme_send_menu(struct Header *msg, int is_smime)
 {
   struct CryptKeyInfo *p = NULL;
-  char input_signas[SHORT_STRING];
   char *prompt = NULL, *letters = NULL, *choices = NULL;
   int choice;
 
@@ -4986,6 +4970,7 @@ static int gpgme_send_menu(struct Header *msg, int is_smime)
                               is_smime ? APPLICATION_SMIME : APPLICATION_PGP, NULL);
         if (p)
         {
+          char input_signas[SHORT_STRING];
           snprintf(input_signas, sizeof(input_signas), "0x%s", crypt_fpr_or_lkeyid(p));
           mutt_str_replace(is_smime ? &SmimeDefaultKey : &PgpSignAs, input_signas);
           crypt_free_key(&p);
@@ -5068,13 +5053,10 @@ static int verify_sender(struct Header *h)
     {
       gpgme_key_t key = signature_key;
       gpgme_user_id_t uid = NULL;
-      int sender_length = 0;
-      int uid_length = 0;
-
-      sender_length = strlen(sender->mailbox);
+      int sender_length = strlen(sender->mailbox);
       for (uid = key->uids; uid && rc; uid = uid->next)
       {
-        uid_length = strlen(uid->email);
+        int uid_length = strlen(uid->email);
         if ((uid->email[0] == '<') && (uid->email[uid_length - 1] == '>') &&
             (uid_length == (sender_length + 2)))
         {

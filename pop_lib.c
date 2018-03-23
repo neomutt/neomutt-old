@@ -71,7 +71,6 @@ int pop_parse_path(const char *path, struct Account *acct)
     url_free(&url);
     FREE(&c);
     mutt_error(_("Invalid POP URL: %s\n"), path);
-    mutt_sleep(1);
     return -1;
   }
 
@@ -343,12 +342,10 @@ int pop_open_connection(struct PopData *pop_data)
       if (rc != 0)
       {
         mutt_error("%s", pop_data->err_msg);
-        mutt_sleep(2);
       }
       else if (mutt_ssl_starttls(pop_data->conn))
       {
         mutt_error(_("Could not negotiate TLS connection"));
-        mutt_sleep(2);
         return -2;
       }
       else
@@ -369,7 +366,6 @@ int pop_open_connection(struct PopData *pop_data)
   if (SslForceTls && !pop_data->conn->ssf)
   {
     mutt_error(_("Encrypted connection unavailable"));
-    mutt_sleep(1);
     return -2;
   }
 #endif
@@ -400,7 +396,6 @@ int pop_open_connection(struct PopData *pop_data)
   if (rc == -2)
   {
     mutt_error("%s", pop_data->err_msg);
-    mutt_sleep(2);
     return rc;
   }
 
@@ -411,7 +406,6 @@ int pop_open_connection(struct PopData *pop_data)
 err_conn:
   pop_data->status = POP_DISCONNECTED;
   mutt_error(_("Server closed connection!"));
-  mutt_sleep(2);
   return -1;
 }
 
@@ -421,12 +415,12 @@ err_conn:
  */
 void pop_logout(struct Context *ctx)
 {
-  int ret = 0;
-  char buf[LONG_STRING];
   struct PopData *pop_data = (struct PopData *) ctx->data;
 
   if (pop_data->status == POP_CONNECTED)
   {
+    int ret = 0;
+    char buf[LONG_STRING];
     mutt_message(_("Closing connection to POP server..."));
 
     if (ctx->readonly)
@@ -509,22 +503,20 @@ int pop_fetch_data(struct PopData *pop_data, char *query, struct Progress *progr
                    int (*funct)(char *, void *), void *data)
 {
   char buf[LONG_STRING];
-  char *inbuf = NULL;
-  char *p = NULL;
-  int ret, chunk = 0;
   long pos = 0;
   size_t lenbuf = 0;
 
   mutt_str_strfcpy(buf, query, sizeof(buf));
-  ret = pop_query(pop_data, buf, sizeof(buf));
+  int ret = pop_query(pop_data, buf, sizeof(buf));
   if (ret < 0)
     return ret;
 
-  inbuf = mutt_mem_malloc(sizeof(buf));
+  char *inbuf = mutt_mem_malloc(sizeof(buf));
 
   while (true)
   {
-    chunk = mutt_socket_readln_d(buf, sizeof(buf), pop_data->conn, MUTT_SOCK_LOG_HDR);
+    const int chunk =
+        mutt_socket_readln_d(buf, sizeof(buf), pop_data->conn, MUTT_SOCK_LOG_HDR);
     if (chunk < 0)
     {
       pop_data->status = POP_DISCONNECTED;
@@ -532,7 +524,7 @@ int pop_fetch_data(struct PopData *pop_data, char *query, struct Progress *progr
       break;
     }
 
-    p = buf;
+    char *p = buf;
     if (!lenbuf && buf[0] == '.')
     {
       if (buf[1] != '.')
@@ -605,9 +597,7 @@ static int check_uidl(char *line, void *data)
  */
 int pop_reconnect(struct Context *ctx)
 {
-  int ret;
   struct PopData *pop_data = (struct PopData *) ctx->data;
-  struct Progress progressbar;
 
   if (pop_data->status == POP_CONNECTED)
     return 0;
@@ -618,9 +608,10 @@ int pop_reconnect(struct Context *ctx)
   {
     mutt_socket_close(pop_data->conn);
 
-    ret = pop_open_connection(pop_data);
+    int ret = pop_open_connection(pop_data);
     if (ret == 0)
     {
+      struct Progress progressbar;
       mutt_progress_init(&progressbar, _("Verifying message indexes..."),
                          MUTT_PROGRESS_SIZE, NetInc, 0);
 
@@ -631,7 +622,6 @@ int pop_reconnect(struct Context *ctx)
       if (ret == -2)
       {
         mutt_error("%s", pop_data->err_msg);
-        mutt_sleep(2);
       }
     }
     if (ret == 0)

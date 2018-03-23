@@ -29,7 +29,7 @@
     <sect1 id="homepage">
       <title>NeoMutt Home Page</title>
       <para>The homepage can be found at
-      <ulink url="https://www.neomutt.org/">https://www.neomutt.org/</ulink>.</para>
+      <ulink url="https://www.neomutt.org">https://www.neomutt.org</ulink>.</para>
     </sect1>
 
     <sect1 id="mailinglists">
@@ -178,7 +178,7 @@
     There are many other features which are described elsewhere in the manual.
     There is even more information available in the NeoMutt FAQ and various web
     pages. See the
-    <ulink url="http://www.neomutt.org/">NeoMutt homepage</ulink> for more
+    <ulink url="https://www.neomutt.org">NeoMutt homepage</ulink> for more
     details.</para>
     <para>The keybindings described in this section are the defaults as
     distributed. Your local system administrator may have altered the defaults
@@ -2713,13 +2713,13 @@ color sidebar_divider   color8  default
         <para>Once you have successfully finished the key selection, the
         message will be encrypted using the selected public keys when sent
         out.</para>
-	<para>
-	To ensure you can view encrypted messages you have sent, you
-	may wish to set <link linkend="pgp-self-encrypt">$pgp_self_encrypt</link>
-	and <link linkend="pgp-default-key">$pgp_default_key</link> for PGP, or
-	<link linkend="smime-self-encrypt">$smime_self_encrypt</link>
-	and <link linkend="smime-default-key">$smime_default_key</link> for S/MIME.
-	</para>
+        <para>
+        To ensure you can view encrypted messages you have sent, you
+        may wish to set <link linkend="pgp-self-encrypt">$pgp_self_encrypt</link>
+        and <link linkend="pgp-default-key">$pgp_default_key</link> for PGP, or
+        <link linkend="smime-self-encrypt">$smime_self_encrypt</link>
+        and <link linkend="smime-default-key">$smime_default_key</link> for S/MIME.
+        </para>
         <para>Most fields of the entries in the key selection menu (see also
         <link linkend="pgp-entry-format">$pgp_entry_format</link>) have obvious
         meanings. But some explanations on the capabilities, flags, and
@@ -2974,6 +2974,11 @@ color sidebar_divider   color8  default
       <para>When NeoMutt starts up it looks for two configuration files -- one
       <quote>system</quote> file and one
       <quote>user</quote> file.</para>
+      <para>NeoMutt first reads the system configuration file, then the user
+      configuration file. The two files are merged in the sense that "last
+      setting wins". That is, if a setting is defined in both files, the user
+      configuration file's value for that setting is the one that takes
+      precedence and becomes effective.</para>
       <para>NeoMutt searches for several different file names when looking for
       config. It looks for NeoMutt config files before Mutt config files and
       versioned config before plain config. For example:</para>
@@ -4192,7 +4197,9 @@ folder-hook work "set sort=threads"
       <emphasis>foreground</emphasis> can optionally be prefixed with the
       keyword
       <literal>bright</literal> to make the foreground color boldfaced (e.g.,
-      <literal>brightred</literal>).</para>
+      <literal>brightred</literal>).
+      <literal>alert</literal> to make a blinking/alert color (e.g.,
+      <literal>alertred</literal>).</para>
       <para>If your terminal supports it, the special keyword
       <emphasis>default</emphasis> can be used as a transparent color. The value
       <emphasis>brightdefault</emphasis> is also valid. If NeoMutt is linked
@@ -7816,7 +7823,7 @@ subjectrx '\[rt #[0-9]+\] *' '%L%R'
 
 subjectrx '\[servicedesk #([0-9]+)\] ([^.]+)\.([^.]+) - (new|open|pending|update) - ' '%L[#%1] %R'
 # Strip out annoying [listname] prefixes in subjects
-subjectrx '\[[^\]]*\]:? *' '%L%R'
+subjectrx '\[[^]]*\]:? *' '%L%R'
 </screen>
       </example>
     </sect1>
@@ -12823,7 +12830,7 @@ color index_tags green default
         <itemizedlist>
           <listitem>
             <para>For more information, see:
-            <ulink url="https://notmuchmail.org/">
+            <ulink url="https://notmuchmail.org">
             https://notmuchmail.org/</ulink></para>
           </listitem>
           <listitem>
@@ -15349,6 +15356,19 @@ folder-hook ^pop 'set read_inc=1'</screen>
         <listitem>
           <cmdsynopsis>
             <command>
+              <link linkend="append-hook">append-hook</link>
+            </command>
+            <arg choice="plain">
+              <replaceable class="parameter">pattern</replaceable>
+            </arg>
+            <arg choice="plain">
+              <replaceable class="parameter">shell-command</replaceable>
+            </arg>
+          </cmdsynopsis>
+        </listitem>
+        <listitem>
+          <cmdsynopsis>
+            <command>
               <link linkend="attachments">attachments</link>
             </command>
             <arg choice="plain">
@@ -15365,19 +15385,6 @@ folder-hook ^pop 'set read_inc=1'</screen>
             </arg>
             <arg choice="plain">
               <replaceable>mime-type</replaceable>
-            </arg>
-          </cmdsynopsis>
-        </listitem>
-        <listitem>
-          <cmdsynopsis>
-            <command>
-              <link linkend="append-hook">append-hook</link>
-            </command>
-            <arg choice="plain">
-              <replaceable class="parameter">pattern</replaceable>
-            </arg>
-            <arg choice="plain">
-              <replaceable class="parameter">shell-command</replaceable>
             </arg>
           </cmdsynopsis>
         </listitem>
@@ -15431,19 +15438,6 @@ folder-hook ^pop 'set read_inc=1'</screen>
             </arg>
             <arg choice="plain">
               <replaceable class="parameter">charset</replaceable>
-            </arg>
-          </cmdsynopsis>
-        </listitem>
-        <listitem>
-          <cmdsynopsis>
-            <command>
-              <link linkend="iconv-hook">iconv-hook</link>
-            </command>
-            <arg choice="plain">
-              <replaceable class="parameter">charset</replaceable>
-            </arg>
-            <arg choice="plain">
-              <replaceable class="parameter">local-charset</replaceable>
             </arg>
           </cmdsynopsis>
         </listitem>
@@ -15531,19 +15525,6 @@ folder-hook ^pop 'set read_inc=1'</screen>
                 <replaceable>pattern</replaceable>
               </arg>
             </group>
-          </cmdsynopsis>
-        </listitem>
-        <listitem>
-          <cmdsynopsis>
-            <command>
-              <link linkend="open-hook">open-hook</link>
-            </command>
-            <arg choice="plain">
-              <replaceable class="parameter">pattern</replaceable>
-            </arg>
-            <arg choice="plain">
-              <replaceable class="parameter">shell-command</replaceable>
-            </arg>
           </cmdsynopsis>
         </listitem>
         <listitem>
@@ -15678,7 +15659,22 @@ folder-hook ^pop 'set read_inc=1'</screen>
         </listitem>
         <listitem>
           <cmdsynopsis>
-            <command>ifdef</command>
+            <command>
+              <link linkend="iconv-hook">iconv-hook</link>
+            </command>
+            <arg choice="plain">
+              <replaceable class="parameter">charset</replaceable>
+            </arg>
+            <arg choice="plain">
+              <replaceable class="parameter">local-charset</replaceable>
+            </arg>
+          </cmdsynopsis>
+        </listitem>
+        <listitem>
+          <cmdsynopsis>
+            <command>
+              <link linkend="ifdef">ifdef</link>
+            </command>
             <arg choice="plain">
               <replaceable class="parameter">item</replaceable>
             </arg>
@@ -15951,10 +15947,36 @@ folder-hook ^pop 'set read_inc=1'</screen>
         <listitem>
           <cmdsynopsis>
             <command>
+              <link linkend="open-hook">open-hook</link>
+            </command>
+            <arg choice="plain">
+              <replaceable class="parameter">pattern</replaceable>
+            </arg>
+            <arg choice="plain">
+              <replaceable class="parameter">shell-command</replaceable>
+            </arg>
+          </cmdsynopsis>
+        </listitem>
+        <listitem>
+          <cmdsynopsis>
+            <command>
               <link linkend="push">push</link>
             </command>
             <arg choice="plain">
               <replaceable class="parameter">string</replaceable>
+            </arg>
+          </cmdsynopsis>
+        </listitem>
+        <listitem>
+          <cmdsynopsis>
+            <command>
+              <link linkend="reply-hook">reply-hook</link>
+            </command>
+            <arg choice="plain">
+              <replaceable class="parameter">[!]pattern</replaceable>
+            </arg>
+            <arg choice="plain">
+              <replaceable class="parameter">command</replaceable>
             </arg>
           </cmdsynopsis>
         </listitem>
@@ -15993,19 +16015,6 @@ folder-hook ^pop 'set read_inc=1'</screen>
                 <replaceable class="parameter">pattern</replaceable>
               </arg>
             </group>
-          </cmdsynopsis>
-        </listitem>
-        <listitem>
-          <cmdsynopsis>
-            <command>
-              <link linkend="reply-hook">reply-hook</link>
-            </command>
-            <arg choice="plain">
-              <replaceable class="parameter">[!]pattern</replaceable>
-            </arg>
-            <arg choice="plain">
-              <replaceable class="parameter">command</replaceable>
-            </arg>
           </cmdsynopsis>
         </listitem>
         <listitem>

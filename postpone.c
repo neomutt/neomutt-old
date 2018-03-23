@@ -188,13 +188,11 @@ static void post_entry(char *buf, size_t buflen, struct Menu *menu, int num)
 
 static struct Header *select_msg(void)
 {
-  struct Menu *menu = NULL;
-  int i, r = -1;
+  int r = -1;
   bool done = false;
   char helpstr[LONG_STRING];
-  short orig_sort;
 
-  menu = mutt_new_menu(MENU_POST);
+  struct Menu *menu = mutt_new_menu(MENU_POST);
   menu->make_entry = post_entry;
   menu->max = PostContext->msgcount;
   menu->title = _("Postponed Messages");
@@ -205,12 +203,13 @@ static struct Header *select_msg(void)
   /* The postponed mailbox is setup to have sorting disabled, but the global
    * Sort variable may indicate something different.   Sorting has to be
    * disabled while the postpone menu is being displayed. */
-  orig_sort = Sort;
+  const short orig_sort = Sort;
   Sort = SORT_ORDER;
 
   while (!done)
   {
-    switch (i = mutt_menu_loop(menu))
+    const int i = mutt_menu_loop(menu);
+    switch (i)
     {
       case OP_DELETE:
       case OP_UNDELETE:
@@ -355,7 +354,7 @@ int mutt_get_postponed(struct Context *ctx, struct Header *hdr,
       */
       code |= SENDPOSTPONEDFCC;
     }
-    else if ((WithCrypto & APPLICATION_PGP) &&
+    else if (((WithCrypto & APPLICATION_PGP) != 0) &&
              ((mutt_str_strncmp("Pgp:", np->data, 4) == 0) /* this is generated
                                                         * by old neomutt versions
                                                         */
@@ -364,7 +363,7 @@ int mutt_get_postponed(struct Context *ctx, struct Header *hdr,
       hdr->security = mutt_parse_crypt_hdr(strchr(np->data, ':') + 1, 1, APPLICATION_PGP);
       hdr->security |= APPLICATION_PGP;
     }
-    else if ((WithCrypto & APPLICATION_SMIME) &&
+    else if (((WithCrypto & APPLICATION_SMIME) != 0) &&
              (mutt_str_strncmp("X-Mutt-SMIME:", np->data, 13) == 0))
     {
       hdr->security = mutt_parse_crypt_hdr(strchr(np->data, ':') + 1, 1, APPLICATION_SMIME);
@@ -500,18 +499,18 @@ int mutt_parse_crypt_hdr(const char *p, int set_empty_signas, int crypt_app)
   }
 
   /* the cryptalg field must not be empty */
-  if ((WithCrypto & APPLICATION_SMIME) && *smime_cryptalg)
+  if (((WithCrypto & APPLICATION_SMIME) != 0) && *smime_cryptalg)
     mutt_str_replace(&SmimeEncryptWith, smime_cryptalg);
 
   /* Set {Smime,Pgp}SignAs, if desired. */
 
-  if ((WithCrypto & APPLICATION_PGP) && (crypt_app == APPLICATION_PGP) &&
+  if (((WithCrypto & APPLICATION_PGP) != 0) && (crypt_app == APPLICATION_PGP) &&
       (flags & SIGN) && (set_empty_signas || *sign_as))
   {
     mutt_str_replace(&PgpSignAs, sign_as);
   }
 
-  if ((WithCrypto & APPLICATION_SMIME) && (crypt_app == APPLICATION_SMIME) &&
+  if (((WithCrypto & APPLICATION_SMIME) != 0) && (crypt_app == APPLICATION_SMIME) &&
       (flags & SIGN) && (set_empty_signas || *sign_as))
   {
     mutt_str_replace(&SmimeSignAs, sign_as);
@@ -574,7 +573,7 @@ int mutt_prepare_template(FILE *fp, struct Context *ctx, struct Header *newhdr,
 
   /* decrypt pgp/mime encoded messages */
 
-  if ((WithCrypto & APPLICATION_PGP) &&
+  if (((WithCrypto & APPLICATION_PGP) != 0) &&
       (sec_type = mutt_is_multipart_encrypted(newhdr->content)))
   {
     newhdr->security |= sec_type;
@@ -598,15 +597,15 @@ int mutt_prepare_template(FILE *fp, struct Context *ctx, struct Header *newhdr,
    * resending messages
    */
 
-  if (WithCrypto && mutt_is_multipart_signed(newhdr->content))
+  if ((WithCrypto != 0) && mutt_is_multipart_signed(newhdr->content))
   {
     newhdr->security |= SIGN;
-    if ((WithCrypto & APPLICATION_PGP) &&
+    if (((WithCrypto & APPLICATION_PGP) != 0) &&
         (mutt_str_strcasecmp(
              mutt_param_get(&newhdr->content->parameter, "protocol"),
              "application/pgp-signature") == 0))
       newhdr->security |= APPLICATION_PGP;
-    else if ((WithCrypto & APPLICATION_SMIME))
+    else if (WithCrypto & APPLICATION_SMIME)
       newhdr->security |= APPLICATION_SMIME;
 
     /* destroy the signature */
@@ -671,7 +670,7 @@ int mutt_prepare_template(FILE *fp, struct Context *ctx, struct Header *newhdr,
     if (!s.fpout)
       goto bail;
 
-    if ((WithCrypto & APPLICATION_PGP) &&
+    if (((WithCrypto & APPLICATION_PGP) != 0) &&
         ((sec_type = mutt_is_application_pgp(b)) & (ENCRYPT | SIGN)))
     {
       if (sec_type & ENCRYPT)
@@ -693,7 +692,7 @@ int mutt_prepare_template(FILE *fp, struct Context *ctx, struct Header *newhdr,
       mutt_str_replace(&b->subtype, "plain");
       mutt_param_delete(&b->parameter, "x-action");
     }
-    else if ((WithCrypto & APPLICATION_SMIME) &&
+    else if (((WithCrypto & APPLICATION_SMIME) != 0) &&
              ((sec_type = mutt_is_application_smime(b)) & (ENCRYPT | SIGN)))
     {
       if (sec_type & ENCRYPT)
@@ -733,7 +732,7 @@ int mutt_prepare_template(FILE *fp, struct Context *ctx, struct Header *newhdr,
   /* Fix encryption flags. */
 
   /* No inline if multipart. */
-  if (WithCrypto && (newhdr->security & INLINE) && newhdr->content->next)
+  if ((WithCrypto != 0) && (newhdr->security & INLINE) && newhdr->content->next)
     newhdr->security &= ~INLINE;
 
   /* Do we even support multiple mechanisms? */

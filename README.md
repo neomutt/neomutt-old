@@ -28,7 +28,7 @@ sorted through them, fixed them up and documented them.
 | Encrypt-to-Self      | Save a self-encrypted copy of emails
 | Fmemopen             | Replace some temporary files with memory buffers
 | Forgotten Attachment | Alert user when (s)he forgets to attach a file to an outgoing email.
-| Global Hooks         | Define actions to run globally within Mutt
+| Global Hooks         | Define actions to run globally within NeoMutt
 | Ifdef                | Conditional config options
 | Index Color          | Custom rules for theming the email index
 | Initials Expando     | Expando for author's initials
@@ -56,8 +56,8 @@ sorted through them, fixed them up and documented them.
 | ---------------------- | ---------------------------------------------
 | Header Cache Benchmark | Script to test the speed of the header cache
 | Keybase                | Keybase Integration
-| Useful programs        | List of useful programs interacting with mutt
-| Vi Keys                | Easy and clean Vi-keys for Mutt
+| Useful programs        | List of useful programs interacting with NeoMutt
+| Vi Keys                | Easy and clean Vi-keys for NeoMutt
 | Vim Syntax             | Vim Syntax File
 
 ## Where is NeoMutt?
@@ -65,12 +65,12 @@ sorted through them, fixed them up and documented them.
 - Source Code:     https://github.com/neomutt/neomutt
 - Releases:        https://github.com/neomutt/neomutt/releases/latest
 - Questions/Bugs:  https://github.com/neomutt/neomutt/issues
-- Website:         http://www.neomutt.org/
+- Website:         https://www.neomutt.org
 - IRC:             irc://irc.freenode.net/neomutt - please be patient.
   We're a small group, so our answer might take some time.
 - Mailinglists:    [neomutt-users](mailto:neomutt-users-request@neomutt.org?subject=subscribe)
   and [neomutt-devel](mailto:neomutt-devel-request@neomutt.org?subject=subscribe)
-- Development:     http://www.neomutt.org/dev.html
+- Development:     https://www.neomutt.org/dev.html
 
 ## NeoMutt Developers
 
@@ -90,15 +90,16 @@ Jasper Adriaanse, Jelle van der Waa, Jenya Sovetkin, Johannes Frankenau,
 Johannes Weißl, Jonathan Perkin, Joshua Jordi, Julian Andres Klode, Karel Zak,
 Kevin Decherf, Kevin Velghe, Kurt Jaeger, Leo Lundgren, Leonardo Schenkel,
 Leonidas Spyropoulos, Manos Pitsidianakis, Marcin Rajner, Marco Hinz,
-Marius Gedminas, Matteo Vescovi, Mehdi Abaakouk, Michael Bazzinotti, ng0,
-Nicolas Bock, Olaf Lessenich, Peter Hogg, Peter Lewis, Phil Pennock,
-Philipp Marek, Pierre-Elliott Bécue, Pietro Cerutti, r3lgar, Regid Ichira,
-Reis Radomil, Riad Wahby, Richard Hartmann, Richard Russon, Rubén Llorente,
+Marius Gedminas, Mateusz Piotrowski, Matteo Vescovi, Mehdi Abaakouk,
+Michael Bazzinotti, ng0, Nicolas Bock, Olaf Lessenich, parazyd, Perry Thompson,
+Peter Hogg, Peter Lewis, Phil Pennock, Philipp Marek, Pierre-Elliott Bécue,
+Pietro Cerutti, r3lgar, Regid Ichira, Reis Radomil, Riad Wahby,
+Richard Hartmann, Richard Russon, Roger Pau Monne, Rubén Llorente,
 Santiago Torres, Serge Gebhardt, sharktamer, Shi Lee, somini, Stefan Assmann,
-Stefan Bühler, Stephen Gilles, Steven Ragnarök, Sven Guckes, Theo Jepsen,
-Thomas Adam, Thomas Klausner, Thomas Schneider, Tobias Angele, Udo Schweigert,
-Vsevolod Volkov, Werner Fink, Wieland Hoffmann, William Pettersson,
-Yoshiki Vázquez Baeza, Zero King.
+Stefan Bühler, Stephen Gilles, Steve Bennett, Steven Ragnarök, Sven Guckes,
+Theo Jepsen, Thiago Costa de Paiva, Thomas Adam, Thomas Klausner,
+Thomas Schneider, Tobias Angele, Udo Schweigert, Vsevolod Volkov, Werner Fink,
+Wieland Hoffmann, William Pettersson, Yoshiki Vázquez Baeza, Zero King.
 
 ## Original Patch Authors
 
@@ -124,5 +125,5 @@ author Michael Elkins and all the people that have contributed to Mutt during
 its long history, see the Acknowledgements section of the user manual for a
 detailed list.
 
-http://www.neomutt.org/guide/miscellany.html#acknowledgements
+https://www.neomutt.org/guide/miscellany.html#acknowledgements
 

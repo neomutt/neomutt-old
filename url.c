@@ -20,10 +20,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * A simple URL parser.
- */
-
 #include "config.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -297,8 +293,6 @@ void url_pct_encode(char *dst, size_t l, const char *src)
  */
 int url_tostring(struct Url *u, char *dest, size_t len, int flags)
 {
-  size_t l;
-
   if (u->scheme == U_UNKNOWN)
     return -1;
 
@@ -308,7 +302,7 @@ int url_tostring(struct Url *u, char *dest, size_t len, int flags)
   {
     if (!(flags & U_PATH))
       mutt_str_strcat(dest, len, "//");
-    l = strlen(dest);
+    size_t l = strlen(dest);
     len -= l;
     dest += l;
 

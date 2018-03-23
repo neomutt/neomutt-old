@@ -26,11 +26,6 @@
  * @page rfc2047 RFC2047 encoding / decoding functions
  *
  * RFC2047 MIME extensions encoding / decoding routines.
- *
- * | Function              | Description
- * | :-------------------- | :-----------------------------------------
- * | mutt_rfc2047_decode() | Decode any RFC2047-encoded header fields
- * | mutt_rfc2047_encode() | RFC-2047-encode a string
  */
 
 #include "config.h"
@@ -204,7 +199,6 @@ static size_t try_block(const char *d, size_t dlen, const char *fromcode,
                         const char *tocode, encoder_t *encoder, size_t *wlen)
 {
   char buf[ENCWORD_LEN_MAX - ENCWORD_LEN_MIN + 1];
-  iconv_t cd;
   const char *ib = NULL;
   char *ob = NULL;
   size_t ibl, obl;
@@ -212,7 +206,7 @@ static size_t try_block(const char *d, size_t dlen, const char *fromcode,
 
   if (fromcode)
   {
-    cd = mutt_ch_iconv_open(tocode, fromcode, 0);
+    iconv_t cd = mutt_ch_iconv_open(tocode, fromcode, 0);
     assert(cd != (iconv_t)(-1));
     ib = d;
     ibl = dlen;
@@ -285,28 +279,23 @@ static size_t try_block(const char *d, size_t dlen, const char *fromcode,
 static size_t encode_block(char *str, char *buf, size_t buflen, const char *fromcode,
                            const char *tocode, encoder_t encoder)
 {
-  char tmp[ENCWORD_LEN_MAX - ENCWORD_LEN_MIN + 1];
-  iconv_t cd;
-  const char *ib = NULL;
-  char *ob = NULL;
-  size_t ibl, obl, n1, n2;
-
-  if (fromcode)
+  if (!fromcode)
   {
-    cd = mutt_ch_iconv_open(tocode, fromcode, 0);
-    assert(cd != (iconv_t)(-1));
-    ib = buf;
-    ibl = buflen;
-    ob = tmp;
-    obl = sizeof(tmp) - strlen(tocode);
-    n1 = iconv(cd, (ICONV_CONST char **) &ib, &ibl, &ob, &obl);
-    n2 = iconv(cd, NULL, NULL, &ob, &obl);
-    assert(n1 != (size_t)(-1) && n2 != (size_t)(-1));
-    iconv_close(cd);
-    return (*encoder)(str, tmp, ob - tmp, tocode);
-  }
-  else
     return (*encoder)(str, buf, buflen, tocode);
+  }
+
+  const iconv_t cd = mutt_ch_iconv_open(tocode, fromcode, 0);
+  assert(cd != (iconv_t)(-1));
+  const char *ib = buf;
+  size_t ibl = buflen;
+  char tmp[ENCWORD_LEN_MAX - ENCWORD_LEN_MIN + 1];
+  char *ob = tmp;
+  size_t obl = sizeof(tmp) - strlen(tocode);
+  const size_t n1 = iconv(cd, (ICONV_CONST char **) &ib, &ibl, &ob, &obl);
+  const size_t n2 = iconv(cd, NULL, NULL, &ob, &obl);
+  assert(n1 != (size_t)(-1) && n2 != (size_t)(-1));
+  iconv_close(cd);
+  return (*encoder)(str, tmp, ob - tmp, tocode);
 }
 
 /**
@@ -328,14 +317,13 @@ static size_t encode_block(char *str, char *buf, size_t buflen, const char *from
 static size_t choose_block(char *d, size_t dlen, int col, const char *fromcode,
                            const char *tocode, encoder_t *encoder, size_t *wlen)
 {
-  size_t n, nn;
-  int utf8 = fromcode && (mutt_str_strcasecmp(fromcode, "utf-8") == 0);
+  const int utf8 = fromcode && (mutt_str_strcasecmp(fromcode, "utf-8") == 0);
 
-  n = dlen;
+  size_t n = dlen;
   while (true)
   {
     assert(n > 0);
-    nn = try_block(d, n, fromcode, tocode, encoder, wlen);
+    const size_t nn = try_block(d, n, fromcode, tocode, encoder, wlen);
     if ((nn == 0) && ((col + *wlen) <= (ENCWORD_LEN_MAX + 1) || (n <= 1)))
       break;
     n = (nn ? nn : n) - 1;
@@ -442,7 +430,7 @@ static int rfc2047_encode(const char *d, size_t dlen, int col, const char *fromc
   size_t bufpos, buflen;
   char *u = NULL, *t0 = NULL, *t1 = NULL, *t = NULL;
   char *s0 = NULL, *s1 = NULL;
-  size_t ulen, r, n, wlen = 0;
+  size_t ulen, r, wlen = 0;
   encoder_t encoder;
   char *tocode1 = NULL;
   const char *tocode = NULL;
@@ -560,7 +548,7 @@ static int rfc2047_encode(const char *d, size_t dlen, int col, const char *fromc
   while (true)
   {
     /* Find how much we can encode. */
-    n = choose_block(t, t1 - t, col, icode, tocode, &encoder, &wlen);
+    size_t n = choose_block(t, t1 - t, col, icode, tocode, &encoder, &wlen);
     if (n == (t1 - t))
     {
       /* See if we can fit the us-ascii suffix, too. */
@@ -570,7 +558,6 @@ static int rfc2047_encode(const char *d, size_t dlen, int col, const char *fromc
       if (icode)
         while (CONTINUATION_BYTE(t[n]))
           n--;
-      assert(n >= 0);
       if (!n)
       {
         /* This should only happen in the really stupid case where the

@@ -236,7 +236,11 @@ static void resolve_color(struct Line *line_info, int n, int cnt, int flags,
   }
   else
     m = n;
-  if (!(flags & MUTT_SHOWCOLOR))
+  if (flags & MUTT_PAGER_LOGS)
+  {
+    def_color = ColorDefs[(line_info[n].syntax)[0].color];
+  }
+  else if (!(flags & MUTT_SHOWCOLOR))
     def_color = ColorDefs[MT_COLOR_NORMAL];
   else if (line_info[m].type == MT_COLOR_HEADER)
     def_color = (line_info[m].syntax)[0].color;
@@ -753,7 +757,7 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
   regmatch_t pmatch[1], smatch[1];
   bool found;
   bool null_rx;
-  int offset, i;
+  int offset, i = 0;
 
   if (n == 0 || ISHEADER(line_info[n - 1].type))
   {
@@ -1255,7 +1259,7 @@ static int format_line(struct Line **line_info, int n, unsigned char *buf, int f
     if (k == 0)
       k = 1;
 
-    if (Charset_is_utf8)
+    if (CharsetIsUtf8)
     {
       /* zero width space, zero width no-break space */
       if (wc == 0x200B || wc == 0xFEFF)
@@ -1275,14 +1279,12 @@ static int format_line(struct Line **line_info, int n, unsigned char *buf, int f
     if (IsWPrint(wc))
     {
       wchar_t wc1;
-      mbstate_t mbstate1;
-      size_t k1, k2;
-
-      mbstate1 = mbstate;
-      k1 = mbrtowc(&wc1, (char *) buf + ch + k, cnt - ch - k, &mbstate1);
+      mbstate_t mbstate1 = mbstate;
+      size_t k1 = mbrtowc(&wc1, (char *) buf + ch + k, cnt - ch - k, &mbstate1);
       while ((k1 != (size_t)(-2)) && (k1 != (size_t)(-1)) && (k1 > 0) && (wc1 == '\b'))
       {
-        k2 = mbrtowc(&wc1, (char *) buf + ch + k + k1, cnt - ch - k - k1, &mbstate1);
+        const size_t k2 =
+            mbrtowc(&wc1, (char *) buf + ch + k + k1, cnt - ch - k - k1, &mbstate1);
         if ((k2 == (size_t)(-2)) || (k2 == (size_t)(-1)) || (k2 == 0) || (!IsWPrint(wc1)))
           break;
 
@@ -1316,14 +1318,14 @@ static int format_line(struct Line **line_info, int n, unsigned char *buf, int f
     }
 
     /* no-break space, narrow no-break space */
-    if (IsWPrint(wc) || (Charset_is_utf8 && (wc == 0x00A0 || wc == 0x202F)))
+    if (IsWPrint(wc) || (CharsetIsUtf8 && (wc == 0x00A0 || wc == 0x202F)))
     {
       if (wc == ' ')
       {
         space = ch;
       }
       /* no-break space, narrow no-break space */
-      else if (Charset_is_utf8 && (wc == 0x00A0 || wc == 0x202F))
+      else if (CharsetIsUtf8 && (wc == 0x00A0 || wc == 0x202F))
       {
         /* Convert non-breaking space to normal space. The local variable
          * `space' is not set here so that the caller of this function won't
@@ -1446,6 +1448,25 @@ static int display_line(FILE *f, LOFF_T *last_pos, struct Line **line_info,
       (*line_info)[ch].syntax = mutt_mem_malloc(sizeof(struct Syntax));
       ((*line_info)[ch].syntax)[0].first = ((*line_info)[ch].syntax)[0].last = -1;
     }
+  }
+
+  if (flags & MUTT_PAGER_LOGS)
+  {
+    /* determine the line class */
+    if (fill_buffer(f, last_pos, (*line_info)[n].offset, &buf, &fmt, &buflen, &buf_ready) < 0)
+    {
+      if (change_last)
+        (*last)--;
+      goto out;
+    }
+
+    (*line_info)[n].type = MT_COLOR_MESSAGE_LOG;
+    if (buf[11] == 'M')
+      (*line_info)[n].syntax[0].color = MT_COLOR_MESSAGE;
+    else if (buf[11] == 'E')
+      (*line_info)[n].syntax[0].color = MT_COLOR_ERROR;
+    else
+      (*line_info)[n].syntax[0].color = MT_COLOR_NORMAL;
   }
 
   /* only do color highlighting if we are viewing a message */
@@ -1678,6 +1699,7 @@ static const struct Mapping PagerHelp[] = {
   { N_("NextPg"), OP_NEXT_PAGE },
   { NULL, 0 },
 };
+
 static const struct Mapping PagerHelpExtra[] = {
   { N_("View Attachm."), OP_VIEW_ATTACHMENTS },
   { N_("Del"), OP_DELETE },
@@ -1744,9 +1766,7 @@ struct PagerRedrawData
 static void pager_menu_redraw(struct Menu *pager_menu)
 {
   struct PagerRedrawData *rd = pager_menu->redraw_data;
-  int i, j;
   char buffer[LONG_STRING];
-  int err;
 
   if (!rd)
     return;
@@ -1815,7 +1835,7 @@ static void pager_menu_redraw(struct Menu *pager_menu)
       if (rd->search_compiled)
       {
         int flags = mutt_mb_is_lower(rd->searchbuf) ? REG_ICASE : 0;
-        err = REGCOMP(&rd->search_re, rd->searchbuf, REG_NEWLINE | flags);
+        const int err = REGCOMP(&rd->search_re, rd->searchbuf, REG_NEWLINE | flags);
         if (err != 0)
         {
           regerror(err, &rd->search_re, buffer, sizeof(buffer));
@@ -1875,10 +1895,10 @@ static void pager_menu_redraw(struct Menu *pager_menu)
     if (!(rd->flags & MUTT_PAGER_RETWINCH))
     {
       rd->lines = -1;
-      for (i = 0; i <= rd->topline; i++)
+      for (int i = 0; i <= rd->topline; i++)
         if (!rd->line_info[i].continuation)
           rd->lines++;
-      for (i = 0; i < rd->max_line; i++)
+      for (int i = 0; i < rd->max_line; i++)
       {
         rd->line_info[i].offset = 0;
         rd->line_info[i].type = -1;
@@ -1895,8 +1915,8 @@ static void pager_menu_redraw(struct Menu *pager_menu)
       rd->last_line = 0;
       rd->topline = 0;
     }
-    i = -1;
-    j = -1;
+    int i = -1;
+    int j = -1;
     while (display_line(rd->fp, &rd->last_pos, &rd->line_info, ++i, &rd->last_line,
                         &rd->max_line, rd->has_types | rd->search_flag | (rd->flags & MUTT_PAGER_NOWRAP),
                         &rd->quote_list, &rd->q_level, &rd->force_redraw,
@@ -1936,7 +1956,9 @@ static void pager_menu_redraw(struct Menu *pager_menu)
                              rd->search_flag | (rd->flags & MUTT_PAGER_NOWRAP),
                          &rd->quote_list, &rd->q_level, &rd->force_redraw,
                          &rd->search_re, rd->pager_window) > 0)
+        {
           rd->lines++;
+        }
         rd->curline++;
         mutt_window_move(rd->pager_window, rd->lines, 0);
       }
@@ -2045,7 +2067,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
 
   struct Menu *pager_menu = NULL;
   int old_PagerIndexLines; /* some people want to resize it
-                                         * while inside the pager... */
+                            * while inside the pager... */
   int index_hint = 0;      /* used to restore cursor position */
   int oldcount = -1;
   int check;
@@ -3025,7 +3047,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
       case OP_DECODE_SAVE:
       case OP_DECODE_COPY:
       case OP_DECRYPT_COPY:
-        if (!WithCrypto && ch == OP_DECRYPT_COPY)
+        if (!(WithCrypto != 0) && ch == OP_DECRYPT_COPY)
         {
           ch = -1;
           break;

@@ -149,10 +149,8 @@ struct Event mutt_getch(void)
   if (ch == ERR)
   {
     if (!isatty(0))
-    {
-      endwin();
-      exit(1);
-    }
+      mutt_exit(1);
+
     return timeout;
   }
 
@@ -213,23 +211,15 @@ int mutt_get_field_unbuffered(char *msg, char *buf, size_t buflen, int flags)
   return rc;
 }
 
-void mutt_clear_error(void)
-{
-  ErrorBuf[0] = 0;
-  if (!OPT_NO_CURSES)
-    mutt_window_clearline(MuttMessageWindow, 0);
-}
-
 void mutt_edit_file(const char *editor, const char *data)
 {
   char cmd[LONG_STRING];
 
-  mutt_endwin(NULL);
+  mutt_endwin();
   mutt_expand_file_fmt(cmd, sizeof(cmd), editor, data);
   if (mutt_system(cmd) != 0)
   {
     mutt_error(_("Error running \"%s\"!"), cmd);
-    mutt_sleep(2);
   }
   /* the terminal may have been resized while the editor owned it */
   mutt_resize_screen();
@@ -384,57 +374,11 @@ void mutt_query_exit(void)
     timeout(-1); /* restore blocking operation */
   if (mutt_yesorno(_("Exit NeoMutt?"), MUTT_YES) == MUTT_YES)
   {
-    endwin();
-    exit(1);
+    mutt_exit(1);
   }
   mutt_clear_error();
   mutt_curs_set(-1);
   SigInt = 0;
-}
-
-static void curses_message(int error, const char *fmt, va_list ap)
-{
-  char scratch[LONG_STRING];
-
-  vsnprintf(scratch, sizeof(scratch), fmt, ap);
-
-  mutt_debug(1, "%s\n", scratch);
-  mutt_simple_format(ErrorBuf, sizeof(ErrorBuf), 0, MuttMessageWindow->cols,
-                     FMT_LEFT, 0, scratch, sizeof(scratch), 0);
-
-  if (!OPT_KEEP_QUIET)
-  {
-    if (error)
-      BEEP();
-    SETCOLOR(error ? MT_COLOR_ERROR : MT_COLOR_MESSAGE);
-    mutt_window_mvaddstr(MuttMessageWindow, 0, 0, ErrorBuf);
-    NORMAL_COLOR;
-    mutt_window_clrtoeol(MuttMessageWindow);
-    mutt_refresh();
-  }
-
-  if (error)
-    OPT_MSG_ERR = true;
-  else
-    OPT_MSG_ERR = false;
-}
-
-void mutt_curses_error(const char *fmt, ...)
-{
-  va_list ap;
-
-  va_start(ap, fmt);
-  curses_message(1, fmt, ap);
-  va_end(ap);
-}
-
-void mutt_curses_message(const char *fmt, ...)
-{
-  va_list ap;
-
-  va_start(ap, fmt);
-  curses_message(0, fmt, ap);
-  va_end(ap);
 }
 
 void mutt_progress_init(struct Progress *progress, const char *msg,
@@ -730,12 +674,10 @@ static int vw_printw(SLcurses_Window_Type *win, const char *fmt, va_list ap)
 
 int mutt_window_mvprintw(struct MuttWindow *win, int row, int col, const char *fmt, ...)
 {
-  va_list ap;
-  int rc;
-
-  rc = mutt_window_move(win, row, col);
+  int rc = mutt_window_move(win, row, col);
   if (rc != ERR)
   {
+    va_list ap;
     va_start(ap, fmt);
     rc = vw_printw(stdscr, fmt, ap);
     va_end(ap);
@@ -754,14 +696,13 @@ void mutt_window_clrtoeol(struct MuttWindow *win)
   if (!win || !stdscr)
     return;
 
-  int row, col, curcol;
-
   if (win->col_offset + win->cols == COLS)
     clrtoeol();
   else
   {
+    int row, col;
     getyx(stdscr, row, col);
-    curcol = col;
+    int curcol = col;
     while (curcol < win->col_offset + win->cols)
     {
       addch(' ');
@@ -796,7 +737,7 @@ void mutt_window_getyx(struct MuttWindow *win, int *y, int *x)
 
 void mutt_show_error(void)
 {
-  if (OPT_KEEP_QUIET)
+  if (OPT_KEEP_QUIET || !ErrorBufMessage)
     return;
 
   SETCOLOR(OPT_MSG_ERR ? MT_COLOR_ERROR : MT_COLOR_MESSAGE);
@@ -805,24 +746,17 @@ void mutt_show_error(void)
   mutt_window_clrtoeol(MuttMessageWindow);
 }
 
-void mutt_endwin(const char *msg)
+void mutt_endwin(void)
 {
+  if (OPT_NO_CURSES)
+    return;
+
   int e = errno;
 
-  if (!OPT_NO_CURSES)
-  {
-    /* at least in some situations (screen + xterm under SuSE11/12) endwin()
-     * doesn't properly flush the screen without an explicit call.
-     */
-    mutt_refresh();
-    endwin();
-  }
-
-  if (msg && *msg)
-  {
-    puts(msg);
-    fflush(stdout);
-  }
+  /* at least in some situations (screen + xterm under SuSE11/12) endwin()
+   * doesn't properly flush the screen without an explicit call.  */
+  mutt_refresh();
+  endwin();
 
   errno = e;
 }
@@ -875,7 +809,7 @@ int mutt_do_pager(const char *banner, const char *tempfile, int do_color, struct
   {
     char cmd[STRING];
 
-    mutt_endwin(NULL);
+    mutt_endwin();
     mutt_expand_file_fmt(cmd, sizeof(cmd), Pager, tempfile);
     if (mutt_system(cmd) == -1)
     {
@@ -1336,7 +1270,6 @@ void mutt_format_s_tree(char *buf, size_t buflen, const char *prec, const char *
 void mutt_paddstr(int n, const char *s)
 {
   wchar_t wc;
-  int w;
   size_t k;
   size_t len = mutt_str_strlen(s);
   mbstate_t mbstate;
@@ -1353,7 +1286,7 @@ void mutt_paddstr(int n, const char *s)
     }
     if (!IsWPrint(wc))
       wc = '?';
-    w = wcwidth(wc);
+    const int w = wcwidth(wc);
     if (w >= 0)
     {
       if (w > n)

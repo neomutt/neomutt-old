@@ -240,7 +240,7 @@ int check_alias_name(const char *s, char *dest, size_t destlen)
   wchar_t wc;
   mbstate_t mb;
   size_t l;
-  int rc = 0, bad = 0, dry = !dest || !destlen;
+  int rc = 0, dry = !dest || !destlen;
 
   memset(&mb, 0, sizeof(mbstate_t));
 
@@ -249,8 +249,8 @@ int check_alias_name(const char *s, char *dest, size_t destlen)
   for (; s && *s && (dry || destlen) && (l = mbrtowc(&wc, s, MB_CUR_MAX, &mb)) != 0;
        s += l, destlen -= l)
   {
-    bad = l == (size_t)(-1) || l == (size_t)(-2); /* conversion error */
-    bad = bad || (!dry && l > destlen);           /* too few room for mb char */
+    int bad = l == (size_t)(-1) || l == (size_t)(-2); /* conversion error */
+    bad = bad || (!dry && l > destlen); /* too few room for mb char */
     if (l == 1)
       bad = bad || (strchr("-_+=.", *s) == NULL && !iswalnum(wc));
     else
@@ -356,7 +356,6 @@ retry_name:
     if (mutt_addrlist_to_intl(new->addr, &err))
     {
       mutt_error(_("Error: '%s' is a bad IDN."), err);
-      mutt_sleep(2);
       continue;
     }
   } while (!new->addr);
@@ -505,7 +504,6 @@ int mutt_alias_complete(char *s, size_t buflen)
   struct Alias *a = Aliases;
   struct Alias *a_list = NULL, *a_cur = NULL;
   char bestname[HUGE_STRING];
-  int i;
 
   if (s[0] != 0) /* avoid empty string as strstr argument */
   {
@@ -520,6 +518,7 @@ int mutt_alias_complete(char *s, size_t buflen)
                            MIN(mutt_str_strlen(a->name) + 1, sizeof(bestname)));
         else
         {
+          int i;
           for (i = 0; a->name[i] && a->name[i] == bestname[i]; i++)
             ;
           bestname[i] = '\0';

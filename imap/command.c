@@ -26,16 +26,6 @@
  * @page imap_command Send/receive commands to/from an IMAP server
  *
  * Send/receive commands to/from an IMAP server
- *
- * | Function           | Description
- * | :----------------- | :-------------------------------------------------
- * | imap_cmd_finish()  | Attempt to perform cleanup
- * | imap_cmd_idle()    | Enter the IDLE state
- * | imap_cmd_start()   | Given an IMAP command, send it to the server
- * | imap_cmd_step()    | Reads server responses from an IMAP command
- * | imap_cmd_trailer() | Extra information after tagged command response if any
- * | imap_code()        | Was the command successful
- * | imap_exec()        | Execute a command and wait for the response from the server
  */
 
 #include "config.h"
@@ -133,20 +123,17 @@ static struct ImapCommand *cmd_new(struct ImapData *idata)
  */
 static int cmd_queue(struct ImapData *idata, const char *cmdstr, int flags)
 {
-  struct ImapCommand *cmd = NULL;
-  int rc;
-
   if (cmd_queue_full(idata))
   {
     mutt_debug(3, "Draining IMAP command pipeline\n");
 
-    rc = imap_exec(idata, NULL, IMAP_CMD_FAIL_OK | (flags & IMAP_CMD_POLL));
+    const int rc = imap_exec(idata, NULL, IMAP_CMD_FAIL_OK | (flags & IMAP_CMD_POLL));
 
     if (rc < 0 && rc != -2)
       return rc;
   }
 
-  cmd = cmd_new(idata);
+  struct ImapCommand *cmd = cmd_new(idata);
   if (!cmd)
     return IMAP_CMD_BAD;
 
@@ -170,7 +157,6 @@ static void cmd_handle_fatal(struct ImapData *idata)
     mutt_socket_close(idata->conn);
     mutt_error(_("Mailbox %s@%s closed"), idata->conn->account.login,
                idata->conn->account.host);
-    mutt_sleep(1);
     idata->state = IMAP_DISCONNECTED;
   }
 
@@ -334,7 +320,7 @@ static void cmd_parse_fetch(struct ImapData *idata, char *s)
       imap_set_flags(idata, h, s, &server_changes);
       if (server_changes)
       {
-        /* If server flags could conflict with mutt's flags, reopen the mailbox. */
+        /* If server flags could conflict with neomutt's flags, reopen the mailbox. */
         if (h->changed)
           idata->reopen |= IMAP_EXPUNGE_PENDING;
         else
@@ -636,8 +622,6 @@ static void cmd_parse_status(struct ImapData *idata, char *s)
   char *value = NULL;
   struct Buffy *inc = NULL;
   struct ImapMbox mx;
-  unsigned long ulcount;
-  unsigned int count;
   struct ImapStatus *status = NULL;
   unsigned int olduv, oldun;
   unsigned int litlen;
@@ -681,13 +665,13 @@ static void cmd_parse_status(struct ImapData *idata, char *s)
     value = imap_next_word(s);
 
     errno = 0;
-    ulcount = strtoul(value, &value, 10);
+    const unsigned long ulcount = strtoul(value, &value, 10);
     if (((errno == ERANGE) && (ulcount == ULONG_MAX)) || ((unsigned int) ulcount != ulcount))
     {
       mutt_debug(1, "Error parsing STATUS number\n");
       return;
     }
-    count = (unsigned int) ulcount;
+    const unsigned int count = (unsigned int) ulcount;
 
     if (mutt_str_strncmp("MESSAGES", s, 8) == 0)
     {
@@ -903,7 +887,6 @@ static int cmd_handle_untagged(struct ImapData *idata)
     s += 3;
     SKIPWS(s);
     mutt_error("%s", s);
-    mutt_sleep(2);
     cmd_handle_fatal(idata);
 
     return -1;
@@ -914,7 +897,6 @@ static int cmd_handle_untagged(struct ImapData *idata)
 
     /* Display the warning message from the server */
     mutt_error("%s", s + 3);
-    mutt_sleep(2);
   }
 
   return 0;
@@ -1133,7 +1115,6 @@ int imap_exec(struct ImapData *idata, const char *cmdstr, int flags)
       (mutt_socket_poll(idata->conn, ImapPollTimeout)) == 0)
   {
     mutt_error(_("Connection to %s timed out"), idata->conn->account.host);
-    mutt_sleep(2);
     cmd_handle_fatal(idata);
     return -1;
   }
@@ -1228,7 +1209,6 @@ int imap_cmd_idle(struct ImapData *idata)
   if ((ImapPollTimeout > 0) && (mutt_socket_poll(idata->conn, ImapPollTimeout)) == 0)
   {
     mutt_error(_("Connection to %s timed out"), idata->conn->account.host);
-    mutt_sleep(2);
     cmd_handle_fatal(idata);
     return -1;
   }

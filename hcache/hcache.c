@@ -543,7 +543,6 @@ static bool create_hcache_dir(const char *path)
     return true;
 
   mutt_error(_("Can't create %s: %s."), dir, strerror(errno));
-  mutt_sleep(2);
   return false;
 }
 
@@ -585,6 +584,7 @@ static const char *hcache_per_folder(const char *path, const char *folder, hcach
   {
     /* An existing file or a non-existing path not ending with a slash */
     snprintf(hcpath, sizeof(hcpath), "%s%s", path, suffix);
+    mutt_encode_path(hcpath, sizeof(hcpath), hcpath);
     return hcpath;
   }
 
@@ -609,6 +609,8 @@ static const char *hcache_per_folder(const char *path, const char *folder, hcach
     rc = snprintf(hcpath, sizeof(hcpath), "%s%s%s%s", path, slash ? "" : "/", name, suffix);
   }
 
+  mutt_encode_path(hcpath, sizeof(hcpath), hcpath);
+
   if (rc < 0) /* namer or fprintf failed.. should not happen */
     return path;
 
@@ -627,7 +629,7 @@ static void *hcache_dump(header_cache_t *h, struct Header *header, int *off,
 {
   unsigned char *d = NULL;
   struct Header nh;
-  bool convert = !Charset_is_utf8;
+  bool convert = !CharsetIsUtf8;
 
   *off = 0;
   d = lazy_malloc(sizeof(union Validate));
@@ -685,7 +687,7 @@ struct Header *mutt_hcache_restore(const unsigned char *d)
 {
   int off = 0;
   struct Header *h = mutt_new_header();
-  bool convert = !Charset_is_utf8;
+  bool convert = !CharsetIsUtf8;
 
   /* skip validate */
   off += sizeof(union Validate);
@@ -710,15 +712,12 @@ struct Header *mutt_hcache_restore(const unsigned char *d)
 static char *get_foldername(const char *folder)
 {
   char *p = NULL;
-  char path[_POSIX_PATH_MAX];
-
-  mutt_encode_path(path, sizeof(path), folder);
 
   /* if the folder is local, canonify the path to avoid
    * to ensure equivalent paths share the hcache */
   p = mutt_mem_malloc(PATH_MAX + 1);
-  if (!realpath(path, p))
-    mutt_str_replace(&p, path);
+  if (!realpath(folder, p))
+    mutt_str_replace(&p, folder);
 
   return p;
 }

@@ -49,7 +49,6 @@ int safe_asprintf(char **strp, const char *fmt, ...)
   if (n < 0)
   {
     mutt_error(_("Out of memory!"));
-    sleep(1);
     mutt_exit(1);
   }
 
@@ -68,14 +67,13 @@ int safe_asprintf(char **strp, const char *fmt, ...)
 int safe_asprintf(char **strp, const char *fmt, ...)
 {
   int rlen = STRING;
-  int n;
 
   *strp = mutt_mem_malloc(rlen);
   while (true)
   {
     va_list ap;
     va_start(ap, fmt);
-    n = vsnprintf(*strp, rlen, fmt, ap);
+    const int n = vsnprintf(*strp, rlen, fmt, ap);
     va_end(ap);
     if (n < 0)
     {

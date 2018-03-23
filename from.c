@@ -52,7 +52,6 @@ int is_from(const char *s, char *path, size_t pathlen, time_t *tp)
   if (!mutt_date_is_day_name(s))
   {
     const char *p = NULL;
-    size_t len;
     short q = 0;
 
     for (p = s; *p && (q || !ISSPACE(*p)); p++)
@@ -71,7 +70,7 @@ int is_from(const char *s, char *path, size_t pathlen, time_t *tp)
     if (q || !*p)
       return 0;
 
-    /* pipermail archives have the return_path obscured such as "me at mutt.org" */
+    /* pipermail archives have the return_path obscured such as "me at neomutt.org" */
     if (mutt_str_strncasecmp(p, " at ", 4) == 0)
     {
       p = strchr(p + 4, ' ');
@@ -87,7 +86,7 @@ int is_from(const char *s, char *path, size_t pathlen, time_t *tp)
 
     if (path)
     {
-      len = (size_t)(p - s);
+      size_t len = (size_t)(p - s);
       if (len + 1 > pathlen)
         len = pathlen - 1;
       memcpy(path, s, len);

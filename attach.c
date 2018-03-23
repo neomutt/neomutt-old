@@ -133,7 +133,7 @@ int mutt_compose_attachment(struct Body *a)
       {
         int r;
 
-        mutt_endwin(NULL);
+        mutt_endwin();
         r = mutt_system(command);
         if (r == -1)
           mutt_error(_("Error running \"%s\"!"), command);
@@ -141,10 +141,9 @@ int mutt_compose_attachment(struct Body *a)
         if (r != -1 && entry->composetypecommand)
         {
           struct Body *b = NULL;
-          FILE *fp = NULL, *tfp = NULL;
           char tempfile[_POSIX_PATH_MAX];
 
-          fp = mutt_file_fopen(a->filename, "r");
+          FILE *fp = mutt_file_fopen(a->filename, "r");
           if (!fp)
           {
             mutt_perror(_("Failure to open file to parse headers."));
@@ -178,7 +177,7 @@ int mutt_compose_attachment(struct Body *a)
             fseeko(fp, b->offset, SEEK_SET);
             mutt_free_body(&b);
             mutt_mktemp(tempfile, sizeof(tempfile));
-            tfp = mutt_file_fopen(tempfile, "w");
+            FILE *tfp = mutt_file_fopen(tempfile, "w");
             if (!tfp)
             {
               mutt_perror(_("Failure to open file to strip headers."));
@@ -267,7 +266,7 @@ int mutt_edit_attachment(struct Body *a)
       }
       else
       {
-        mutt_endwin(NULL);
+        mutt_endwin();
         if (mutt_system(command) == -1)
         {
           mutt_error(_("Error running \"%s\"!"), command);
@@ -307,12 +306,10 @@ bailout:
  */
 void mutt_check_lookup_list(struct Body *b, char *type, size_t len)
 {
-  int i;
-
   struct ListNode *np;
   STAILQ_FOREACH(np, &MimeLookupList, entries)
   {
-    i = mutt_str_strlen(np->data) - 1;
+    const int i = mutt_str_strlen(np->data) - 1;
     if ((i > 0 && np->data[i - 1] == '/' && np->data[i] == '*' &&
          (mutt_str_strncasecmp(type, np->data, i) == 0)) ||
         (mutt_str_strcasecmp(type, np->data) == 0))
@@ -371,7 +368,6 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
 {
   char tempfile[_POSIX_PATH_MAX] = "";
   char pagerfile[_POSIX_PATH_MAX] = "";
-  bool is_message = false;
   bool use_mailcap = false;
   bool use_pipe = false;
   bool use_pager = true;
@@ -383,9 +379,9 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
   int rc = -1;
   bool unlink_tempfile = false;
 
-  is_message = mutt_is_message_type(a->type, a->subtype);
-  if (WithCrypto && is_message && a->hdr && (a->hdr->security & ENCRYPT) &&
-      !crypt_valid_passphrase(a->hdr->security))
+  bool is_message = mutt_is_message_type(a->type, a->subtype);
+  if ((WithCrypto != 0) && is_message && a->hdr &&
+      (a->hdr->security & ENCRYPT) && !crypt_valid_passphrase(a->hdr->security))
   {
     return rc;
   }
@@ -478,7 +474,7 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
     int tempfd = -1, pagerfd = -1;
 
     if (!use_pager)
-      mutt_endwin(NULL);
+      mutt_endwin();
 
     if (use_pager || use_pipe)
     {
@@ -506,7 +502,7 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
         if (tempfd != -1)
           close(tempfd);
 
-        mutt_error(_("Cannot create filter"));
+        mutt_error(_("Can't create filter"));
         goto return_error;
       }
 
@@ -562,7 +558,6 @@ int mutt_view_attachment(FILE *fp, struct Body *a, int flag, struct Header *hdr,
           mutt_debug(1, "mutt_file_fopen(%s) errno=%d %s\n", pagerfile, errno,
                      strerror(errno));
           mutt_perror(pagerfile);
-          mutt_sleep(1);
           goto return_error;
         }
         decode_state.fpin = fp;
@@ -663,7 +658,7 @@ int mutt_pipe_attachment(FILE *fp, struct Body *b, const char *path, char *outfi
     }
   }
 
-  mutt_endwin(NULL);
+  mutt_endwin();
 
   if (fp)
   {
@@ -694,9 +689,9 @@ int mutt_pipe_attachment(FILE *fp, struct Body *b, const char *path, char *outfi
   {
     /* send case */
 
-    FILE *ifp = NULL, *ofp = NULL;
+    FILE *ofp = NULL;
 
-    ifp = fopen(b->filename, "r");
+    FILE *ifp = fopen(b->filename, "r");
     if (!ifp)
     {
       mutt_perror("fopen");
@@ -778,13 +773,12 @@ int mutt_save_attachment(FILE *fp, struct Body *m, char *path, int flags, struct
       /* message type attachments are written to mail folders. */
 
       char buf[HUGE_STRING];
-      struct Header *hn = NULL;
       struct Context ctx;
       struct Message *msg = NULL;
       int chflags = 0;
       int r = -1;
 
-      hn = m->hdr;
+      struct Header *hn = m->hdr;
       hn->msgno = hdr->msgno; /* required for MH/maildir */
       hn->read = true;
 
@@ -828,7 +822,6 @@ int mutt_save_attachment(FILE *fp, struct Body *m, char *path, int flags, struct
       if (!s.fpout)
       {
         mutt_perror("fopen");
-        mutt_sleep(2);
         return -1;
       }
       fseeko((s.fpin = fp), m->offset, SEEK_SET);
@@ -837,7 +830,6 @@ int mutt_save_attachment(FILE *fp, struct Body *m, char *path, int flags, struct
       if (mutt_file_fsync_close(&s.fpout) != 0)
       {
         mutt_perror("fclose");
-        mutt_sleep(2);
         return -1;
       }
     }
@@ -849,16 +841,14 @@ int mutt_save_attachment(FILE *fp, struct Body *m, char *path, int flags, struct
 
     /* In send mode, just copy file */
 
-    FILE *ofp = NULL, *nfp = NULL;
-
-    ofp = fopen(m->filename, "r");
+    FILE *ofp = fopen(m->filename, "r");
     if (!ofp)
     {
       mutt_perror("fopen");
       return -1;
     }
 
-    nfp = save_attachment_open(path, flags);
+    FILE *nfp = save_attachment_open(path, flags);
     if (!nfp)
     {
       mutt_perror("fopen");
@@ -997,12 +987,11 @@ int mutt_print_attachment(FILE *fp, struct Body *a)
   if (rfc1524_mailcap_lookup(a, type, NULL, MUTT_PRINT))
   {
     char command[_POSIX_PATH_MAX + STRING];
-    struct Rfc1524MailcapEntry *entry = NULL;
     int piped = false;
 
     mutt_debug(2, "Using mailcap...\n");
 
-    entry = rfc1524_new_entry();
+    struct Rfc1524MailcapEntry *entry = rfc1524_new_entry();
     rfc1524_mailcap_lookup(a, type, entry, MUTT_PRINT);
     if (rfc1524_expand_filename(entry->nametemplate, a->filename, newfile, sizeof(newfile)))
     {
@@ -1029,7 +1018,7 @@ int mutt_print_attachment(FILE *fp, struct Body *a)
     mutt_str_strfcpy(command, entry->printcommand, sizeof(command));
     piped = rfc1524_expand_command(a, newfile, type, command, sizeof(command));
 
-    mutt_endwin(NULL);
+    mutt_endwin();
 
     /* interactive program */
     if (piped)
@@ -1103,7 +1092,7 @@ int mutt_print_attachment(FILE *fp, struct Body *a)
 
       mutt_debug(2, "successfully opened %s read-only\n", newfile);
 
-      mutt_endwin(NULL);
+      mutt_endwin();
       thepid = mutt_create_filter(NONULL(PrintCommand), &fpout, NULL, NULL);
       if (thepid < 0)
       {
@@ -1137,14 +1126,12 @@ int mutt_print_attachment(FILE *fp, struct Body *a)
 
 void mutt_actx_add_attach(struct AttachCtx *actx, struct AttachPtr *attach)
 {
-  int i;
-
   if (actx->idxlen == actx->idxmax)
   {
     actx->idxmax += 5;
     mutt_mem_realloc(&actx->idx, sizeof(struct AttachPtr *) * actx->idxmax);
     mutt_mem_realloc(&actx->v2r, sizeof(short) * actx->idxmax);
-    for (i = actx->idxlen; i < actx->idxmax; i++)
+    for (int i = actx->idxlen; i < actx->idxmax; i++)
       actx->idx[i] = NULL;
   }
 
@@ -1153,13 +1140,11 @@ void mutt_actx_add_attach(struct AttachCtx *actx, struct AttachPtr *attach)
 
 void mutt_actx_add_fp(struct AttachCtx *actx, FILE *new_fp)
 {
-  int i;
-
   if (actx->fp_len == actx->fp_max)
   {
     actx->fp_max += 5;
     mutt_mem_realloc(&actx->fp_idx, sizeof(FILE *) * actx->fp_max);
-    for (i = actx->fp_len; i < actx->fp_max; i++)
+    for (int i = actx->fp_len; i < actx->fp_max; i++)
       actx->fp_idx[i] = NULL;
   }
 
@@ -1168,13 +1153,11 @@ void mutt_actx_add_fp(struct AttachCtx *actx, FILE *new_fp)
 
 void mutt_actx_add_body(struct AttachCtx *actx, struct Body *new_body)
 {
-  int i;
-
   if (actx->body_len == actx->body_max)
   {
     actx->body_max += 5;
     mutt_mem_realloc(&actx->body_idx, sizeof(struct Body *) * actx->body_max);
-    for (i = actx->body_len; i < actx->body_max; i++)
+    for (int i = actx->body_len; i < actx->body_max; i++)
       actx->body_idx[i] = NULL;
   }
 

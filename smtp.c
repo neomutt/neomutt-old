@@ -138,7 +138,6 @@ static int smtp_get_resp(struct Connection *conn)
     return 0;
 
   mutt_error(_("SMTP session failed: %s"), buf);
-  mutt_sleep(0);
   return -1;
 }
 
@@ -278,17 +277,13 @@ static bool addresses_use_unicode(const struct Address *a)
 
 static int smtp_fill_account(struct Account *account)
 {
-  static unsigned short SmtpPort = 0;
-
-  struct servent *service = NULL;
   struct Url url;
-  char *urlstr = NULL;
 
   account->flags = 0;
   account->port = 0;
   account->type = MUTT_ACCT_TYPE_SMTP;
 
-  urlstr = mutt_str_strdup(SmtpUrl);
+  char *urlstr = mutt_str_strdup(SmtpUrl);
   url_parse(&url, urlstr);
   if ((url.scheme != U_SMTP && url.scheme != U_SMTPS) || !url.host ||
       mutt_account_fromurl(account, &url) < 0)
@@ -296,7 +291,6 @@ static int smtp_fill_account(struct Account *account)
     url_free(&url);
     FREE(&urlstr);
     mutt_error(_("Invalid SMTP URL: %s"), SmtpUrl);
-    mutt_sleep(1);
     return -1;
   }
   url_free(&url);
@@ -311,9 +305,10 @@ static int smtp_fill_account(struct Account *account)
       account->port = SMTPS_PORT;
     else
     {
+      static unsigned short SmtpPort = 0;
       if (!SmtpPort)
       {
-        service = getservbyname("smtp", "tcp");
+        struct servent *service = getservbyname("smtp", "tcp");
         if (service)
           SmtpPort = ntohs(service->s_port);
         else
@@ -487,7 +482,6 @@ static int smtp_auth(struct Connection *conn)
       if (r == SMTP_AUTH_FAIL && delim)
       {
         mutt_error(_("%s authentication failed, trying next method"), method);
-        mutt_sleep(1);
       }
       else if (r != SMTP_AUTH_UNAVAIL)
         break;
@@ -504,12 +498,10 @@ static int smtp_auth(struct Connection *conn)
   if (r == SMTP_AUTH_FAIL)
   {
     mutt_error(_("SASL authentication failed"));
-    mutt_sleep(1);
   }
   else if (r == SMTP_AUTH_UNAVAIL)
   {
     mutt_error(_("No authenticators available"));
-    mutt_sleep(1);
   }
 
   return r == SMTP_AUTH_SUCCESS ? 0 : -1;
@@ -568,7 +560,6 @@ static int smtp_auth_plain(struct Connection *conn)
 
 error:
   mutt_error(error);
-  mutt_sleep(1);
   return -1;
 }
 #endif /* USE_SASL */
@@ -610,7 +601,6 @@ static int smtp_open(struct Connection *conn)
     if (mutt_ssl_starttls(conn))
     {
       mutt_error(_("Could not negotiate TLS connection"));
-      mutt_sleep(1);
       return -1;
     }
 
@@ -626,7 +616,6 @@ static int smtp_open(struct Connection *conn)
     if (!mutt_bit_isset(Capabilities, AUTH))
     {
       mutt_error(_("SMTP server does not support authentication"));
-      mutt_sleep(1);
       return -1;
     }
 

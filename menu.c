@@ -132,7 +132,7 @@ static void print_enriched_string(int index, int attr, unsigned char *s, int do_
             else
               add_wch(WACS_LLCORNER);
 #else
-            else if (Charset_is_utf8)
+            else if (CharsetIsUtf8)
               addstr("\342\224\224"); /* WACS_LLCORNER */
             else
               addch(ACS_LLCORNER);
@@ -145,7 +145,7 @@ static void print_enriched_string(int index, int attr, unsigned char *s, int do_
             else
               add_wch(WACS_ULCORNER);
 #else
-            else if (Charset_is_utf8)
+            else if (CharsetIsUtf8)
               addstr("\342\224\214"); /* WACS_ULCORNER */
             else
               addch(ACS_ULCORNER);
@@ -158,7 +158,7 @@ static void print_enriched_string(int index, int attr, unsigned char *s, int do_
             else
               add_wch(WACS_LTEE);
 #else
-            else if (Charset_is_utf8)
+            else if (CharsetIsUtf8)
               addstr("\342\224\234"); /* WACS_LTEE */
             else
               addch(ACS_LTEE);
@@ -171,7 +171,7 @@ static void print_enriched_string(int index, int attr, unsigned char *s, int do_
             else
               add_wch(WACS_HLINE);
 #else
-            else if (Charset_is_utf8)
+            else if (CharsetIsUtf8)
               addstr("\342\224\200"); /* WACS_HLINE */
             else
               addch(ACS_HLINE);
@@ -184,7 +184,7 @@ static void print_enriched_string(int index, int attr, unsigned char *s, int do_
             else
               add_wch(WACS_VLINE);
 #else
-            else if (Charset_is_utf8)
+            else if (CharsetIsUtf8)
               addstr("\342\224\202"); /* WACS_VLINE */
             else
               addch(ACS_VLINE);
@@ -197,7 +197,7 @@ static void print_enriched_string(int index, int attr, unsigned char *s, int do_
             else
               add_wch(WACS_TTEE);
 #else
-            else if (Charset_is_utf8)
+            else if (CharsetIsUtf8)
               addstr("\342\224\254"); /* WACS_TTEE */
             else
               addch(ACS_TTEE);
@@ -210,7 +210,7 @@ static void print_enriched_string(int index, int attr, unsigned char *s, int do_
             else
               add_wch(WACS_BTEE);
 #else
-            else if (Charset_is_utf8)
+            else if (CharsetIsUtf8)
               addstr("\342\224\264"); /* WACS_BTEE */
             else
               addch(ACS_BTEE);
@@ -394,7 +394,6 @@ void menu_redraw_index(struct Menu *menu)
 void menu_redraw_motion(struct Menu *menu)
 {
   char buf[LONG_STRING];
-  int old_color, cur_color;
 
   if (menu->dialog)
   {
@@ -406,7 +405,7 @@ void menu_redraw_motion(struct Menu *menu)
    * over imap (if matching against ~h for instance).  This can
    * generate status messages.  So we want to call it *before* we
    * position the cursor for drawing. */
-  old_color = menu->color(menu->oldcurrent);
+  const int old_color = menu->color(menu->oldcurrent);
   mutt_window_move(menu->indexwin, menu->oldcurrent + menu->offset - menu->top, 0);
   ATTRSET(old_color);
 
@@ -435,7 +434,7 @@ void menu_redraw_motion(struct Menu *menu)
     print_enriched_string(menu->oldcurrent, old_color, (unsigned char *) buf, 1);
 
     /* now draw the new one to reflect the change */
-    cur_color = menu->color(menu->current);
+    const int cur_color = menu->color(menu->current);
     menu_make_entry(buf, sizeof(buf), menu, menu->current);
     menu_pad_string(menu, buf, sizeof(buf));
     SETCOLOR(MT_COLOR_INDICATOR);
@@ -480,7 +479,7 @@ static void menu_redraw_prompt(struct Menu *menu)
       OPT_MSG_ERR = false;
     }
 
-    if (*ErrorBuf)
+    if (ErrorBufMessage)
       mutt_clear_error();
 
     mutt_window_mvaddstr(menu->messagewin, 0, 0, menu->prompt);
@@ -533,11 +532,11 @@ void menu_check_recenter(struct Menu *menu)
 static void menu_jump(struct Menu *menu)
 {
   int n;
-  char buf[SHORT_STRING];
 
   if (menu->max)
   {
     mutt_unget_event(LastKey, 0);
+    char buf[SHORT_STRING];
     buf[0] = '\0';
     if (mutt_get_field(_("Jump to: "), buf, sizeof(buf), 0) == 0 && buf[0])
     {
@@ -602,12 +601,13 @@ void menu_prev_line(struct Menu *menu)
 #define DIRECTION ((neg * 2) + 1)
 static void menu_length_jump(struct Menu *menu, int jumplen)
 {
-  int tmp, neg = (jumplen >= 0) ? 0 : -1;
-  int c = MIN(MenuContext, menu->pagelen / 2);
+  const int neg = (jumplen >= 0) ? 0 : -1;
+  const int c = MIN(MenuContext, menu->pagelen / 2);
 
   if (menu->max)
   {
     /* possible to scroll? */
+    int tmp;
     if (DIRECTION * menu->top <
         (tmp = (neg ? 0 : (menu->max /* -1 */) - (menu->pagelen /* -1 */))))
     {
@@ -688,11 +688,9 @@ void menu_bottom_page(struct Menu *menu)
 
 void menu_middle_page(struct Menu *menu)
 {
-  int i;
-
   if (menu->max)
   {
-    i = menu->top + menu->pagelen;
+    int i = menu->top + menu->pagelen;
     if (i > menu->max - 1)
       i = menu->max - 1;
     menu->current = menu->top + (i - menu->top) / 2;

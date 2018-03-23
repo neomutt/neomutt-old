@@ -26,10 +26,6 @@
  * @page imap_auth IMAP authenticator multiplexor
  *
  * IMAP authenticator multiplexor
- *
- * | Function            | Description
- * | :------------------ | :-------------------------------------------------
- * | imap_authenticate() | Authenticate to an IMAP server
  */
 
 #include "config.h"
@@ -130,7 +126,6 @@ int imap_authenticate(struct ImapData *idata)
   if (r == IMAP_AUTH_UNAVAIL)
   {
     mutt_error(_("No authenticators available"));
-    mutt_sleep(1);
   }
 
   return r;

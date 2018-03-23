@@ -482,19 +482,26 @@ static notmuch_database_t *do_database_open(const char *filename, bool writable,
   notmuch_database_t *db = NULL;
   int ct = 0;
   notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
+#if LIBNOTMUCH_CHECK_VERSION(4, 2, 0)
+  char *msg = NULL;
+#endif
 
   mutt_debug(1, "nm: db open '%s' %s (timeout %d)\n", filename,
              writable ? "[WRITE]" : "[READ]", NmOpenTimeout);
+
+  const notmuch_database_mode_t mode =
+      writable ? NOTMUCH_DATABASE_MODE_READ_WRITE : NOTMUCH_DATABASE_MODE_READ_ONLY;
+
   do
   {
-#ifdef NOTMUCH_API_3
-    st = notmuch_database_open(filename, writable ? NOTMUCH_DATABASE_MODE_READ_WRITE : NOTMUCH_DATABASE_MODE_READ_ONLY,
-                               &db);
+#if LIBNOTMUCH_CHECK_VERSION(4, 2, 0)
+    st = notmuch_database_open_verbose(filename, mode, &db, &msg);
+#elif defined(NOTMUCH_API_3)
+    st = notmuch_database_open(filename, mode, &db);
 #else
-    db = notmuch_database_open(filename, writable ? NOTMUCH_DATABASE_MODE_READ_WRITE :
-                                                    NOTMUCH_DATABASE_MODE_READ_ONLY);
+    db = notmuch_database_open(filename, mode);
 #endif
-    if (db || !NmOpenTimeout || ((ct / 2) > NmOpenTimeout))
+    if ((st == NOTMUCH_STATUS_FILE_ERROR) || db || !NmOpenTimeout || ((ct / 2) > NmOpenTimeout))
       break;
 
     if (verbose && ct && ((ct % 2) == 0))
@@ -506,10 +513,24 @@ static notmuch_database_t *do_database_open(const char *filename, bool writable,
   if (verbose)
   {
     if (!db)
-      mutt_error(_("Cannot open notmuch database: %s: %s"), filename,
-                 st ? notmuch_status_to_string(st) : _("unknown reason"));
+    {
+#if LIBNOTMUCH_CHECK_VERSION(4, 2, 0)
+      if (msg)
+      {
+        mutt_error(msg);
+        FREE(&msg);
+      }
+      else
+#endif
+      {
+        mutt_error(_("Cannot open notmuch database: %s: %s"), filename,
+                   st ? notmuch_status_to_string(st) : _("unknown reason"));
+      }
+    }
     else if (ct > 1)
+    {
       mutt_clear_error();
+    }
   }
   return db;
 }
@@ -2283,7 +2304,6 @@ static int nm_sync_mailbox(struct Context *ctx, int *index_hint)
 {
   struct NmCtxData *data = get_ctxdata(ctx);
   int rc = 0;
-  char msgbuf[STRING];
   struct Progress progress;
   char *uri = ctx->path;
   bool changed = false;
@@ -2296,6 +2316,7 @@ static int nm_sync_mailbox(struct Context *ctx, int *index_hint)
   if (!ctx->quiet)
   {
     /* all is in this function so we don't use data->progress here */
+    char msgbuf[STRING];
     snprintf(msgbuf, sizeof(msgbuf), _("Writing %s..."), ctx->path);
     mutt_progress_init(&progress, msgbuf, MUTT_PROGRESS_MSG, WriteInc, ctx->msgcount);
   }

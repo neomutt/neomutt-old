@@ -25,10 +25,6 @@
  * @page imap_auth_plain IMAP plain authentication method
  *
  * IMAP plain authentication method
- *
- * | Function           | Description
- * | :----------------- | :-------------------------------------------------
- * | imap_auth_plain()  | SASL PLAIN support
  */
 
 #include "config.h"
@@ -75,7 +71,6 @@ enum ImapAuthRes imap_auth_plain(struct ImapData *idata, const char *method)
   else if (rc == IMAP_CMD_NO)
   {
     mutt_error(_("Login failed."));
-    mutt_sleep(2);
     res = IMAP_AUTH_FAILURE;
   }
 

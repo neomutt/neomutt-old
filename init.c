@@ -25,7 +25,6 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
-#include <pwd.h>
 #include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -406,7 +405,7 @@ int mutt_option_set(const struct Option *val, struct Buffer *err)
             map = SortBrowserMethods;
             break;
           case DT_SORT_KEYS:
-            if ((WithCrypto & APPLICATION_PGP))
+            if (WithCrypto & APPLICATION_PGP)
               map = SortKeyMethods;
             break;
           case DT_SORT_AUX:
@@ -460,7 +459,7 @@ int mutt_option_set(const struct Option *val, struct Buffer *err)
         /* MuttVars[idx].var is already 'char**' (or some 'void**') or...
           * so cast to 'void*' is okay */
         FREE((void *) MuttVars[idx].var);
-        *((char **) MuttVars[idx].var) = mutt_str_strdup(*(char **) val->var);
+        *((char **) MuttVars[idx].var) = mutt_str_strdup((char *) val->var);
       }
       break;
       case DT_BOOL:
@@ -648,7 +647,6 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
     {
       const char *env = NULL;
       char *var = NULL;
-      int idx;
 
       if (*tok->dptr == '{')
       {
@@ -669,6 +667,7 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
       }
       if (var)
       {
+        int idx;
         if ((env = mutt_str_getenv(var)) || (env = myvar_get(var)))
           mutt_buffer_addstr(dest, env);
         else if ((idx = mutt_option_index(var)) != -1)
@@ -758,7 +757,7 @@ static int finish_source(struct Buffer *tmp, struct Buffer *s,
 {
   if (MoreArgs(s))
   {
-    snprintf(err->data, err->dsize, _("finish: too many arguments"));
+    mutt_buffer_printf(err, _("%s: too many arguments"), "finish");
     return -1;
   }
 
@@ -1414,7 +1413,6 @@ static int parse_unattach_list(struct Buffer *buf, struct Buffer *s,
 {
   struct AttachMatch *a = NULL;
   char *tmp = NULL;
-  int major;
   char *minor = NULL;
 
   do
@@ -1439,7 +1437,7 @@ static int parse_unattach_list(struct Buffer *buf, struct Buffer *s,
     {
       minor = "unknown";
     }
-    major = mutt_check_mime_type(tmp);
+    const int major = mutt_check_mime_type(tmp);
 
     struct ListNode *np, *tmp2;
     STAILQ_FOREACH_SAFE(np, head, entries, tmp2)
@@ -1496,9 +1494,9 @@ static int parse_attachments(struct Buffer *buf, struct Buffer *s,
 
   if (op == '?')
   {
-    mutt_endwin(NULL);
+    mutt_endwin();
     fflush(stdout);
-    printf(_("\nCurrent attachments settings:\n\n"));
+    printf("\n%s\n\n", _("Current attachments settings:"));
     print_attach_list(&AttachAllow, '+', "A");
     print_attach_list(&AttachExclude, '-', "A");
     print_attach_list(&InlineAllow, '+', "I");
@@ -1760,7 +1758,7 @@ static int parse_alias(struct Buffer *buf, struct Buffer *s, unsigned long data,
   mutt_group_context_add_addrlist(gc, tmp->addr);
   mutt_alias_add_reverse(tmp);
 
-  if (debuglevel >= 2)
+  if (DebugLevel > 2)
   {
     /* A group is terminated with an empty address, so check a->mailbox */
     for (struct Address *a = tmp->addr; a && a->mailbox; a = a->next)
@@ -1900,20 +1898,25 @@ static void restore_default(struct Option *p)
       *((struct MbTable **) p->var) = parse_mbtable((char *) p->initial);
       break;
     case DT_PATH:
-      FREE((char **) p->var);
-      char *init = NULL;
-      if (mutt_str_strcmp(p->name, "debug_file") == 0 && debugfile_cmdline)
-        init = debugfile_cmdline;
-      else
-        init = (char *) p->initial;
-      if (init)
+    {
+      char *init = (char *) p->initial;
+      if (mutt_str_strcmp(p->name, "debug_file") == 0)
       {
-        char path[_POSIX_PATH_MAX];
-        mutt_str_strfcpy(path, init, sizeof(path));
-        mutt_expand_path(path, sizeof(path));
-        *((char **) p->var) = mutt_str_strdup(path);
+        mutt_log_set_file(init, true);
+      }
+      else
+      {
+        FREE((char **) p->var);
+        if (init)
+        {
+          char path[_POSIX_PATH_MAX];
+          mutt_str_strfcpy(path, init, sizeof(path));
+          mutt_expand_path(path, sizeof(path));
+          *((char **) p->var) = mutt_str_strdup(path);
+        }
       }
       break;
+    }
     case DT_ADDRESS:
       mutt_addr_free((struct Address **) p->var);
       if (p->initial)
@@ -1931,8 +1934,8 @@ static void restore_default(struct Option *p)
     case DT_NUMBER:
     case DT_SORT:
     case DT_MAGIC:
-      if (mutt_str_strcmp(p->name, "debug_level") == 0 && debuglevel_cmdline)
-        *((short *) p->var) = debuglevel_cmdline;
+      if (mutt_str_strcmp(p->name, "debug_level") == 0)
+        mutt_log_set_level(p->initial, true);
       else
         *((short *) p->var) = p->initial;
       break;
@@ -2073,67 +2076,7 @@ char **mutt_envlist(void)
 }
 
 /**
- * start_debug - prepare the debugging file
- *
- * This method prepares and opens a new debug file for mutt_debug.
- */
-static void start_debug(void)
-{
-  if (!DebugFile)
-    return;
-
-  char buf[_POSIX_PATH_MAX];
-
-  /* rotate the old debug logs */
-  for (int i = 3; i >= 0; i--)
-  {
-    snprintf(debugfilename, sizeof(debugfilename), "%s%d", DebugFile, i);
-    snprintf(buf, sizeof(buf), "%s%d", DebugFile, i + 1);
-
-    mutt_expand_path(debugfilename, sizeof(debugfilename));
-    mutt_expand_path(buf, sizeof(buf));
-    rename(debugfilename, buf);
-  }
-
-  debugfile = mutt_file_fopen(debugfilename, "w");
-  if (debugfile)
-  {
-    setbuf(debugfile, NULL); /* don't buffer the debugging output! */
-    mutt_debug(1, "NeoMutt/%s debugging at level %d\n", PACKAGE_VERSION, debuglevel);
-  }
-}
-
-/**
- * restart_debug - reload the debugging configuration
- *
- * This method closes the old debug file is debug was enabled,
- * then reconfigure the debugging system from the configuration options
- * and start a new debug file if debug is enabled
- */
-static void restart_debug(void)
-{
-  bool disable_debug = (debuglevel > 0 && DebugLevel == 0);
-  bool enable_debug = (debuglevel == 0 && DebugLevel > 0);
-  bool file_changed =
-      ((mutt_str_strlen(debugfilename) - 1) != mutt_str_strlen(DebugFile) ||
-       mutt_str_strncmp(debugfilename, DebugFile, mutt_str_strlen(debugfilename) - 1));
-
-  if (disable_debug || file_changed)
-  {
-    mutt_debug(1, "NeoMutt/%s stop debugging\n", PACKAGE_VERSION);
-    mutt_file_fclose(&debugfile);
-  }
-
-  if (!enable_debug && !disable_debug && debuglevel != DebugLevel)
-    mutt_debug(1, "NeoMutt/%s debugging at level %d\n", PACKAGE_VERSION, DebugLevel);
-
-  debuglevel = DebugLevel;
-
-  if (enable_debug || (file_changed && debuglevel > 0))
-    start_debug();
-}
-
-/* mutt_envlist_set - Helper function for parse_setenv()
+ * mutt_envlist_set - Helper function for parse_setenv()
  * @param name      Name of the environment variable
  * @param value     Value the envionment variable should have
  * @param overwrite Whether the environment variable should be overwritten
@@ -2184,14 +2127,13 @@ static int parse_setenv(struct Buffer *tmp, struct Buffer *s,
 {
   int query, unset, len;
   char *name = NULL, **save = NULL, **envp = envlist;
-  int count = 0;
 
   query = 0;
   unset = data & MUTT_SET_UNSET;
 
   if (!MoreArgs(s))
   {
-    mutt_str_strfcpy(err->data, _("too few arguments"), err->dsize);
+    mutt_buffer_printf(err, _("%s: too few arguments"), "setenv");
     return -1;
   }
 
@@ -2210,11 +2152,12 @@ static int parse_setenv(struct Buffer *tmp, struct Buffer *s,
     int found = 0;
     while (envp && *envp)
     {
+      /* This will display all matches for "^QUERY" */
       if (mutt_str_strncmp(tmp->data, *envp, len) == 0)
       {
         if (!found)
         {
-          mutt_endwin(NULL);
+          mutt_endwin();
           found = 1;
         }
         puts(*envp);
@@ -2234,7 +2177,7 @@ static int parse_setenv(struct Buffer *tmp, struct Buffer *s,
 
   if (unset)
   {
-    count = 0;
+    int count = 0;
     while (envp && *envp)
     {
       if ((mutt_str_strncmp(tmp->data, *envp, len) == 0) && (*envp)[len] == '=')
@@ -2266,7 +2209,7 @@ static int parse_setenv(struct Buffer *tmp, struct Buffer *s,
 
   if (!MoreArgs(s))
   {
-    mutt_str_strfcpy(err->data, _("too few arguments"), err->dsize);
+    mutt_buffer_printf(err, _("%s: too few arguments"), "setenv");
     return -1;
   }
 
@@ -2281,20 +2224,17 @@ static int parse_setenv(struct Buffer *tmp, struct Buffer *s,
 static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
                      struct Buffer *err)
 {
-  int query, unset, inv, reset, r = 0;
-  int idx = -1;
-  const char *p = NULL;
-  char scratch[_POSIX_PATH_MAX];
-  char *myvar = NULL;
+  int r = 0;
 
   while (MoreArgs(s))
   {
-    /* reset state variables */
-    query = 0;
-    unset = data & MUTT_SET_UNSET;
-    inv = data & MUTT_SET_INV;
-    reset = data & MUTT_SET_RESET;
-    myvar = NULL;
+    int query = 0;
+    int unset = data & MUTT_SET_UNSET;
+    int inv = data & MUTT_SET_INV;
+    int reset = data & MUTT_SET_RESET;
+    int idx = -1;
+    const char *p = NULL;
+    const char *myvar = NULL;
 
     if (*s->dptr == '?')
     {
@@ -2494,21 +2434,20 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
         }
         else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_PATH))
         {
-          if (mutt_str_strcmp(MuttVars[idx].name, "debug_file") == 0 && debugfile_cmdline)
-          {
-            mutt_message(_("set debug_file ignored, it has been overridden by "
-                           "the cmdline"));
-            break;
-          }
-          /* MuttVars[idx].var is already 'char**' (or some 'void**') or...
-           * so cast to 'void*' is okay */
-          FREE((void *) MuttVars[idx].var);
-
+          char scratch[_POSIX_PATH_MAX];
           mutt_str_strfcpy(scratch, tmp->data, sizeof(scratch));
           mutt_expand_path(scratch, sizeof(scratch));
-          *((char **) MuttVars[idx].var) = mutt_str_strdup(scratch);
           if (mutt_str_strcmp(MuttVars[idx].name, "debug_file") == 0)
-            restart_debug();
+          {
+            mutt_log_set_file(scratch, true);
+          }
+          else
+          {
+            /* MuttVars[idx].var is already 'char**' (or some 'void**') or...
+             * so cast to 'void*' is okay */
+            FREE((void *) MuttVars[idx].var);
+            *((char **) MuttVars[idx].var) = mutt_str_strdup(scratch);
+          }
         }
         else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_STRING))
         {
@@ -2596,7 +2535,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
         }
       }
     }
-    else if (DTYPE(MuttVars[idx].type) == DT_MAGIC)
+    else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_MAGIC))
     {
       if (query || *s->dptr != '=')
       {
@@ -2634,7 +2573,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
         break;
       }
     }
-    else if (DTYPE(MuttVars[idx].type) == DT_NUMBER)
+    else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_NUMBER))
     {
       short *ptr = (short *) MuttVars[idx].var;
       short val;
@@ -2665,12 +2604,9 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
         r = -1;
         break;
       }
-      else if (mutt_str_strcmp(MuttVars[idx].name, "debug_level") == 0 && debuglevel_cmdline)
-      {
-        mutt_message(_(
-            "set debug_level ignored, it has been overridden by the cmdline"));
-        break;
-      }
+
+      if (mutt_str_strcmp(MuttVars[idx].name, "debug_level") == 0)
+        mutt_log_set_level(val, true);
       else
         *ptr = val;
 
@@ -2680,12 +2616,6 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
         if (*ptr < 0)
           *ptr = 0;
         mutt_hist_init();
-      }
-      else if (mutt_str_strcmp(MuttVars[idx].name, "debug_level") == 0)
-      {
-        if (*ptr < 0)
-          *ptr = 0;
-        restart_debug();
       }
       else if (mutt_str_strcmp(MuttVars[idx].name, "pager_index_lines") == 0)
       {
@@ -2707,7 +2637,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
       }
 #endif
     }
-    else if (DTYPE(MuttVars[idx].type) == DT_QUAD)
+    else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_QUAD))
     {
       if (query)
       {
@@ -2749,7 +2679,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
           *(unsigned char *) MuttVars[idx].var = MUTT_YES;
       }
     }
-    else if (DTYPE(MuttVars[idx].type) == DT_SORT)
+    else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_SORT))
     {
       const struct Mapping *map = NULL;
 
@@ -2762,7 +2692,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
           map = SortBrowserMethods;
           break;
         case DT_SORT_KEYS:
-          if ((WithCrypto & APPLICATION_PGP))
+          if (WithCrypto & APPLICATION_PGP)
             map = SortKeyMethods;
           break;
         case DT_SORT_AUX:
@@ -2803,7 +2733,7 @@ static int parse_set(struct Buffer *tmp, struct Buffer *s, unsigned long data,
       }
     }
 #ifdef USE_HCACHE
-    else if (DTYPE(MuttVars[idx].type) == DT_HCACHE)
+    else if ((idx >= 0) && (DTYPE(MuttVars[idx].type) == DT_HCACHE))
     {
       if (query || (*s->dptr != '='))
       {
@@ -2884,7 +2814,7 @@ static struct ListHead MuttrcStack = STAILQ_HEAD_INITIALIZER(MuttrcStack);
 static int source_rc(const char *rcfile_path, struct Buffer *err)
 {
   FILE *f = NULL;
-  int line = 0, rc = 0, conv = 0, line_rc, warnings = 0;
+  int line = 0, rc = 0, line_rc, warnings = 0;
   struct Buffer token;
   char *linebuf = NULL;
   char *currentline = NULL;
@@ -2942,7 +2872,7 @@ static int source_rc(const char *rcfile_path, struct Buffer *err)
   mutt_buffer_init(&token);
   while ((linebuf = mutt_file_read_line(linebuf, &buflen, f, &line, MUTT_CONT)) != NULL)
   {
-    conv = ConfigCharset && (*ConfigCharset) && Charset;
+    const int conv = ConfigCharset && (*ConfigCharset) && Charset;
     if (conv)
     {
       currentline = mutt_str_strdup(linebuf);
@@ -3119,14 +3049,12 @@ static int MatchesListsize = MAX(NUMVARS, NUMCOMMANDS) + 10;
 
 static void matches_ensure_morespace(int current)
 {
-  int base_space, extra_space, space;
-
   if (current > MatchesListsize - 2)
   {
-    base_space = MAX(NUMVARS, NUMCOMMANDS) + 1;
-    extra_space = MatchesListsize - base_space;
+    int base_space = MAX(NUMVARS, NUMCOMMANDS) + 1;
+    int extra_space = MatchesListsize - base_space;
     extra_space *= 2;
-    space = base_space + extra_space;
+    const int space = base_space + extra_space;
     mutt_mem_realloc(&Matches, space * sizeof(char *));
     memset(&Matches[current + 1], 0, space - current);
     MatchesListsize = space;
@@ -3341,14 +3269,13 @@ int mutt_command_complete(char *buffer, size_t len, int pos, int numtabs)
 
 int mutt_var_value_complete(char *buffer, size_t len, int pos)
 {
-  char var[STRING], *pt = buffer;
-  int spaces;
+  char *pt = buffer;
 
   if (buffer[0] == 0)
     return 0;
 
   SKIPWS(buffer);
-  spaces = buffer - pt;
+  const int spaces = buffer - pt;
 
   pt = buffer + pos - spaces;
   while ((pt > buffer) && !isspace((unsigned char) *pt))
@@ -3362,7 +3289,7 @@ int mutt_var_value_complete(char *buffer, size_t len, int pos)
     int idx;
     char val[LONG_STRING];
     const char *myvarval = NULL;
-
+    char var[STRING];
     mutt_str_strfcpy(var, pt, sizeof(var));
     /* ignore the trailing '=' when comparing */
     int vlen = mutt_str_strlen(var);
@@ -3603,7 +3530,7 @@ int var_to_string(int idx, char *val, size_t len)
         map = SortBrowserMethods;
         break;
       case DT_SORT_KEYS:
-        if ((WithCrypto & APPLICATION_PGP))
+        if (WithCrypto & APPLICATION_PGP)
           map = SortKeyMethods;
         else
           map = SortMethods;
@@ -3671,19 +3598,19 @@ int mutt_query_variables(struct ListHead *queries)
     snprintf(command, sizeof(command), "set ?%s\n", np->data);
     if (mutt_parse_rc_line(command, &token, &err) == -1)
     {
-      fprintf(stderr, "%s\n", err.data);
+      mutt_error("%s", err.data);
       FREE(&token.data);
       FREE(&err.data);
 
-      return 1;
+      return 1; // TEST15: neomutt -Q missing
     }
-    printf("%s\n", err.data);
+    mutt_message("%s", err.data);
   }
 
   FREE(&token.data);
   FREE(&err.data);
 
-  return 0;
+  return 0; // TEST16: neomutt -Q charset
 }
 
 /**
@@ -3708,19 +3635,19 @@ int mutt_dump_variables(int hide_sensitive)
 
     if (hide_sensitive && IS_SENSITIVE(MuttVars[i]))
     {
-      printf("%s='***'\n", MuttVars[i].name);
+      mutt_message("%s='***'\n", MuttVars[i].name);
       continue;
     }
     snprintf(command, sizeof(command), "set ?%s\n", MuttVars[i].name);
     if (mutt_parse_rc_line(command, &token, &err) == -1)
     {
-      fprintf(stderr, "%s\n", err.data);
+      mutt_message("%s", err.data);
       FREE(&token.data);
       FREE(&err.data);
 
-      return 1;
+      return 1; // TEST17: can't test
     }
-    printf("%s\n", err.data);
+    mutt_message("%s", err.data);
   }
 
   FREE(&token.data);
@@ -3742,7 +3669,7 @@ static int execute_commands(struct ListHead *p)
   {
     if (mutt_parse_rc_line(np->data, &token, &err) == -1)
     {
-      fprintf(stderr, _("Error in command line: %s\n"), err.data);
+      mutt_error(_("Error in command line: %s"), err.data);
       FREE(&token.data);
       FREE(&err.data);
 
@@ -3791,9 +3718,8 @@ static char *find_cfg(const char *home, const char *xdg_cfg_home)
   return NULL;
 }
 
-void mutt_init(int skip_sys_rc, struct ListHead *commands)
+int mutt_init(int skip_sys_rc, struct ListHead *commands)
 {
-  struct passwd *pw = NULL;
   struct utsname utsname;
   const char *p = NULL;
   char buffer[STRING];
@@ -3817,63 +3743,6 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
   snprintf(AttachmentMarker, sizeof(AttachmentMarker), "\033]9;%" PRIu64 "\a",
            mutt_rand64());
 
-  /* on one of the systems I use, getcwd() does not return the same prefix
-     as is listed in the passwd file */
-  p = mutt_str_getenv("HOME");
-  if (p)
-    HomeDir = mutt_str_strdup(p);
-
-  /* Get some information about the user */
-  pw = getpwuid(getuid());
-  if (pw)
-  {
-    char rnbuf[STRING];
-
-    Username = mutt_str_strdup(pw->pw_name);
-    if (!HomeDir)
-      HomeDir = mutt_str_strdup(pw->pw_dir);
-
-    RealName = mutt_str_strdup(mutt_gecos_name(rnbuf, sizeof(rnbuf), pw));
-    Shell = mutt_str_strdup(pw->pw_shell);
-    endpwent();
-  }
-  else
-  {
-    if (!HomeDir)
-    {
-      mutt_endwin(NULL);
-      fputs(_("unable to determine home directory"), stderr);
-      exit(1);
-    }
-    p = mutt_str_getenv("USER");
-    if (p)
-      Username = mutt_str_strdup(p);
-    else
-    {
-      mutt_endwin(NULL);
-      fputs(_("unable to determine username"), stderr);
-      exit(1);
-    }
-    Shell = mutt_str_strdup((p = mutt_str_getenv("SHELL")) ? p : "/bin/sh");
-  }
-
-  /* Start up debugging mode if requested from cmdline */
-  if (debuglevel_cmdline > 0)
-  {
-    debuglevel = debuglevel_cmdline;
-    if (debugfile_cmdline)
-    {
-      DebugFile = mutt_str_strdup(debugfile_cmdline);
-    }
-    else
-    {
-      int i = mutt_option_index("debug_file");
-      if ((i >= 0) && (MuttVars[i].initial != 0))
-        DebugFile = mutt_str_strdup((const char *) MuttVars[i].initial);
-    }
-    start_debug();
-  }
-
   /* And about the host... */
 
   /*
@@ -3883,9 +3752,8 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
    */
   if ((uname(&utsname)) == -1)
   {
-    mutt_endwin(NULL);
-    perror(_("unable to determine nodename via uname()"));
-    exit(1);
+    mutt_perror(_("unable to determine nodename via uname()"));
+    return 1; // TEST09: can't test
   }
 
   /* some systems report the FQDN instead of just the hostname */
@@ -4070,9 +3938,8 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
       np->data = mutt_str_strdup(buffer);
       if (access(np->data, F_OK))
       {
-        snprintf(buffer, sizeof(buffer), "%s: %s", np->data, strerror(errno));
-        mutt_endwin(buffer);
-        exit(1);
+        mutt_perror(np->data);
+        return 1; // TEST10: neomutt -F missing
       }
     }
   }
@@ -4110,9 +3977,8 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
     {
       if (source_rc(buffer, &err) != 0)
       {
-        fputs(err.data, stderr);
-        fputc('\n', stderr);
-        need_pause = 1;
+        mutt_error("%s", err.data);
+        need_pause = 1; // TEST11: neomutt (error in /etc/neomuttrc)
       }
     }
   }
@@ -4123,24 +3989,22 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
   {
     if (np->data)
     {
-      if (!OPT_NO_CURSES)
-        endwin();
       if (source_rc(np->data, &err) != 0)
       {
-        fputs(err.data, stderr);
-        fputc('\n', stderr);
-        need_pause = 1;
+        mutt_error("%s", err.data);
+        need_pause = 1; // TEST12: neomutt (error in ~/.neomuttrc)
       }
     }
   }
 
   if (execute_commands(commands) != 0)
-    need_pause = 1;
+    need_pause = 1; // TEST13: neomutt -e broken
 
   if (need_pause && !OPT_NO_CURSES)
   {
-    if (mutt_any_key_to_continue(NULL) == -1)
-      mutt_exit(1);
+    log_queue_flush(log_disp_terminal);
+    if (mutt_any_key_to_continue(NULL) == 'q')
+      return 1; // TEST14: neomutt -e broken (press 'q')
   }
 
   mutt_file_mkdir(Tmpdir, S_IRWXU);
@@ -4164,6 +4028,7 @@ void mutt_init(int skip_sys_rc, struct ListHead *commands)
 #endif
 
   FREE(&err.data);
+  return 0;
 }
 
 int mutt_get_hook_type(const char *name)
@@ -4305,7 +4170,7 @@ static int parse_subscribe_to(struct Buffer *b, struct Buffer *s,
 
     if (MoreArgs(s))
     {
-      mutt_buffer_addstr(err, _("Too many arguments"));
+      mutt_buffer_printf(err, _("%s: too many arguments"), "subscribe-to");
       return -1;
     }
 
@@ -4359,7 +4224,7 @@ static int parse_unsubscribe_from(struct Buffer *b, struct Buffer *s,
 
     if (MoreArgs(s))
     {
-      mutt_buffer_addstr(err, _("Too many arguments"));
+      mutt_buffer_printf(err, _("%s: too many arguments"), "unsubscribe-from");
       return -1;
     }
 
@@ -4451,4 +4316,29 @@ int mutt_label_complete(char *buffer, size_t len, int numtabs)
   strncpy(buffer, Completed, len - spaces);
 
   return 1;
+}
+
+bool set_default_value(const char *name, intptr_t value)
+{
+  if (!name)
+    return false;
+
+  int idx = mutt_option_index(name);
+  if (idx < 0)
+    return false;
+
+  MuttVars[idx].initial = value;
+  return true;
+}
+
+void reset_value(const char *name)
+{
+  if (!name)
+    return;
+
+  int idx = mutt_option_index(name);
+  if (idx < 0)
+    return;
+
+  restore_default(&MuttVars[idx]);
 }

@@ -21,10 +21,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * NOTE
- *
- * This code used to be the parser for GnuPG's output.
+/* NOTE: This code used to be the parser for GnuPG's output.
  *
  * Nowadays, we are using an external pubring lister with PGP which mimics
  * gpg's output format.
@@ -142,7 +139,7 @@ static struct PgpKeyInfo *parse_pub_line(char *buf, int *is_subkey, struct PgpKe
   else
     memset(&tmp, 0, sizeof(tmp));
 
-  mutt_debug(2, "buf = `%s'\n", buf);
+  mutt_debug(2, "buf = '%s'\n", buf);
 
   for (p = buf; p; p = pend)
   {

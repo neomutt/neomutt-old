@@ -35,13 +35,6 @@
  * write. Thinking about it, the abstraction problem is that there is more in
  * Connection than there needs to be. Ideally it would have only (void*)data
  * and methods.
- *
- * | Function               | Description
- * | :--------------------- | :-----------------------------------
- * | mutt_sasl_client_new() | wrapper for sasl_client_new
- * | mutt_sasl_done()       | Invoke when processing is complete.
- * | mutt_sasl_interact()   | Perform an SASL interaction with the user
- * | mutt_sasl_setup_conn() | Set up an SASL connection
  */
 
 #include "config.h"
@@ -53,7 +46,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <time.h>
-#include "mutt/debug.h"
+#include "mutt/logging.h"
 #include "mutt/memory.h"
 #include "mutt/message.h"
 #include "mutt/string2.h"
@@ -607,7 +600,6 @@ int mutt_sasl_client_new(struct Connection *conn, sasl_conn_t **saslconn)
   if (rc != SASL_OK)
   {
     mutt_error(_("Error allocating SASL connection"));
-    mutt_sleep(2);
     return -1;
   }
 

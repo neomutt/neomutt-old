@@ -105,7 +105,6 @@ static int mmdf_parse_mailbox(struct Context *ctx)
   struct Header *hdr = NULL;
   struct stat sb;
   struct Progress progress;
-  char msgbuf[STRING];
 
   if (stat(ctx->path, &sb) == -1)
   {
@@ -120,6 +119,7 @@ static int mmdf_parse_mailbox(struct Context *ctx)
 
   if (!ctx->quiet)
   {
+    char msgbuf[STRING];
     snprintf(msgbuf, sizeof(msgbuf), _("Reading %s..."), ctx->path);
     mutt_progress_init(&progress, msgbuf, MUTT_PROGRESS_MSG, ReadInc, 0);
   }
@@ -259,7 +259,6 @@ static int mbox_parse_mailbox(struct Context *ctx)
   int count = 0, lines = 0;
   LOFF_T loc;
   struct Progress progress;
-  char msgbuf[STRING];
 
   /* Save information about the folder at the time we opened it. */
   if (stat(ctx->path, &sb) == -1)
@@ -277,6 +276,7 @@ static int mbox_parse_mailbox(struct Context *ctx)
 
   if (!ctx->quiet)
   {
+    char msgbuf[STRING];
     snprintf(msgbuf, sizeof(msgbuf), _("Reading %s..."), ctx->path);
     mutt_progress_init(&progress, msgbuf, MUTT_PROGRESS_MSG, ReadInc, 0);
   }
@@ -783,7 +783,6 @@ static int reopen_mailbox(struct Context *ctx, int *index_hint)
 static int mbox_check_mailbox(struct Context *ctx, int *index_hint)
 {
   struct stat st;
-  char buffer[LONG_STRING];
   bool unlock = false;
   bool modified = false;
 
@@ -823,6 +822,7 @@ static int mbox_check_mailbox(struct Context *ctx, int *index_hint)
        * see the message separator at *exactly* what used to be the end of the
        * folder.
        */
+      char buffer[LONG_STRING];
       if (fseeko(ctx->fp, ctx->size, SEEK_SET) != 0)
         mutt_debug(1, "#1 fseek() failed\n");
       if (fgets(buffer, sizeof(buffer), ctx->fp) != NULL)
@@ -1010,7 +1010,6 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
       unlink(tempfile);
     }
     mutt_error(_("Could not create temporary file!"));
-    mutt_sleep(5);
     goto bail;
   }
 
@@ -1029,7 +1028,6 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
      */
     mutt_error(
         _("sync: mbox modified, but no modified messages! (report this bug)"));
-    mutt_sleep(5); /* the mutt_error /will/ get cleared! */
     mutt_debug(1, "no modified messages.\n");
     unlink(tempfile);
     goto bail;
@@ -1080,7 +1078,6 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
         if (fputs(MMDF_SEP, fp) == EOF)
         {
           mutt_perror(tempfile);
-          mutt_sleep(5);
           unlink(tempfile);
           goto bail;
         }
@@ -1096,7 +1093,6 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
                                 CH_FROM | CH_UPDATE | CH_UPDATE_LEN) != 0)
       {
         mutt_perror(tempfile);
-        mutt_sleep(5);
         unlink(tempfile);
         goto bail;
       }
@@ -1116,7 +1112,6 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
           if (fputs(MMDF_SEP, fp) == EOF)
           {
             mutt_perror(tempfile);
-            mutt_sleep(5);
             unlink(tempfile);
             goto bail;
           }
@@ -1125,7 +1120,6 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
           if (fputs("\n", fp) == EOF)
           {
             mutt_perror(tempfile);
-            mutt_sleep(5);
             unlink(tempfile);
             goto bail;
           }
@@ -1139,7 +1133,6 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
     mutt_debug(1, "mutt_file_fclose (&) returned non-zero.\n");
     unlink(tempfile);
     mutt_perror(tempfile);
-    mutt_sleep(5);
     goto bail;
   }
   fp = NULL;
@@ -1148,7 +1141,6 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
   if (stat(ctx->path, &statbuf) == -1)
   {
     mutt_perror(ctx->path);
-    mutt_sleep(5);
     unlink(tempfile);
     goto bail;
   }
@@ -1160,7 +1152,6 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
     mx_fastclose_mailbox(ctx);
     mutt_debug(1, "unable to reopen temp copy of mailbox!\n");
     mutt_perror(tempfile);
-    mutt_sleep(5);
     FREE(&new_offset);
     FREE(&old_offset);
     return -1;
@@ -1218,14 +1209,13 @@ static int mbox_sync_mailbox(struct Context *ctx, int *index_hint)
 
     char savefile[_POSIX_PATH_MAX];
 
-    snprintf(savefile, sizeof(savefile), "%s/mutt.%s-%s-%u", NONULL(Tmpdir),
+    snprintf(savefile, sizeof(savefile), "%s/neomutt.%s-%s-%u", NONULL(Tmpdir),
              NONULL(Username), NONULL(ShortHostname), (unsigned int) getpid());
     rename(tempfile, savefile);
     mutt_sig_unblock();
     mx_fastclose_mailbox(ctx);
     mutt_pretty_mailbox(savefile, sizeof(savefile));
     mutt_error(_("Write failed!  Saved partial mailbox to %s"), savefile);
-    mutt_sleep(5);
     FREE(&new_offset);
     FREE(&old_offset);
     return -1;

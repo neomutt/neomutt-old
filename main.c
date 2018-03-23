@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <locale.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,7 +47,9 @@
 #include "keymap.h"
 #include "mailbox.h"
 #include "mutt_curses.h"
+#include "mutt_logging.h"
 #include "mutt_menu.h"
+#include "myvar.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
 #include "protos.h"
@@ -69,7 +72,7 @@ char **envlist = NULL;
 
 void mutt_exit(int code)
 {
-  mutt_endwin(NULL);
+  mutt_endwin();
   exit(code);
 }
 
@@ -116,16 +119,14 @@ static void usage(void)
          "  -s <subj>     specify a subject (must be in quotes if it has spaces)\n"
          "  -v            show version and compile-time definitions\n"
          "  -x            simulate the mailx send mode\n"
-         "  -y            select a mailbox specified in your `mailboxes' list\n"
+         "  -y            select a mailbox specified in your 'mailboxes' list\n"
          "  -z            exit immediately if there are no messages in the mailbox\n"
          "  -Z            open the first folder with new message, exit immediately if none\n"
          "  -h            this help message"));
-
-  exit(0);
 }
 // clang-format on
 
-static void start_curses(void)
+static int start_curses(void)
 {
   km_init(); /* must come before mutt_init */
 
@@ -143,8 +144,8 @@ static void start_curses(void)
 #endif
   if (!initscr())
   {
-    puts(_("Error initializing terminal."));
-    exit(1);
+    mutt_error(_("Error initializing terminal."));
+    return 1;
   }
   /* slang requires the signal handlers to be set after initializing */
   mutt_signal_init();
@@ -161,6 +162,7 @@ static void start_curses(void)
 #endif
   init_extended_keys();
   mutt_reflow_windows();
+  return 0;
 }
 
 #define MUTT_IGNORE (1 << 0)  /* -z */
@@ -171,6 +173,59 @@ static void start_curses(void)
 #ifdef USE_NNTP
 #define MUTT_NEWS (1 << 5) /* -g and -G */
 #endif
+
+static int get_user_info(void)
+{
+  const char *p = NULL;
+
+  p = mutt_str_getenv("HOME");
+  if (p)
+    HomeDir = mutt_str_strdup(p);
+
+  /* Get some information about the user */
+  struct passwd *pw = getpwuid(getuid());
+  if (pw)
+  {
+    char rnbuf[STRING];
+
+    Username = mutt_str_strdup(pw->pw_name);
+    if (!HomeDir)
+      HomeDir = mutt_str_strdup(pw->pw_dir);
+
+    RealName = mutt_str_strdup(mutt_gecos_name(rnbuf, sizeof(rnbuf), pw));
+    Shell = mutt_str_strdup(pw->pw_shell);
+    endpwent();
+  }
+
+  if (!Username)
+  {
+    p = mutt_str_getenv("USER");
+    if (p)
+      Username = mutt_str_strdup(p);
+  }
+
+  if (!Username)
+  {
+    mutt_error(_("unable to determine username"));
+    return 1; // TEST05: neomutt (unset $USER, delete user from /etc/passwd)
+  }
+
+  if (!HomeDir)
+  {
+    mutt_error(_("unable to determine home directory"));
+    return 1; // TEST06: neomutt (unset $HOME, delete user from /etc/passwd)
+  }
+
+  if (!Shell)
+  {
+    p = mutt_str_getenv("SHELL");
+    if (!p)
+      p = "/bin/sh";
+    Shell = mutt_str_strdup(p);
+  }
+
+  return 0;
+}
 
 /**
  * main - Start NeoMutt
@@ -187,11 +242,15 @@ int main(int argc, char **argv, char **env)
   char *include_file = NULL;
   char *draft_file = NULL;
   char *new_magic = NULL;
+  char *dlevel = NULL;
+  char *dfile = NULL;
   struct Header *msg = NULL;
   struct ListHead attach = STAILQ_HEAD_INITIALIZER(attach);
   struct ListHead commands = STAILQ_HEAD_INITIALIZER(commands);
   struct ListHead queries = STAILQ_HEAD_INITIALIZER(queries);
   struct ListHead alias_queries = STAILQ_HEAD_INITIALIZER(alias_queries);
+  struct ListHead cc_list = STAILQ_HEAD_INITIALIZER(cc_list);
+  struct ListHead bcc_list = STAILQ_HEAD_INITIALIZER(bcc_list);
   int sendflags = 0;
   int flags = 0;
   int version = 0;
@@ -204,13 +263,16 @@ int main(int argc, char **argv, char **env)
   extern char *optarg;
   extern int optind;
   int double_dash = argc, nargc = 1;
+  int rc = 1;
+  bool repeat_error = false;
+
+  MuttLogger = log_disp_terminal;
 
   /* sanity check against stupid administrators */
-
   if (getegid() != getgid())
   {
-    fprintf(stderr, "%s: I don't want to run with privileges!\n", argv[0]);
-    exit(1);
+    mutt_error("%s: I don't want to run with privileges!", argv[0]);
+    goto main_exit; // TEST01: neomutt (as root, chgrp mail neomutt; chmod +s neomutt)
   }
 
   setlocale(LC_ALL, "");
@@ -227,9 +289,10 @@ int main(int argc, char **argv, char **env)
   }
 #endif
 
-  mutt_message = mutt_error; /* send messages to stderr, too */
-  mutt_perror = mutt_perror_debug;
-  (void) mutt_rand32();
+  int out = 0;
+  if (mutt_randbuf(&out, sizeof(out)) < 0)
+    goto main_exit; // TEST02: neomutt (as root on non-Linux OS, rename /dev/urandom)
+
   umask(077);
 
   /* Init envlist */
@@ -252,9 +315,9 @@ int main(int argc, char **argv, char **env)
      */
     for (; optind < argc; optind++)
     {
-      if (argv[optind][0] == '-' && argv[optind][1] != '\0')
+      if ((argv[optind][0] == '-') && (argv[optind][1] != '\0'))
       {
-        if (argv[optind][1] == '-' && argv[optind][2] == '\0')
+        if ((argv[optind][1] == '-') && (argv[optind][2] == '\0'))
           double_dash = optind; /* quit outer loop after getopt */
         break;                  /* drop through to getopt */
       }
@@ -278,133 +341,90 @@ int main(int argc, char **argv, char **env)
         case 'a':
           mutt_list_insert_tail(&attach, mutt_str_strdup(optarg));
           break;
-
+        case 'B':
+          batch_mode = true;
+          break;
+        case 'b':
+          mutt_list_insert_tail(&bcc_list, mutt_str_strdup(optarg));
+          break;
+        case 'c':
+          mutt_list_insert_tail(&cc_list, mutt_str_strdup(optarg));
+          break;
+        case 'D':
+          dump_variables = true;
+          break;
+        case 'd':
+          dlevel = optarg;
+          break;
+        case 'E':
+          edit_infile = true;
+          break;
+        case 'e':
+          mutt_list_insert_tail(&commands, mutt_str_strdup(optarg));
+          break;
         case 'F':
-          /* mutt_str_replace (&Muttrc, optarg); */
           mutt_list_insert_tail(&Muttrc, mutt_str_strdup(optarg));
           break;
-
         case 'f':
           mutt_str_strfcpy(folder, optarg, sizeof(folder));
           explicit_folder = true;
           break;
-
-        case 'b':
-        case 'c':
-          if (!msg)
-            msg = mutt_new_header();
-          if (!msg->env)
-            msg->env = mutt_env_new();
-          if (i == 'b')
-            msg->env->bcc = mutt_addr_parse_list(msg->env->bcc, optarg);
-          else
-            msg->env->cc = mutt_addr_parse_list(msg->env->cc, optarg);
-          break;
-
-        case 'D':
-          dump_variables = true;
-          break;
-
-        case 'B':
-          batch_mode = true;
-          break;
-
-        case 'd':
-          if (mutt_str_atoi(optarg, &debuglevel_cmdline) < 0 || debuglevel_cmdline <= 0)
-          {
-            fprintf(stderr, _("Error: value '%s' is invalid for -d.\n"), optarg);
-            return 1;
-          }
-          printf(_("Debugging at level %d.\n"), debuglevel_cmdline);
-          break;
-
-        case 'E':
-          edit_infile = true;
-          break;
-
-        case 'e':
-          mutt_list_insert_tail(&commands, mutt_str_strdup(optarg));
-          break;
-
-        case 'H':
-          draft_file = optarg;
-          break;
-
-        case 'i':
-          include_file = optarg;
-          break;
-
-        case 'l':
-          debugfile_cmdline = optarg;
-          printf(_("Debugging at file %s.\n"), debugfile_cmdline);
-          break;
-
-        case 'm':
-          /* should take precedence over .neomuttrc setting, so save it for later */
-          new_magic = optarg;
-          break;
-
-        case 'n':
-          flags |= MUTT_NOSYSRC;
-          break;
-
-        case 'p':
-          sendflags |= SENDPOSTPONED;
-          break;
-
-        case 'Q':
-          mutt_list_insert_tail(&queries, mutt_str_strdup(optarg));
-          break;
-
-        case 'R':
-          flags |= MUTT_RO; /* read-only mode */
-          break;
-
-        case 'S':
-          hide_sensitive = true;
-          break;
-
-        case 's':
-          subject = optarg;
-          break;
-
-        case 'v':
-          version++;
-          break;
-
-        case 'x': /* mailx compatible send mode */
-          sendflags |= SENDMAILX;
-          break;
-
-        case 'y': /* My special hack mode */
-          flags |= MUTT_SELECT;
-          break;
-
 #ifdef USE_NNTP
         case 'g': /* Specify a news server */
-        {
-          char buf[LONG_STRING];
-
-          snprintf(buf, sizeof(buf), "set news_server=%s", optarg);
-          mutt_list_insert_tail(&commands, mutt_str_strdup(buf));
-        }
+          set_default_value("news_server", (intptr_t) mutt_str_strdup(optarg));
           /* fallthrough */
-
         case 'G': /* List of newsgroups */
           flags |= MUTT_SELECT | MUTT_NEWS;
           break;
 #endif
-
-        case 'z':
-          flags |= MUTT_IGNORE;
+        case 'H':
+          draft_file = optarg;
           break;
-
+        case 'i':
+          include_file = optarg;
+          break;
+        case 'l':
+          dfile = optarg;
+          break;
+        case 'm':
+          new_magic = optarg;
+          break;
+        case 'n':
+          flags |= MUTT_NOSYSRC;
+          break;
+        case 'p':
+          sendflags |= SENDPOSTPONED;
+          break;
+        case 'Q':
+          mutt_list_insert_tail(&queries, mutt_str_strdup(optarg));
+          break;
+        case 'R':
+          flags |= MUTT_RO; /* read-only mode */
+          break;
+        case 'S':
+          hide_sensitive = true;
+          break;
+        case 's':
+          subject = optarg;
+          break;
+        case 'v':
+          version++;
+          break;
+        case 'x': /* mailx compatible send mode */
+          sendflags |= SENDMAILX;
+          break;
+        case 'y': /* My special hack mode */
+          flags |= MUTT_SELECT;
+          break;
         case 'Z':
           flags |= MUTT_BUFFY | MUTT_IGNORE;
           break;
-
+        case 'z':
+          flags |= MUTT_IGNORE;
+          break;
         default:
           usage();
+          goto main_ok; // TEST03: neomutt -9
       }
     }
   }
@@ -415,16 +435,71 @@ int main(int argc, char **argv, char **env)
   optind = 1;
   argc = nargc;
 
-  switch (version)
+  if (version > 0)
   {
-    case 0:
-      break;
-    case 1:
+    log_queue_flush(log_disp_terminal);
+    if (version == 1)
       print_version();
-      exit(0);
-    default:
+    else
       print_copyright();
-      exit(0);
+    goto main_ok; // TEST04: neomutt -v
+  }
+
+  if (get_user_info() != 0)
+  {
+    goto main_exit;
+  }
+
+  if (dfile)
+  {
+    set_default_value("debug_file", (intptr_t) mutt_str_strdup(dfile));
+    mutt_str_replace(&DebugFile, dfile);
+  }
+  else
+  {
+    /* Make sure that the DebugFile has a value */
+    LogAllowDebugSet = true;
+    reset_value("debug_file");
+    LogAllowDebugSet = false;
+  }
+
+  if (dlevel)
+  {
+    short num = 0;
+    if ((mutt_str_atos(dlevel, &num) < 0) || (num < LL_MESSAGE) || (num > LL_DEBUG5))
+    {
+      mutt_error(_("Error: value '%s' is invalid for -d."), dlevel);
+      goto main_exit; // TEST07: neomutt -d xyz
+    }
+    set_default_value("debug_level", (intptr_t) num);
+    DebugLevel = num;
+  }
+
+  if (dlevel)
+    mutt_log_start();
+  else
+    LogAllowDebugSet = true;
+
+  MuttLogger = log_disp_queue;
+
+  if (!STAILQ_EMPTY(&cc_list) || !STAILQ_EMPTY(&bcc_list))
+  {
+    msg = mutt_new_header();
+    msg->env = mutt_env_new();
+
+    struct ListNode *np = NULL;
+    STAILQ_FOREACH(np, &bcc_list, entries)
+    {
+      msg->env->bcc = mutt_addr_parse_list(msg->env->bcc, np->data);
+    }
+
+    STAILQ_FOREACH(np, &cc_list, entries)
+    {
+      msg->env->cc = mutt_addr_parse_list(msg->env->cc, np->data);
+    }
+
+    mutt_list_free(&bcc_list);
+    mutt_list_free(&cc_list);
   }
 
   /* Check for a batch send. */
@@ -440,37 +515,69 @@ int main(int argc, char **argv, char **env)
   mutt_init_windows();
 
   /* This must come before mutt_init() because curses needs to be started
-     before calling the init_pair() function to set the color scheme.  */
+   * before calling the init_pair() function to set the color scheme.  */
   if (!OPT_NO_CURSES)
   {
-    start_curses();
+    int crc = start_curses();
+    /* Now that curses is set up, we drop back to normal screen mode.
+     * This simplifies displaying error messages to the user.
+     * The first call to refresh() will swap us back to curses screen mode. */
+    endwin();
+
+    if (crc != 0)
+      goto main_curses; // TEST08: can't test -- fake term?
 
     /* check whether terminal status is supported (must follow curses init) */
     TSSupported = mutt_ts_capability();
   }
 
   /* set defaults and read init files */
-  mutt_init(flags & MUTT_NOSYSRC, &commands);
+  rc = mutt_init(flags & MUTT_NOSYSRC, &commands);
+  if (rc != 0)
+    goto main_curses;
+
+  /* The command line overrides the config */
+  if (dlevel)
+    reset_value("debug_level");
+  if (dfile)
+    reset_value("debug_file");
+
+  if (mutt_log_start() < 0)
+  {
+    mutt_perror("log file");
+    goto main_exit;
+  }
+
+  LogAllowDebugSet = true;
+
   mutt_list_free(&commands);
 
   /* Initialize crypto backends.  */
   crypt_init();
 
   if (new_magic)
+  {
     mx_set_magic(new_magic);
+    set_default_value("mbox_type", (intptr_t) MboxType);
+  }
 
   if (!STAILQ_EMPTY(&queries))
   {
     for (; optind < argc; optind++)
       mutt_list_insert_tail(&queries, mutt_str_strdup(argv[optind]));
-    return mutt_query_variables(&queries);
+    rc = mutt_query_variables(&queries);
+    goto main_curses;
   }
+
   if (dump_variables)
-    return mutt_dump_variables(hide_sensitive);
+  {
+    rc = mutt_dump_variables(hide_sensitive);
+    goto main_curses; // TEST18: neomutt -D
+  }
 
   if (!STAILQ_EMPTY(&alias_queries))
   {
-    int rc = 0;
+    rc = 0;
     struct Address *a = NULL;
     for (; optind < argc; optind++)
       mutt_list_insert_tail(&alias_queries, mutt_str_strdup(argv[optind]));
@@ -487,19 +594,20 @@ int main(int argc, char **argv, char **env)
       else
       {
         rc = 1;
-        printf("%s\n", np->data);
+        printf("%s\n", np->data); // TEST19: neomutt -A unknown
       }
     }
     mutt_list_free(&alias_queries);
-    return rc;
+    goto main_curses; // TEST20: neomutt -A alias
   }
 
   if (!OPT_NO_CURSES)
   {
     NORMAL_COLOR;
     clear();
-    mutt_error = mutt_curses_error;
-    mutt_message = mutt_curses_message;
+    MuttLogger = log_disp_curses;
+    log_queue_flush(log_disp_curses);
+    log_queue_set_max_size(100);
   }
 
   /* Create the Folder directory if it doesn't exist. */
@@ -507,7 +615,6 @@ int main(int argc, char **argv, char **env)
   {
     struct stat sb;
     char fpath[_POSIX_PATH_MAX];
-    char msg2[STRING];
 
     mutt_str_strfcpy(fpath, Folder, sizeof(fpath));
     mutt_expand_path(fpath, sizeof(fpath));
@@ -519,34 +626,39 @@ int main(int argc, char **argv, char **env)
 #ifdef USE_NNTP
     skip |= mx_is_nntp(fpath);
 #endif
-    if (!skip && stat(fpath, &sb) == -1 && errno == ENOENT)
+    if (!skip && (stat(fpath, &sb) == -1) && (errno == ENOENT))
     {
+      char msg2[STRING];
       snprintf(msg2, sizeof(msg2), _("%s does not exist. Create it?"), Folder);
       if (mutt_yesorno(msg2, MUTT_YES) == MUTT_YES)
       {
-        if (mkdir(fpath, 0700) == -1 && errno != EEXIST)
-          mutt_error(_("Can't create %s: %s."), Folder, strerror(errno));
+        if ((mkdir(fpath, 0700) == -1) && (errno != EEXIST))
+          mutt_error(_("Can't create %s: %s."), Folder, strerror(errno)); // TEST21: neomutt -n -F /dev/null (and ~/Mail doesn't exist)
       }
     }
   }
 
   if (batch_mode)
-    exit(0);
+  {
+    goto main_ok; // TEST22: neomutt -B
+  }
 
   if (sendflags & SENDPOSTPONED)
   {
     if (!OPT_NO_CURSES)
       mutt_flushinp();
-    ci_send_message(SENDPOSTPONED, NULL, NULL, NULL, NULL);
-    mutt_free_windows();
-    mutt_endwin(NULL);
+    if (ci_send_message(SENDPOSTPONED, NULL, NULL, NULL, NULL) == 0)
+      rc = 0;
+    // TEST23: neomutt -p (postponed message, cancel)
+    // TEST24: neomutt -p (no postponed message)
+    log_queue_empty();
+    repeat_error = true;
   }
   else if (subject || msg || sendflags || draft_file || include_file ||
            !STAILQ_EMPTY(&attach) || optind < argc)
   {
     FILE *fin = NULL;
     FILE *fout = NULL;
-    char buf[LONG_STRING];
     char *tempfile = NULL, *infile = NULL;
     char *bodytext = NULL, *bodyfile = NULL;
     int rv = 0;
@@ -566,10 +678,8 @@ int main(int argc, char **argv, char **env)
       {
         if (url_parse_mailto(msg->env, &bodytext, argv[i]) < 0)
         {
-          if (!OPT_NO_CURSES)
-            mutt_endwin(NULL);
-          fputs(_("Failed to parse mailto: link\n"), stderr);
-          exit(1);
+          mutt_error(_("Failed to parse mailto: link"));
+          goto main_curses; // TEST25: neomutt mailto:
         }
       }
       else
@@ -578,10 +688,8 @@ int main(int argc, char **argv, char **env)
 
     if (!draft_file && Autoedit && !msg->env->to && !msg->env->cc)
     {
-      if (!OPT_NO_CURSES)
-        mutt_endwin(NULL);
-      fputs(_("No recipients specified.\n"), stderr);
-      exit(1);
+      mutt_error(_("No recipients specified."));
+      goto main_curses; // TEST26: neomutt -s test (with autoedit=yes)
     }
 
     if (subject)
@@ -606,8 +714,8 @@ int main(int argc, char **argv, char **env)
         {
           if (edit_infile)
           {
-            fputs(_("Cannot use -E flag with stdin\n"), stderr);
-            exit(1);
+            mutt_error(_("Cannot use -E flag with stdin"));
+            goto main_curses; // TEST27: neomutt -E -H -
           }
           fin = stdin;
         }
@@ -618,10 +726,8 @@ int main(int argc, char **argv, char **env)
           fin = fopen(expanded_infile, "r");
           if (!fin)
           {
-            if (!OPT_NO_CURSES)
-              mutt_endwin(NULL);
-            perror(expanded_infile);
-            exit(1);
+            mutt_perror(expanded_infile);
+            goto main_curses; // TEST28: neomutt -E -H missing
           }
         }
       }
@@ -632,18 +738,17 @@ int main(int argc, char **argv, char **env)
        */
       if (!edit_infile)
       {
+        char buf[LONG_STRING];
         mutt_mktemp(buf, sizeof(buf));
         tempfile = mutt_str_strdup(buf);
 
         fout = mutt_file_fopen(tempfile, "w");
         if (!fout)
         {
-          if (!OPT_NO_CURSES)
-            mutt_endwin(NULL);
-          perror(tempfile);
           mutt_file_fclose(&fin);
+          mutt_perror(tempfile);
           FREE(&tempfile);
-          exit(1);
+          goto main_curses; // TEST29: neomutt -H existing-file (where tmpdir=/path/to/FILE blocking tmpdir)
         }
         if (fin)
         {
@@ -658,11 +763,9 @@ int main(int argc, char **argv, char **env)
         fin = fopen(tempfile, "r");
         if (!fin)
         {
-          if (!OPT_NO_CURSES)
-            mutt_endwin(NULL);
-          perror(tempfile);
+          mutt_perror(tempfile);
           FREE(&tempfile);
-          exit(1);
+          goto main_curses; // TEST30: can't test
         }
       }
       /* If editing the infile, keep it around afterwards so
@@ -689,14 +792,20 @@ int main(int argc, char **argv, char **env)
         context_hdr = mutt_new_header();
         context_hdr->offset = 0;
         context_hdr->content = mutt_new_body();
-        if (fstat(fileno(fin), &st))
+        if (fstat(fileno(fin), &st) != 0)
         {
-          perror(draft_file);
-          exit(1);
+          mutt_perror(draft_file);
+          goto main_curses; // TEST31: can't test
         }
         context_hdr->content->length = st.st_size;
 
-        mutt_prepare_template(fin, NULL, msg, context_hdr, 0);
+        if (mutt_prepare_template(fin, NULL, msg, context_hdr, 0) < 0)
+        {
+          mutt_error(_("Cannot parse message template: %s"), draft_file);
+          mutt_env_free(&opts_env);
+          mutt_free_header(&context_hdr);
+          goto main_curses;
+        }
 
         /* Scan for neomutt header to set ResumeDraftFiles */
         struct ListNode *np, *tmp;
@@ -757,17 +866,19 @@ int main(int argc, char **argv, char **env)
           msg->content = a = mutt_make_file_attach(np->data);
         if (!a)
         {
-          if (!OPT_NO_CURSES)
-            mutt_endwin(NULL);
-          fprintf(stderr, _("%s: unable to attach file.\n"), np->data);
+          mutt_error(_("%s: unable to attach file."), np->data);
           mutt_list_free(&attach);
-          exit(1);
+          goto main_curses; // TEST32: neomutt john@example.com -a missing
         }
       }
       mutt_list_free(&attach);
     }
 
     rv = ci_send_message(sendflags, msg, bodyfile, NULL, NULL);
+    /* We WANT the "Mail sent." and any possible, later error */
+    log_queue_empty();
+    if (ErrorBufMessage)
+      mutt_message("%s", ErrorBuf);
 
     if (edit_infile)
     {
@@ -777,18 +888,14 @@ int main(int argc, char **argv, char **env)
       {
         if (truncate(expanded_infile, 0) == -1)
         {
-          if (!OPT_NO_CURSES)
-            mutt_endwin(NULL);
-          perror(expanded_infile);
-          exit(1);
+          mutt_perror(expanded_infile);
+          goto main_curses; // TEST33: neomutt -H read-only -s test john@example.com -E
         }
         fout = mutt_file_fopen(expanded_infile, "a");
         if (!fout)
         {
-          if (!OPT_NO_CURSES)
-            mutt_endwin(NULL);
-          perror(expanded_infile);
-          exit(1);
+          mutt_perror(expanded_infile);
+          goto main_curses; // TEST34: can't test
         }
 
         /* If the message was sent or postponed, these will already
@@ -809,10 +916,8 @@ int main(int argc, char **argv, char **env)
         fputc('\n', fout);
         if ((mutt_write_mime_body(msg->content, fout) == -1))
         {
-          if (!OPT_NO_CURSES)
-            mutt_endwin(NULL);
           mutt_file_fclose(&fout);
-          exit(1);
+          goto main_curses; // TEST35: can't test
         }
         mutt_file_fclose(&fout);
       }
@@ -828,11 +933,9 @@ int main(int argc, char **argv, char **env)
     }
 
     mutt_free_windows();
-    if (!OPT_NO_CURSES)
-      mutt_endwin(NULL);
 
-    if (rv)
-      exit(1);
+    if (rv != 0)
+      goto main_curses; // TEST36: neomutt -H existing -s test john@example.com -E (cancel sending)
   }
   else
   {
@@ -840,10 +943,10 @@ int main(int argc, char **argv, char **env)
     {
       if (!mutt_buffy_check(false))
       {
-        mutt_endwin(_("No mailbox with new mail."));
-        exit(1);
+        mutt_message(_("No mailbox with new mail."));
+        goto main_curses; // TEST37: neomutt -Z (no new mail)
       }
-      folder[0] = 0;
+      folder[0] = '\0';
       mutt_buffy(folder, sizeof(folder));
     }
     else if (flags & MUTT_SELECT)
@@ -854,24 +957,20 @@ int main(int argc, char **argv, char **env)
         OPT_NEWS = true;
         CurrentNewsSrv = nntp_select_server(NewsServer, false);
         if (!CurrentNewsSrv)
-        {
-          mutt_endwin(ErrorBuf);
-          exit(1);
-        }
+          goto main_curses; // TEST38: neomutt -G (unset news_server)
       }
       else
 #endif
           if (!Incoming)
       {
-        mutt_endwin(_("No incoming mailboxes defined."));
-        exit(1);
+        mutt_error(_("No incoming mailboxes defined."));
+        goto main_curses; // TEST39: neomutt -n -F /dev/null -y
       }
-      folder[0] = 0;
+      folder[0] = '\0';
       mutt_select_file(folder, sizeof(folder), MUTT_SEL_FOLDER | MUTT_SEL_BUFFY, NULL, NULL);
-      if (!folder[0])
+      if (folder[0] == '\0')
       {
-        mutt_endwin(NULL);
-        exit(0);
+        goto main_ok; // TEST40: neomutt -y (quit selection)
       }
     }
 
@@ -903,17 +1002,18 @@ int main(int argc, char **argv, char **env)
       switch (mx_check_empty(folder))
       {
         case -1:
-          mutt_endwin(strerror(errno));
-          exit(1);
+          mutt_perror(folder);
+          goto main_curses; // TEST41: neomutt -z -f missing
         case 1:
-          mutt_endwin(_("Mailbox is empty."));
-          exit(1);
+          mutt_error(_("Mailbox is empty."));
+          goto main_curses; // TEST42: neomutt -z -f /dev/null
       }
     }
 
     mutt_folder_hook(folder);
     mutt_startup_shutdown_hook(MUTT_STARTUPHOOK);
 
+    repeat_error = true;
     Context = mx_open_mailbox(
         folder, ((flags & MUTT_RO) || ReadOnly) ? MUTT_READONLY : 0, NULL);
     if (Context || !explicit_folder)
@@ -931,10 +1031,23 @@ int main(int argc, char **argv, char **env)
 #ifdef USE_SASL
     mutt_sasl_done();
 #endif
+    log_queue_empty();
+    mutt_log_stop();
     mutt_free_opts();
     mutt_free_windows();
-    mutt_endwin(ErrorBuf);
+    // TEST43: neomutt (no change to mailbox)
+    // TEST44: neomutt (change mailbox)
   }
 
-  exit(0);
+main_ok:
+  rc = 0;
+main_curses:
+  mutt_endwin();
+  log_queue_flush(log_disp_terminal);
+  mutt_log_stop();
+  /* Repeat the last message to the user */
+  if (repeat_error && ErrorBufMessage)
+    puts(ErrorBuf);
+main_exit:
+  return rc;
 }

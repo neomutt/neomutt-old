@@ -37,6 +37,7 @@
 
 WHERE struct Context *Context;
 
+WHERE bool ErrorBufMessage;
 WHERE char ErrorBuf[STRING];
 WHERE char AttachmentMarker[STRING];
 
@@ -233,9 +234,6 @@ WHERE char *HiddenTags;
 WHERE short NntpPoll;
 WHERE short NntpContext;
 #endif
-
-WHERE short DebugLevel;
-WHERE char *DebugFile;
 
 WHERE short MenuContext;
 WHERE short PagerContext;

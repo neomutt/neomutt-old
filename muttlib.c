@@ -83,23 +83,21 @@ static const char *xdg_defaults[] = {
  */
 void mutt_adv_mktemp(char *s, size_t l)
 {
-  char prefix[_POSIX_PATH_MAX];
-  char *suffix = NULL;
-  struct stat sb;
-
   if (s[0] == '\0')
   {
     mutt_mktemp(s, l);
   }
   else
   {
+    char prefix[_POSIX_PATH_MAX];
     mutt_str_strfcpy(prefix, s, sizeof(prefix));
     mutt_file_sanitize_filename(prefix, 1);
     snprintf(s, l, "%s/%s", NONULL(Tmpdir), prefix);
+    struct stat sb;
     if (lstat(s, &sb) == -1 && errno == ENOENT)
       return;
 
-    suffix = strrchr(prefix, '.');
+    char *suffix = strrchr(prefix, '.');
     if (suffix)
     {
       *suffix = 0;
@@ -362,9 +360,9 @@ bool mutt_needs_mailcap(struct Body *m)
         return false;
       break;
     case TYPEAPPLICATION:
-      if ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(m))
+      if (((WithCrypto & APPLICATION_PGP) != 0) && mutt_is_application_pgp(m))
         return false;
-      if ((WithCrypto & APPLICATION_SMIME) && mutt_is_application_smime(m))
+      if (((WithCrypto & APPLICATION_SMIME) != 0) && mutt_is_application_smime(m))
         return false;
       break;
 
@@ -381,7 +379,7 @@ bool mutt_is_text_part(struct Body *b)
   int t = b->type;
   char *s = b->subtype;
 
-  if ((WithCrypto & APPLICATION_PGP) && mutt_is_application_pgp(b))
+  if (((WithCrypto & APPLICATION_PGP) != 0) && mutt_is_application_pgp(b))
     return false;
 
   if (t == TYPETEXT)
@@ -393,7 +391,7 @@ bool mutt_is_text_part(struct Body *b)
       return true;
   }
 
-  if ((WithCrypto & APPLICATION_PGP) && t == TYPEAPPLICATION)
+  if (((WithCrypto & APPLICATION_PGP) != 0) && t == TYPEAPPLICATION)
   {
     if (mutt_str_strcasecmp("pgp-keys", s) == 0)
       return true;
@@ -404,12 +402,12 @@ bool mutt_is_text_part(struct Body *b)
 
 static FILE *frandom;
 
-static void mutt_randbuf(void *out, size_t len)
+int mutt_randbuf(void *out, size_t len)
 {
   if (len > 1048576)
   {
     mutt_error(_("mutt_randbuf len=%zu"), len);
-    exit(1);
+    return -1;
   }
 /* XXX switch to HAVE_GETRANDOM and getrandom() in about 2017 */
 #if defined(SYS_getrandom) && defined(__linux__)
@@ -419,25 +417,27 @@ static void mutt_randbuf(void *out, size_t len)
     ret = syscall(SYS_getrandom, out, len, 0, 0, 0, 0);
   } while ((ret == -1) && (errno == EINTR));
   if (ret == len)
-    return;
-/* let's try urandom in case we're on an old kernel, or the user has
-   * configured selinux, seccomp or something to not allow getrandom */
+    return 0;
 #endif
+  /* let's try urandom in case we're on an old kernel, or the user has
+   * configured selinux, seccomp or something to not allow getrandom */
   if (!frandom)
   {
     frandom = fopen("/dev/urandom", "rb");
     if (!frandom)
     {
       mutt_error(_("open /dev/urandom: %s"), strerror(errno));
-      exit(1);
+      return -1;
     }
     setbuf(frandom, NULL);
   }
   if (fread(out, 1, len, frandom) != len)
   {
     mutt_error(_("read /dev/urandom: %s"), strerror(errno));
-    exit(1);
+    return -1;
   }
+
+  return 0;
 }
 
 static const unsigned char base32[] = "abcdefghijklmnopqrstuvwxyz234567";
@@ -446,24 +446,27 @@ void mutt_rand_base32(void *out, size_t len)
 {
   uint8_t *p = out;
 
-  mutt_randbuf(p, len);
+  if (mutt_randbuf(p, len) < 0)
+    mutt_exit(1);
   for (size_t pos = 0; pos < len; pos++)
     p[pos] = base32[p[pos] % 32];
 }
 
 uint32_t mutt_rand32(void)
 {
-  uint32_t ret;
+  uint32_t ret = 0;
 
-  mutt_randbuf(&ret, sizeof(ret));
+  if (mutt_randbuf(&ret, sizeof(ret)) < 0)
+    mutt_exit(1);
   return ret;
 }
 
 uint64_t mutt_rand64(void)
 {
-  uint64_t ret;
+  uint64_t ret = 0;
 
-  mutt_randbuf(&ret, sizeof(ret));
+  if (mutt_randbuf(&ret, sizeof(ret)) < 0)
+    mutt_exit(1);
   return ret;
 }
 
@@ -628,8 +631,6 @@ void mutt_expand_fmt(char *dest, size_t destlen, const char *fmt, const char *sr
 int mutt_check_overwrite(const char *attname, const char *path, char *fname,
                          size_t flen, int *append, char **directory)
 {
-  int rc = 0;
-  char tmp[_POSIX_PATH_MAX];
   struct stat st;
 
   mutt_str_strfcpy(fname, path, flen);
@@ -639,6 +640,7 @@ int mutt_check_overwrite(const char *attname, const char *path, char *fname,
     return -1;
   if (S_ISDIR(st.st_mode))
   {
+    int rc = 0;
     if (directory)
     {
       switch (mutt_multi_choice
@@ -667,6 +669,7 @@ int mutt_check_overwrite(const char *attname, const char *path, char *fname,
     else if ((rc = mutt_yesorno(_("File is a directory, save under it?"), MUTT_YES)) != MUTT_YES)
       return (rc == MUTT_NO) ? 1 : -1;
 
+    char tmp[_POSIX_PATH_MAX];
     mutt_str_strfcpy(tmp, mutt_file_basename(NONULL(attname)), sizeof(tmp));
     if (mutt_get_field(_("File under directory: "), tmp, sizeof(tmp),
                        MUTT_FILE | MUTT_CLEAR) != 0 ||
@@ -742,7 +745,6 @@ void mutt_expando_format(char *buf, size_t buflen, size_t col, int cols, const c
   size_t wlen, count, len, wid;
   pid_t pid;
   FILE *filter = NULL;
-  int n;
   char *recycler = NULL;
 
   char src2[STRING];
@@ -759,7 +761,7 @@ void mutt_expando_format(char *buf, size_t buflen, size_t col, int cols, const c
     int off = -1;
 
     /* Do not consider filters if no pipe at end */
-    n = mutt_str_strlen(src);
+    int n = mutt_str_strlen(src);
     if (n > 1 && src[n - 1] == '|')
     {
       /* Scan backwards for backslashes */
@@ -1123,7 +1125,7 @@ void mutt_expando_format(char *buf, size_t buflen, size_t col, int cols, const c
       else if (ch == '|')
       {
         /* pad to EOL */
-        int pl, pw, c;
+        int pl, pw;
         pl = mutt_mb_charlen(src, &pw);
         if (pl <= 0)
           pl = pw = 1;
@@ -1131,7 +1133,7 @@ void mutt_expando_format(char *buf, size_t buflen, size_t col, int cols, const c
         /* see if there's room to add content, else ignore */
         if (col < cols && wlen < buflen)
         {
-          c = (cols - col) / pw;
+          int c = (cols - col) / pw;
           if (c > 0 && wlen + (c * pl) > buflen)
             c = ((signed) (buflen - wlen)) / pl;
           while (c > 0)
@@ -1267,7 +1269,7 @@ FILE *mutt_open_read(const char *path, pid_t *thepid)
     char *p = mutt_str_strdup(path);
 
     p[len - 1] = 0;
-    mutt_endwin(NULL);
+    mutt_endwin();
     *thepid = mutt_create_filter(p, NULL, &f, NULL);
     FREE(&p);
   }
@@ -1397,9 +1399,18 @@ const char *mutt_make_version(void)
 void mutt_encode_path(char *dest, size_t dlen, const char *src)
 {
   char *p = mutt_str_strdup(src);
-  int rc = mutt_ch_convert_string(&p, Charset, "utf-8", 0);
+  int rc = mutt_ch_convert_string(&p, Charset, "us-ascii", 0);
   /* `src' may be NULL, such as when called from the pop3 driver. */
-  mutt_str_strfcpy(dest, (rc == 0) ? NONULL(p) : NONULL(src), dlen);
+  size_t len = mutt_str_strfcpy(dest, (rc == 0) ? NONULL(p) : NONULL(src), dlen);
+
+  /* convert the path to POSIX "Portable Filename Character Set" */
+  for (size_t i = 0; i < len; ++i)
+  {
+    if (!isalnum(dest[i]) && !strchr("/.-_", dest[i]))
+    {
+      dest[i] = '_';
+    }
+  }
   FREE(&p);
 }
 
@@ -1498,37 +1509,6 @@ size_t mutt_realpath(char *buf)
     return 0;
 
   return mutt_str_strfcpy(buf, s, PATH_MAX);
-}
-
-char debugfilename[_POSIX_PATH_MAX];
-FILE *debugfile = NULL;
-int debuglevel;
-char *debugfile_cmdline = NULL;
-int debuglevel_cmdline;
-
-int mutt_debug_real(const char *function, const char *file, int line, int level, ...)
-{
-  va_list ap;
-  time_t now = time(NULL);
-  static char buf[23] = "";
-  static time_t last = 0;
-  int ret = 0;
-
-  if ((debuglevel < level) || !debugfile)
-    return 0;
-
-  if (now > last)
-  {
-    ret += strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now));
-    last = now;
-  }
-  ret += fprintf(debugfile, "[%s] %s() ", buf, function);
-
-  va_start(ap, level);
-  const char *fmt = va_arg(ap, const char *);
-  ret += vfprintf(debugfile, fmt, ap);
-  va_end(ap);
-  return ret;
 }
 
 /**
