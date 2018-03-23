@@ -1,2 +1,2 @@
-debian/tmp/usr/share/man/man1/*
-debian/tmp/usr/share/man/man5/*
+debian/tmp/share/man/man1/*
+debian/tmp/share/man/man5/*

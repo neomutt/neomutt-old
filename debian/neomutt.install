@@ -1,4 +1,4 @@
-debian/extra/neomutt.xpm		usr/share/pixmaps
 debian/extra/neomutt.desktop		usr/share/applications
+debian/extra/neomutt.xpm		usr/share/pixmaps
 debian/tmp/usr/bin/neomutt
 debian/tmp/usr/lib/neomutt/*		usr/lib/neomutt

@@ -47,9 +47,9 @@ Depends: neomutt-common (= ${source:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Recommends: libsasl2-modules, locales, mime-support
-Suggests: aspell | ispell,
+Suggests: default-mta | mail-transport-agent,
+          aspell | ispell,
           ca-certificates,
-          default-mta | mail-transport-agent,
           gnupg,
           mixmaster,
           notmuch,

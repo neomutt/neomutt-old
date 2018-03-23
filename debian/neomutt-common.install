@@ -1,8 +1,8 @@
 README.*					usr/share/doc/neomutt-common/README
 contrib/smime.rc				etc/NeoMuttrc.d
-usr/share/doc/neomutt/*.html			usr/share/doc/neomutt-common/html
-usr/share/doc/neomutt/manual.txt		usr/share/doc/neomutt-common
 debian/extra/lib/*				usr/lib/neomutt
 debian/extra/rc/*.rc				etc/NeoMuttrc.d
 debian/tmp/neomuttrc				etc
 debian/tmp/usr/share/locale
+usr/share/doc/neomutt/*.html			usr/share/doc/neomutt-common/html
+usr/share/doc/neomutt/manual.txt		usr/share/doc/neomutt-common

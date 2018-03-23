@@ -1,6 +1,10 @@
-neomutt (1:20180223-1lxtec3) unstable; urgency=medium
+neomutt (1:20180323-1lxtec1) unstable; urgency=medium
 
+  * Merged neomutt-20180323
   * Added libxml2-utils to BuildDepends.
+  * Refreshed version patch.
+  * Install manpages from debian/tmp/share/man/man[1,5]/*.
+  * Mentioned default-mta at first place in Suggests:.
 
  -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 09 Mar 2018 00:21:29 +0100
 
