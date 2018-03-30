@@ -1,3 +1,9 @@
+neomutt (1:20180323-1lxtec2) UNRELEASED; urgency=medium
+
+  * Switched to clang-6.0
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Fri, 30 Mar 2018 23:02:22 +0200
+
 neomutt (1:20180323-1lxtec1) unstable; urgency=medium
 
   * Merged neomutt-20180323

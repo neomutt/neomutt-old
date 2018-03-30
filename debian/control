@@ -2,7 +2,7 @@ Source: neomutt
 Section: mail
 Priority: optional
 Maintainer: Elimar Riesebieter <riesebie@lxtec.de>
-Build-Depends: clang-5.0,
+Build-Depends: clang-6.0,
                debhelper (>= 11),
                dh-lua,
                docbook-xml,

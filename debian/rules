@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-export CXX=/usr/bin/clang++-5.0
-export CC=/usr/bin/clang-5.0
+export CXX=/usr/bin/clang++-6.0
+export CC=/usr/bin/clang-6.0
 CFLAGS+=-fpie
 CPPFLAGS+=-fpie
 LDFLAGS+=-pie
