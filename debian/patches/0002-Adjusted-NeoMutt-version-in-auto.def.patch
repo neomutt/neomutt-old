@@ -16,7 +16,7 @@ index 95bb5000..1307865d 100644
  # Names and versions
  define PACKAGE          "neomutt"
 -define PACKAGE_VERSION  "20180323"
-+define PACKAGE_VERSION  "20180323-lxtec"
++define PACKAGE_VERSION  "20180405-lxtec"
  define BUGS_ADDRESS     "neomutt-devel@neomutt.org"
  
  # Subdirectories that contain additional Makefile.autosetup files
