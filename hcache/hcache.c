@@ -627,12 +627,11 @@ static const char *hcache_per_folder(const char *path, const char *folder, hcach
 static void *hcache_dump(header_cache_t *h, struct Header *header, int *off,
                          unsigned int uidvalidity)
 {
-  unsigned char *d = NULL;
   struct Header nh;
   bool convert = !CharsetIsUtf8;
 
   *off = 0;
-  d = lazy_malloc(sizeof(union Validate));
+  unsigned char *d = lazy_malloc(sizeof(union Validate));
 
   if (uidvalidity == 0)
   {
@@ -686,7 +685,7 @@ static void *hcache_dump(header_cache_t *h, struct Header *header, int *off,
 struct Header *mutt_hcache_restore(const unsigned char *d)
 {
   int off = 0;
-  struct Header *h = mutt_new_header();
+  struct Header *h = mutt_header_new();
   bool convert = !CharsetIsUtf8;
 
   /* skip validate */
@@ -701,7 +700,7 @@ struct Header *mutt_hcache_restore(const unsigned char *d)
   h->env = mutt_env_new();
   restore_envelope(h->env, d, &off, convert);
 
-  h->content = mutt_new_body();
+  h->content = mutt_body_new();
   restore_body(h->content, d, &off, convert);
 
   restore_char(&h->maildir_flags, d, &off, convert);
@@ -711,11 +710,9 @@ struct Header *mutt_hcache_restore(const unsigned char *d)
 
 static char *get_foldername(const char *folder)
 {
-  char *p = NULL;
-
   /* if the folder is local, canonify the path to avoid
    * to ensure equivalent paths share the hcache */
-  p = mutt_mem_malloc(PATH_MAX + 1);
+  char *p = mutt_mem_malloc(PATH_MAX + 1);
   if (!realpath(folder, p))
     mutt_str_replace(&p, folder);
 
@@ -810,9 +807,7 @@ void mutt_hcache_close(header_cache_t *h)
 
 void *mutt_hcache_fetch(header_cache_t *h, const char *key, size_t keylen)
 {
-  void *data = NULL;
-
-  data = mutt_hcache_fetch_raw(h, key, keylen);
+  void *data = mutt_hcache_fetch_raw(h, key, keylen);
   if (!data)
   {
     return NULL;

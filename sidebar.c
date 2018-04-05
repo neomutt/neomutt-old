@@ -37,6 +37,7 @@
 #include "globals.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "opcodes.h"
 #include "options.h"
@@ -915,9 +916,8 @@ static void draw_sidebar(int num_rows, int num_cols, int div_width)
     }
     else if (maildir_is_prefix && SidebarFolderIndent)
     {
-      const char *tmp_folder_name = NULL;
       int lastsep = 0;
-      tmp_folder_name = b->path + maildirlen + 1;
+      const char *tmp_folder_name = b->path + maildirlen + 1;
       int tmplen = (int) mutt_str_strlen(tmp_folder_name) - 1;
       for (int i = 0; i < tmplen; i++)
       {
@@ -1040,7 +1040,7 @@ void mutt_sb_change_mailbox(int op)
     default:
       return;
   }
-  mutt_set_current_menu_redraw(REDRAW_SIDEBAR);
+  mutt_menu_set_current_redraw(REDRAW_SIDEBAR);
 }
 
 /**
@@ -1173,7 +1173,7 @@ void mutt_sb_notify_mailbox(struct Buffy *b, int created)
       Entries[del_index] = Entries[del_index + 1];
   }
 
-  mutt_set_current_menu_redraw(REDRAW_SIDEBAR);
+  mutt_menu_set_current_redraw(REDRAW_SIDEBAR);
 }
 
 /**
@@ -1207,5 +1207,5 @@ void mutt_sb_toggle_virtual(void)
     }
   }
 
-  mutt_set_current_menu_redraw(REDRAW_SIDEBAR);
+  mutt_menu_set_current_redraw(REDRAW_SIDEBAR);
 }

@@ -42,6 +42,7 @@
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "opcodes.h"
@@ -711,7 +712,6 @@ void mutt_pipe_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag,
 {
   struct State state;
   char buf[SHORT_STRING];
-  pid_t thepid;
 
   if (fp)
     filter = false; /* sanity check: we can't filter in the recv case yet */
@@ -731,7 +731,7 @@ void mutt_pipe_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag,
   if (!filter && !AttachSplit)
   {
     mutt_endwin();
-    thepid = mutt_create_filter(buf, &state.fpout, NULL, NULL);
+    pid_t thepid = mutt_create_filter(buf, &state.fpout, NULL, NULL);
     pipe_attachment_list(buf, actx, fp, tag, top, filter, &state);
     mutt_file_fclose(&state.fpout);
     if (mutt_wait_filter(thepid) != 0 || WaitKey)
@@ -834,7 +834,6 @@ void mutt_print_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag, stru
 {
   struct State state = { 0 };
 
-  pid_t thepid;
   if (query_quadoption(Print, tag ? _("Print tagged attachment(s)?") :
                                     _("Print attachment?")) != MUTT_YES)
     return;
@@ -844,7 +843,7 @@ void mutt_print_attachment_list(struct AttachCtx *actx, FILE *fp, bool tag, stru
     if (!can_print(actx, top, tag))
       return;
     mutt_endwin();
-    thepid = mutt_create_filter(NONULL(PrintCommand), &state.fpout, NULL, NULL);
+    pid_t thepid = mutt_create_filter(NONULL(PrintCommand), &state.fpout, NULL, NULL);
     print_attachment_list(actx, fp, tag, top, &state);
     mutt_file_fclose(&state.fpout);
     if (mutt_wait_filter(thepid) != 0 || WaitKey)
@@ -997,7 +996,7 @@ static void mutt_generate_recvattach_list(struct AttachCtx *actx, struct Header 
       secured = !crypt_smime_decrypt_mime(fp, &new_fp, m, &new_body);
 
       /* S/MIME nesting */
-      if ((mutt_is_application_smime(new_body) & SMIMEOPAQUE))
+      if ((mutt_is_application_smime(new_body) & SMIMEOPAQUE) == SMIMEOPAQUE)
       {
         struct Body *outer_new_body = new_body;
         FILE *outer_fp = new_fp;
@@ -1007,7 +1006,7 @@ static void mutt_generate_recvattach_list(struct AttachCtx *actx, struct Header 
 
         secured = !crypt_smime_decrypt_mime(outer_fp, &new_fp, outer_new_body, &new_body);
 
-        mutt_free_body(&outer_new_body);
+        mutt_body_free(&outer_new_body);
         mutt_file_fclose(&outer_fp);
       }
 
@@ -1152,10 +1151,7 @@ static const char *Function_not_permitted =
 void mutt_view_attachments(struct Header *hdr)
 {
   char helpstr[LONG_STRING];
-  struct Menu *menu = NULL;
   struct Body *cur = NULL;
-  struct Message *msg = NULL;
-  struct AttachCtx *actx = NULL;
   int flags = 0;
   int op = OP_NULL;
 
@@ -1164,18 +1160,18 @@ void mutt_view_attachments(struct Header *hdr)
 
   mutt_message_hook(Context, hdr, MUTT_MESSAGEHOOK);
 
-  msg = mx_open_message(Context, hdr->msgno);
+  struct Message *msg = mx_open_message(Context, hdr->msgno);
   if (!msg)
     return;
 
-  menu = mutt_new_menu(MENU_ATTACH);
+  struct Menu *menu = mutt_menu_new(MENU_ATTACH);
   menu->title = _("Attachments");
   menu->make_entry = attach_entry;
   menu->tag = mutt_tag_attach;
   menu->help = mutt_compile_help(helpstr, sizeof(helpstr), MENU_ATTACH, AttachHelp);
-  mutt_push_current_menu(menu);
+  mutt_menu_push_current(menu);
 
-  actx = mutt_mem_calloc(sizeof(struct AttachCtx), 1);
+  struct AttachCtx *actx = mutt_mem_calloc(sizeof(struct AttachCtx), 1);
   actx->hdr = hdr;
   actx->root_fp = msg->fp;
   mutt_update_recvattach_menu(actx, menu, 1);
@@ -1430,7 +1426,7 @@ void mutt_view_attachments(struct Header *hdr)
 
         mutt_free_attach_context(&actx);
 
-        mutt_pop_current_menu(menu);
+        mutt_menu_pop_current(menu);
         mutt_menu_destroy(&menu);
         return;
     }

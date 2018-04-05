@@ -516,7 +516,7 @@ void imap_pretty_mailbox(char *path)
     if (tlen && mutt_account_match(&home.account, &target.account) &&
         (mutt_str_strncmp(home.mbox, target.mbox, hlen) == 0))
     {
-      if (!hlen)
+      if (hlen == 0)
         home_match = true;
       else if (ImapDelimChars)
         for (delim = ImapDelimChars; *delim != '\0'; delim++)
@@ -531,7 +531,7 @@ void imap_pretty_mailbox(char *path)
   {
     *path++ = '=';
     /* copy remaining path, skipping delimiter */
-    if (!hlen)
+    if (hlen == 0)
       hlen = -1;
     memcpy(path, target.mbox + hlen + 1, tlen - hlen - 1);
     path[tlen - hlen - 1] = '\0';
@@ -800,11 +800,8 @@ void imap_qualify_path(char *dest, size_t len, struct ImapMbox *mx, char *path)
 void imap_quote_string(char *dest, size_t dlen, const char *src)
 {
   static const char quote[] = "\"\\";
-  char *pt = NULL;
-  const char *s = NULL;
-
-  pt = dest;
-  s = src;
+  char *pt = dest;
+  const char *s = src;
 
   *pt++ = '"';
   /* save room for trailing quote-char */
@@ -815,7 +812,7 @@ void imap_quote_string(char *dest, size_t dlen, const char *src)
     if (strchr(quote, *s))
     {
       dlen -= 2;
-      if (!dlen)
+      if (dlen == 0)
         break;
       *pt++ = '\\';
       *pt++ = *s;
@@ -873,9 +870,7 @@ void imap_unquote_string(char *s)
  */
 void imap_munge_mbox_name(struct ImapData *idata, char *dest, size_t dlen, const char *src)
 {
-  char *buf = NULL;
-
-  buf = mutt_str_strdup(src);
+  char *buf = mutt_str_strdup(src);
   imap_utf_encode(idata, &buf);
 
   imap_quote_string(dest, dlen, buf);
@@ -892,11 +887,9 @@ void imap_munge_mbox_name(struct ImapData *idata, char *dest, size_t dlen, const
  */
 void imap_unmunge_mbox_name(struct ImapData *idata, char *s)
 {
-  char *buf = NULL;
-
   imap_unquote_string(s);
 
-  buf = mutt_str_strdup(s);
+  char *buf = mutt_str_strdup(s);
   if (buf)
   {
     imap_utf_decode(idata, &buf);

@@ -35,6 +35,7 @@
 #include "header.h"
 #include "mailbox.h"
 #include "mutt_curses.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
@@ -46,7 +47,7 @@
 #include "mutt_notmuch.h"
 #endif
 
-static int address_header_decode(char **str);
+static int address_header_decode(char **h);
 static int copy_delete_attach(struct Body *b, FILE *fpin, FILE *fpout, char *date);
 
 /**
@@ -172,7 +173,7 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
       {
         if (flags & CH_DECODE)
         {
-          if (!address_header_decode(&this_one))
+          if (address_header_decode(&this_one) == 0)
             mutt_rfc2047_decode(&this_one);
           this_one_len = mutt_str_strlen(this_one);
 
@@ -289,7 +290,7 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
   {
     if (flags & CH_DECODE)
     {
-      if (!address_header_decode(&this_one))
+      if (address_header_decode(&this_one) == 0)
         mutt_rfc2047_decode(&this_one);
       this_one_len = mutt_str_strlen(this_one);
     }
@@ -319,7 +320,7 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
 
       if (flags & (CH_DECODE | CH_PREFIX))
       {
-        if (mutt_write_one_header(out, 0, headers[x], flags & CH_PREFIX ? prefix : 0,
+        if (mutt_write_one_header(out, 0, headers[x], (flags & CH_PREFIX) ? prefix : 0,
                                   mutt_window_wrap_cols(MuttIndexWindow, Wrap), flags) == -1)
         {
           error = true;
@@ -629,7 +630,7 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
           Context->vsize -= body->length - new_length;
 
         body->length = new_length;
-        mutt_free_body(&body->parts);
+        mutt_body_free(&body->parts);
       }
 
       return 0;
@@ -702,10 +703,10 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
     if (mutt_file_copy_bytes(fp, fpout, cur->length) == -1)
     {
       mutt_file_fclose(&fp);
-      mutt_free_body(&cur);
+      mutt_body_free(&cur);
       return -1;
     }
-    mutt_free_body(&cur);
+    mutt_body_free(&cur);
     mutt_file_fclose(&fp);
   }
   else
@@ -735,7 +736,7 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
   if ((flags & MUTT_CM_UPDATE) && (flags & MUTT_CM_NOHEADER) == 0 && new_offset != -1)
   {
     body->offset = new_offset;
-    mutt_free_body(&body->parts);
+    mutt_body_free(&body->parts);
   }
 
   return rc;
@@ -750,15 +751,12 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
 int mutt_copy_message_ctx(FILE *fpout, struct Context *src, struct Header *hdr,
                           int flags, int chflags)
 {
-  struct Message *msg = NULL;
-  int r;
-
-  msg = mx_open_message(src, hdr->msgno);
+  struct Message *msg = mx_open_message(src, hdr->msgno);
   if (!msg)
     return -1;
   if (!hdr->content)
     return -1;
-  r = mutt_copy_message_fp(fpout, msg->fp, hdr, flags, chflags);
+  int r = mutt_copy_message_fp(fpout, msg->fp, hdr, flags, chflags);
   if ((r == 0) && (ferror(fpout) || feof(fpout)))
   {
     mutt_debug(1, "failed to detect EOF!\n");
@@ -813,13 +811,10 @@ static int append_message(struct Context *dest, FILE *fpin, struct Context *src,
 int mutt_append_message(struct Context *dest, struct Context *src,
                         struct Header *hdr, int cmflags, int chflags)
 {
-  struct Message *msg = NULL;
-  int r;
-
-  msg = mx_open_message(src, hdr->msgno);
+  struct Message *msg = mx_open_message(src, hdr->msgno);
   if (!msg)
     return -1;
-  r = append_message(dest, msg->fp, src, hdr, cmflags, chflags);
+  int r = append_message(dest, msg->fp, src, hdr, cmflags, chflags);
   mx_close_message(src, &msg);
   return r;
 }
@@ -957,6 +952,34 @@ static int address_header_decode(char **h)
 
   switch (tolower((unsigned char) *s))
   {
+    case 'b':
+    {
+      if (mutt_str_strncasecmp(s, "bcc:", 4) != 0)
+        return 0;
+      l = 4;
+      break;
+    }
+    case 'c':
+    {
+      if (mutt_str_strncasecmp(s, "cc:", 3) != 0)
+        return 0;
+      l = 3;
+      break;
+    }
+    case 'f':
+    {
+      if (mutt_str_strncasecmp(s, "from:", 5) != 0)
+        return 0;
+      l = 5;
+      break;
+    }
+    case 'm':
+    {
+      if (mutt_str_strncasecmp(s, "mail-followup-to:", 17) != 0)
+        return 0;
+      l = 17;
+      break;
+    }
     case 'r':
     {
       if (mutt_str_strncasecmp(s, "return-path:", 12) == 0)
@@ -972,27 +995,6 @@ static int address_header_decode(char **h)
       }
       return 0;
     }
-    case 'f':
-    {
-      if (mutt_str_strncasecmp(s, "from:", 5) != 0)
-        return 0;
-      l = 5;
-      break;
-    }
-    case 'c':
-    {
-      if (mutt_str_strncasecmp(s, "cc:", 3) != 0)
-        return 0;
-      l = 3;
-      break;
-    }
-    case 'b':
-    {
-      if (mutt_str_strncasecmp(s, "bcc:", 4) != 0)
-        return 0;
-      l = 4;
-      break;
-    }
     case 's':
     {
       if (mutt_str_strncasecmp(s, "sender:", 7) != 0)
@@ -1005,13 +1007,6 @@ static int address_header_decode(char **h)
       if (mutt_str_strncasecmp(s, "to:", 3) != 0)
         return 0;
       l = 3;
-      break;
-    }
-    case 'm':
-    {
-      if (mutt_str_strncasecmp(s, "mail-followup-to:", 17) != 0)
-        return 0;
-      l = 17;
       break;
     }
     default:

@@ -34,6 +34,7 @@
 #include "globals.h"
 #include "header.h"
 #include "mutt_curses.h"
+#include "mutt_window.h"
 #include "options.h"
 #include "protos.h"
 #include "state.h"
@@ -266,7 +267,7 @@ static void print_fixed_line(const char *line, struct State *s, int ql, struct F
  */
 int rfc3676_handler(struct Body *a, struct State *s)
 {
-  char *buf = NULL, *t = NULL;
+  char *buf = NULL;
   unsigned int quotelevel = 0;
   int delsp = 0;
   size_t sz = 0;
@@ -275,7 +276,7 @@ int rfc3676_handler(struct Body *a, struct State *s)
   memset(&fst, 0, sizeof(fst));
 
   /* respect DelSp of RFC3676 only with f=f parts */
-  t = mutt_param_get(&a->parameter, "delsp");
+  char *t = mutt_param_get(&a->parameter, "delsp");
   if (t)
   {
     delsp = mutt_str_strlen(t) == 3 && (mutt_str_strncasecmp(t, "yes", 3) == 0);
@@ -312,7 +313,7 @@ int rfc3676_handler(struct Body *a, struct State *s)
 
     /* print fixed-and-standalone, fixed-and-empty and sigsep lines as
      * fixed lines */
-    if ((fixed && (!fst.width || !buf_len)) || sigsep)
+    if ((fixed && ((fst.width == 0) || (buf_len == 0))) || sigsep)
     {
       /* if we're within a flowed paragraph, terminate it */
       flush_par(s, &fst);

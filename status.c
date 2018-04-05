@@ -30,6 +30,7 @@
 #include "mbtable.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "options.h"
 #include "protos.h"
@@ -108,7 +109,7 @@ static const char *status_format_str(char *buf, size_t buflen, size_t col, int c
         snprintf(fmt, sizeof(fmt), "%%%sd", prec);
         snprintf(buf, buflen, fmt, mutt_buffy_check(false));
       }
-      else if (!mutt_buffy_check(false))
+      else if (mutt_buffy_check(false) == 0)
         optional = 0;
       break;
 

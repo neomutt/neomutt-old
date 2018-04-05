@@ -31,6 +31,7 @@
 #include "config.h"
 #include <assert.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <string.h>
 #include "rfc2047.h"
 #include "base64.h"
@@ -428,16 +429,16 @@ static int rfc2047_encode(const char *d, size_t dlen, int col, const char *fromc
   int rc = 0;
   char *buf = NULL;
   size_t bufpos, buflen;
-  char *u = NULL, *t0 = NULL, *t1 = NULL, *t = NULL;
+  char *t0 = NULL, *t1 = NULL, *t = NULL;
   char *s0 = NULL, *s1 = NULL;
   size_t ulen, r, wlen = 0;
-  encoder_t encoder;
+  encoder_t encoder = NULL;
   char *tocode1 = NULL;
   const char *tocode = NULL;
   char *icode = "utf-8";
 
   /* Try to convert to UTF-8. */
-  u = mutt_str_substr_dup(d, d + dlen);
+  char *u = mutt_str_substr_dup(d, d + dlen);
   if (mutt_ch_convert_string(&u, fromcode, icode, 0))
   {
     rc = 1;
@@ -511,7 +512,7 @@ static int rfc2047_encode(const char *d, size_t dlen, int col, const char *fromc
     if (icode)
       while ((t < (u + ulen)) && CONTINUATION_BYTE(*t))
         t++;
-    if (!try_block(t0, t - t0, icode, tocode, &encoder, &wlen) &&
+    if ((try_block(t0, t - t0, icode, tocode, &encoder, &wlen) == 0) &&
         ((col + (t0 - u) + wlen) <= (ENCWORD_LEN_MAX + 1)))
     {
       break;
@@ -527,7 +528,7 @@ static int rfc2047_encode(const char *d, size_t dlen, int col, const char *fromc
     if (icode)
       while (CONTINUATION_BYTE(*t))
         t--;
-    if (!try_block(t, t1 - t, icode, tocode, &encoder, &wlen) &&
+    if ((try_block(t, t1 - t, icode, tocode, &encoder, &wlen) == 0) &&
         ((1 + wlen + (u + ulen - t1)) <= (ENCWORD_LEN_MAX + 1)))
     {
       break;

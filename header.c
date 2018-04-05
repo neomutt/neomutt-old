@@ -45,14 +45,13 @@ void mutt_edit_headers(const char *editor, const char *body, struct Header *msg,
   char path[_POSIX_PATH_MAX]; /* tempfile used to edit headers + body */
   char buffer[LONG_STRING];
   const char *p = NULL;
-  FILE *ifp = NULL, *ofp = NULL;
   int i;
   struct Envelope *n = NULL;
   time_t mtime;
   struct stat st;
 
   mutt_mktemp(path, sizeof(path));
-  ofp = mutt_file_fopen(path, "w");
+  FILE *ofp = mutt_file_fopen(path, "w");
   if (!ofp)
   {
     mutt_perror(path);
@@ -60,11 +59,11 @@ void mutt_edit_headers(const char *editor, const char *body, struct Header *msg,
   }
 
   mutt_env_to_local(msg->env);
-  mutt_write_rfc822_header(ofp, msg->env, NULL, 1, 0, 1);
+  mutt_rfc822_write_header(ofp, msg->env, NULL, 1, 0, 1);
   fputc('\n', ofp); /* tie off the header. */
 
   /* now copy the body of the message. */
-  ifp = fopen(body, "r");
+  FILE *ifp = fopen(body, "r");
   if (!ifp)
   {
     mutt_perror(body);
@@ -115,7 +114,7 @@ void mutt_edit_headers(const char *editor, const char *body, struct Header *msg,
     return;
   }
 
-  n = mutt_read_rfc822_header(ifp, NULL, 1, 0);
+  n = mutt_rfc822_read_header(ifp, NULL, 1, 0);
   while ((i = fread(buffer, 1, sizeof(buffer), ifp)) > 0)
     fwrite(buffer, 1, i, ofp);
   mutt_file_fclose(&ofp);
@@ -224,14 +223,11 @@ void mutt_edit_headers(const char *editor, const char *body, struct Header *msg,
 
 static void label_ref_dec(struct Context *ctx, char *label)
 {
-  struct HashElem *elem = NULL;
-  uintptr_t count;
-
-  elem = mutt_hash_find_elem(ctx->label_hash, label);
+  struct HashElem *elem = mutt_hash_find_elem(ctx->label_hash, label);
   if (!elem)
     return;
 
-  count = (uintptr_t) elem->data;
+  uintptr_t count = (uintptr_t) elem->data;
   if (count <= 1)
   {
     mutt_hash_delete(ctx->label_hash, label, NULL);
@@ -244,10 +240,9 @@ static void label_ref_dec(struct Context *ctx, char *label)
 
 static void label_ref_inc(struct Context *ctx, char *label)
 {
-  struct HashElem *elem = NULL;
   uintptr_t count;
 
-  elem = mutt_hash_find_elem(ctx->label_hash, label);
+  struct HashElem *elem = mutt_hash_find_elem(ctx->label_hash, label);
   if (!elem)
   {
     count = 1;
@@ -354,12 +349,12 @@ void mutt_label_hash_remove(struct Context *ctx, struct Header *hdr)
     label_ref_dec(ctx, hdr->env->x_label);
 }
 
-void mutt_free_header(struct Header **h)
+void mutt_header_free(struct Header **h)
 {
   if (!h || !*h)
     return;
   mutt_env_free(&(*h)->env);
-  mutt_free_body(&(*h)->content);
+  mutt_body_free(&(*h)->content);
   FREE(&(*h)->maildir_flags);
   FREE(&(*h)->tree);
   FREE(&(*h)->path);
@@ -375,7 +370,7 @@ void mutt_free_header(struct Header **h)
   FREE(h);
 }
 
-struct Header *mutt_new_header(void)
+struct Header *mutt_header_new(void)
 {
   struct Header *h = mutt_mem_calloc(1, sizeof(struct Header));
 #ifdef MIXMASTER

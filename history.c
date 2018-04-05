@@ -80,6 +80,7 @@
 #include "keymap.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "opcodes.h"
 #include "options.h"
 #include "protos.h"
@@ -166,14 +167,11 @@ static void init_history(struct History *h)
  */
 static int dup_hash_dec(struct Hash *dup_hash, char *str)
 {
-  struct HashElem *elem = NULL;
-  uintptr_t count;
-
-  elem = mutt_hash_find_elem(dup_hash, str);
+  struct HashElem *elem = mutt_hash_find_elem(dup_hash, str);
   if (!elem)
     return -1;
 
-  count = (uintptr_t) elem->data;
+  uintptr_t count = (uintptr_t) elem->data;
   if (count <= 1)
   {
     mutt_hash_delete(dup_hash, str, NULL);
@@ -195,10 +193,9 @@ static int dup_hash_dec(struct Hash *dup_hash, char *str)
  */
 static int dup_hash_inc(struct Hash *dup_hash, char *str)
 {
-  struct HashElem *elem = NULL;
   uintptr_t count;
 
-  elem = mutt_hash_find_elem(dup_hash, str);
+  struct HashElem *elem = mutt_hash_find_elem(dup_hash, str);
   if (!elem)
   {
     count = 1;
@@ -218,7 +215,7 @@ static int dup_hash_inc(struct Hash *dup_hash, char *str)
 static void shrink_histfile(void)
 {
   char tmpfname[_POSIX_PATH_MAX];
-  FILE *f = NULL, *tmp = NULL;
+  FILE *tmp = NULL;
   int n[HC_LAST] = { 0 };
   int line, hclass, read;
   char *linebuf = NULL, *p = NULL;
@@ -226,7 +223,7 @@ static void shrink_histfile(void)
   bool regen_file = false;
   struct Hash *dup_hashes[HC_LAST] = { 0 };
 
-  f = fopen(HistoryFile, "r");
+  FILE *f = fopen(HistoryFile, "r");
   if (!f)
     return;
 
@@ -387,7 +384,7 @@ static void remove_history_dups(enum HistoryClass hclass, const char *str)
   source = dest = 0;
   while (source < h->last)
   {
-    if (!mutt_str_strcmp(h->hist[source], str))
+    if (mutt_str_strcmp(h->hist[source], str) == 0)
       FREE(&h->hist[source++]);
     else
       h->hist[dest++] = h->hist[source++];
@@ -406,7 +403,7 @@ static void remove_history_dups(enum HistoryClass hclass, const char *str)
   source = dest = History;
   while (source > old_last)
   {
-    if (!mutt_str_strcmp(h->hist[source], str))
+    if (mutt_str_strcmp(h->hist[source], str) == 0)
       FREE(&h->hist[source--]);
     else
       h->hist[dest--] = h->hist[source--];
@@ -551,12 +548,11 @@ void mutt_hist_reset_state(enum HistoryClass hclass)
  */
 void mutt_hist_read_file(void)
 {
-  FILE *f = NULL;
   int line = 0, hclass, read;
   char *linebuf = NULL, *p = NULL;
   size_t buflen;
 
-  f = fopen(HistoryFile, "r");
+  FILE *f = fopen(HistoryFile, "r");
   if (!f)
     return;
 
@@ -661,11 +657,11 @@ static void history_menu(char *buf, size_t buflen, char **matches, int match_cou
 
   snprintf(title, sizeof(title), _("History '%s'"), buf);
 
-  menu = mutt_new_menu(MENU_GENERIC);
+  menu = mutt_menu_new(MENU_GENERIC);
   menu->make_entry = history_entry;
   menu->title = title;
   menu->help = mutt_compile_help(helpstr, sizeof(helpstr), MENU_GENERIC, HistoryHelp);
-  mutt_push_current_menu(menu);
+  mutt_menu_push_current(menu);
 
   menu->max = match_count;
   menu->data = matches;
@@ -684,7 +680,7 @@ static void history_menu(char *buf, size_t buflen, char **matches, int match_cou
     }
   }
 
-  mutt_pop_current_menu(menu);
+  mutt_menu_pop_current(menu);
   mutt_menu_destroy(&menu);
 }
 

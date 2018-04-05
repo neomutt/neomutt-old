@@ -39,6 +39,7 @@
 #include "mutt_curses.h"
 #include "mutt_socket.h"
 #include "options.h"
+#include "progress.h"
 #include "protos.h"
 #include "url.h"
 #ifdef USE_SASL
@@ -172,13 +173,12 @@ static int smtp_rcpt_to(struct Connection *conn, const struct Address *a)
 static int smtp_data(struct Connection *conn, const char *msgfile)
 {
   char buf[1024];
-  FILE *fp = NULL;
   struct Progress progress;
   struct stat st;
   int r, term = 0;
   size_t buflen = 0;
 
-  fp = fopen(msgfile, "r");
+  FILE *fp = fopen(msgfile, "r");
   if (!fp)
   {
     mutt_error(_("SMTP session failed: unable to open %s"), msgfile);
@@ -346,9 +346,9 @@ static int smtp_helo(struct Connection *conn)
 
   snprintf(buf, sizeof(buf), "%s %s\r\n", Esmtp ? "EHLO" : "HELO", fqdn);
   /* XXX there should probably be a wrapper in mutt_socket.c that
-    * repeatedly calls conn->write until all data is sent.  This
-    * currently doesn't check for a short write.
-    */
+   * repeatedly calls conn->write until all data is sent.  This
+   * currently doesn't check for a short write.
+   */
   if (mutt_socket_write(conn, buf) == -1)
     return SMTP_ERR_WRITE;
   return smtp_get_resp(conn);

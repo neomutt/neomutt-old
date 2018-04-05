@@ -334,9 +334,7 @@ static char *rstrip_in_place(char *s)
   if (!s)
     return NULL;
 
-  char *p = NULL;
-
-  p = &s[strlen(s)];
+  char *p = &s[strlen(s)];
   if (p == s)
     return s;
   p--;
@@ -369,7 +367,8 @@ void print_version(void)
   printf(" (%s)", uts.machine);
 
 #ifdef NCURSES_VERSION
-  printf("\nncurses: %s (compiled with %s)", curses_version(), NCURSES_VERSION);
+  printf("\nncurses: %s (compiled with %s.%d)", curses_version(),
+         NCURSES_VERSION, NCURSES_VERSION_PATCH);
 #elif defined(USE_SLANG_CURSES)
   printf("\nslang: %s", SLANG_VERSION_STRING);
 #endif

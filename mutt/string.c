@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -275,21 +276,19 @@ int mutt_str_atoul(const char *str, unsigned long *dst)
 
 /**
  * mutt_str_strdup - Copy a string, safely
- * @param s String to copy
+ * @param str String to copy
  * @retval ptr  Copy of the string
  * @retval NULL if s was NULL
  */
-char *mutt_str_strdup(const char *s)
+char *mutt_str_strdup(const char *str)
 {
-  char *p = NULL;
-  size_t l;
+  if (!str || !*str)
+    return NULL;
 
-  if (!s || !*s)
-    return 0;
-  l = strlen(s) + 1;
-  p = mutt_mem_malloc(l);
-  memcpy(p, s, l);
-  return p;
+  const size_t len = strlen(str) + 1;
+  char *copy = mutt_mem_malloc(len);
+  memcpy(copy, str, len);
+  return copy;
 }
 
 /**
@@ -733,7 +732,7 @@ size_t mutt_str_lws_rlen(const char *s, size_t n)
   const char *p = s + n - 1;
   size_t len = n;
 
-  if (n <= 0)
+  if (n == 0)
     return 0;
 
   if (strchr("\r\n", *p)) /* LWS doesn't end with CRLF */

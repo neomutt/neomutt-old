@@ -261,8 +261,14 @@ static void ssl_err(struct SslSockData *data, int err)
 
   switch (e)
   {
-    case SSL_ERROR_ZERO_RETURN:
-      errmsg = "SSL connection closed";
+    case SSL_ERROR_SYSCALL:
+      errmsg = "I/O error";
+      break;
+    case SSL_ERROR_WANT_ACCEPT:
+      errmsg = "retry accept";
+      break;
+    case SSL_ERROR_WANT_CONNECT:
+      errmsg = "retry connect";
       break;
     case SSL_ERROR_WANT_READ:
       errmsg = "retry read";
@@ -270,17 +276,11 @@ static void ssl_err(struct SslSockData *data, int err)
     case SSL_ERROR_WANT_WRITE:
       errmsg = "retry write";
       break;
-    case SSL_ERROR_WANT_CONNECT:
-      errmsg = "retry connect";
-      break;
-    case SSL_ERROR_WANT_ACCEPT:
-      errmsg = "retry accept";
-      break;
     case SSL_ERROR_WANT_X509_LOOKUP:
       errmsg = "retry x509 lookup";
       break;
-    case SSL_ERROR_SYSCALL:
-      errmsg = "I/O error";
+    case SSL_ERROR_ZERO_RETURN:
+      errmsg = "SSL connection closed";
       break;
     case SSL_ERROR_SSL:
       sslerr = ERR_get_error();
@@ -479,8 +479,8 @@ static bool compare_certificates(X509 *cert, X509 *peercert,
   unsigned int mdlen;
 
   /* Avoid CPU-intensive digest calculation if the certificates are
-    * not even remotely equal.
-    */
+   * not even remotely equal.
+   */
   if (X509_subject_name_cmp(cert, peercert) != 0 || X509_issuer_name_cmp(cert, peercert) != 0)
     return false;
 
@@ -952,12 +952,12 @@ static int interactive_check_cert(X509 *cert, int idx, size_t len, SSL *ssl, int
   char helpstr[LONG_STRING];
   char buf[STRING];
   char title[STRING];
-  struct Menu *menu = mutt_new_menu(MENU_GENERIC);
+  struct Menu *menu = mutt_menu_new(MENU_GENERIC);
   int done, row;
   FILE *fp = NULL;
   int ALLOW_SKIP = 0; /**< All caps tells Coverity that this is effectively a preproc condition */
 
-  mutt_push_current_menu(menu);
+  mutt_menu_push_current(menu);
 
   menu->max = mutt_array_size(part) * 2 + 10;
   menu->dialog = mutt_mem_calloc(1, menu->max * sizeof(char *));
@@ -1088,7 +1088,7 @@ static int interactive_check_cert(X509 *cert, int idx, size_t len, SSL *ssl, int
     }
   }
   OPT_IGNORE_MACRO_EVENTS = false;
-  mutt_pop_current_menu(menu);
+  mutt_menu_pop_current(menu);
   mutt_menu_destroy(&menu);
   mutt_debug(2, "done=%d\n", done);
   return (done == 2);
@@ -1184,7 +1184,7 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
   buf[0] = 0;
   if (pos == 0 && SslVerifyHost != MUTT_NO)
   {
-    if (!check_host(cert, host, buf, sizeof(buf)))
+    if (check_host(cert, host, buf, sizeof(buf)) == 0)
     {
       mutt_error(_("Certificate host check failed: %s"), buf);
       /* we disallow (a)ccept always in the prompt, because it will have no effect

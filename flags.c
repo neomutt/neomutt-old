@@ -30,6 +30,7 @@
 #include "header.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "options.h"
 #include "protos.h"
@@ -316,7 +317,7 @@ void mutt_set_flag_update(struct Context *ctx, struct Header *h, int flag, int b
   {
     mutt_set_header_color(ctx, h);
 #ifdef USE_SIDEBAR
-    mutt_set_current_menu_redraw(REDRAW_SIDEBAR);
+    mutt_menu_set_current_redraw(REDRAW_SIDEBAR);
 #endif
   }
 

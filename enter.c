@@ -34,6 +34,7 @@
 #include "history.h"
 #include "keymap.h"
 #include "mutt_curses.h"
+#include "mutt_window.h"
 #include "opcodes.h"
 #include "protos.h"
 
@@ -115,7 +116,7 @@ static void replace_part(struct EnterState *state, size_t from, char *buf)
 int mutt_enter_string(char *buf, size_t buflen, int col, int flags)
 {
   int rc;
-  struct EnterState *es = mutt_new_enter_state();
+  struct EnterState *es = mutt_enter_state_new();
   do
   {
     if (SigWinch)
@@ -126,7 +127,7 @@ int mutt_enter_string(char *buf, size_t buflen, int col, int flags)
     }
     rc = mutt_enter_string_full(buf, buflen, col, flags, 0, NULL, NULL, es);
   } while (rc == 1);
-  mutt_free_enter_state(&es);
+  mutt_enter_state_free(&es);
   return rc;
 }
 
@@ -489,7 +490,7 @@ int mutt_enter_string_full(char *buf, size_t buflen, int col, int flags, int mul
               rc = 1;
               goto bye;
             }
-            if (!mutt_complete(buf, buflen))
+            if (mutt_complete(buf, buflen) == 0)
             {
               templen = state->lastchar - i;
               mutt_mem_realloc(&tempbuf, templen * sizeof(wchar_t));
@@ -609,7 +610,7 @@ int mutt_enter_string_full(char *buf, size_t buflen, int col, int flags, int mul
               goto bye;
             }
 
-            if (!mutt_complete(buf, buflen))
+            if (mutt_complete(buf, buflen) == 0)
             {
               templen = state->lastchar;
               mutt_mem_realloc(&tempbuf, templen * sizeof(wchar_t));
@@ -758,7 +759,7 @@ bye:
   return rc;
 }
 
-void mutt_free_enter_state(struct EnterState **esp)
+void mutt_enter_state_free(struct EnterState **esp)
 {
   if (!esp)
     return;

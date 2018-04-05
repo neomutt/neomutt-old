@@ -39,6 +39,7 @@
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "options.h"
 #include "protos.h"
@@ -123,13 +124,13 @@ static int test_last_status_new(FILE *f)
   if (fseek_last_message(f) == -1)
     return 0;
 
-  hdr = mutt_new_header();
-  tmp_envelope = mutt_read_rfc822_header(f, hdr, 0, 0);
+  hdr = mutt_header_new();
+  tmp_envelope = mutt_rfc822_read_header(f, hdr, 0, 0);
   if (!(hdr->read || hdr->old))
     result = 1;
 
   mutt_env_free(&tmp_envelope);
-  mutt_free_header(&hdr);
+  mutt_header_free(&hdr);
 
   return result;
 }
@@ -157,13 +158,11 @@ static int test_new_folder(const char *path)
 
 static struct Buffy *buffy_new(const char *path)
 {
-  struct Buffy *buffy = NULL;
   char rp[PATH_MAX] = "";
-  char *r = NULL;
 
-  buffy = mutt_mem_calloc(1, sizeof(struct Buffy));
+  struct Buffy *buffy = mutt_mem_calloc(1, sizeof(struct Buffy));
   mutt_str_strfcpy(buffy->path, path, sizeof(buffy->path));
-  r = realpath(path, rp);
+  char *r = realpath(path, rp);
   mutt_str_strfcpy(buffy->realpath, r ? rp : path, sizeof(buffy->realpath));
   buffy->next = NULL;
   buffy->magic = 0;
@@ -354,7 +353,7 @@ static void buffy_check(struct Buffy *tmp, struct stat *contex_sb, bool check_st
   int orig_count, orig_unread, orig_flagged;
 #endif
 
-  sb.st_size = 0;
+  memset(&sb, 0, sizeof (sb));
 
 #ifdef USE_SIDEBAR
   orig_new = tmp->new;
@@ -383,8 +382,8 @@ static void buffy_check(struct Buffy *tmp, struct stat *contex_sb, bool check_st
         if (stat(tmp->path, &sb) != 0 || (S_ISREG(sb.st_mode) && sb.st_size == 0) ||
             (!tmp->magic && (tmp->magic = mx_get_magic(tmp->path)) <= 0))
     {
-      /* if the mailbox still doesn't exist, set the newly created flag to
-         * be ready for when it does. */
+      /* if the mailbox still doesn't exist, set the newly created flag to be
+       * ready for when it does. */
       tmp->newly_created = true;
       tmp->magic = 0;
       tmp->size = 0;
@@ -392,8 +391,7 @@ static void buffy_check(struct Buffy *tmp, struct stat *contex_sb, bool check_st
     }
   }
 
-  /* check to see if the folder is the currently selected folder
-     * before polling */
+  /* check to see if the folder is the currently selected folder before polling */
   if (!Context || !Context->path ||
       ((tmp->magic == MUTT_IMAP ||
 #ifdef USE_NNTP
@@ -445,7 +443,7 @@ static void buffy_check(struct Buffy *tmp, struct stat *contex_sb, bool check_st
   if ((orig_new != tmp->new) || (orig_count != tmp->msg_count) ||
       (orig_unread != tmp->msg_unread) || (orig_flagged != tmp->msg_flagged))
   {
-    mutt_set_current_menu_redraw(REDRAW_SIDEBAR);
+    mutt_menu_set_current_redraw(REDRAW_SIDEBAR);
   }
 #endif
 
@@ -666,7 +664,7 @@ int mutt_parse_unmailboxes(struct Buffer *path, struct Buffer *s,
       /* Decide whether to delete all normal mailboxes or all virtual */
       bool virt = (((*b)->magic == MUTT_NOTMUCH) && (data & MUTT_VIRTUAL));
       bool norm = (((*b)->magic != MUTT_NOTMUCH) && !(data & MUTT_VIRTUAL));
-      bool clear_this = clear_all && (virt | norm);
+      bool clear_this = clear_all && (virt || norm);
 
       if (clear_this || (mutt_str_strcasecmp(buf, (*b)->path) == 0) ||
           (mutt_str_strcasecmp(buf, (*b)->desc) == 0))
@@ -804,9 +802,7 @@ int mutt_buffy_list(void)
 
 void mutt_buffy_setnotified(const char *path)
 {
-  struct Buffy *buffy = NULL;
-
-  buffy = buffy_get(path);
+  struct Buffy *buffy = buffy_get(path);
   if (!buffy)
     return;
 

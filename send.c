@@ -85,9 +85,9 @@ static void append_signature(FILE *f)
  */
 struct Address *mutt_remove_xrefs(struct Address *a, struct Address *b)
 {
-  struct Address *top = NULL, *p = NULL, *prev = NULL;
+  struct Address *p = NULL, *prev = NULL;
 
-  top = b;
+  struct Address *top = b;
   while (b)
   {
     for (p = a; p; p = p->next)
@@ -375,29 +375,29 @@ static void process_user_header(struct Envelope *env)
 
 void mutt_forward_intro(struct Context *ctx, struct Header *cur, FILE *fp)
 {
-  if (ForwardAttributionIntro)
-  {
-    char buffer[LONG_STRING];
-    setlocale(LC_TIME, NONULL(AttributionLocale));
-    mutt_make_string(buffer, sizeof(buffer), ForwardAttributionIntro, ctx, cur);
-    setlocale(LC_TIME, "");
-    fputs(buffer, fp);
-    fputs("\n\n", fp);
-  }
+  if (!ForwardAttributionIntro || !fp)
+    return;
+
+  char buffer[LONG_STRING];
+  setlocale(LC_TIME, NONULL(AttributionLocale));
+  mutt_make_string(buffer, sizeof(buffer), ForwardAttributionIntro, ctx, cur);
+  setlocale(LC_TIME, "");
+  fputs(buffer, fp);
+  fputs("\n\n", fp);
 }
 
 void mutt_forward_trailer(struct Context *ctx, struct Header *cur, FILE *fp)
 {
-  if (ForwardAttributionTrailer)
-  {
-    char buffer[LONG_STRING];
-    setlocale(LC_TIME, NONULL(AttributionLocale));
-    mutt_make_string(buffer, sizeof(buffer), ForwardAttributionTrailer, ctx, cur);
-    setlocale(LC_TIME, "");
-    fputc('\n', fp);
-    fputs(buffer, fp);
-    fputc('\n', fp);
-  }
+  if (!ForwardAttributionTrailer || !fp)
+    return;
+
+  char buffer[LONG_STRING];
+  setlocale(LC_TIME, NONULL(AttributionLocale));
+  mutt_make_string(buffer, sizeof(buffer), ForwardAttributionTrailer, ctx, cur);
+  setlocale(LC_TIME, "");
+  fputc('\n', fp);
+  fputs(buffer, fp);
+  fputc('\n', fp);
 }
 
 static int include_forward(struct Context *ctx, struct Header *cur, FILE *out)
@@ -439,26 +439,26 @@ static int include_forward(struct Context *ctx, struct Header *cur, FILE *out)
 
 void mutt_make_attribution(struct Context *ctx, struct Header *cur, FILE *out)
 {
-  if (Attribution)
-  {
-    char buffer[LONG_STRING];
-    setlocale(LC_TIME, NONULL(AttributionLocale));
-    mutt_make_string(buffer, sizeof(buffer), Attribution, ctx, cur);
-    setlocale(LC_TIME, "");
-    fputs(buffer, out);
-    fputc('\n', out);
-  }
+  if (!Attribution || !out)
+    return;
+
+  char buffer[LONG_STRING];
+  setlocale(LC_TIME, NONULL(AttributionLocale));
+  mutt_make_string(buffer, sizeof(buffer), Attribution, ctx, cur);
+  setlocale(LC_TIME, "");
+  fputs(buffer, out);
+  fputc('\n', out);
 }
 
 void mutt_make_post_indent(struct Context *ctx, struct Header *cur, FILE *out)
 {
-  if (PostIndentString)
-  {
-    char buffer[STRING];
-    mutt_make_string(buffer, sizeof(buffer), PostIndentString, ctx, cur);
-    fputs(buffer, out);
-    fputc('\n', out);
-  }
+  if (!PostIndentString || !out)
+    return;
+
+  char buffer[STRING];
+  mutt_make_string(buffer, sizeof(buffer), PostIndentString, ctx, cur);
+  fputs(buffer, out);
+  fputc('\n', out);
 }
 
 static int include_reply(struct Context *ctx, struct Header *cur, FILE *out)
@@ -899,7 +899,7 @@ static int generate_body(FILE *tempfp, struct Header *msg, int flags,
         }
       }
     }
-    else if (i == -1)
+    else
       return -1;
   }
   /* if (WithCrypto && (flags & SENDKEY)) */
@@ -1057,7 +1057,6 @@ struct Address *mutt_default_from(void)
 static int send_message(struct Header *msg)
 {
   char tempfile[_POSIX_PATH_MAX];
-  FILE *tempfp = NULL;
   int i;
 #ifdef USE_SMTP
   short old_write_bcc;
@@ -1065,7 +1064,7 @@ static int send_message(struct Header *msg)
 
   /* Write out the message in MIME form. */
   mutt_mktemp(tempfile, sizeof(tempfile));
-  tempfp = mutt_file_fopen(tempfile, "w");
+  FILE *tempfp = mutt_file_fopen(tempfile, "w");
   if (!tempfp)
     return -1;
 
@@ -1075,10 +1074,10 @@ static int send_message(struct Header *msg)
     WriteBcc = false;
 #endif
 #ifdef MIXMASTER
-  mutt_write_rfc822_header(tempfp, msg->env, msg->content, 0, !STAILQ_EMPTY(&msg->chain), 0);
+  mutt_rfc822_write_header(tempfp, msg->env, msg->content, 0, !STAILQ_EMPTY(&msg->chain), 0);
 #endif
 #ifndef MIXMASTER
-  mutt_write_rfc822_header(tempfp, msg->env, msg->content, 0, 0, 0);
+  mutt_rfc822_write_header(tempfp, msg->env, msg->content, 0, 0, 0);
 #endif
 #ifdef USE_SMTP
   if (old_write_bcc)
@@ -1154,9 +1153,7 @@ static void decode_descriptions(struct Body *b)
 
 static void fix_end_of_file(const char *data)
 {
-  FILE *fp = NULL;
-
-  fp = mutt_file_fopen(data, "a+");
+  FILE *fp = mutt_file_fopen(data, "a+");
   if (!fp)
     return;
   if (fseek(fp, -1, SEEK_END) >= 0)
@@ -1170,7 +1167,7 @@ static void fix_end_of_file(const char *data)
 
 int mutt_compose_to_sender(struct Header *hdr)
 {
-  struct Header *msg = mutt_new_header();
+  struct Header *msg = mutt_header_new();
 
   msg->env = mutt_env_new();
   if (!hdr)
@@ -1189,11 +1186,11 @@ int mutt_compose_to_sender(struct Header *hdr)
 
 int mutt_resend_message(FILE *fp, struct Context *ctx, struct Header *cur)
 {
-  struct Header *msg = mutt_new_header();
+  struct Header *msg = mutt_header_new();
 
   if (mutt_prepare_template(fp, ctx, msg, cur, 1) < 0)
   {
-    mutt_free_header(&msg);
+    mutt_header_free(&msg);
     return -1;
   }
 
@@ -1229,25 +1226,26 @@ static int is_reply(struct Header *reply, struct Header *orig)
          mutt_list_find(&orig->env->in_reply_to, reply->env->message_id);
 }
 
-static int search_attach_keyword(char *filename)
+static bool search_attach_keyword(char *filename)
 {
-  /* Search for the regex in AttachKeyword within a file */
-  if (!AttachKeyword || !AttachKeyword->regex || !QuoteRegex || !QuoteRegex->regex)
-    return 0;
+  /* Search for the regex in AbortNoattachRegex within a file */
+  if (!AbortNoattachRegex || !AbortNoattachRegex->regex || !QuoteRegex ||
+      !QuoteRegex->regex)
+    return false;
 
   FILE *attf = mutt_file_fopen(filename, "r");
   if (!attf)
-    return 0;
+    return false;
 
   char *inputline = mutt_mem_malloc(LONG_STRING);
-  int found = 0;
+  bool found = false;
   while (!feof(attf))
   {
     fgets(inputline, LONG_STRING, attf);
     if (regexec(QuoteRegex->regex, inputline, 0, NULL, 0) != 0 &&
-        regexec(AttachKeyword->regex, inputline, 0, NULL, 0) == 0)
+        regexec(AbortNoattachRegex->regex, inputline, 0, NULL, 0) == 0)
     {
-      found = 1;
+      found = true;
       break;
     }
   }
@@ -1326,7 +1324,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
 
   if (!msg)
   {
-    msg = mutt_new_header();
+    msg = mutt_header_new();
 
     if (flags == SENDPOSTPONED)
     {
@@ -1381,7 +1379,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
      */
     if (!(flags & SENDDRAFTFILE))
     {
-      pbody = mutt_new_body();
+      pbody = mutt_body_new();
       pbody->next = msg->content; /* don't kill command-line attachments */
       msg->content = pbody;
 
@@ -1805,7 +1803,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
     fcc_error = false; /* reset value since we may have failed before */
     mutt_pretty_mailbox(fcc, sizeof(fcc));
     i = mutt_compose_menu(msg, fcc, sizeof(fcc), cur,
-                          (flags & SENDNOFREEHEADER ? MUTT_COMPOSE_NOFREEHEADER : 0));
+                          ((flags & SENDNOFREEHEADER) ? MUTT_COMPOSE_NOFREEHEADER : 0));
     if (i == -1)
     {
 /* abort */
@@ -1886,8 +1884,9 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
 #ifdef USE_NNTP
   if (!(flags & SENDNEWS))
 #endif
-    if (!mutt_addr_has_recips(msg->env->to) && !mutt_addr_has_recips(msg->env->cc) &&
-        !mutt_addr_has_recips(msg->env->bcc))
+    if ((mutt_addr_has_recips(msg->env->to) == 0) &&
+        (mutt_addr_has_recips(msg->env->cc) == 0) &&
+        (mutt_addr_has_recips(msg->env->bcc) == 0))
     {
       if (!(flags & SENDBATCH))
       {
@@ -1933,15 +1932,17 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
   }
 #endif
 
-  if (AbortNoattach != MUTT_NO && !msg->content->next &&
+  if (!(flags & SENDBATCH) && (AbortNoattach != MUTT_NO) &&
+      !msg->content->next && (msg->content->type == TYPETEXT) &&
+      (mutt_str_strcasecmp(msg->content->subtype, "plain") == 0) &&
       search_attach_keyword(msg->content->filename) &&
       query_quadoption(AbortNoattach, _("No attachments, cancel sending?")) != MUTT_NO)
   {
     /* if the abort is automatic, print an error message */
     if (AbortNoattach == MUTT_YES)
     {
-      mutt_error(_(
-          "Message contains text matching \"$attach_keyword\". Not sending."));
+      mutt_error(_("Message contains text matching "
+                   "\"$abort_noattach_regex\". Not sending."));
     }
     goto main_loop;
   }
@@ -2094,10 +2095,10 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
       /* cleanup the second signature structures */
       if (save_content->parts)
       {
-        mutt_free_body(&save_content->parts->next);
+        mutt_body_free(&save_content->parts->next);
         save_content->parts = NULL;
       }
-      mutt_free_body(&save_content);
+      mutt_body_free(&save_content);
 
       /* restore old signature and attachments */
       msg->content->parts->next = save_sig;
@@ -2106,7 +2107,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
     else if ((WithCrypto != 0) && save_content)
     {
       /* destroy the new encrypted body. */
-      mutt_free_body(&save_content);
+      mutt_body_free(&save_content);
     }
   }
 
@@ -2124,12 +2125,12 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
       else if ((msg->security & ENCRYPT) ||
                ((msg->security & SIGN) && msg->content->type == TYPEAPPLICATION))
       {
-        mutt_free_body(&msg->content); /* destroy PGP data */
+        mutt_body_free(&msg->content); /* destroy PGP data */
         msg->content = clear_content;  /* restore clear text. */
       }
       else if ((msg->security & SIGN) && msg->content->type == TYPEMULTIPART)
       {
-        mutt_free_body(&msg->content->parts->next); /* destroy sig */
+        mutt_body_free(&msg->content->parts->next); /* destroy sig */
         msg->content = mutt_remove_multipart(msg->content);
       }
 
@@ -2160,7 +2161,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
     FREE(&pgpkeylist);
 
   if ((WithCrypto != 0) && free_clear_content)
-    mutt_free_body(&clear_content);
+    mutt_body_free(&clear_content);
 
   /* set 'replied' flag only if the user didn't change/remove
      In-Reply-To: and References: headers during edit */
@@ -2200,7 +2201,7 @@ cleanup:
 
   mutt_file_fclose(&tempfp);
   if (!(flags & SENDNOFREEHEADER))
-    mutt_free_header(&msg);
+    mutt_header_free(&msg);
 
   FREE(&finalpath);
   return rc;

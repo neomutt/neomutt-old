@@ -46,6 +46,7 @@
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
@@ -197,7 +198,7 @@ int mutt_display_message(struct Header *cur)
     {
       if (cur->security & GOODSIGN)
       {
-        if (!crypt_smime_verify_sender(cur))
+        if (crypt_smime_verify_sender(cur) == 0)
           mutt_message(_("S/MIME signature successfully verified."));
         else
           mutt_error(_("S/MIME certificate owner does not match sender."));
@@ -260,7 +261,7 @@ void ci_bounce_message(struct Header *h)
   int rc;
 
   /* RFC5322 mandates a From: header, so warn before bouncing
-  * messages without one */
+   * messages without one */
   if (h)
   {
     if (!h->env->from)
@@ -660,10 +661,8 @@ void mutt_display_address(struct Envelope *env)
 {
   char *pfx = NULL;
   char buf[SHORT_STRING];
-  struct Address *addr = NULL;
 
-  addr = mutt_get_address(env, &pfx);
-
+  struct Address *addr = mutt_get_address(env, &pfx);
   if (!addr)
     return;
 
@@ -952,15 +951,13 @@ int mutt_edit_content_type(struct Header *h, struct Body *b, FILE *fp)
   char buf[LONG_STRING];
   char obuf[LONG_STRING];
   char tmp[STRING];
-
   char charset[STRING];
-  char *cp = NULL;
 
   short charset_changed = 0;
   short type_changed = 0;
   short structure_changed = 0;
 
-  cp = mutt_param_get(&b->parameter, "charset");
+  char *cp = mutt_param_get(&b->parameter, "charset");
   mutt_str_strfcpy(charset, NONULL(cp), sizeof(charset));
 
   snprintf(buf, sizeof(buf), "%s/%s", TYPE(b), b->subtype);
@@ -1021,13 +1018,13 @@ int mutt_edit_content_type(struct Header *h, struct Body *b, FILE *fp)
   if (!is_multipart(b) && b->parts)
   {
     structure_changed = 1;
-    mutt_free_body(&b->parts);
+    mutt_body_free(&b->parts);
   }
   if (!mutt_is_message_type(b->type, b->subtype) && b->hdr)
   {
     structure_changed = 1;
     b->hdr->content = NULL;
-    mutt_free_header(&b->hdr);
+    mutt_header_free(&b->hdr);
   }
 
   if (fp && !b->parts && (is_multipart(b) || mutt_is_message_type(b->type, b->subtype)))
@@ -1049,13 +1046,12 @@ int mutt_edit_content_type(struct Header *h, struct Body *b, FILE *fp)
 
 static int check_traditional_pgp(struct Header *h, int *redraw)
 {
-  struct Message *msg = NULL;
   int rc = 0;
 
   h->security |= PGP_TRADITIONAL_CHECKED;
 
   mutt_parse_mime_message(Context, h);
-  msg = mx_open_message(Context, h->msgno);
+  struct Message *msg = mx_open_message(Context, h->msgno);
   if (!msg)
     return 0;
   if (crypt_pgp_check_traditional(msg->fp, h->content, 0))

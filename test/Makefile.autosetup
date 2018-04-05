@@ -21,4 +21,7 @@ clean-test:
 install-test:
 uninstall-test:
 
+TEST_DEPFILES = $(TEST_OBJS:.o=.Po)
+-include $(TEST_DEPFILES)
+
 # vim: set ts=8 noexpandtab:

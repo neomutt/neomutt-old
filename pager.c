@@ -47,12 +47,14 @@
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "opcodes.h"
 #include "options.h"
 #include "protos.h"
 #include "sort.h"
+#include "terminal.h"
 #ifdef USE_SIDEBAR
 #include "sidebar.h"
 #endif
@@ -376,9 +378,7 @@ static void new_class_color(struct QClass *class, int *q_level)
 static void shift_class_colors(struct QClass *quote_list,
                                struct QClass *new_class, int index, int *q_level)
 {
-  struct QClass *q_list = NULL;
-
-  q_list = quote_list;
+  struct QClass *q_list = quote_list;
   new_class->index = -1;
 
   while (q_list)
@@ -1773,7 +1773,7 @@ static void pager_menu_redraw(struct Menu *pager_menu)
 
   if (pager_menu->redraw & REDRAW_FULL)
   {
-    mutt_reflow_windows();
+    mutt_window_reflow();
     NORMAL_COLOR;
     /* clear() doesn't optimize screen redraws */
     move(0, 0);
@@ -1860,7 +1860,7 @@ static void pager_menu_redraw(struct Menu *pager_menu)
       {
         /* only allocate the space if/when we need the index.
            Initialise the menu as per the main index */
-        rd->index = mutt_new_menu(MENU_MAIN);
+        rd->index = mutt_menu_new(MENU_MAIN);
         rd->index->make_entry = index_make_entry;
         rd->index->color = index_color;
         rd->index->max = Context ? Context->vcount : 0;
@@ -2017,7 +2017,7 @@ static void pager_menu_redraw(struct Menu *pager_menu)
       mutt_draw_statusline(rd->pager_status_window->cols, bn, sizeof(bn));
     }
     NORMAL_COLOR;
-    if (TsEnabled && TSSupported && rd->index)
+    if (TsEnabled && TsSupported && rd->index)
     {
       menu_status_line(buffer, sizeof(buffer), rd->index, NONULL(TSStatusFormat));
       mutt_ts_status(buffer);
@@ -2147,10 +2147,10 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
   rd.pager_status_window = mutt_mem_calloc(1, sizeof(struct MuttWindow));
   rd.pager_window = mutt_mem_calloc(1, sizeof(struct MuttWindow));
 
-  pager_menu = mutt_new_menu(MENU_PAGER);
+  pager_menu = mutt_menu_new(MENU_PAGER);
   pager_menu->custom_menu_redraw = pager_menu_redraw;
   pager_menu->redraw_data = &rd;
-  mutt_push_current_menu(pager_menu);
+  mutt_menu_push_current(pager_menu);
 
   while (ch != -1)
   {
@@ -2204,7 +2204,6 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
           /* fatal error occurred */
           FREE(&Context);
           pager_menu->redraw = REDRAW_FULL;
-          ch = -1;
           break;
         }
       }
@@ -2244,7 +2243,6 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
             if (extra->hdr != Context->hdrs[Context->v2r[rd.index->current]])
             {
               extra->hdr = Context->hdrs[Context->v2r[rd.index->current]];
-              ch = -1;
               break;
             }
           }
@@ -2293,7 +2291,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
       }
       else
       {
-        /* note: mutt_resize_screen() -> mutt_reflow_windows() sets
+        /* note: mutt_resize_screen() -> mutt_window_reflow() sets
          * REDRAW_FULL and REDRAW_FLOW */
         ch = 0;
       }
@@ -2773,9 +2771,9 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
       case OP_CREATE_ALIAS:
         CHECK_MODE(IsHeader(extra) || IsMsgAttach(extra));
         if (IsMsgAttach(extra))
-          mutt_create_alias(extra->bdy->hdr->env, NULL);
+          mutt_alias_create(extra->bdy->hdr->env, NULL);
         else
-          mutt_create_alias(extra->hdr->env, NULL);
+          mutt_alias_create(extra->hdr->env, NULL);
         break;
 
       case OP_PURGE_MESSAGE:
@@ -3238,7 +3236,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
 
       case OP_SIDEBAR_TOGGLE_VISIBLE:
         SidebarVisible = !SidebarVisible;
-        mutt_reflow_windows();
+        mutt_window_reflow();
         break;
 #endif
 
@@ -3280,7 +3278,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
     rd.search_compiled = 0;
   }
   FREE(&rd.line_info);
-  mutt_pop_current_menu(pager_menu);
+  mutt_menu_pop_current(pager_menu);
   mutt_menu_destroy(&pager_menu);
   if (rd.index)
     mutt_menu_destroy(&rd.index);

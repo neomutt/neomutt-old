@@ -88,16 +88,12 @@ static void fix_uid(char *uid)
   if (chs && (cd = mutt_ch_iconv_open(chs, "utf-8", 0)) != (iconv_t) -1)
   {
     int n = s - uid + 1; /* chars available in original buffer */
-    char *buf = NULL;
-    const char *ib = NULL;
-    char *ob = NULL;
-    size_t ibl, obl;
 
-    buf = mutt_mem_malloc(n + 1);
-    ib = uid;
-    ibl = d - uid + 1;
-    ob = buf;
-    obl = n;
+    char *buf = mutt_mem_malloc(n + 1);
+    const char *ib = uid;
+    size_t ibl = d - uid + 1;
+    char *ob = buf;
+    size_t obl = n;
     iconv(cd, (ICONV_CONST char **) &ib, &ibl, &ob, &obl);
     if (!ibl)
     {
@@ -185,23 +181,23 @@ static struct PgpKeyInfo *parse_pub_line(char *buf, int *is_subkey, struct PgpKe
 
         switch (*p)
         { /* look only at the first letter */
-          case 'e':
-            flags |= KEYFLAG_EXPIRED;
-            break;
-          case 'r':
-            flags |= KEYFLAG_REVOKED;
-            break;
           case 'd':
             flags |= KEYFLAG_DISABLED;
             break;
-          case 'n':
-            trust = 1;
+          case 'e':
+            flags |= KEYFLAG_EXPIRED;
+            break;
+          case 'f':
+            trust = 3;
             break;
           case 'm':
             trust = 2;
             break;
-          case 'f':
-            trust = 3;
+          case 'n':
+            trust = 1;
+            break;
+          case 'r':
+            flags |= KEYFLAG_REVOKED;
             break;
           case 'u':
             trust = 3;

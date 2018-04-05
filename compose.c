@@ -45,6 +45,7 @@
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "opcodes.h"
@@ -507,7 +508,7 @@ static int delete_attachment(struct AttachCtx *actx, int x)
 
   idx[rindex]->content->next = NULL;
   idx[rindex]->content->parts = NULL;
-  mutt_free_body(&(idx[rindex]->content));
+  mutt_body_free(&(idx[rindex]->content));
   FREE(&idx[rindex]->tree);
   FREE(&idx[rindex]);
   for (; rindex < actx->idxlen - 1; rindex++)
@@ -760,20 +761,21 @@ static void compose_status_line(char *buf, size_t buflen, size_t col, int cols,
 
 /**
  * mutt_compose_menu - Allow the user to edit the message envelope
+ * @param msg    Message to fill
+ * @param fcc    Buffer to save FCC
+ * @param fcclen Length of FCC buffer
+ * @param cur    Current message
+ * @param flags  Flags, e.g. #MUTT_COMPOSE_NOFREEHEADER
  * @retval  1 Message should be postponed
  * @retval  0 Normal exit
  * @retval -1 Abort message
  */
-int mutt_compose_menu(struct Header *msg, /* structure for new message */
-                      char *fcc, /* where to save a copy of the message */
-                      size_t fcclen, struct Header *cur, /* current message */
-                      int flags)
+int mutt_compose_menu(struct Header *msg, char *fcc, size_t fcclen,
+                      struct Header *cur, int flags)
 {
   char helpstr[LONG_STRING];
   char buf[LONG_STRING];
   char fname[_POSIX_PATH_MAX];
-  struct Menu *menu = NULL;
-  struct AttachCtx *actx = NULL;
   struct AttachPtr *new = NULL;
   int i, close = 0;
   int r = -1; /* return value */
@@ -796,7 +798,7 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
   rd.msg = msg;
   rd.fcc = fcc;
 
-  menu = mutt_new_menu(MENU_COMPOSE);
+  struct Menu *menu = mutt_menu_new(MENU_COMPOSE);
   menu->offset = HDR_ATTACH;
   menu->make_entry = snd_entry;
   menu->tag = mutt_tag_attach;
@@ -808,9 +810,9 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
     menu->help = mutt_compile_help(helpstr, sizeof(helpstr), MENU_COMPOSE, ComposeHelp);
   menu->custom_menu_redraw = compose_menu_redraw;
   menu->redraw_data = &rd;
-  mutt_push_current_menu(menu);
+  mutt_menu_push_current(menu);
 
-  actx = mutt_mem_calloc(sizeof(struct AttachCtx), 1);
+  struct AttachCtx *actx = mutt_mem_calloc(sizeof(struct AttachCtx), 1);
   actx->hdr = msg;
   mutt_update_compose_menu(actx, menu, 1);
 
@@ -1019,20 +1021,17 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
 
       case OP_COMPOSE_ATTACH_FILE:
       {
-        char *prompt = NULL, **files = NULL;
-        int error, numfiles;
-
+        char *prompt = _("Attach file");
+        int numfiles = 0;
+        char **files = NULL;
         fname[0] = 0;
-        prompt = _("Attach file");
-        numfiles = 0;
-        files = NULL;
 
         if (mutt_enter_fname_full(prompt, fname, sizeof(fname), 0, 1, &files,
                                   &numfiles, MUTT_SEL_MULTI) == -1 ||
             *fname == '\0')
           break;
 
-        error = 0;
+        int error = 0;
         if (numfiles > 1)
           mutt_message(_("Attaching selected files..."));
         for (i = 0; i < numfiles; i++)
@@ -1066,10 +1065,8 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
       case OP_COMPOSE_ATTACH_NEWS_MESSAGE:
 #endif
       {
-        char *prompt = NULL;
-
+        char *prompt = _("Open mailbox to attach message from");
         fname[0] = 0;
-        prompt = _("Open mailbox to attach message from");
 
 #ifdef USE_NNTP
         OPT_NEWS = false;
@@ -1532,7 +1529,7 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
               /* avoid freeing other attachments */
               actx->idx[i]->content->next = NULL;
               actx->idx[i]->content->parts = NULL;
-              mutt_free_body(&actx->idx[i]->content);
+              mutt_body_free(&actx->idx[i]->content);
             }
           }
           r = -1;
@@ -1667,7 +1664,7 @@ int mutt_compose_menu(struct Header *msg, /* structure for new message */
     }
   }
 
-  mutt_pop_current_menu(menu);
+  mutt_menu_pop_current(menu);
   mutt_menu_destroy(&menu);
 
   if (actx->idxlen)

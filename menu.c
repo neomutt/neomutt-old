@@ -34,6 +34,7 @@
 #include "keymap.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "opcodes.h"
 #include "options.h"
 #include "pattern.h"
@@ -301,7 +302,7 @@ static void menu_pad_string(struct Menu *menu, char *buf, size_t buflen)
 
 void menu_redraw_full(struct Menu *menu)
 {
-  mutt_reflow_windows();
+  mutt_window_reflow();
   NORMAL_COLOR;
   /* clear() doesn't optimize screen redraws */
   move(0, 0);
@@ -800,7 +801,7 @@ void mutt_menu_init(void)
     SearchBuffers[i] = NULL;
 }
 
-struct Menu *mutt_new_menu(int menu)
+struct Menu *mutt_menu_new(int menu)
 {
   struct Menu *p = mutt_mem_calloc(1, sizeof(struct Menu));
 
@@ -841,7 +842,7 @@ static struct Menu *get_current_menu(void)
   return MenuStackCount ? MenuStack[MenuStackCount - 1] : NULL;
 }
 
-void mutt_push_current_menu(struct Menu *menu)
+void mutt_menu_push_current(struct Menu *menu)
 {
   if (MenuStackCount >= MenuStackLen)
   {
@@ -853,7 +854,7 @@ void mutt_push_current_menu(struct Menu *menu)
   CurrentMenu = menu->menu;
 }
 
-void mutt_pop_current_menu(struct Menu *menu)
+void mutt_menu_pop_current(struct Menu *menu)
 {
   struct Menu *prev_menu = NULL;
 
@@ -876,41 +877,35 @@ void mutt_pop_current_menu(struct Menu *menu)
   }
 }
 
-void mutt_set_current_menu_redraw(int redraw)
+void mutt_menu_set_current_redraw(int redraw)
 {
-  struct Menu *current_menu = NULL;
-
-  current_menu = get_current_menu();
+  struct Menu *current_menu = get_current_menu();
   if (current_menu)
     current_menu->redraw |= redraw;
 }
 
-void mutt_set_current_menu_redraw_full(void)
+void mutt_menu_set_current_redraw_full(void)
 {
-  struct Menu *current_menu = NULL;
-
-  current_menu = get_current_menu();
+  struct Menu *current_menu = get_current_menu();
   if (current_menu)
     current_menu->redraw = REDRAW_FULL;
 }
 
-void mutt_set_menu_redraw(int menu_type, int redraw)
+void mutt_menu_set_redraw(int menu_type, int redraw)
 {
   if (CurrentMenu == menu_type)
-    mutt_set_current_menu_redraw(redraw);
+    mutt_menu_set_current_redraw(redraw);
 }
 
-void mutt_set_menu_redraw_full(int menu_type)
+void mutt_menu_set_redraw_full(int menu_type)
 {
   if (CurrentMenu == menu_type)
-    mutt_set_current_menu_redraw_full();
+    mutt_menu_set_current_redraw_full();
 }
 
-void mutt_current_menu_redraw()
+void mutt_menu_current_redraw()
 {
-  struct Menu *current_menu = NULL;
-
-  current_menu = get_current_menu();
+  struct Menu *current_menu = get_current_menu();
   if (current_menu)
   {
     if (menu_redraw(current_menu) == OP_REDRAW)

@@ -61,17 +61,14 @@ struct TunnelData
  */
 static int tunnel_socket_open(struct Connection *conn)
 {
-  struct TunnelData *tunnel = NULL;
-  int pid;
-  int rc;
   int pin[2], pout[2];
 
-  tunnel = mutt_mem_malloc(sizeof(struct TunnelData));
+  struct TunnelData *tunnel = mutt_mem_malloc(sizeof(struct TunnelData));
   conn->sockdata = tunnel;
 
   mutt_message(_("Connecting with \"%s\"..."), Tunnel);
 
-  rc = pipe(pin);
+  int rc = pipe(pin);
   if (rc == -1)
   {
     mutt_perror("pipe");
@@ -89,7 +86,7 @@ static int tunnel_socket_open(struct Connection *conn)
   }
 
   mutt_sig_block_system();
-  pid = fork();
+  int pid = fork();
   if (pid == 0)
   {
     mutt_sig_unblock_system(0);
@@ -108,7 +105,7 @@ static int tunnel_socket_open(struct Connection *conn)
     /* Don't let the subprocess think it can use the controlling tty */
     setsid();
 
-    execle(EXECSHELL, "sh", "-c", Tunnel, NULL, mutt_envlist());
+    execle(EXECSHELL, "sh", "-c", Tunnel, NULL, mutt_envlist_getlist());
     _exit(127);
   }
   mutt_sig_unblock_system(1);

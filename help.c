@@ -31,6 +31,7 @@
 #include "globals.h"
 #include "keymap.h"
 #include "mutt_curses.h"
+#include "mutt_window.h"
 #include "opcodes.h"
 #include "options.h"
 #include "pager.h"
@@ -346,14 +347,12 @@ void mutt_help(int menu)
 {
   char t[_POSIX_PATH_MAX];
   char buf[SHORT_STRING];
-  const char *desc = NULL;
   FILE *f = NULL;
-  const struct Binding *funcs = NULL;
 
   mutt_mktemp(t, sizeof(t));
 
-  funcs = km_get_table(menu);
-  desc = mutt_map_get_name(menu, Menus);
+  const struct Binding *funcs = km_get_table(menu);
+  const char *desc = mutt_map_get_name(menu, Menus);
   if (!desc)
     desc = _("<UNKNOWN>");
 

@@ -43,23 +43,19 @@
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "opcodes.h"
 #include "options.h"
 #include "pager.h"
 #include "pattern.h"
+#include "progress.h"
 #include "protos.h"
 #include "sort.h"
 #include "tags.h"
+#include "terminal.h"
 #include "thread.h"
-#ifdef HAVE_NCURSESW_NCURSES_H
-#include <ncursesw/term.h>
-#elif defined(HAVE_NCURSES_NCURSES_H)
-#include <ncurses/term.h>
-#elif !defined(USE_SLANG_CURSES)
-#include <term.h>
-#endif
 #ifdef USE_SIDEBAR
 #include "sidebar.h"
 #endif
@@ -144,10 +140,6 @@ static const char *NoVisible = N_("No visible messages.");
 
 #define CAN_COLLAPSE(header)                                                   \
   ((CollapseUnread || !UNREAD(header)) && (CollapseFlagged || !FLAGGED(header)))
-
-/* de facto standard escapes for tsl/fsl */
-static char *tsl = "\033]0;";
-static char *fsl = "\007";
 
 /**
  * collapse/uncollapse all threads
@@ -454,7 +446,6 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
 
   if (Context)
   {
-    int check;
     char *new_last_folder = NULL;
 
 #ifdef USE_COMPRESSED
@@ -465,7 +456,7 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
       new_last_folder = mutt_str_strdup(Context->path);
     *oldcount = Context ? Context->msgcount : 0;
 
-    check = mx_close_mailbox(Context, index_hint);
+    int check = mx_close_mailbox(Context, index_hint);
     if (check != 0)
     {
       if (check == MUTT_NEW_MAIL || check == MUTT_REOPENED)
@@ -516,77 +507,6 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
   OPT_SEARCH_INVALID = true;
 
   return 0;
-}
-
-/**
- * mutt_ts_capability - Check terminal capabilities
- *
- * terminal status capability check. terminfo must have been initialized.
- */
-bool mutt_ts_capability(void)
-{
-  const char *term = mutt_str_getenv("TERM");
-  char *tcaps = NULL;
-#ifdef HAVE_USE_EXTENDED_NAMES
-  int tcapi;
-#endif
-  char **termp = NULL;
-  char *known[] = {
-    "color-xterm", "cygwin", "eterm",  "kterm", "nxterm",
-    "putty",       "rxvt",   "screen", "xterm", NULL,
-  };
-
-  /* If tsl is set, then terminfo says that status lines work. */
-  tcaps = tigetstr("tsl");
-  if (tcaps && tcaps != (char *) -1 && *tcaps)
-  {
-    /* update the static defns of tsl/fsl from terminfo */
-    tsl = tcaps;
-
-    tcaps = tigetstr("fsl");
-    if (tcaps && tcaps != (char *) -1 && *tcaps)
-      fsl = tcaps;
-
-    return true;
-  }
-
-/* If XT (boolean) is set, then this terminal supports the standard escape. */
-/* Beware: tigetflag returns -1 if XT is invalid or not a boolean. */
-#ifdef HAVE_USE_EXTENDED_NAMES
-  use_extended_names(true);
-  tcapi = tigetflag("XT");
-  if (tcapi == 1)
-    return true;
-#endif /* HAVE_USE_EXTENDED_NAMES */
-
-  /* Check term types that are known to support the standard escape without
-   * necessarily asserting it in terminfo. */
-  for (termp = known; termp; termp++)
-  {
-    if (term && *termp && (mutt_str_strncasecmp(term, *termp, strlen(*termp)) != 0))
-      return true;
-  }
-
-  /* not supported */
-  return false;
-}
-
-void mutt_ts_status(char *str)
-{
-  /* If empty, do not set.  To clear, use a single space. */
-  if (str == NULL || *str == '\0')
-    return;
-  fprintf(stderr, "%s%s%s", tsl, str, fsl);
-}
-
-void mutt_ts_icon(char *str)
-{
-  /* If empty, do not set.  To clear, use a single space. */
-  if (str == NULL || *str == '\0')
-    return;
-
-  /* icon setting is not supported in terminfo, so hardcode the escape - yuck */
-  fprintf(stderr, "\033]1;%s\007", str);
 }
 
 /**
@@ -883,7 +803,7 @@ static void index_menu_redraw(struct Menu *menu)
     mutt_draw_statusline(MuttStatusWindow->cols, buf, sizeof(buf));
     NORMAL_COLOR;
     menu->redraw &= ~REDRAW_STATUS;
-    if (TsEnabled && TSSupported)
+    if (TsEnabled && TsSupported)
     {
       menu_status_line(buf, sizeof(buf), menu, NONULL(TSStatusFormat));
       mutt_ts_status(buf);
@@ -912,14 +832,13 @@ int mutt_index_menu(void)
   int newcount = -1;
   int oldcount = -1;
   int rc = -1;
-  struct Menu *menu = NULL;
   char *cp = NULL; /* temporary variable. */
   int index_hint;  /* used to restore cursor position */
   bool do_buffy_notify = true;
   int close = 0; /* did we OP_QUIT or OP_EXIT out of this menu? */
   int attach_msg = OPT_ATTACH_MSG;
 
-  menu = mutt_new_menu(MENU_MAIN);
+  struct Menu *menu = mutt_menu_new(MENU_MAIN);
   menu->make_entry = index_make_entry;
   menu->color = index_color;
   menu->current = ci_first_message();
@@ -930,7 +849,7 @@ int mutt_index_menu(void)
 #endif
                                                                      IndexHelp);
   menu->custom_menu_redraw = index_menu_redraw;
-  mutt_push_current_menu(menu);
+  mutt_menu_push_current(menu);
 
   if (!attach_msg)
     mutt_buffy_check(true); /* force the buffy check after we enter the folder */
@@ -1188,44 +1107,44 @@ int mutt_index_menu(void)
       case OP_BOTTOM_PAGE:
         menu_bottom_page(menu);
         break;
-      case OP_FIRST_ENTRY:
-        menu_first_entry(menu);
-        break;
-      case OP_MIDDLE_PAGE:
-        menu_middle_page(menu);
-        break;
-      case OP_HALF_UP:
-        menu_half_up(menu);
-        break;
-      case OP_HALF_DOWN:
-        menu_half_down(menu);
-        break;
-      case OP_NEXT_LINE:
-        menu_next_line(menu);
-        break;
-      case OP_PREV_LINE:
-        menu_prev_line(menu);
-        break;
-      case OP_NEXT_PAGE:
-        menu_next_page(menu);
-        break;
-      case OP_PREV_PAGE:
-        menu_prev_page(menu);
-        break;
-      case OP_LAST_ENTRY:
-        menu_last_entry(menu);
-        break;
-      case OP_TOP_PAGE:
-        menu_top_page(menu);
-        break;
-      case OP_CURRENT_TOP:
-        menu_current_top(menu);
+      case OP_CURRENT_BOTTOM:
+        menu_current_bottom(menu);
         break;
       case OP_CURRENT_MIDDLE:
         menu_current_middle(menu);
         break;
-      case OP_CURRENT_BOTTOM:
-        menu_current_bottom(menu);
+      case OP_CURRENT_TOP:
+        menu_current_top(menu);
+        break;
+      case OP_FIRST_ENTRY:
+        menu_first_entry(menu);
+        break;
+      case OP_HALF_DOWN:
+        menu_half_down(menu);
+        break;
+      case OP_HALF_UP:
+        menu_half_up(menu);
+        break;
+      case OP_LAST_ENTRY:
+        menu_last_entry(menu);
+        break;
+      case OP_MIDDLE_PAGE:
+        menu_middle_page(menu);
+        break;
+      case OP_NEXT_LINE:
+        menu_next_line(menu);
+        break;
+      case OP_NEXT_PAGE:
+        menu_next_page(menu);
+        break;
+      case OP_PREV_LINE:
+        menu_prev_line(menu);
+        break;
+      case OP_PREV_PAGE:
+        menu_prev_page(menu);
+        break;
+      case OP_TOP_PAGE:
+        menu_top_page(menu);
         break;
 
 #ifdef USE_NNTP
@@ -2206,7 +2125,7 @@ int mutt_index_menu(void)
         int hint = Context->hdrs[Context->v2r[menu->current]]->index;
 
         /* If we are returning to the pager via an index menu redirection, we
-         * need to reset the menu->menu.  Otherwise mutt_pop_current_menu() will
+         * need to reset the menu->menu.  Otherwise mutt_menu_pop_current() will
          * set CurrentMenu incorrectly when we return back to the index menu. */
         menu->menu = MENU_MAIN;
 
@@ -2806,7 +2725,7 @@ int mutt_index_menu(void)
 
       case OP_CREATE_ALIAS:
 
-        mutt_create_alias(Context && Context->vcount ? CURHDR->env : NULL, NULL);
+        mutt_alias_create(Context && Context->vcount ? CURHDR->env : NULL, NULL);
         menu->redraw |= REDRAW_CURRENT;
         break;
 
@@ -3357,7 +3276,7 @@ int mutt_index_menu(void)
 
       case OP_SIDEBAR_TOGGLE_VISIBLE:
         SidebarVisible = !SidebarVisible;
-        mutt_reflow_windows();
+        mutt_window_reflow();
         break;
 
       case OP_SIDEBAR_TOGGLE_VIRTUAL:
@@ -3385,7 +3304,7 @@ int mutt_index_menu(void)
       break;
   }
 
-  mutt_pop_current_menu(menu);
+  mutt_menu_pop_current(menu);
   mutt_menu_destroy(&menu);
   return close;
 }

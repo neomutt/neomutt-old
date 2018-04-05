@@ -59,6 +59,7 @@
 #include "mailbox.h"
 #include "mutt_curses.h"
 #include "mx.h"
+#include "progress.h"
 #include "protos.h"
 #include "tags.h"
 #include "thread.h"
@@ -756,11 +757,10 @@ static int update_header_tags(struct Header *h, notmuch_message_t *msg)
 static int update_message_path(struct Header *h, const char *path)
 {
   struct NmHdrData *data = h->data;
-  char *p = NULL;
 
   mutt_debug(2, "nm: path update requested path=%s, (%s)\n", path, data->virtual_id);
 
-  p = strrchr(path, '/');
+  char *p = strrchr(path, '/');
   if (p && ((p - path) > 3) &&
       ((strncmp(p - 3, "cur", 3) == 0) || (strncmp(p - 3, "new", 3) == 0) ||
        (strncmp(p - 3, "tmp", 3) == 0)))
@@ -1020,7 +1020,7 @@ static void append_message(struct Context *ctx, notmuch_query_t *q,
   }
   if (init_header(h, newpath ? newpath : path, msg) != 0)
   {
-    mutt_free_header(&h);
+    mutt_header_free(&h);
     mutt_debug(1, "nm: failed to append header!\n");
     goto done;
   }
@@ -1310,10 +1310,9 @@ static int rename_maildir_filename(const char *old, char *newpath, size_t newsz,
   char filename[_POSIX_PATH_MAX];
   char suffix[_POSIX_PATH_MAX];
   char folder[_POSIX_PATH_MAX];
-  char *p = NULL;
 
   mutt_str_strfcpy(folder, old, sizeof(folder));
-  p = strrchr(folder, '/');
+  char *p = strrchr(folder, '/');
   if (p)
   {
     *p = '\0';
@@ -1425,7 +1424,11 @@ static int rename_filename(struct NmCtxData *data, const char *old,
     return -1;
 
   mutt_debug(2, "nm: rename: add '%s'\n", new);
+#ifdef HAVE_NOTMUCH_DATABASE_INDEX_FILE
+  st = notmuch_database_index_file(db, new, NULL, &msg);
+#else
   st = notmuch_database_add_message(db, new, &msg);
+#endif
 
   if ((st != NOTMUCH_STATUS_SUCCESS) && (st != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID))
   {
@@ -1460,7 +1463,11 @@ static int rename_filename(struct NmCtxData *data, const char *old,
         {
           mutt_debug(2, "nm: rename dup %s -> %s\n", path, newpath);
           notmuch_database_remove_message(db, path);
+#ifdef HAVE_NOTMUCH_DATABASE_INDEX_FILE
+          notmuch_database_index_file(db, newpath, NULL, NULL);
+#else
           notmuch_database_add_message(db, newpath, NULL);
+#endif
         }
       }
       notmuch_message_destroy(msg);
@@ -1791,15 +1798,12 @@ done:
 
 bool nm_message_is_still_queried(struct Context *ctx, struct Header *hdr)
 {
-  char *orig_str = NULL;
   char *new_str = NULL;
   struct NmCtxData *data = get_ctxdata(ctx);
-  notmuch_database_t *db = NULL;
-  notmuch_query_t *q = NULL;
   bool result = false;
 
-  db = get_db(data, false);
-  orig_str = get_query_string(data, true);
+  notmuch_database_t *db = get_db(data, false);
+  char *orig_str = get_query_string(data, true);
 
   if (!db || !orig_str)
     return false;
@@ -1809,7 +1813,7 @@ bool nm_message_is_still_queried(struct Context *ctx, struct Header *hdr)
 
   mutt_debug(2, "nm: checking if message is still queried: %s\n", new_str);
 
-  q = notmuch_query_create(db, new_str);
+  notmuch_query_t *q = notmuch_query_create(db, new_str);
 
   switch (data->query_type)
   {
@@ -2007,7 +2011,11 @@ int nm_record_message(struct Context *ctx, char *path, struct Header *h)
   if (trans < 0)
     goto done;
 
+#ifdef HAVE_NOTMUCH_DATABASE_INDEX_FILE
+  st = notmuch_database_index_file(db, path, NULL, &msg);
+#else
   st = notmuch_database_add_message(db, path, &msg);
+#endif
 
   if ((st != NOTMUCH_STATUS_SUCCESS) && (st != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID))
   {

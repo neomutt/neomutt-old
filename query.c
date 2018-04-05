@@ -38,6 +38,7 @@
 #include "keymap.h"
 #include "mutt_curses.h"
 #include "mutt_menu.h"
+#include "mutt_window.h"
 #include "opcodes.h"
 #include "protos.h"
 
@@ -326,14 +327,14 @@ static void query_menu(char *buf, size_t buflen, struct Query *results, int retb
   {
     snprintf(title, sizeof(title), _("Query '%s'"), buf);
 
-    menu = mutt_new_menu(MENU_QUERY);
+    menu = mutt_menu_new(MENU_QUERY);
     menu->make_entry = query_entry;
     menu->search = query_search;
     menu->tag = query_tag;
     menu->title = title;
     char helpstr[LONG_STRING];
     menu->help = mutt_compile_help(helpstr, sizeof(helpstr), MENU_QUERY, QueryHelp);
-    mutt_push_current_menu(menu);
+    mutt_menu_push_current(menu);
 
     /* count the number of results */
     for (queryp = results; queryp; queryp = queryp->next)
@@ -355,9 +356,7 @@ static void query_menu(char *buf, size_t buflen, struct Query *results, int retb
         case OP_QUERY:
           if (mutt_get_field(_("Query: "), buf, buflen, 0) == 0 && buf[0])
           {
-            struct Query *newresults = NULL;
-
-            newresults = run_query(buf, 0);
+            struct Query *newresults = run_query(buf, 0);
 
             menu->redraw = REDRAW_FULL;
             if (newresults)
@@ -380,15 +379,15 @@ static void query_menu(char *buf, size_t buflen, struct Query *results, int retb
               }
 
               menu->current = 0;
-              mutt_pop_current_menu(menu);
+              mutt_menu_pop_current(menu);
               mutt_menu_destroy(&menu);
-              menu = mutt_new_menu(MENU_QUERY);
+              menu = mutt_menu_new(MENU_QUERY);
               menu->make_entry = query_entry;
               menu->search = query_search;
               menu->tag = query_tag;
               menu->title = title;
               menu->help = mutt_compile_help(helpstr, sizeof(helpstr), MENU_QUERY, QueryHelp);
-              mutt_push_current_menu(menu);
+              mutt_menu_push_current(menu);
 
               /* count the number of results */
               for (queryp = results; queryp; queryp = queryp->next)
@@ -441,13 +440,13 @@ static void query_menu(char *buf, size_t buflen, struct Query *results, int retb
               }
             }
 
-            mutt_create_alias(NULL, naddr);
+            mutt_alias_create(NULL, naddr);
             mutt_addr_free(&naddr);
           }
           else
           {
             struct Address *a = result_to_addr(QueryTable[menu->current].data);
-            mutt_create_alias(NULL, a);
+            mutt_alias_create(NULL, a);
             mutt_addr_free(&a);
           }
           break;
@@ -460,7 +459,7 @@ static void query_menu(char *buf, size_t buflen, struct Query *results, int retb
           }
         /* fallthrough */
         case OP_MAIL:
-          msg = mutt_new_header();
+          msg = mutt_header_new();
           msg->env = mutt_env_new();
           if (!menu->tagprefix)
           {
@@ -533,7 +532,7 @@ static void query_menu(char *buf, size_t buflen, struct Query *results, int retb
 
     free_query(&results);
     FREE(&QueryTable);
-    mutt_pop_current_menu(menu);
+    mutt_menu_pop_current(menu);
     mutt_menu_destroy(&menu);
   }
 }

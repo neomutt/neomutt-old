@@ -46,6 +46,7 @@
 #include "mx.h"
 #include "ncrypt/ncrypt.h"
 #include "options.h"
+#include "progress.h"
 #include "protos.h"
 #include "thread.h"
 #include "url.h"
@@ -942,13 +943,11 @@ static int fetch_description(char *line, void *data)
  */
 static int get_description(struct NntpData *nntp_data, char *wildmat, char *msg)
 {
-  struct NntpServer *nserv = NULL;
   char buf[STRING];
   char *cmd = NULL;
-  int rc;
 
   /* get newsgroup description, if possible */
-  nserv = nntp_data->nserv;
+  struct NntpServer *nserv = nntp_data->nserv;
   if (!wildmat)
     wildmat = nntp_data->group;
   if (nserv->hasLIST_NEWSGROUPS)
@@ -959,7 +958,7 @@ static int get_description(struct NntpData *nntp_data, char *wildmat, char *msg)
     return 0;
 
   snprintf(buf, sizeof(buf), "%s %s\r\n", cmd, wildmat);
-  rc = nntp_fetch_lines(nntp_data, buf, sizeof(buf), msg, fetch_description, nserv);
+  int rc = nntp_fetch_lines(nntp_data, buf, sizeof(buf), msg, fetch_description, nserv);
   if (rc > 0)
   {
     mutt_error("%s: %s", cmd, buf);
@@ -975,17 +974,16 @@ static int get_description(struct NntpData *nntp_data, char *wildmat, char *msg)
 static void nntp_parse_xref(struct Context *ctx, struct Header *hdr)
 {
   struct NntpData *nntp_data = ctx->data;
-  char *buf = NULL, *p = NULL;
 
-  buf = p = mutt_str_strdup(hdr->env->xref);
+  char *buf = mutt_str_strdup(hdr->env->xref);
+  char *p = buf;
   while (p)
   {
-    char *grp = NULL, *colon = NULL;
     anum_t anum;
 
     /* skip to next word */
     p += strspn(p, " \t");
-    grp = p;
+    char *grp = p;
 
     /* skip to end of word */
     p = strpbrk(p, " \t");
@@ -993,7 +991,7 @@ static void nntp_parse_xref(struct Context *ctx, struct Header *hdr)
       *p++ = '\0';
 
     /* find colon */
-    colon = strchr(grp, ':');
+    char *colon = strchr(grp, ':');
     if (!colon)
       continue;
     *colon++ = '\0';
@@ -1133,8 +1131,8 @@ static int parse_overview_line(char *line, void *data)
     mx_alloc_memory(ctx);
 
   /* parse header */
-  hdr = ctx->hdrs[ctx->msgcount] = mutt_new_header();
-  hdr->env = mutt_read_rfc822_header(fp, hdr, 0, 0);
+  hdr = ctx->hdrs[ctx->msgcount] = mutt_header_new();
+  hdr->env = mutt_rfc822_read_header(fp, hdr, 0, 0);
   hdr->env->newsgroups = mutt_str_strdup(nntp_data->group);
   hdr->received = hdr->date_sent;
   mutt_file_fclose(&fp);
@@ -1143,16 +1141,15 @@ static int parse_overview_line(char *line, void *data)
 #ifdef USE_HCACHE
   if (fc->hc)
   {
-    void *hdata = NULL;
     char buf[16];
 
     /* try to replace with header from cache */
-    snprintf(buf, sizeof(buf), "%d", anum);
-    hdata = mutt_hcache_fetch(fc->hc, buf, strlen(buf));
+    snprintf(buf, sizeof(buf), "%u", anum);
+    void *hdata = mutt_hcache_fetch(fc->hc, buf, strlen(buf));
     if (hdata)
     {
       mutt_debug(2, "mutt_hcache_fetch %s\n", buf);
-      mutt_free_header(&hdr);
+      mutt_header_free(&hdr);
       ctx->hdrs[ctx->msgcount] = hdr = mutt_hcache_restore(hdata);
       mutt_hcache_free(fc->hc, &hdata);
       hdr->data = 0;
@@ -1200,7 +1197,7 @@ static int parse_overview_line(char *line, void *data)
       nntp_data->last_loaded = anum;
   }
   else
-    mutt_free_header(&hdr);
+    mutt_header_free(&hdr);
 
   /* progress */
   if (!ctx->quiet)
@@ -1246,7 +1243,7 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
     if (!ctx->quiet)
       mutt_message(_("Fetching list of articles..."));
     if (nntp_data->nserv->hasLISTGROUPrange)
-      snprintf(buf, sizeof(buf), "LISTGROUP %s %d-%d\r\n", nntp_data->group, first, last);
+      snprintf(buf, sizeof(buf), "LISTGROUP %s %u-%u\r\n", nntp_data->group, first, last);
     else
       snprintf(buf, sizeof(buf), "LISTGROUP %s\r\n", nntp_data->group);
     rc = nntp_fetch_lines(nntp_data, buf, sizeof(buf), NULL, fetch_numbers, &fc);
@@ -1261,7 +1258,7 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
         if (fc.messages[current - first])
           continue;
 
-        snprintf(buf, sizeof(buf), "%d", current);
+        snprintf(buf, sizeof(buf), "%u", current);
         if (nntp_data->bcache)
         {
           mutt_debug(2, "#1 mutt_bcache_del %s\n", buf);
@@ -1292,7 +1289,7 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
       mutt_progress_update(&fc.progress, current - first + 1, -1);
 
 #ifdef USE_HCACHE
-    snprintf(buf, sizeof(buf), "%d", current);
+    snprintf(buf, sizeof(buf), "%u", current);
 #endif
 
     /* delete header from cache that does not exist on server */
@@ -1316,7 +1313,7 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
       /* skip header marked as deleted in cache */
       if (hdr->deleted && !restore)
       {
-        mutt_free_header(&hdr);
+        mutt_header_free(&hdr);
         if (nntp_data->bcache)
         {
           mutt_debug(2, "#2 mutt_bcache_del %s\n", buf);
@@ -1345,11 +1342,10 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
     /* fetch header from server */
     else
     {
-      FILE *fp = NULL;
       char tempfile[_POSIX_PATH_MAX];
 
       mutt_mktemp(tempfile, sizeof(tempfile));
-      fp = mutt_file_fopen(tempfile, "w+");
+      FILE *fp = mutt_file_fopen(tempfile, "w+");
       if (!fp)
       {
         mutt_perror(tempfile);
@@ -1358,7 +1354,7 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
         break;
       }
 
-      snprintf(buf, sizeof(buf), "HEAD %d\r\n", current);
+      snprintf(buf, sizeof(buf), "HEAD %u\r\n", current);
       rc = nntp_fetch_lines(nntp_data, buf, sizeof(buf), NULL, fetch_tempfile, fp);
       if (rc)
       {
@@ -1377,7 +1373,7 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
         /* no such article */
         if (nntp_data->bcache)
         {
-          snprintf(buf, sizeof(buf), "%d", current);
+          snprintf(buf, sizeof(buf), "%u", current);
           mutt_debug(2, "#3 mutt_bcache_del %s\n", buf);
           mutt_bcache_del(nntp_data->bcache, buf);
         }
@@ -1386,8 +1382,8 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
       }
 
       /* parse header */
-      hdr = ctx->hdrs[ctx->msgcount] = mutt_new_header();
-      hdr->env = mutt_read_rfc822_header(fp, hdr, 0, 0);
+      hdr = ctx->hdrs[ctx->msgcount] = mutt_header_new();
+      hdr->env = mutt_rfc822_read_header(fp, hdr, 0, 0);
       hdr->received = hdr->date_sent;
       mutt_file_fclose(&fp);
       unlink(tempfile);
@@ -1420,7 +1416,7 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
   if (current <= last && rc == 0 && !nntp_data->deleted)
   {
     char *cmd = nntp_data->nserv->hasOVER ? "OVER" : "XOVER";
-    snprintf(buf, sizeof(buf), "%s %d-%d\r\n", cmd, current, last);
+    snprintf(buf, sizeof(buf), "%s %u-%u\r\n", cmd, current, last);
     rc = nntp_fetch_lines(nntp_data, buf, sizeof(buf), NULL, parse_overview_line, &fc);
     if (rc > 0)
     {
@@ -1667,7 +1663,7 @@ static int nntp_open_message(struct Context *ctx, struct Message *msg, int msgno
     mutt_hash_delete(ctx->subj_hash, hdr->env->real_subj, hdr);
 
   mutt_env_free(&hdr->env);
-  hdr->env = mutt_read_rfc822_header(msg->fp, hdr, 0, 0);
+  hdr->env = mutt_rfc822_read_header(msg->fp, hdr, 0, 0);
 
   if (ctx->id_hash && hdr->env->message_id)
     mutt_hash_insert(ctx->id_hash, hdr->env->message_id, hdr);
@@ -1860,7 +1856,7 @@ static int check_mailbox(struct Context *ctx)
   if (nntp_data->last_message < nntp_data->last_loaded)
   {
     for (int i = 0; i < ctx->msgcount; i++)
-      mutt_free_header(&ctx->hdrs[i]);
+      mutt_header_free(&ctx->hdrs[i]);
     ctx->msgcount = 0;
     ctx->tagged = 0;
 
@@ -1876,7 +1872,6 @@ static int check_mailbox(struct Context *ctx)
   /* .newsrc has been externally modified */
   if (nserv->newsrc_modified)
   {
-    anum_t anum;
 #ifdef USE_HCACHE
     unsigned char *messages = NULL;
     char buf[16];
@@ -1893,6 +1888,7 @@ static int check_mailbox(struct Context *ctx)
 
     /* update flags according to .newsrc */
     int j = 0;
+    anum_t anum;
     for (int i = 0; i < ctx->msgcount; i++)
     {
       bool flagged = false;
@@ -1905,7 +1901,7 @@ static int check_mailbox(struct Context *ctx)
         if (anum >= first && anum <= nntp_data->last_loaded)
           messages[anum - first] = 1;
 
-        snprintf(buf, sizeof(buf), "%d", anum);
+        snprintf(buf, sizeof(buf), "%u", anum);
         hdata = mutt_hcache_fetch(hc, buf, strlen(buf));
         if (hdata)
         {
@@ -1917,13 +1913,13 @@ static int check_mailbox(struct Context *ctx)
           hdr->data = 0;
           deleted = hdr->deleted;
           flagged = hdr->flagged;
-          mutt_free_header(&hdr);
+          mutt_header_free(&hdr);
 
           /* header marked as deleted, removing from context */
           if (deleted)
           {
             mutt_set_flag(ctx, ctx->hdrs[i], MUTT_TAG, 0);
-            mutt_free_header(&ctx->hdrs[i]);
+            mutt_header_free(&ctx->hdrs[i]);
             continue;
           }
         }
@@ -1951,7 +1947,7 @@ static int check_mailbox(struct Context *ctx)
       if (messages[anum - first])
         continue;
 
-      snprintf(buf, sizeof(buf), "%d", anum);
+      snprintf(buf, sizeof(buf), "%u", anum);
       hdata = mutt_hcache_fetch(hc, buf, strlen(buf));
       if (hdata)
       {
@@ -1964,7 +1960,7 @@ static int check_mailbox(struct Context *ctx)
         hdr->data = 0;
         if (hdr->deleted)
         {
-          mutt_free_header(&hdr);
+          mutt_header_free(&hdr);
           if (nntp_data->bcache)
           {
             mutt_debug(2, "mutt_bcache_del %s\n", buf);
@@ -2357,14 +2353,11 @@ int nntp_check_new_groups(struct NntpServer *nserv)
 int nntp_check_msgid(struct Context *ctx, const char *msgid)
 {
   struct NntpData *nntp_data = ctx->data;
-  struct Header *hdr = NULL;
-  FILE *fp = NULL;
   char tempfile[_POSIX_PATH_MAX];
   char buf[LONG_STRING];
-  int rc;
 
   mutt_mktemp(tempfile, sizeof(tempfile));
-  fp = mutt_file_fopen(tempfile, "w+");
+  FILE *fp = mutt_file_fopen(tempfile, "w+");
   if (!fp)
   {
     mutt_perror(tempfile);
@@ -2373,7 +2366,7 @@ int nntp_check_msgid(struct Context *ctx, const char *msgid)
   }
 
   snprintf(buf, sizeof(buf), "HEAD %s\r\n", msgid);
-  rc = nntp_fetch_lines(nntp_data, buf, sizeof(buf), NULL, fetch_tempfile, fp);
+  int rc = nntp_fetch_lines(nntp_data, buf, sizeof(buf), NULL, fetch_tempfile, fp);
   if (rc)
   {
     mutt_file_fclose(&fp);
@@ -2389,9 +2382,9 @@ int nntp_check_msgid(struct Context *ctx, const char *msgid)
   /* parse header */
   if (ctx->msgcount == ctx->hdrmax)
     mx_alloc_memory(ctx);
-  hdr = ctx->hdrs[ctx->msgcount] = mutt_new_header();
+  struct Header *hdr = ctx->hdrs[ctx->msgcount] = mutt_header_new();
   hdr->data = mutt_mem_calloc(1, sizeof(struct NntpHeaderData));
-  hdr->env = mutt_read_rfc822_header(fp, hdr, 0, 0);
+  hdr->env = mutt_rfc822_read_header(fp, hdr, 0, 0);
   mutt_file_fclose(&fp);
   unlink(tempfile);
 
@@ -2403,7 +2396,7 @@ int nntp_check_msgid(struct Context *ctx, const char *msgid)
     snprintf(buf, sizeof(buf), "STAT %s\r\n", msgid);
     if (nntp_query(nntp_data, buf, sizeof(buf)) < 0)
     {
-      mutt_free_header(&hdr);
+      mutt_header_free(&hdr);
       return -1;
     }
     sscanf(buf + 4, ANUM, &NHDR(hdr)->article_num);
@@ -2477,7 +2470,7 @@ int nntp_check_children(struct Context *ctx, const char *msgid)
   cc.child = mutt_mem_malloc(sizeof(anum_t) * cc.max);
 
   /* fetch numbers of child messages */
-  snprintf(buf, sizeof(buf), "XPAT References %d-%d *%s*\r\n",
+  snprintf(buf, sizeof(buf), "XPAT References %u-%u *%s*\r\n",
            nntp_data->first_message, nntp_data->last_loaded, msgid);
   rc = nntp_fetch_lines(nntp_data, buf, sizeof(buf), NULL, fetch_children, &cc);
   if (rc)
