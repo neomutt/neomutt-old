@@ -1,3 +1,9 @@
+neomutt (1:20180405-1lxtec2) UNRELEASED; urgency=medium
+
+  * Bumped Standards-Version: 4.1.4
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 10 Apr 2018 13:25:37 +0200
+
 neomutt (1:20180405-1lxtec1) unstable; urgency=medium
 
   * Switched to clang-6.0
