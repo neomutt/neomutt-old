@@ -2415,6 +2415,9 @@ int mutt_index_menu(struct MuttWindow *dlg)
         break;
       }
 
+#ifdef USE_DEVEL_HELP
+      case OP_HELP_BOX:
+#endif
       case OP_MAIN_CHANGE_FOLDER:
       case OP_MAIN_CHANGE_FOLDER_READONLY:
 #ifdef USE_NOTMUCH
@@ -2447,6 +2450,10 @@ int mutt_index_menu(struct MuttWindow *dlg)
         /* By default, fill buf with the next mailbox that contains unread mail */
         mutt_mailbox_next(Context ? Context->mailbox : NULL, folderbuf);
 
+#ifdef USE_DEVEL_HELP
+        if (op == OP_HELP_BOX)
+          mutt_buffer_strcpy(folderbuf, "help:///");
+#endif
         if (mutt_buffer_enter_fname(cp, folderbuf, true) == -1)
           goto changefoldercleanup;
 

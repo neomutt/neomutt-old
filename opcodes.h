@@ -320,6 +320,13 @@
 #define OPS_SMIME(_fmt) \
   _fmt(OP_COMPOSE_SMIME_MENU,             N_("show S/MIME options")) \
 
+#ifdef USE_DEVEL_HELP
+#define OPS_HELP(_fmt) \
+  _fmt(OP_HELP_BOX,                       N_("open help mailbox"))
+#else
+#define OPS_HELP(_)
+#endif
+
 #define OPS(_fmt) \
   _fmt(OP_NULL,                           N_("null operation")) \
   OPS_AUTOCRYPT(_fmt) \
@@ -330,6 +337,7 @@
   OPS_PGP(_fmt) \
   OPS_SMIME(_fmt) \
   OPS_CRYPT(_fmt) \
+  OPS_HELP(_fmt) \
 
 enum MuttOps {
 #define DEFINE_OPS(opcode, help_string) opcode,

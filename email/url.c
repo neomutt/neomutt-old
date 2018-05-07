@@ -42,7 +42,11 @@ static const struct Mapping UrlMap[] = {
   { "pop", U_POP },       { "pops", U_POPS },       { "news", U_NNTP },
   { "nntp", U_NNTP },     { "snews", U_NNTPS },     { "nntps", U_NNTPS },
   { "mailto", U_MAILTO }, { "notmuch", U_NOTMUCH }, { "smtp", U_SMTP },
-  { "smtps", U_SMTPS },   { NULL, U_UNKNOWN },
+  { "smtps", U_SMTPS },
+#ifdef USE_DEVEL_HELP
+  { "help", U_HELP },
+#endif
+  { NULL, U_UNKNOWN },
 };
 
 /**

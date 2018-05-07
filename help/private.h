@@ -1,0 +1,66 @@
+/**
+ * @file
+ * Shared constants/structs that are private to the Help Backend
+ *
+ * @authors
+ * Copyright (C) 2018-2020 Richard Russon <rich@flatcap.org>
+ * Copyright (C) 2018 Floyd Anderson <f.a@31c0.net>
+ * Copyright (C) 2019 Tran Manh Tu <xxlaguna93@gmail.com>
+ *
+ * @copyright
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef MUTT_HELP_PRIVATE_H
+#define MUTT_HELP_PRIVATE_H
+
+#include <stdint.h>
+#include "mutt/lib.h"
+
+extern char *C_HelpDocDir;
+
+/**
+ * struct HelpFileHeader - Describes the header of a help file
+ */
+struct HelpFileHeader
+{
+  char *key; ///< Name of header
+  char *val; ///< Value of header
+};
+
+ARRAY_HEAD(StringArray, const char *);
+ARRAY_HEAD(HeaderArray, struct HelpFileHeader *);
+ARRAY_HEAD(EmailArray, struct Email *);
+
+typedef uint8_t HelpDocFlags;       ///< Types of Help Documents, e.g. #HELP_DOC_INDEX
+#define HELP_DOC_NO_FLAGS       0   ///< No flags are set
+#define HELP_DOC_UNKNOWN  (1 << 0)  ///< File isn't a help document
+#define HELP_DOC_INDEX    (1 << 1)  ///< Document is treated as help index (index.md)
+#define HELP_DOC_ROOTDOC  (1 << 2)  ///< Document lives directly in root of `$help_doc_dir`
+#define HELP_DOC_CHAPTER  (1 << 3)  ///< Document is treated as help chapter
+#define HELP_DOC_SECTION  (1 << 4)  ///< Document is treated as help section
+
+/**
+ * struct HelpEmailData - Helpdoc-specific Email data - @extends Email
+ */
+struct HelpEmailData
+{
+  struct HeaderArray *ha; ///< File header lines (list of key/value pairs)
+  char *name;             ///< Base file name
+  HelpDocFlags type;      ///< Type of the help document
+};
+
+void scan_dir(const char *path, struct StringArray *files);
+
+#endif /* MUTT_HELP_PRIVATE_H */

@@ -822,6 +822,9 @@ static void init_variables(struct ConfigSet *cs)
 #ifdef USE_HCACHE
   CONFIG_INIT_VARS(cs, hcache);
 #endif
+#ifdef USE_DEVEL_HELP
+  CONFIG_INIT_VARS(cs, help);
+#endif
   CONFIG_INIT_VARS(cs, helpbar);
   CONFIG_INIT_VARS(cs, history);
 #ifdef USE_IMAP

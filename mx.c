@@ -79,6 +79,9 @@
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #endif
+#ifdef USE_DEVEL_HELP
+#include "help/lib.h"
+#endif
 
 /* These Config Variables are only used in mx.c */
 bool C_KeepFlagged; ///< Config: Don't move flagged messages from `$spoolfile` to `$mbox`
@@ -118,6 +121,9 @@ const struct MxOps *mx_ops[] = {
 #endif
 #ifdef USE_NNTP
   &MxNntpOps,
+#endif
+#ifdef USE_DEVEL_HELP
+  &MxHelpOps,
 #endif
 
   /* Local mailboxes */

@@ -340,6 +340,21 @@ $(PWD)/hcache:
 @endif
 
 ###############################################################################
+# libhelp
+@if USE_DEVEL_HELP
+LIBHELP=	libhelp.a
+LIBHELPOBJS=	help/config.o help/help.o help/scan.o
+CLEANFILES+=	$(LIBHELP) $(LIBHELPOBJS)
+ALLOBJS+=	$(LIBHELPOBJS)
+
+$(LIBHELP): $(PWD)/help $(LIBHELPOBJS)
+	$(AR) cr $@ $(LIBHELPOBJS)
+	$(RANLIB) $@
+$(PWD)/help:
+	$(MKDIR_P) $(PWD)/help
+@endif
+
+###############################################################################
 # libhelpbar
 LIBHELPBAR=	libhelpbar.a
 LIBHELPBAROBJS=	helpbar/config.o helpbar/helpbar.o helpbar/wdata.o
@@ -612,7 +627,7 @@ $(ALLOBJS):
 MUTTLIBS+=	$(LIBAUTOCRYPT) $(LIBPOP) $(LIBNNTP) $(LIBCOMPMBOX) \
 		$(LIBSTORE) $(LIBPATTERN) $(LIBGUI) $(LIBHELPBAR) $(LIBMBOX) \
 		$(LIBNOTMUCH) $(LIBMAILDIR) $(LIBNCRYPT) $(LIBIMAP) $(LIBCONN) \
-		$(LIBHCACHE)  $(LIBCOMPRESS) $(LIBSIDEBAR) $(LIBBCACHE) \
+		$(LIBHCACHE) $(LIBHELP) $(LIBCOMPRESS) $(LIBSIDEBAR) $(LIBBCACHE) \
 		$(LIBHISTORY) $(LIBALIAS) $(LIBSEND) $(LIBCOMPOSE) $(LIBCORE) $(LIBCONFIG) \
 		$(LIBEMAIL) $(LIBADDRESS) $(LIBDEBUG) $(LIBMUTT)
 
