@@ -24,7 +24,6 @@ hcache/hcversion.h
 neomutt
 pgpewrap
 pgpring
-txt2c
 test/neomutt-test
 
 # ./configure
@@ -40,7 +39,7 @@ doc/makedoc
 doc/manual.txt
 doc/manual.xml
 doc/neomuttrc
-doc/neomuttrc.man
+doc/neomuttrc.5
 po/*.gmo
 po/*.mo
 po/POTFILES
@@ -93,5 +92,6 @@ po/remove-potcdate.sed
 po/remove-potcdate.sin
 po/Rules-quot
 po/neomutt.pot
+.clang_complete
 
 html

@@ -20,6 +20,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page progress Progress bar
+ *
+ * Progress bar
+ */
+
 #include "config.h"
 #include <errno.h>
 #include <stdarg.h>
@@ -109,7 +115,7 @@ void mutt_progress_init(struct Progress *progress, const char *msg,
 
   if (!progress)
     return;
-  if (OPT_NO_CURSES)
+  if (OptNoCurses)
     return;
 
   memset(progress, 0, sizeof(struct Progress));
@@ -158,14 +164,15 @@ void mutt_progress_update(struct Progress *progress, long pos, int percent)
   struct timeval tv = { 0, 0 };
   unsigned int now = 0;
 
-  if (OPT_NO_CURSES)
+  if (OptNoCurses)
     return;
 
   if (progress->inc == 0)
     goto out;
 
   /* refresh if size > inc */
-  if ((progress->flags & MUTT_PROGRESS_SIZE) && (pos >= (progress->pos + (progress->inc << 10))))
+  if ((progress->flags & MUTT_PROGRESS_SIZE) &&
+      (pos >= (progress->pos + (progress->inc << 10))))
     update = true;
   else if (pos >= (progress->pos + progress->inc))
     update = true;
@@ -220,4 +227,3 @@ out:
   if (pos >= progress->size)
     mutt_clear_error();
 }
-

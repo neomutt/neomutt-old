@@ -22,6 +22,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page crypt_smime SMIME helper routines
+ *
+ * SMIME helper routines
+ */
+
 #include "config.h"
 #include <limits.h>
 #include <stdbool.h>
@@ -174,7 +180,7 @@ static const char *fmt_smime_command(char *buf, size_t buflen, size_t col, int c
         char buf1[LONG_STRING], buf2[LONG_STRING];
         struct stat sb;
 
-        mutt_str_strfcpy(path, NONULL(SmimeCALocation), sizeof(path));
+        mutt_str_strfcpy(path, NONULL(SmimeCaLocation), sizeof(path));
         mutt_expand_path(path, sizeof(path));
         mutt_file_quote_filename(buf1, sizeof(buf1), path);
 
@@ -186,7 +192,7 @@ static const char *fmt_smime_command(char *buf, size_t buflen, size_t col, int c
         snprintf(fmt, sizeof(fmt), "%%%ss", prec);
         snprintf(buf, buflen, fmt, buf2);
       }
-      else if (!SmimeCALocation)
+      else if (!SmimeCaLocation)
         optional = 0;
       break;
     }
@@ -362,25 +368,74 @@ static void smime_entry(char *buf, size_t buflen, struct Menu *menu, int num)
   switch (this->trust)
   {
     case 'e':
-      truststate = N_("Expired   ");
+      /* L10N: Describes the trust state of a S/MIME key.
+         This translation must be padded with spaces to the right such that it
+         has the same length as the other translations.
+
+         The translation strings which need to be padded are:
+         Expired, Invalid, Revoked, Trusted, Unverified, Verified, and Unknown.
+       */
+      truststate = _("Expired   ");
       break;
     case 'i':
-      truststate = N_("Invalid   ");
+      /* L10N: Describes the trust state of a S/MIME key.
+         This translation must be padded with spaces to the right such that it
+         has the same length as the other translations.
+
+         The translation strings which need to be padded are:
+         Expired, Invalid, Revoked, Trusted, Unverified, Verified, and Unknown.
+       */
+      truststate = _("Invalid   ");
       break;
     case 'r':
-      truststate = N_("Revoked   ");
+      /* L10N: Describes the trust state of a S/MIME key.
+         This translation must be padded with spaces to the right such that it
+         has the same length as the other translations.
+
+         The translation strings which need to be padded are:
+         Expired, Invalid, Revoked, Trusted, Unverified, Verified, and Unknown.
+       */
+      truststate = _("Revoked   ");
       break;
     case 't':
-      truststate = N_("Trusted   ");
+      /* L10N: Describes the trust state of a S/MIME key.
+         This translation must be padded with spaces to the right such that it
+         has the same length as the other translations.
+
+         The translation strings which need to be padded are:
+         Expired, Invalid, Revoked, Trusted, Unverified, Verified, and Unknown.
+       */
+      truststate = _("Trusted   ");
       break;
     case 'u':
-      truststate = N_("Unverified");
+      /* L10N: Describes the trust state of a S/MIME key.
+         This translation must be padded with spaces to the right such that it
+         has the same length as the other translations.
+
+         The translation strings which need to be padded are:
+         Expired, Invalid, Revoked, Trusted, Unverified, Verified, and Unknown.
+       */
+      truststate = _("Unverified");
       break;
     case 'v':
-      truststate = N_("Verified  ");
+      /* L10N: Describes the trust state of a S/MIME key.
+         This translation must be padded with spaces to the right such that it
+         has the same length as the other translations.
+
+         The translation strings which need to be padded are:
+         Expired, Invalid, Revoked, Trusted, Unverified, Verified, and Unknown.
+       */
+      truststate = _("Verified  ");
       break;
     default:
-      truststate = N_("Unknown   ");
+      /* L10N: Describes the trust state of a S/MIME key.
+         This translation must be padded with spaces to the right such that it
+         has the same length as the other translations.
+
+         The translation strings which need to be padded are:
+         Expired, Invalid, Revoked, Trusted, Unverified, Verified, and Unknown.
+       */
+      truststate = _("Unknown   ");
   }
   snprintf(buf, buflen, " 0x%s %s %s %-35.35s %s", this->hash,
            smime_key_flags(this->flags), truststate, this->email, this->label);
@@ -447,17 +502,19 @@ static struct SmimeKey *smime_select_key(struct SmimeKey *keys, char *query)
             case 'e':
             case 'i':
             case 'r':
-              s = N_("ID is expired/disabled/revoked.");
+              s = _("ID is expired/disabled/revoked. Do you really want to use "
+                    "the key?");
               break;
             case 'u':
-              s = N_("ID has undefined validity.");
+              s = _("ID has undefined validity. Do you really want to use the "
+                    "key?");
               break;
             case 'v':
-              s = N_("ID is not trusted.");
+              s = _("ID is not trusted. Do you really want to use the key?");
               break;
           }
 
-          snprintf(buf, sizeof(buf), _("%s Do you really want to use the key?"), _(s));
+          snprintf(buf, sizeof(buf), "%s", s);
 
           if (mutt_yesorno(buf, MUTT_NO) != MUTT_YES)
           {
@@ -1207,8 +1264,9 @@ void smime_invoke_import(char *infile, char *mailbox)
   {
     mutt_endwin();
 
-    pid_t thepid = smime_invoke(&smimein, NULL, NULL, -1, fileno(fpout), fileno(fperr), certfile,
-                          NULL, NULL, NULL, NULL, NULL, NULL, SmimeImportCertCommand);
+    pid_t thepid = smime_invoke(&smimein, NULL, NULL, -1, fileno(fpout),
+                                fileno(fperr), certfile, NULL, NULL, NULL, NULL,
+                                NULL, NULL, SmimeImportCertCommand);
     if (thepid == -1)
     {
       mutt_message(_("Error: unable to create OpenSSL subprocess!"));
@@ -1483,7 +1541,7 @@ struct Body *smime_sign_message(struct Body *a)
     return NULL;
   }
 
-  convert_to_7bit(a); /* Signed data _must_ be in 7-bit format. */
+  crypt_convert_to_7bit(a); /* Signed data _must_ be in 7-bit format. */
 
   mutt_mktemp(filetosign, sizeof(filetosign));
   sfp = mutt_file_fopen(filetosign, "w+");
@@ -2120,14 +2178,15 @@ int smime_send_menu(struct Header *msg)
         msg->security |= ENCRYPT;
         do
         {
-          /* I use "dra" because "123" is recognized anyway */
-          switch (mutt_multi_choice(_("Choose algorithm family:"
-                                      " 1: DES, 2: RC2, 3: AES,"
-                                      " or (c)lear? "),
+          switch (mutt_multi_choice(_("Choose algorithm family: 1: DES, 2: "
+                                      "RC2, 3: AES, or (c)lear? "),
+                                    // L10N: Options for: Choose algorithm family: 1: DES, 2: RC2, 3: AES, or (c)lear?
                                     _("123c")))
           {
             case 1:
-              switch (choice = mutt_multi_choice(_("1: DES, 2: Triple-DES "), _("12")))
+              switch (choice = mutt_multi_choice(_("1: DES, 2: Triple-DES "),
+                                                 // L10N: Options for: 1: DES, 2: Triple-DES
+                                                 _("12")))
               {
                 case 1:
                   mutt_str_replace(&SmimeEncryptWith, "des");
@@ -2140,7 +2199,9 @@ int smime_send_menu(struct Header *msg)
 
             case 2:
               switch (choice = mutt_multi_choice(
-                          _("1: RC2-40, 2: RC2-64, 3: RC2-128 "), _("123")))
+                          _("1: RC2-40, 2: RC2-64, 3: RC2-128 "),
+                          // L10N: Options for: 1: RC2-40, 2: RC2-64, 3: RC2-128
+                          _("123")))
               {
                 case 1:
                   mutt_str_replace(&SmimeEncryptWith, "rc2-40");
@@ -2156,7 +2217,9 @@ int smime_send_menu(struct Header *msg)
 
             case 3:
               switch (choice = mutt_multi_choice(
-                          _("1: AES128, 2: AES192, 3: AES256 "), _("123")))
+                          _("1: AES128, 2: AES192, 3: AES256 "),
+                          // L10N: Options for: 1: AES128, 2: AES192, 3: AES256
+                          _("123")))
               {
                 case 1:
                   mutt_str_replace(&SmimeEncryptWith, "aes128");

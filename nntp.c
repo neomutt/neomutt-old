@@ -22,6 +22,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page nntp Usenet network mailbox type; talk to an NNTP server
+ *
+ * Usenet network mailbox type; talk to an NNTP server
+ */
+
 #include "config.h"
 #include <ctype.h>
 #include <limits.h>
@@ -58,6 +64,11 @@
 #include <sasl/saslutil.h>
 #endif
 
+/**
+ * nntp_connect_error - Signal a failed connection
+ * @param nserv NNTP server
+ * @retval -1 Always
+ */
 static int nntp_connect_error(struct NntpServer *nserv)
 {
   nserv->status = NNTP_NONE;
@@ -67,6 +78,7 @@ static int nntp_connect_error(struct NntpServer *nserv)
 
 /**
  * nntp_capabilities - Get capabilities
+ * @param nserv NNTP server
  * @retval -1 Error, connection is closed
  * @retval  0 Mode is reader, capabilities set up
  * @retval  1 Need to switch to reader mode
@@ -87,7 +99,7 @@ static int nntp_capabilities(struct NntpServer *nserv)
   nserv->hasOVER = false;
   FREE(&nserv->authenticators);
 
-  if (mutt_socket_write(conn, "CAPABILITIES\r\n") < 0 ||
+  if (mutt_socket_send(conn, "CAPABILITIES\r\n") < 0 ||
       mutt_socket_readln(buf, sizeof(buf), conn) < 0)
   {
     return nntp_connect_error(nserv);
@@ -178,6 +190,9 @@ char *OverviewFmt = "Subject:\0"
 
 /**
  * nntp_attempt_features - Detect supported commands
+ * @param nserv NNTP server
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int nntp_attempt_features(struct NntpServer *nserv)
 {
@@ -187,7 +202,7 @@ static int nntp_attempt_features(struct NntpServer *nserv)
   /* no CAPABILITIES, trying DATE, LISTGROUP, LIST NEWSGROUPS */
   if (!nserv->hasCAPABILITIES)
   {
-    if (mutt_socket_write(conn, "DATE\r\n") < 0 ||
+    if (mutt_socket_send(conn, "DATE\r\n") < 0 ||
         mutt_socket_readln(buf, sizeof(buf), conn) < 0)
     {
       return nntp_connect_error(nserv);
@@ -195,7 +210,7 @@ static int nntp_attempt_features(struct NntpServer *nserv)
     if (mutt_str_strncmp("500", buf, 3) != 0)
       nserv->hasDATE = true;
 
-    if (mutt_socket_write(conn, "LISTGROUP\r\n") < 0 ||
+    if (mutt_socket_send(conn, "LISTGROUP\r\n") < 0 ||
         mutt_socket_readln(buf, sizeof(buf), conn) < 0)
     {
       return nntp_connect_error(nserv);
@@ -203,7 +218,7 @@ static int nntp_attempt_features(struct NntpServer *nserv)
     if (mutt_str_strncmp("500", buf, 3) != 0)
       nserv->hasLISTGROUP = true;
 
-    if (mutt_socket_write(conn, "LIST NEWSGROUPS +\r\n") < 0 ||
+    if (mutt_socket_send(conn, "LIST NEWSGROUPS +\r\n") < 0 ||
         mutt_socket_readln(buf, sizeof(buf), conn) < 0)
     {
       return nntp_connect_error(nserv);
@@ -223,7 +238,7 @@ static int nntp_attempt_features(struct NntpServer *nserv)
   /* no LIST NEWSGROUPS, trying XGTITLE */
   if (!nserv->hasLIST_NEWSGROUPS)
   {
-    if (mutt_socket_write(conn, "XGTITLE\r\n") < 0 ||
+    if (mutt_socket_send(conn, "XGTITLE\r\n") < 0 ||
         mutt_socket_readln(buf, sizeof(buf), conn) < 0)
     {
       return nntp_connect_error(nserv);
@@ -235,7 +250,7 @@ static int nntp_attempt_features(struct NntpServer *nserv)
   /* no OVER, trying XOVER */
   if (!nserv->hasOVER)
   {
-    if (mutt_socket_write(conn, "XOVER\r\n") < 0 ||
+    if (mutt_socket_send(conn, "XOVER\r\n") < 0 ||
         mutt_socket_readln(buf, sizeof(buf), conn) < 0)
     {
       return nntp_connect_error(nserv);
@@ -247,7 +262,7 @@ static int nntp_attempt_features(struct NntpServer *nserv)
   /* trying LIST OVERVIEW.FMT */
   if (nserv->hasOVER || nserv->hasXOVER)
   {
-    if (mutt_socket_write(conn, "LIST OVERVIEW.FMT\r\n") < 0 ||
+    if (mutt_socket_send(conn, "LIST OVERVIEW.FMT\r\n") < 0 ||
         mutt_socket_readln(buf, sizeof(buf), conn) < 0)
     {
       return nntp_connect_error(nserv);
@@ -317,6 +332,9 @@ static int nntp_attempt_features(struct NntpServer *nserv)
 
 /**
  * nntp_auth - Get login, password and authenticate
+ * @param nserv NNTP server
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int nntp_auth(struct NntpServer *nserv)
 {
@@ -394,7 +412,7 @@ static int nntp_auth(struct NntpServer *nserv)
       {
         mutt_message(_("Authenticating (%s)..."), method);
         snprintf(buf, sizeof(buf), "AUTHINFO USER %s\r\n", conn->account.user);
-        if (mutt_socket_write(conn, buf) < 0 ||
+        if (mutt_socket_send(conn, buf) < 0 ||
             mutt_socket_readln(buf, sizeof(buf), conn) < 0)
         {
           break;
@@ -410,7 +428,7 @@ static int nntp_auth(struct NntpServer *nserv)
           if (DebugLevel < MUTT_SOCK_LOG_FULL)
             mutt_debug(MUTT_SOCK_LOG_CMD, "%d> AUTHINFO PASS *\n", conn->fd);
           snprintf(buf, sizeof(buf), "AUTHINFO PASS %s\r\n", conn->account.pass);
-          if (mutt_socket_write_d(conn, buf, -1, MUTT_SOCK_LOG_FULL) < 0 ||
+          if (mutt_socket_send_d(conn, buf, MUTT_SOCK_LOG_FULL) < 0 ||
               mutt_socket_readln(buf, sizeof(buf), conn) < 0)
           {
             break;
@@ -501,7 +519,7 @@ static int nntp_auth(struct NntpServer *nserv)
               mutt_debug(MUTT_SOCK_LOG_CMD, "%d> sasl_data\n", conn->fd);
           }
           client_len = 0;
-          if (mutt_socket_write_d(conn, buf, -1, MUTT_SOCK_LOG_FULL) < 0 ||
+          if (mutt_socket_send_d(conn, buf, MUTT_SOCK_LOG_FULL) < 0 ||
               mutt_socket_readln_d(inbuf, sizeof(inbuf), conn, MUTT_SOCK_LOG_FULL) < 0)
           {
             break;
@@ -565,7 +583,7 @@ static int nntp_auth(struct NntpServer *nserv)
           break;
         if (mutt_str_strncmp(inbuf, "383 ", 4) == 0)
         {
-          if (mutt_socket_write(conn, "*\r\n") < 0 ||
+          if (mutt_socket_send(conn, "*\r\n") < 0 ||
               mutt_socket_readln(inbuf, sizeof(inbuf), conn) < 0)
           {
             break;
@@ -600,6 +618,9 @@ static int nntp_auth(struct NntpServer *nserv)
 
 /**
  * nntp_open_connection - Connect to server, authenticate and get capabilities
+ * @param nserv NNTP server
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 int nntp_open_connection(struct NntpServer *nserv)
 {
@@ -638,7 +659,7 @@ int nntp_open_connection(struct NntpServer *nserv)
   /* tell news server to switch to mode reader if it isn't so */
   if (cap > 0)
   {
-    if (mutt_socket_write(conn, "MODE READER\r\n") < 0 ||
+    if (mutt_socket_send(conn, "MODE READER\r\n") < 0 ||
         mutt_socket_readln(buf, sizeof(buf), conn) < 0)
     {
       return nntp_connect_error(nserv);
@@ -681,7 +702,7 @@ int nntp_open_connection(struct NntpServer *nserv)
               1;
     if (nserv->use_tls == 2)
     {
-      if (mutt_socket_write(conn, "STARTTLS\r\n") < 0 ||
+      if (mutt_socket_send(conn, "STARTTLS\r\n") < 0 ||
           mutt_socket_readln(buf, sizeof(buf), conn) < 0)
       {
         return nntp_connect_error(nserv);
@@ -718,7 +739,7 @@ int nntp_open_connection(struct NntpServer *nserv)
   }
   else
   {
-    if (mutt_socket_write(conn, "STAT\r\n") < 0 ||
+    if (mutt_socket_send(conn, "STAT\r\n") < 0 ||
         mutt_socket_readln(buf, sizeof(buf), conn) < 0)
     {
       return nntp_connect_error(nserv);
@@ -755,6 +776,11 @@ int nntp_open_connection(struct NntpServer *nserv)
 
 /**
  * nntp_query - Send data from buffer and receive answer to same buffer
+ * @param nntp_data NNTP server data
+ * @param line      Buffer containing data
+ * @param linelen   Length of buffer
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int nntp_query(struct NntpData *nntp_data, char *line, size_t linelen)
 {
@@ -771,11 +797,11 @@ static int nntp_query(struct NntpData *nntp_data, char *line, size_t linelen)
       int rc = 0;
 
       if (*line)
-        rc = mutt_socket_write(nserv->conn, line);
+        rc = mutt_socket_send(nserv->conn, line);
       else if (nntp_data->group)
       {
         snprintf(buf, sizeof(buf), "GROUP %s\r\n", nntp_data->group);
-        rc = mutt_socket_write(nserv->conn, buf);
+        rc = mutt_socket_send(nserv->conn, buf);
       }
       if (rc >= 0)
         rc = mutt_socket_readln(buf, sizeof(buf), nserv->conn);
@@ -803,7 +829,7 @@ static int nntp_query(struct NntpData *nntp_data, char *line, size_t linelen)
     if (nntp_data->group)
     {
       snprintf(buf, sizeof(buf), "GROUP %s\r\n", nntp_data->group);
-      if (mutt_socket_write(nserv->conn, buf) < 0 ||
+      if (mutt_socket_send(nserv->conn, buf) < 0 ||
           mutt_socket_readln(buf, sizeof(buf), nserv->conn) < 0)
       {
         return nntp_connect_error(nserv);
@@ -819,6 +845,12 @@ static int nntp_query(struct NntpData *nntp_data, char *line, size_t linelen)
 
 /**
  * nntp_fetch_lines - Read lines, calling a callback function for each
+ * @param nntp_data NNTP server data
+ * @param query     Query to match
+ * @param qlen      Length of query
+ * @param msg       Progess message (OPTIONAL)
+ * @param funct     Callback function
+ * @param data      Data for callback function
  * @retval  0 Success
  * @retval  1 Bad response (answer in query buffer)
  * @retval -1 Connection lost
@@ -903,6 +935,9 @@ static int nntp_fetch_lines(struct NntpData *nntp_data, char *query, size_t qlen
 
 /**
  * fetch_description - Parse newsgroup description
+ * @param line String to parse
+ * @param data NNTP Server
+ * @retval 0 Always
  */
 static int fetch_description(char *line, void *data)
 {
@@ -968,6 +1003,8 @@ static int get_description(struct NntpData *nntp_data, char *wildmat, char *msg)
 
 /**
  * nntp_parse_xref - Parse cross-reference
+ * @param ctx Mailbox
+ * @param hdr Email header
  *
  * Update read flag and set article number if empty
  */
@@ -1006,7 +1043,11 @@ static void nntp_parse_xref(struct Context *ctx, struct Header *hdr)
 }
 
 /**
- * fetch_tempfile - Write line to temporarily file
+ * fetch_tempfile - Write line to temporary file
+ * @param line Text to write
+ * @param data FILE pointer
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int fetch_tempfile(char *line, void *data)
 {
@@ -1037,6 +1078,9 @@ struct FetchCtx
 
 /**
  * fetch_numbers - Parse article number
+ * @param line Article number
+ * @param data FetchCtx
+ * @retval 0 Always
  */
 static int fetch_numbers(char *line, void *data)
 {
@@ -1055,6 +1099,10 @@ static int fetch_numbers(char *line, void *data)
 
 /**
  * parse_overview_line - Parse overview line
+ * @param line String to parse
+ * @param data FetchCtx
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int parse_overview_line(char *line, void *data)
 {
@@ -1062,8 +1110,6 @@ static int parse_overview_line(char *line, void *data)
   struct Context *ctx = fc->ctx;
   struct NntpData *nntp_data = ctx->data;
   struct Header *hdr = NULL;
-  FILE *fp = NULL;
-  char tempfile[_POSIX_PATH_MAX];
   char *header = NULL, *field = NULL;
   bool save = true;
   anum_t anum;
@@ -1093,8 +1139,7 @@ static int parse_overview_line(char *line, void *data)
   }
 
   /* convert overview line to header */
-  mutt_mktemp(tempfile, sizeof(tempfile));
-  fp = mutt_file_fopen(tempfile, "w+");
+  FILE *fp = mutt_file_mkstemp();
   if (!fp)
     return -1;
 
@@ -1108,7 +1153,6 @@ static int parse_overview_line(char *line, void *data)
       if (strstr(header, ":full") == NULL && fputs(header, fp) == EOF)
       {
         mutt_file_fclose(&fp);
-        unlink(tempfile);
         return -1;
       }
       header = strchr(header, '\0') + 1;
@@ -1120,7 +1164,6 @@ static int parse_overview_line(char *line, void *data)
     if (fputs(b, fp) == EOF || fputc('\n', fp) == EOF)
     {
       mutt_file_fclose(&fp);
-      unlink(tempfile);
       return -1;
     }
   }
@@ -1136,7 +1179,6 @@ static int parse_overview_line(char *line, void *data)
   hdr->env->newsgroups = mutt_str_strdup(nntp_data->group);
   hdr->received = hdr->date_sent;
   mutt_file_fclose(&fp);
-  unlink(tempfile);
 
 #ifdef USE_HCACHE
   if (fc->hc)
@@ -1207,6 +1249,13 @@ static int parse_overview_line(char *line, void *data)
 
 /**
  * nntp_fetch_headers - Fetch headers
+ * @param ctx     Mailbox
+ * @param hc      Header cache
+ * @param first   Number of first header to fetch
+ * @param last    Number of last header to fetch
+ * @param restore Restore message listed as deleted
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
                               anum_t last, int restore)
@@ -1342,14 +1391,10 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
     /* fetch header from server */
     else
     {
-      char tempfile[_POSIX_PATH_MAX];
-
-      mutt_mktemp(tempfile, sizeof(tempfile));
-      FILE *fp = mutt_file_fopen(tempfile, "w+");
+      FILE *fp = mutt_file_mkstemp();
       if (!fp)
       {
-        mutt_perror(tempfile);
-        unlink(tempfile);
+        mutt_perror("mutt_file_mkstemp() failed!");
         rc = -1;
         break;
       }
@@ -1359,7 +1404,6 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
       if (rc)
       {
         mutt_file_fclose(&fp);
-        unlink(tempfile);
         if (rc < 0)
           break;
 
@@ -1386,7 +1430,6 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
       hdr->env = mutt_rfc822_read_header(fp, hdr, 0, 0);
       hdr->received = hdr->date_sent;
       mutt_file_fclose(&fp);
-      unlink(tempfile);
     }
 
     /* save header in context */
@@ -1436,6 +1479,9 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
 
 /**
  * nntp_open_mailbox - Open newsgroup
+ * @param ctx Mailbox
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int nntp_open_mailbox(struct Context *ctx)
 {
@@ -1570,6 +1616,11 @@ static int nntp_open_mailbox(struct Context *ctx)
 
 /**
  * nntp_open_message - Fetch message
+ * @param ctx   Mailbox
+ * @param msg   Message to fetch
+ * @param msgno Message number
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int nntp_open_message(struct Context *ctx, struct Message *msg, int msgno)
 {
@@ -1693,6 +1744,10 @@ static int nntp_open_message(struct Context *ctx, struct Message *msg, int msgno
 
 /**
  * nntp_close_message - Close message
+ * @param ctx Mailbox
+ * @param msg Message to close
+ * @retval 0   Success
+ * @retval EOF Error, see errno
  */
 static int nntp_close_message(struct Context *ctx, struct Message *msg)
 {
@@ -1701,6 +1756,9 @@ static int nntp_close_message(struct Context *ctx, struct Message *msg)
 
 /**
  * nntp_post - Post article
+ * @param msg Message to post
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 int nntp_post(const char *msg)
 {
@@ -1752,8 +1810,8 @@ int nntp_post(const char *msg)
       len++;
       buf[len] = '\0';
     }
-    if (mutt_socket_write_d(nntp_data->nserv->conn, buf[1] == '.' ? buf : buf + 1,
-                            -1, MUTT_SOCK_LOG_HDR) < 0)
+    if (mutt_socket_send_d(nntp_data->nserv->conn,
+                           buf[1] == '.' ? buf : buf + 1, MUTT_SOCK_LOG_HDR) < 0)
     {
       mutt_file_fclose(&fp);
       return nntp_connect_error(nntp_data->nserv);
@@ -1762,8 +1820,8 @@ int nntp_post(const char *msg)
   mutt_file_fclose(&fp);
 
   if ((buf[strlen(buf) - 1] != '\n' &&
-       mutt_socket_write_d(nntp_data->nserv->conn, "\r\n", -1, MUTT_SOCK_LOG_HDR) < 0) ||
-      mutt_socket_write_d(nntp_data->nserv->conn, ".\r\n", -1, MUTT_SOCK_LOG_HDR) < 0 ||
+       mutt_socket_send_d(nntp_data->nserv->conn, "\r\n", MUTT_SOCK_LOG_HDR) < 0) ||
+      mutt_socket_send_d(nntp_data->nserv->conn, ".\r\n", MUTT_SOCK_LOG_HDR) < 0 ||
       mutt_socket_readln(buf, sizeof(buf), nntp_data->nserv->conn) < 0)
     return nntp_connect_error(nntp_data->nserv);
   if (buf[0] != '2')
@@ -1776,6 +1834,8 @@ int nntp_post(const char *msg)
 
 /**
  * nntp_group_poll - Check newsgroup for new articles
+ * @param nntp_data   NNTP server data
+ * @param update_stat Update the stats?
  * @retval  1 New articles found
  * @retval  0 No change
  * @retval -1 Lost connection
@@ -1820,6 +1880,7 @@ static int nntp_group_poll(struct NntpData *nntp_data, int update_stat)
 
 /**
  * check_mailbox - Check current newsgroup for new articles
+ * @param ctx Mailbox
  * @retval #MUTT_REOPENED Articles have been renumbered or removed from server
  * @retval #MUTT_NEW_MAIL New articles found
  * @retval  0             No change
@@ -2038,6 +2099,8 @@ static int check_mailbox(struct Context *ctx)
 
 /**
  * nntp_check_mailbox - Check current newsgroup for new articles
+ * @param ctx        Mailbox
+ * @param index_hint Current message (UNUSED)
  * @retval #MUTT_REOPENED Articles have been renumbered or removed from server
  * @retval #MUTT_NEW_MAIL New articles found
  * @retval  0             No change
@@ -2057,6 +2120,12 @@ static int nntp_check_mailbox(struct Context *ctx, int *index_hint)
 
 /**
  * nntp_sync_mailbox - Save changes to .newsrc and cache
+ * @param ctx        Mailbox
+ * @param index_hint Current message (UNUSED)
+ * @retval  0 Success
+ * @retval -1 Failure
+ *
+ * @note May also return values from check_mailbox()
  */
 static int nntp_sync_mailbox(struct Context *ctx, int *index_hint)
 {
@@ -2117,6 +2186,8 @@ static int nntp_sync_mailbox(struct Context *ctx, int *index_hint)
 
 /**
  * nntp_close_mailbox - Free up memory associated with the newsgroup context
+ * @param ctx Mailbox
+ * @retval 0 Always
  */
 static int nntp_close_mailbox(struct Context *ctx)
 {
@@ -2139,6 +2210,10 @@ static int nntp_close_mailbox(struct Context *ctx)
 
 /**
  * nntp_date - Get date and time from server
+ * @param nserv NNTP server
+ * @param now   Server time
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int nntp_date(struct NntpServer *nserv, time_t *now)
 {
@@ -2174,6 +2249,10 @@ static int nntp_date(struct NntpServer *nserv, time_t *now)
 
 /**
  * nntp_active_fetch - Fetch list of all newsgroups from server
+ * @param nserv NNTP server
+ * @param new   Mark the groups as new
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 int nntp_active_fetch(struct NntpServer *nserv, bool new)
 {
@@ -2236,6 +2315,7 @@ int nntp_active_fetch(struct NntpServer *nserv, bool new)
 
 /**
  * nntp_check_new_groups - Check for new groups/articles in subscribed groups
+ * @param nserv NNTP server
  * @retval  1 New groups found
  * @retval  0 No new groups
  * @retval -1 Error
@@ -2346,6 +2426,8 @@ int nntp_check_new_groups(struct NntpServer *nserv)
 
 /**
  * nntp_check_msgid - Fetch article by Message-ID
+ * @param ctx   Mailbox
+ * @param msgid Message ID
  * @retval  0 Success
  * @retval  1 No such article
  * @retval -1 Error
@@ -2353,15 +2435,12 @@ int nntp_check_new_groups(struct NntpServer *nserv)
 int nntp_check_msgid(struct Context *ctx, const char *msgid)
 {
   struct NntpData *nntp_data = ctx->data;
-  char tempfile[_POSIX_PATH_MAX];
   char buf[LONG_STRING];
 
-  mutt_mktemp(tempfile, sizeof(tempfile));
-  FILE *fp = mutt_file_fopen(tempfile, "w+");
+  FILE *fp = mutt_file_mkstemp();
   if (!fp)
   {
-    mutt_perror(tempfile);
-    unlink(tempfile);
+    mutt_perror("mutt_file_mkstemp() failed!");
     return -1;
   }
 
@@ -2370,7 +2449,6 @@ int nntp_check_msgid(struct Context *ctx, const char *msgid)
   if (rc)
   {
     mutt_file_fclose(&fp);
-    unlink(tempfile);
     if (rc < 0)
       return -1;
     if (mutt_str_strncmp("430", buf, 3) == 0)
@@ -2386,7 +2464,6 @@ int nntp_check_msgid(struct Context *ctx, const char *msgid)
   hdr->data = mutt_mem_calloc(1, sizeof(struct NntpHeaderData));
   hdr->env = mutt_rfc822_read_header(fp, hdr, 0, 0);
   mutt_file_fclose(&fp);
-  unlink(tempfile);
 
   /* get article number */
   if (hdr->env->xref)
@@ -2426,6 +2503,9 @@ struct ChildCtx
 
 /**
  * fetch_children - Parse XPAT line
+ * @param line String to parse
+ * @param data ChildCtx
+ * @retval 0 Always
  */
 static int fetch_children(char *line, void *data)
 {
@@ -2448,6 +2528,10 @@ static int fetch_children(char *line, void *data)
 
 /**
  * nntp_check_children - Fetch children of article with the Message-ID
+ * @param ctx   Mailbox
+ * @param msgid Message ID to find
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 int nntp_check_children(struct Context *ctx, const char *msgid)
 {

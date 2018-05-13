@@ -47,6 +47,8 @@
 #include "message.h"
 #include "string2.h"
 
+char *Tmpdir; /**< Temporary directory path */
+
 /* these characters must be escaped in regular expressions */
 static const char rx_special_chars[] = "^.[$()|*+?{\\";
 
@@ -64,7 +66,7 @@ static const char safe_chars[] =
  * compare_stat - Compare the struct stat's of two files/dirs
  * @param osb struct stat of the first file/dir
  * @param nsb struct stat of the second file/dir
- * @retval boolean
+ * @retval true They match
  *
  * This compares the device id (st_dev), inode number (st_ino) and special id
  * (st_rdev) of the files/dirs.
@@ -164,20 +166,20 @@ int mutt_file_fclose(FILE **f)
  */
 int mutt_file_fsync_close(FILE **f)
 {
+  if (!f || !*f)
+    return 0;
+
   int r = 0;
 
-  if (*f)
+  if (fflush(*f) || fsync(fileno(*f)))
   {
-    if (fflush(*f) || fsync(fileno(*f)))
-    {
-      int save_errno = errno;
-      r = -1;
-      mutt_file_fclose(f);
-      errno = save_errno;
-    }
-    else
-      r = mutt_file_fclose(f);
+    int save_errno = errno;
+    r = -1;
+    mutt_file_fclose(f);
+    errno = save_errno;
   }
+  else
+    r = mutt_file_fclose(f);
 
   return r;
 }
@@ -662,7 +664,7 @@ char *mutt_file_read_line(char *s, size_t *size, FILE *fp, int *line, int flags)
  * @param d Buffer for the result
  * @param l Length of buffer
  * @param f String to convert
- * @retval num Number of bytes written to the buffer
+ * @retval num Bytes written to the buffer
  *
  * From the Unix programming FAQ by way of Liviu.
  */
@@ -709,7 +711,7 @@ size_t mutt_file_quote_filename(char *d, size_t l, const char *f)
  * @param fname    Filename
  * @param fnamelen Filename length
  * @retval NULL Error
- * @retval ptr  Pointer to \a dst on success
+ * @retval ptr  Success, pointer to \a dst
  *
  * Write the concatenated pathname (dir + "/" + fname) into dst.
  * The slash is omitted when dir or fname is of 0 length.
@@ -850,6 +852,40 @@ int mutt_file_mkdir(const char *path, mode_t mode)
 }
 
 /**
+ * mutt_file_mkstemp_full - Create temporary file safely
+ * @param file Source file of caller
+ * @param line Source line number of caller
+ * @param func Function name of caller
+ * @retval ptr  FILE handle
+ * @retval NULL Error, see errno
+ *
+ * Create and immediately unlink a temp file using mkstemp().
+ */
+FILE *mutt_file_mkstemp_full(const char *file, int line, const char *func)
+{
+  char name[PATH_MAX];
+
+  int n = snprintf(name, sizeof(name), "%s/neomutt-XXXXXX", NONULL(Tmpdir));
+  if (n < 0)
+    return NULL;
+
+  int fd = mkstemp(name);
+  if (fd == -1)
+    return NULL;
+
+  FILE *fp = fdopen(fd, "w+");
+
+  if ((unlink(name) != 0) && (errno != ENOENT))
+  {
+    mutt_file_fclose(&fp);
+    return NULL;
+  }
+
+  MuttLogger(0, file, line, func, 1, "created temp file '%s'\n", name);
+  return fp;
+}
+
+/**
  * mutt_file_decrease_mtime - Decrease a file's modification time by 1 second
  * @param f  Filename
  * @param st struct stat for the file (optional)
@@ -885,20 +921,18 @@ time_t mutt_file_decrease_mtime(const char *f, struct stat *st)
 
 /**
  * mutt_file_dirname - Return a path up to, but not including, the final '/'
- * @param  p    Path
+ * @param  path Path
  * @retval ptr  The directory containing p
  *
  * Unlike the IEEE Std 1003.1-2001 specification of dirname(3), this
  * implementation does not modify its parameter, so callers need not manually
  * copy their paths into a modifiable buffer prior to calling this function.
- *
- * @warning mutt_file_dirname() returns a static string which must not be free()'d.
  */
-const char *mutt_file_dirname(const char *p)
+char *mutt_file_dirname(const char *path)
 {
-  static char buf[_POSIX_PATH_MAX];
-  mutt_str_strfcpy(buf, p, sizeof(buf));
-  return dirname(buf);
+  char buf[PATH_MAX] = { 0 };
+  mutt_str_strfcpy(buf, path, sizeof(buf));
+  return mutt_str_strdup(dirname(buf));
 }
 
 /**
@@ -938,7 +972,7 @@ void mutt_file_touch_atime(int f)
  * mutt_file_chmod - Set permissions of a file
  * @param path Filename
  * @param mode the permissions to set
- * @retval int same as chmod(2)
+ * @retval num Same as chmod(2)
  *
  * This is essentially chmod(path, mode), see chmod(2).
  */
@@ -951,7 +985,7 @@ int mutt_file_chmod(const char *path, mode_t mode)
  * mutt_file_chmod_add - Add permissions to a file
  * @param path Filename
  * @param mode the permissions to add
- * @retval int same as chmod(2)
+ * @retval num Same as chmod(2)
  * @see   mutt_file_chmod_add_stat()
  *
  * Adds the given permissions to the file. Permissions not mentioned in mode
@@ -973,7 +1007,7 @@ int mutt_file_chmod_add(const char *path, mode_t mode)
  * @param path Filename
  * @param mode the permissions to add
  * @param st   struct stat for the file (optional)
- * @retval int same as chmod(2)
+ * @retval num Same as chmod(2)
  * @see   mutt_file_chmod_add()
  *
  * Same as mutt_file_chmod_add() but saves a system call to stat() if a
@@ -1003,7 +1037,7 @@ int mutt_file_chmod_add_stat(const char *path, mode_t mode, struct stat *st)
  * mutt_file_chmod_rm - Remove permissions from a file
  * @param path Filename
  * @param mode the permissions to remove
- * @retval int same as chmod(2)
+ * @retval num Same as chmod(2)
  * @see   mutt_file_chmod_rm_stat()
  *
  * Removes the given permissions from the file. Permissions not mentioned in
@@ -1025,7 +1059,7 @@ int mutt_file_chmod_rm(const char *path, mode_t mode)
  * @param path Filename
  * @param mode the permissions to remove
  * @param st   struct stat for the file (optional)
- * @retval int same as chmod(2)
+ * @retval num Same as chmod(2)
  * @see   mutt_file_chmod_rm()
  *
  * Same as mutt_file_chmod_rm() but saves a system call to stat() if a non-NULL
@@ -1051,29 +1085,25 @@ int mutt_file_chmod_rm_stat(const char *path, mode_t mode, struct stat *st)
   return chmod(path, st->st_mode & ~mode);
 }
 
+#if defined(USE_FCNTL)
 /**
- * mutt_file_lock - (try to) lock a file
+ * mutt_file_lock - (try to) lock a file using fcntl()
  * @param fd      File descriptor to file
  * @param excl    If set, try to lock exclusively
  * @param timeout Retry after this time
- * @retval 0 on success
- * @retval -1 on failure
+ * @retval  0 Success
+ * @retval -1 Failure
  *
- * The type of file locking depends on how NeoMutt was compiled.
- * It could use fcntl() or flock() to perform the locking.
+ * Use fcntl() to lock a file.
  *
  * Use mutt_file_unlock() to unlock the file.
  */
 int mutt_file_lock(int fd, int excl, int timeout)
 {
-#if defined(USE_FCNTL) || defined(USE_FLOCK)
   int count;
   int attempt;
   struct stat sb = { 0 }, prev_sb = { 0 };
-#endif
-  int r = 0;
 
-#ifdef USE_FCNTL
   struct flock lck;
 
   memset(&lck, 0, sizeof(struct flock));
@@ -1110,9 +1140,46 @@ int mutt_file_lock(int fd, int excl, int timeout)
     mutt_message(_("Waiting for fcntl lock... %d"), ++attempt);
     sleep(1);
   }
-#endif /* USE_FCNTL */
 
-#ifdef USE_FLOCK
+  return 0;
+}
+
+/**
+ * mutt_file_unlock - Unlock a file previously locked by mutt_file_lock()
+ * @param fd File descriptor to file
+ * @retval 0 Always
+ */
+int mutt_file_unlock(int fd)
+{
+  struct flock unlockit = { F_UNLCK, 0, 0, 0, 0 };
+
+  memset(&unlockit, 0, sizeof(struct flock));
+  unlockit.l_type = F_UNLCK;
+  unlockit.l_whence = SEEK_SET;
+  fcntl(fd, F_SETLK, &unlockit);
+
+  return 0;
+}
+#elif defined(USE_FLOCK)
+/**
+ * mutt_file_lock - (try to) lock a file using flock()
+ * @param fd      File descriptor to file
+ * @param excl    If set, try to lock exclusively
+ * @param timeout Retry after this time
+ * @retval  0 Success
+ * @retval -1 Failure
+ *
+ * Use flock() to lock a file.
+ *
+ * Use mutt_file_unlock() to unlock the file.
+ */
+int mutt_file_lock(int fd, int excl, int timeout)
+{
+  int count;
+  int attempt;
+  struct stat sb = { 0 }, prev_sb = { 0 };
+  int r = 0;
+
   count = 0;
   attempt = 0;
   while (flock(fd, (excl ? LOCK_EX : LOCK_SH) | LOCK_NB) == -1)
@@ -1144,19 +1211,11 @@ int mutt_file_lock(int fd, int excl, int timeout)
     mutt_message(_("Waiting for flock attempt... %d"), ++attempt);
     sleep(1);
   }
-#endif /* USE_FLOCK */
 
   /* release any other locks obtained in this routine */
   if (r != 0)
   {
-#ifdef USE_FCNTL
-    lck.l_type = F_UNLCK;
-    fcntl(fd, F_SETLK, &lck);
-#endif /* USE_FCNTL */
-
-#ifdef USE_FLOCK
     flock(fd, LOCK_UN);
-#endif /* USE_FLOCK */
   }
 
   return r;
@@ -1169,21 +1228,12 @@ int mutt_file_lock(int fd, int excl, int timeout)
  */
 int mutt_file_unlock(int fd)
 {
-#ifdef USE_FCNTL
-  struct flock unlockit = { F_UNLCK, 0, 0, 0, 0 };
-
-  memset(&unlockit, 0, sizeof(struct flock));
-  unlockit.l_type = F_UNLCK;
-  unlockit.l_whence = SEEK_SET;
-  fcntl(fd, F_SETLK, &unlockit);
-#endif
-
-#ifdef USE_FLOCK
   flock(fd, LOCK_UN);
-#endif
-
   return 0;
 }
+#else
+#error "You must select a locking mechanism via USE_FCNTL or USE_FLOCK"
+#endif
 
 /**
  * mutt_file_unlink_empty - Delete a file if it's empty
@@ -1220,7 +1270,7 @@ void mutt_file_unlink_empty(const char *path)
  * @retval 2 New file already exists
  * @retval 3 Some other error
  *
- * note on access(2) use: No dangling symlink problems here due to
+ * @note on access(2) use No dangling symlink problems here due to
  * mutt_file_fopen().
  */
 int mutt_file_rename(char *oldfile, char *newfile)
@@ -1251,15 +1301,15 @@ int mutt_file_rename(char *oldfile, char *newfile)
  * mutt_file_to_absolute_path - Convert relative filepath to an absolute path
  * @param path      Relative path
  * @param reference Absolute path that \a path is relative to
- * @retval true on success
- * @retval false otherwise
+ * @retval true  Success
+ * @retval false Failure
  *
  * Use POSIX functions to convert a path to absolute, relatively to another path
+ *
  * @note \a path should be at least of PATH_MAX length
  */
 int mutt_file_to_absolute_path(char *path, const char *reference)
 {
-  const char *dirpath = NULL;
   char abs_path[PATH_MAX];
   int path_len;
 
@@ -1269,8 +1319,9 @@ int mutt_file_to_absolute_path(char *path, const char *reference)
     return true;
   }
 
-  dirpath = mutt_file_dirname(reference);
+  char *dirpath = mutt_file_dirname(reference);
   mutt_str_strfcpy(abs_path, dirpath, PATH_MAX);
+  FREE(&dirpath);
   mutt_str_strncat(abs_path, sizeof(abs_path), "/", 1); /* append a / at the end of the path */
 
   path_len = PATH_MAX - strlen(path);
@@ -1324,9 +1375,9 @@ char *mutt_file_read_keyword(const char *file, char *buffer, size_t buflen)
 /**
  * mutt_file_check_empty - Is the mailbox empty
  * @param path Path to mailbox
- * @retval 1 mailbox is not empty
- * @retval 0 mailbox is empty
- * @retval -1 on error
+ * @retval  1 Mailbox is not empty
+ * @retval  0 Mailbox is empty
+ * @retval -1 Error
  */
 int mutt_file_check_empty(const char *path)
 {

@@ -20,22 +20,28 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page window Window management
+ *
+ * Window management
+ */
+
 #include "config.h"
-#include "globals.h"
-#include "mutt/logging.h"
-#include "mutt/mutt.h"
-#include "mutt_menu.h"
-#include "mutt_window.h"
-#include "options.h"
 #include <stdarg.h>
 #include <string.h>
+#include "mutt/logging.h"
+#include "mutt/mutt.h"
+#include "mutt_window.h"
+#include "globals.h"
+#include "mutt_menu.h"
+#include "options.h"
 
-struct MuttWindow *MuttHelpWindow = NULL;
-struct MuttWindow *MuttIndexWindow = NULL;
-struct MuttWindow *MuttStatusWindow = NULL;
-struct MuttWindow *MuttMessageWindow = NULL;
+struct MuttWindow *MuttHelpWindow = NULL;    /**< Help Window */
+struct MuttWindow *MuttIndexWindow = NULL;   /**< Index Window */
+struct MuttWindow *MuttStatusWindow = NULL;  /**< Status Window */
+struct MuttWindow *MuttMessageWindow = NULL; /**< Message Window */
 #ifdef USE_SIDEBAR
-struct MuttWindow *MuttSidebarWindow = NULL;
+struct MuttWindow *MuttSidebarWindow = NULL; /**< Sidebar Window */
 #endif
 
 #ifdef USE_SLANG_CURSES
@@ -194,7 +200,7 @@ int mutt_window_mvaddstr(struct MuttWindow *win, int row, int col, const char *s
  * @param col Column to move to
  * @param fmt printf format string
  * @param ... printf arguments
- * @retval num Success, number of characters written
+ * @retval num Success, characters written
  * @retval ERR Error, move failed
  */
 int mutt_window_mvprintw(struct MuttWindow *win, int row, int col, const char *fmt, ...)
@@ -216,7 +222,7 @@ int mutt_window_mvprintw(struct MuttWindow *win, int row, int col, const char *f
  */
 void mutt_window_reflow(void)
 {
-  if (OPT_NO_CURSES)
+  if (OptNoCurses)
     return;
 
   mutt_debug(2, "entering\n");
@@ -295,6 +301,9 @@ void mutt_window_reflow_message_rows(int mw_rows)
 
 /**
  * mutt_window_wrap_cols - Calculate the wrap column for a Window
+ * @param win  Window
+ * @param wrap Wrap config
+ * @retval num Column that text should be wrapped at
  *
  * The wrap variable can be negative, meaning there should be a right margin.
  */

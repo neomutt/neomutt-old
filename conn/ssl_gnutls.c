@@ -543,8 +543,8 @@ static int tls_check_preauth(const gnutls_datum_t *certdata,
  * @param hostname Hostname
  * @param idx      Index into certificate list
  * @param len      Length of certificate list
- * @retval 0  on failure
- * @retval >0 on success
+ * @retval 0  Failure
+ * @retval >0 Success
  */
 static int tls_check_one_certificate(const gnutls_datum_t *certdata,
                                      gnutls_certificate_status_t certstat,
@@ -795,7 +795,7 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
   menu->help = helpstr;
 
   done = 0;
-  OPT_IGNORE_MACRO_EVENTS = true;
+  OptIgnoreMacroEvents = true;
   while (!done)
   {
     switch (mutt_menu_loop(menu))
@@ -846,7 +846,7 @@ static int tls_check_one_certificate(const gnutls_datum_t *certdata,
         break;
     }
   }
-  OPT_IGNORE_MACRO_EVENTS = false;
+  OptIgnoreMacroEvents = false;
   mutt_menu_pop_current(menu);
   mutt_menu_destroy(&menu);
   gnutls_x509_crt_deinit(cert);
@@ -1062,6 +1062,12 @@ static int tls_set_priority(struct TlsSockData *data)
 static int protocol_priority[] = { GNUTLS_TLS1_2, GNUTLS_TLS1_1, GNUTLS_TLS1,
                                    GNUTLS_SSL3, 0 };
 
+/**
+ * tls_set_priority - Set the priority of various protocols
+ * @param data TLS socket data
+ * @retval  0 Success
+ * @retval -1 Error
+ */
 static int tls_set_priority(struct TlsSockData *data)
 {
   size_t nproto = 0; /* number of tls/ssl protocols */
@@ -1198,7 +1204,7 @@ static int tls_negotiate(struct Connection *conn)
 
   tls_get_client_cert(conn);
 
-  if (!OPT_NO_CURSES)
+  if (!OptNoCurses)
   {
     mutt_message(_("SSL/TLS connection using %s (%s/%s/%s)"),
                  gnutls_protocol_get_name(gnutls_protocol_get_version(data->state)),

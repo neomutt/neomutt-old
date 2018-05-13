@@ -249,7 +249,7 @@ char *mutt_expand_path_regex(char *s, size_t slen, int regex)
         }
         else
         {
-          mutt_str_strfcpy(p, NONULL(SpoolFile), sizeof(p));
+          mutt_str_strfcpy(p, NONULL(Spoolfile), sizeof(p));
           tail = s + 1;
         }
       }
@@ -622,9 +622,9 @@ void mutt_expand_fmt(char *dest, size_t destlen, const char *fmt, const char *sr
 
 /**
  * mutt_check_overwrite - Ask the user if overwriting is necessary
- * @retval  0 on success
- * @retval -1 on abort
- * @retval  1 on error
+ * @retval  0 Success
+ * @retval -1 Abort
+ * @retval  1 Error
  */
 int mutt_check_overwrite(const char *attname, const char *path, char *fname,
                          size_t flen, int *append, char **directory)
@@ -644,7 +644,10 @@ int mutt_check_overwrite(const char *attname, const char *path, char *fname,
       switch (mutt_multi_choice
               /* L10N:
                  Means "The path you specified as the destination file is a directory."
-                 See the msgid "Save to file: " (alias.c, recvattach.c) */
+                 See the msgid "Save to file: " (alias.c, recvattach.c)
+
+                 These three letters correspond to the choices in the string.
+               */
               (_("File is a directory, save under it? [(y)es, (n)o, (a)ll]"), _("yna")))
       {
         case 3: /* all */
@@ -678,8 +681,10 @@ int mutt_check_overwrite(const char *attname, const char *path, char *fname,
 
   if (*append == 0 && access(fname, F_OK) == 0)
   {
-    switch (mutt_multi_choice(
-        _("File exists, (o)verwrite, (a)ppend, or (c)ancel?"), _("oac")))
+    switch (
+        mutt_multi_choice(_("File exists, (o)verwrite, (a)ppend, or (c)ancel?"),
+                          // L10N: Options for: File exists, (o)verwrite, (a)ppend, or (c)ancel?
+                          _("oac")))
     {
       case -1: /* abort */
         return -1;
@@ -1355,12 +1360,15 @@ int mutt_save_confirm(const char *s, struct stat *st)
       if (ret == 0)
       {
         /* create dir recursively */
-        if (mutt_file_mkdir(mutt_file_dirname(s), S_IRWXU) == -1)
+        char *tmp_path = mutt_file_dirname(s);
+        if (mutt_file_mkdir(tmp_path, S_IRWXU) == -1)
         {
           /* report failure & abort */
           mutt_perror(s);
+          FREE(&tmp_path);
           return 1;
         }
+        FREE(&tmp_path);
       }
     }
     else
@@ -1486,7 +1494,7 @@ void mutt_get_parent_path(char *output, char *path, size_t olen)
 /**
  * mutt_realpath - resolve path, unraveling symlinks
  * @param buf Buffer containing path
- * @retval len String length of resolved path
+ * @retval num String length of resolved path
  * @retval 0   Error, buf is not overwritten
  *
  * Resolve and overwrite the path in buf.

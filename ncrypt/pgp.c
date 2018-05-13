@@ -22,7 +22,10 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* This file contains all of the PGP routines necessary to sign, encrypt,
+/**
+ * @page crypt_pgp PGP sign, encrypt, check routines
+ *
+ * This file contains all of the PGP routines necessary to sign, encrypt,
  * verify and decrypt PGP messages in either the new PGP/MIME format, or in the
  * older Application/Pgp format.  It also contains some code to cache the
  * user's passphrase for repeat use when decrypting or signing a message.
@@ -257,7 +260,7 @@ static int pgp_check_decryption_okay(FILE *fpin)
 /**
  * pgp_copy_clearsigned - Copy a clearsigned message, stripping the signature
  *
- * XXX - charset handling: We assume that it is safe to do character set
+ * XXX charset handling: We assume that it is safe to do character set
  * decoding first, dash decoding second here, while we do it the other way
  * around in the main handler.
  *
@@ -369,7 +372,7 @@ int pgp_application_pgp_handler(struct Body *m, struct State *s)
       }
       else
       {
-        /* XXX - we may wish to recode here */
+        /* XXX we may wish to recode here */
         if (s->prefix)
           state_puts(s->prefix, s);
         state_puts(buf, s);
@@ -574,7 +577,7 @@ int pgp_application_pgp_handler(struct Body *m, struct State *s)
     else
     {
       /* A traditional PGP part may mix signed and unsigned content */
-      /* XXX - we may wish to recode here */
+      /* XXX we may wish to recode here */
       if (s->prefix)
         state_puts(s->prefix, s);
       state_puts(buf, s);
@@ -794,7 +797,7 @@ void pgp_extract_keys_from_attachment_list(FILE *fp, int tag, struct Body *top)
   }
 
   mutt_endwin();
-  OPT_DONT_HANDLE_PGP_KEYS = true;
+  OptDontHandlePgpKeys = true;
 
   for (; top; top = top->next)
   {
@@ -805,7 +808,7 @@ void pgp_extract_keys_from_attachment_list(FILE *fp, int tag, struct Body *top)
       break;
   }
 
-  OPT_DONT_HANDLE_PGP_KEYS = false;
+  OptDontHandlePgpKeys = false;
 }
 
 static struct Body *pgp_decrypt_part(struct Body *a, struct State *s,
@@ -1101,7 +1104,7 @@ struct Body *pgp_sign_message(struct Body *a)
   bool empty = true;
   pid_t thepid;
 
-  convert_to_7bit(a); /* Signed data _must_ be in 7-bit format. */
+  crypt_convert_to_7bit(a); /* Signed data _must_ be in 7-bit format. */
 
   mutt_mktemp(sigfile, sizeof(sigfile));
   FILE *fp = mutt_file_fopen(sigfile, "w");
@@ -1217,9 +1220,13 @@ struct Body *pgp_sign_message(struct Body *a)
 
 /**
  * pgp_find_keys - Find the keyids of the recipients of a message
+ * @param addrlist    Address List
+ * @param oppenc_mode If true, use opportunistic encryption
+ * @retval ptr  Space-separated string of keys
+ * @retval NULL At least one of the keys can't be found
  *
- * It returns NULL if any of the keys can not be found.  If oppenc_mode is
- * true, only keys that can be determined without prompting will be used.
+ * If oppenc_mode is true, only keys that can be determined without prompting
+ * will be used.
  */
 char *pgp_find_keys(struct Address *addrlist, int oppenc_mode)
 {
@@ -1385,7 +1392,7 @@ struct Body *pgp_encrypt_message(struct Body *a, char *keylist, int sign)
   }
 
   if (sign)
-    convert_to_7bit(a);
+    crypt_convert_to_7bit(a);
 
   mutt_write_mime_header(a, fptmp);
   fputc('\n', fptmp);
@@ -1774,7 +1781,7 @@ int pgp_send_menu(struct Header *msg)
     switch (choices[choice - 1])
     {
       case 'a': /* sign (a)s */
-        OPT_PGP_CHECK_TRUST = false;
+        OptPgpCheckTrust = false;
 
         p = pgp_ask_for_key(_("Sign as: "), NULL, 0, PGP_SECRING);
         if (p)

@@ -3,6 +3,7 @@
 
 PACKAGE=	@PACKAGE@
 PACKAGE_VERSION=@PACKAGE_VERSION@
+PACKAGE_DATE=	@PACKAGE_DATE@
 
 # Build-time compiler and flags. These are used for building executables that
 # are only used at build-time, e.g., doc/makedoc. These are different from CC /
@@ -43,8 +44,9 @@ datadir=	@PKGDATADIR@
 docdir=		@PKGDOCDIR@
 mandir=		@mandir@
 libdir=		@libdir@
-libexecdir=		@libexecdir@
+libexecdir=	@libexecdir@
 sysconfdir=	@SYSCONFDIR@
+textdomaindir=	@MUTTLOCALEDIR@
 
 # targets for specific subdirectories
 ALL_TARGETS=		@ALL_TARGETS@
@@ -140,8 +142,8 @@ ALLOBJS+=	$(LIBIMAPOBJS)
 ###############################################################################
 # libconn
 LIBCONN=	libconn.a
-LIBCONNOBJS=	conn/conn_globals.o conn/getdomain.o conn/sasl_plain.o \
-		conn/socket.o conn/tunnel.o
+LIBCONNOBJS=	conn/conn_globals.o conn/conn_raw.o conn/getdomain.o \
+		conn/sasl_plain.o  conn/socket.o conn/tunnel.o
 @if HAVE_SASL
 LIBCONNOBJS+=	conn/sasl.o
 @endif
@@ -313,7 +315,7 @@ uninstall: $(UNINSTALL_TARGETS)
 distclean: clean
 	$(RM) $(DEPFILES) conststrings.c config.h config.log doc/neomutt.1 \
 		Makefile po/Makefile contrib/Makefile doc/Makefile \
-		test/Makefile autosetup/jimsh0
+		test/Makefile autosetup/jimsh0 .clang_complete
 
 ##############################################################################
 # include generated dependency files

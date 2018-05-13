@@ -21,6 +21,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page postpone Save/restore and GUI list postponed emails
+ *
+ * Save/restore and GUI list postponed emails
+ */
+
 #include "config.h"
 #include <limits.h>
 #include <stdbool.h>
@@ -69,7 +75,7 @@ static short UpdateNumPostponed = 0;
  * @param force
  * * 0 Use a cached value if costly to get a fresh count (IMAP)
  * * 1 Force check
- * @retval n Number of postponed messages
+ * @retval num Postponed messages
  */
 int mutt_num_postponed(int force)
 {
@@ -142,7 +148,7 @@ int mutt_num_postponed(int force)
   if (LastModify < st.st_mtime)
   {
 #ifdef USE_NNTP
-    int optnews = OPT_NEWS;
+    int optnews = OptNews;
 #endif
     LastModify = st.st_mtime;
 
@@ -150,7 +156,7 @@ int mutt_num_postponed(int force)
       return (PostCount = 0);
 #ifdef USE_NNTP
     if (optnews)
-      OPT_NEWS = false;
+      OptNews = false;
 #endif
     if (mx_open_mailbox(Postponed, MUTT_NOSORT | MUTT_QUIET, &ctx) == NULL)
       PostCount = 0;
@@ -159,13 +165,16 @@ int mutt_num_postponed(int force)
     mx_fastclose_mailbox(&ctx);
 #ifdef USE_NNTP
     if (optnews)
-      OPT_NEWS = true;
+      OptNews = true;
 #endif
   }
 
   return PostCount;
 }
 
+/**
+ * mutt_update_num_postponed - Force the update of the number of postponed messages
+ */
 void mutt_update_num_postponed(void)
 {
   UpdateNumPostponed = 1;
@@ -186,6 +195,10 @@ static void post_entry(char *buf, size_t buflen, struct Menu *menu, int num)
                          MUTT_FORMAT_ARROWCURSOR);
 }
 
+/**
+ * select_msg - Create a Menu to select a postponed message
+ * @retval ptr Email Header
+ */
 static struct Header *select_msg(void)
 {
   int r = -1;
@@ -254,8 +267,7 @@ static struct Header *select_msg(void)
  * mutt_get_postponed - Recall a postponed message
  * @param ctx     Context info, used when recalling a message to which we reply
  * @param hdr     envelope/attachment info for recalled message
- * @param cur     if message was a reply, `cur' is set to the message
- *                which `hdr' is in reply to
+ * @param cur     if message was a reply, `cur' is set to the message which `hdr' is in reply to
  * @param fcc     fcc for the recalled message
  * @param fcclen  max length of fcc
  * @retval -1         Error/no messages
@@ -403,6 +415,13 @@ int mutt_get_postponed(struct Context *ctx, struct Header *hdr,
   return code;
 }
 
+/**
+ * mutt_parse_crypt_hdr - Parse a crypto header string
+ * @param p                Header string to parse
+ * @param set_empty_signas Allow an empty "Sign as"
+ * @param crypt_app App, e.g. #APPLICATION_PGP
+ * @retval num Flags, e.g. #ENCRYPT
+ */
 int mutt_parse_crypt_hdr(const char *p, int set_empty_signas, int crypt_app)
 {
   char smime_cryptalg[LONG_STRING] = "\0";
@@ -528,8 +547,8 @@ int mutt_parse_crypt_hdr(const char *p, int set_empty_signas, int crypt_app)
  * @param resend  Set if resending (as opposed to recalling a postponed msg).
  *                Resent messages enable header weeding, and also
  *                discard any existing Message-ID and Mail-Followup-To.
- * @retval 0 on success
- * @retval -1 on error
+ * @retval  0 Success
+ * @retval -1 Error
  */
 int mutt_prepare_template(FILE *fp, struct Context *ctx, struct Header *newhdr,
                           struct Header *hdr, short resend)

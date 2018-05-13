@@ -44,8 +44,6 @@ WHERE char AttachmentMarker[STRING];
 WHERE char *HomeDir;
 WHERE char *ShortHostname;
 
-WHERE struct ListHead Muttrc INITVAL(STAILQ_HEAD_INITIALIZER(Muttrc));
-
 WHERE char *Username;
 
 WHERE char *CurrentFolder;
@@ -58,17 +56,25 @@ WHERE struct Hash *ReverseAliases;
 WHERE struct Hash *TagTransforms;
 WHERE struct Hash *TagFormats;
 
-WHERE struct ListHead AutoViewList INITVAL(STAILQ_HEAD_INITIALIZER(AutoViewList));
+/* Lists of strings */
 WHERE struct ListHead AlternativeOrderList INITVAL(STAILQ_HEAD_INITIALIZER(AlternativeOrderList));
-WHERE struct ListHead AttachAllow INITVAL(STAILQ_HEAD_INITIALIZER(AttachAllow));
-WHERE struct ListHead AttachExclude INITVAL(STAILQ_HEAD_INITIALIZER(AttachExclude));
-WHERE struct ListHead InlineAllow INITVAL(STAILQ_HEAD_INITIALIZER(InlineAllow));
-WHERE struct ListHead InlineExclude INITVAL(STAILQ_HEAD_INITIALIZER(InlineExclude));
+WHERE struct ListHead AutoViewList INITVAL(STAILQ_HEAD_INITIALIZER(AutoViewList));
 WHERE struct ListHead HeaderOrderList INITVAL(STAILQ_HEAD_INITIALIZER(HeaderOrderList));
 WHERE struct ListHead Ignore INITVAL(STAILQ_HEAD_INITIALIZER(Ignore));
 WHERE struct ListHead MailToAllow INITVAL(STAILQ_HEAD_INITIALIZER(MailToAllow));
 WHERE struct ListHead MimeLookupList INITVAL(STAILQ_HEAD_INITIALIZER(MimeLookupList));
+WHERE struct ListHead Muttrc INITVAL(STAILQ_HEAD_INITIALIZER(Muttrc));
+#ifdef USE_SIDEBAR
+WHERE struct ListHead SidebarWhitelist INITVAL(STAILQ_HEAD_INITIALIZER(SidebarWhitelist));
+#endif
 WHERE struct ListHead UnIgnore INITVAL(STAILQ_HEAD_INITIALIZER(UnIgnore));
+WHERE struct ListHead UserHeader INITVAL(STAILQ_HEAD_INITIALIZER(UserHeader));
+
+/* Lists of AttachMatch */
+WHERE struct ListHead AttachAllow INITVAL(STAILQ_HEAD_INITIALIZER(AttachAllow));
+WHERE struct ListHead AttachExclude INITVAL(STAILQ_HEAD_INITIALIZER(AttachExclude));
+WHERE struct ListHead InlineAllow INITVAL(STAILQ_HEAD_INITIALIZER(InlineAllow));
+WHERE struct ListHead InlineExclude INITVAL(STAILQ_HEAD_INITIALIZER(InlineExclude));
 
 WHERE struct RegexList *Alternates;
 WHERE struct RegexList *UnAlternates;
@@ -82,10 +88,6 @@ WHERE struct ReplaceList *SubjectRegexList;
 
 WHERE unsigned short Counter;
 
-#ifdef USE_SIDEBAR
-WHERE struct ListHead SidebarWhitelist INITVAL(STAILQ_HEAD_INITIALIZER(SidebarWhitelist));
-#endif
-
 /* flags for received signals */
 WHERE SIG_ATOMIC_VOLATILE_T SigAlrm;
 WHERE SIG_ATOMIC_VOLATILE_T SigInt;
@@ -94,7 +96,6 @@ WHERE SIG_ATOMIC_VOLATILE_T SigWinch;
 WHERE int CurrentMenu;
 
 WHERE struct Alias *Aliases;
-WHERE struct ListHead UserHeader INITVAL(STAILQ_HEAD_INITIALIZER(UserHeader));
 
 /* All the variables below are backing for config items */
 
@@ -146,7 +147,7 @@ WHERE char *MessageCachedir;
 WHERE char *HeaderCache;
 WHERE char *HeaderCacheBackend;
 #if defined(HAVE_GDBM) || defined(HAVE_BDB)
-WHERE char *HeaderCachePageSize;
+WHERE char *HeaderCachePagesize;
 #endif /* HAVE_GDBM || HAVE_BDB */
 #endif /* USE_HCACHE */
 WHERE char *MarkMacroPrefix;
@@ -171,7 +172,7 @@ WHERE char *Inews;
 WHERE char *NewsCacheDir;
 WHERE char *NewsServer;
 WHERE char *NewsgroupsCharset;
-WHERE char *NewsRc;
+WHERE char *Newsrc;
 WHERE char *NntpAuthenticators;
 WHERE char *NntpUser;
 WHERE char *NntpPass;
@@ -195,7 +196,7 @@ WHERE char *PrintCommand;
 WHERE char *NewMailCommand;
 WHERE char *QueryCommand;
 WHERE char *QueryFormat;
-WHERE char *RealName;
+WHERE char *Realname;
 WHERE short SearchContext;
 WHERE char *SendCharset;
 WHERE char *Sendmail;
@@ -214,16 +215,15 @@ WHERE char *SmtpAuthenticators;
 WHERE char *SmtpPass;
 WHERE char *SmtpUrl;
 #endif /* USE_SMTP */
-WHERE char *SpoolFile;
+WHERE char *Spoolfile;
 WHERE char *SpamSeparator;
 WHERE struct MbTable *StatusChars;
 WHERE char *StatusFormat;
-WHERE char *Tmpdir;
 WHERE struct MbTable *ToChars;
 WHERE struct MbTable *FlagChars;
 WHERE char *Trash;
-WHERE char *TSStatusFormat;
-WHERE char *TSIconFormat;
+WHERE char *TsStatusFormat;
+WHERE char *TsIconFormat;
 WHERE char *Visual;
 
 WHERE char *HiddenTags;
@@ -236,6 +236,7 @@ WHERE short NntpContext;
 WHERE short MenuContext;
 WHERE short PagerContext;
 WHERE short PagerIndexLines;
+WHERE char *PreferredLanguages;
 WHERE short ReadInc;
 WHERE short ReflowWrap;
 WHERE short SendmailWait;
@@ -268,7 +269,7 @@ WHERE char *PgpDefaultKey;
 WHERE char *PgpSignAs;
 WHERE short PgpTimeout;
 WHERE char *PgpEntryFormat;
-WHERE char *PgpClearSignCommand;
+WHERE char *PgpClearsignCommand;
 WHERE char *PgpDecodeCommand;
 WHERE char *PgpVerifyCommand;
 WHERE char *PgpDecryptCommand;
@@ -289,7 +290,7 @@ WHERE short SmimeTimeout;
 WHERE char *SmimeCertificates;
 WHERE char *SmimeKeys;
 WHERE char *SmimeEncryptWith;
-WHERE char *SmimeCALocation;
+WHERE char *SmimeCaLocation;
 WHERE char *SmimeVerifyCommand;
 WHERE char *SmimeVerifyOpaqueCommand;
 WHERE char *SmimeDecryptCommand;

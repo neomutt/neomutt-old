@@ -363,23 +363,25 @@ static void luaopen_mutt(lua_State *l)
 
 static bool lua_init(lua_State **l)
 {
+  if (!l)
+    return false;
+  if (*l)
+    return true;
+
+  mutt_debug(2, " * lua_init()\n");
+  *l = luaL_newstate();
+
   if (!*l)
   {
-    mutt_debug(2, " * lua_init()\n");
-    *l = luaL_newstate();
-
-    if (!*l)
-    {
-      mutt_error("Error: Couldn't load the lua interpreter.");
-      return false;
-    }
-
-    lua_atpanic(*l, handle_panic);
-
-    /* load various Lua libraries */
-    luaL_openlibs(*l);
-    luaopen_mutt(*l);
+    mutt_error("Error: Couldn't load the lua interpreter.");
+    return false;
   }
+
+  lua_atpanic(*l, handle_panic);
+
+  /* load various Lua libraries */
+  luaL_openlibs(*l);
+  luaopen_mutt(*l);
 
   return true;
 }
@@ -396,7 +398,7 @@ int mutt_lua_parse(struct Buffer *tmp, struct Buffer *s, unsigned long data, str
   if (luaL_dostring(Lua, s->dptr))
   {
     mutt_debug(2, " * %s -> failure\n", s->dptr);
-    snprintf(err->data, err->dsize, _("%s: %s"), s->dptr, lua_tostring(Lua, -1));
+    snprintf(err->data, err->dsize, "%s: %s", s->dptr, lua_tostring(Lua, -1));
     /* pop error message from the stack */
     lua_pop(Lua, 1);
     return -1;

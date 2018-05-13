@@ -20,6 +20,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page mutt_account Account object used by POP and IMAP
+ *
+ * Account object used by POP and IMAP
+ */
+
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
@@ -35,6 +41,7 @@
  * mutt_account_match - Compare account info (host/port/user)
  * @param a1 First Account
  * @param a2 Second Account
+ * @retval 1 Accounts match
  * @retval 0 Accounts match
  */
 int mutt_account_match(const struct Account *a1, const struct Account *a2)
@@ -205,7 +212,7 @@ int mutt_account_getuser(struct Account *account)
   else if ((account->type == MUTT_ACCT_TYPE_NNTP) && NntpUser)
     mutt_str_strfcpy(account->user, NntpUser, sizeof(account->user));
 #endif
-  else if (OPT_NO_CURSES)
+  else if (OptNoCurses)
     return -1;
   /* prompt (defaults to unix username), copy into account->user */
   else
@@ -289,7 +296,7 @@ int mutt_account_getpass(struct Account *account)
   else if ((account->type == MUTT_ACCT_TYPE_NNTP) && NntpPass)
     mutt_str_strfcpy(account->pass, NntpPass, sizeof(account->pass));
 #endif
-  else if (OPT_NO_CURSES)
+  else if (OptNoCurses)
     return -1;
   else
   {

@@ -20,6 +20,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page hook Parse and execute user-defined hooks
+ *
+ * Parse and execute user-defined hooks
+ */
+
 #include "config.h"
 #include <limits.h>
 #include <regex.h>
@@ -54,10 +60,19 @@ struct Hook
   struct Pattern *pattern; /**< used for fcc,save,send-hook */
   TAILQ_ENTRY(Hook) entries;
 };
-static TAILQ_HEAD(HookHead, Hook) Hooks = TAILQ_HEAD_INITIALIZER(Hooks);
+static TAILQ_HEAD(, Hook) Hooks = TAILQ_HEAD_INITIALIZER(Hooks);
 
 static int current_hook_type = 0;
 
+/**
+ * mutt_parse_hook - Parse a hook command
+ * @param buf  Temporary Buffer
+ * @param s    Buffer containing command
+ * @param data Data from Command definition
+ * @param err  Buffer for error messages
+ * @retval  0 Success
+ * @retval -1 Failure
+ */
 int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
                     struct Buffer *err)
 {
@@ -263,7 +278,8 @@ error:
 }
 
 /**
- * delete_hook - XXX
+ * delete_hook - Delete a Hook
+ * @param h Hook to delete
  */
 static void delete_hook(struct Hook *h)
 {
@@ -278,12 +294,12 @@ static void delete_hook(struct Hook *h)
 }
 
 /**
- * delete_hooks - Delete matching hooks
- * @param type
- * * Hook type to delete, e.g. #MUTT_SENDHOOK
- * * Or, 0 to delete all hooks
+ * mutt_delete_hooks - Delete matching hooks
+ * @param type Hook type to delete, e.g. #MUTT_SENDHOOK
+ *
+ * If 0 is passed, all the hooks will be deleted.
  */
-static void delete_hooks(int type)
+void mutt_delete_hooks(int type)
 {
   struct Hook *h = NULL;
   struct Hook *tmp = NULL;
@@ -298,6 +314,15 @@ static void delete_hooks(int type)
   }
 }
 
+/**
+ * mutt_parse_unhook - Parse an unhook command
+ * @param buf  Temporary Buffer
+ * @param s    Buffer containing command
+ * @param data Data from Command definition
+ * @param err  Buffer for error messages
+ * @retval  0 Success
+ * @retval -1 Failure
+ */
 int mutt_parse_unhook(struct Buffer *buf, struct Buffer *s, unsigned long data,
                       struct Buffer *err)
 {
@@ -312,7 +337,7 @@ int mutt_parse_unhook(struct Buffer *buf, struct Buffer *s, unsigned long data,
                  _("unhook: Can't do unhook * from within a hook."));
         return -1;
       }
-      delete_hooks(0);
+      mutt_delete_hooks(0);
       mutt_ch_lookup_remove();
     }
     else
@@ -335,12 +360,16 @@ int mutt_parse_unhook(struct Buffer *buf, struct Buffer *s, unsigned long data,
                  buf->data, buf->data);
         return -1;
       }
-      delete_hooks(type);
+      mutt_delete_hooks(type);
     }
   }
   return 0;
 }
 
+/**
+ * mutt_folder_hook - Perform a folder hook
+ * @param path Path to match
+ */
 void mutt_folder_hook(const char *path)
 {
   struct Hook *tmp = NULL;
@@ -380,7 +409,12 @@ void mutt_folder_hook(const char *path)
 }
 
 /**
- * mutt_find_hook - XXX
+ * mutt_find_hook - Find a matching hook
+ * @param type Type, e.g. #MUTT_FOLDERHOOK
+ * @param pat  Pattern to match
+ * @retval ptr Command string
+ *
+ * @note The returned string must not be freed.
  */
 char *mutt_find_hook(int type, const char *pat)
 {
@@ -397,6 +431,12 @@ char *mutt_find_hook(int type, const char *pat)
   return NULL;
 }
 
+/**
+ * mutt_message_hook - Perform a message hook
+ * @param ctx Mailbox Context
+ * @param hdr Email Header
+ * @param type Hook type, e.g. #MUTT_MESSAGEHOOK
+ */
 void mutt_message_hook(struct Context *ctx, struct Header *hdr, int type)
 {
   struct Buffer err, token;
@@ -441,6 +481,16 @@ void mutt_message_hook(struct Context *ctx, struct Header *hdr, int type)
   current_hook_type = 0;
 }
 
+/**
+ * addr_hook - Perform an address hook (get a path)
+ * @param path    Buffer for path
+ * @param pathlen Length of buffer
+ * @param type    Type e.g. XXX
+ * @param ctx     Mailbox Context
+ * @param hdr     Email Header
+ * @retval  0 Success
+ * @retval -1 Failure
+ */
 static int addr_hook(char *path, size_t pathlen, int type, struct Context *ctx,
                      struct Header *hdr)
 {
@@ -468,34 +518,46 @@ static int addr_hook(char *path, size_t pathlen, int type, struct Context *ctx,
   return -1;
 }
 
+/**
+ * mutt_default_save - Find the default save path for an email
+ * @param path    Buffer for the path
+ * @param pathlen Length of buffer
+ * @param hdr     Email Header
+ */
 void mutt_default_save(char *path, size_t pathlen, struct Header *hdr)
 {
   *path = '\0';
-  if (addr_hook(path, pathlen, MUTT_SAVEHOOK, Context, hdr) != 0)
-  {
-    struct Address *addr = NULL;
-    struct Envelope *env = hdr->env;
-    bool from_me = mutt_addr_is_user(env->from);
+  if (addr_hook(path, pathlen, MUTT_SAVEHOOK, Context, hdr) == 0)
+    return;
 
-    if (!from_me && env->reply_to && env->reply_to->mailbox)
-      addr = env->reply_to;
-    else if (!from_me && env->from && env->from->mailbox)
-      addr = env->from;
-    else if (env->to && env->to->mailbox)
-      addr = env->to;
-    else if (env->cc && env->cc->mailbox)
-      addr = env->cc;
-    else
-      addr = NULL;
-    if (addr)
-    {
-      char tmp[_POSIX_PATH_MAX];
-      mutt_safe_path(tmp, sizeof(tmp), addr);
-      snprintf(path, pathlen, "=%s", tmp);
-    }
+  struct Address *addr = NULL;
+  struct Envelope *env = hdr->env;
+  bool from_me = mutt_addr_is_user(env->from);
+
+  if (!from_me && env->reply_to && env->reply_to->mailbox)
+    addr = env->reply_to;
+  else if (!from_me && env->from && env->from->mailbox)
+    addr = env->from;
+  else if (env->to && env->to->mailbox)
+    addr = env->to;
+  else if (env->cc && env->cc->mailbox)
+    addr = env->cc;
+  else
+    addr = NULL;
+  if (addr)
+  {
+    char tmp[_POSIX_PATH_MAX];
+    mutt_safe_path(tmp, sizeof(tmp), addr);
+    snprintf(path, pathlen, "=%s", tmp);
   }
 }
 
+/**
+ * mutt_select_fcc - Select the FCC path for an email
+ * @param path    Buffer for the path
+ * @param pathlen Length of the buffer
+ * @param hdr     Email Header
+ */
 void mutt_select_fcc(char *path, size_t pathlen, struct Header *hdr)
 {
   if (addr_hook(path, pathlen, MUTT_FCCHOOK, NULL, hdr) != 0)
@@ -516,6 +578,12 @@ void mutt_select_fcc(char *path, size_t pathlen, struct Header *hdr)
   mutt_pretty_mailbox(path, pathlen);
 }
 
+/**
+ * list_hook - Find hook strings matching
+ * @param[out] matches List of hook strings
+ * @param[in]  match   String to match
+ * @param[in]  hook    Hook type, e.g. #MUTT_CRYPTHOOK
+ */
 static void list_hook(struct ListHead *matches, const char *match, int hook)
 {
   struct Hook *tmp = NULL;
@@ -530,12 +598,23 @@ static void list_hook(struct ListHead *matches, const char *match, int hook)
   }
 }
 
+/**
+ * mutt_crypt_hook - Find crypto hooks for an Address
+ * @param[out] list List of keys
+ * @param[in]  addr Address to match
+ *
+ * The crypt-hook associates keys with addresses.
+ */
 void mutt_crypt_hook(struct ListHead *list, struct Address *addr)
 {
   list_hook(list, addr->mailbox, MUTT_CRYPTHOOK);
 }
 
 #ifdef USE_SOCKET
+/**
+ * mutt_account_hook - Perform an account hook
+ * @param url Account URL to match
+ */
 void mutt_account_hook(const char *url)
 {
   /* parsing commands with URLs in an account hook can cause a recursive

@@ -22,6 +22,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page version Display version and copyright about NeoMutt
+ *
+ * Display version and copyright about NeoMutt
+ */
+
 #include "config.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -30,11 +36,6 @@
 #include <unistd.h>
 #include "mutt/mutt.h"
 #include "mutt_curses.h"
-#ifdef HAVE_STRINGPREP_H
-#include <stringprep.h>
-#elif defined(HAVE_IDN_STRINGPREP_H)
-#include <idn/stringprep.h>
-#endif
 
 /* #include "protos.h" */
 const char *mutt_make_version(void);
@@ -56,8 +57,8 @@ static const char *Copyright =
     "Copyright (C) 1999-2002 Tommi Komulainen <Tommi.Komulainen@iki.fi>\n"
     "Copyright (C) 2000-2004 Edmund Grimley Evans <edmundo@rano.org>\n"
     "Copyright (C) 2006-2009 Rocco Rutte <pdmef@gmx.net>\n"
-    "Copyright (C) 2014-2017 Kevin J. McCarthy <kevin@8t8.us>\n"
-    "Copyright (C) 2015-2017 Richard Russon <rich@flatcap.org>\n";
+    "Copyright (C) 2014-2018 Kevin J. McCarthy <kevin@8t8.us>\n"
+    "Copyright (C) 2015-2018 Richard Russon <rich@flatcap.org>\n";
 
 static const char *Thanks =
     N_("Many others not mentioned here contributed code, fixes,\n"
@@ -72,16 +73,15 @@ static const char *License = N_(
     "    This program is distributed in the hope that it will be useful,\n"
     "    but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
     "    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-    "    GNU General Public License for more details.\n");
-
-static const char *Obtaining =
-    N_("    You should have received a copy of the GNU General Public License\n"
-       "    along with this program; if not, write to the Free Software\n"
-       "    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  "
-       "02110-1301, USA.\n");
+    "    GNU General Public License for more details.\n"
+    "\n"
+    "    You should have received a copy of the GNU General Public License\n"
+    "    along with this program; if not, write to the Free Software\n"
+    "    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  "
+    "02110-1301, USA.\n");
 
 static const char *ReachingUs =
-    N_("To learn more about NeoMutt, visit: https://www.neomutt.org\n"
+    N_("To learn more about NeoMutt, visit: https://neomutt.org\n"
        "If you find a bug in NeoMutt, please raise an issue at:\n"
        "    https://github.com/neomutt/neomutt/issues\n"
        "or send an email to: <neomutt-devel@neomutt.org>\n");
@@ -280,6 +280,7 @@ static struct CompileOptions comp_opts[] = {
 
 /**
  * print_compile_options - Print a list of enabled/disabled features
+ * @param co Array of compile options
  *
  * Two lists are generated and passed to this function:
  *
@@ -325,7 +326,7 @@ static void print_compile_options(struct CompileOptions *co)
 /**
  * rstrip_in_place - Strip a trailing carriage return
  * @param s  String to be modified
- * @retval string The modified string
+ * @retval ptr The modified string
  *
  * The string has its last carriage return set to NUL.
  */
@@ -378,7 +379,7 @@ void print_version(void)
 #endif
 
 #ifdef HAVE_LIBIDN
-  printf("\nlibidn: %s (compiled with %s)", stringprep_check_version(NULL), STRINGPREP_VERSION);
+  printf("\n%s", mutt_idna_print_version());
 #endif
 
 #ifdef USE_HCACHE
@@ -433,7 +434,6 @@ void print_copyright(void)
   puts(Copyright);
   puts(_(Thanks));
   puts(_(License));
-  puts(_(Obtaining));
   puts(_(ReachingUs));
 }
 

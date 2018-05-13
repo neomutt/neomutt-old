@@ -80,7 +80,7 @@ enum LookupType
 
 #define MUTT_ICONV_HOOK_FROM 1 /**< apply charset-hooks to fromcode */
 
-extern const struct MimeNames PreferredMIMENames[];
+extern const struct MimeNames PreferredMimeNames[];
 
 void             mutt_ch_canonical_charset(char *buf, size_t buflen, const char *name);
 int              mutt_ch_chscmp(const char *cs1, const char *cs2);
@@ -93,7 +93,7 @@ void             mutt_ch_lookup_remove(void);
 const char *     mutt_ch_charset_lookup(const char *chs);
 
 iconv_t          mutt_ch_iconv_open(const char *tocode, const char *fromcode, int flags);
-size_t           mutt_ch_iconv(iconv_t cd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft, const char **inrepls, const char *outrepl);
+size_t           mutt_ch_iconv(iconv_t cd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft, const char **inrepls, const char *outrepl, int *iconverrno);
 const char *     mutt_ch_iconv_lookup(const char *chs);
 int              mutt_ch_convert_string(char **ps, const char *from, const char *to, int flags);
 int              mutt_ch_convert_nonmime_string(char **ps);

@@ -41,6 +41,7 @@ struct Address;
 struct Alias;
 struct Body;
 struct Buffer;
+struct ColorLineHead;
 struct Context;
 struct EnterState;
 struct Envelope;
@@ -107,9 +108,9 @@ struct Body *mutt_make_file_attach(const char *path);
 struct Body *mutt_make_message_attach(struct Context *ctx, struct Header *hdr, int attach_msg);
 struct Body *mutt_remove_multipart(struct Body *b);
 struct Body *mutt_make_multipart(struct Body *b);
-struct Body *mutt_parse_multipart(FILE *fp, const char *boundary, LOFF_T end_off, int digest);
+struct Body *mutt_parse_multipart(FILE *fp, const char *boundary, LOFF_T end_off, bool digest);
 struct Body *mutt_rfc822_parse_message(FILE *fp, struct Body *parent);
-struct Body *mutt_read_mime_header(FILE *fp, int digest);
+struct Body *mutt_read_mime_header(FILE *fp, bool digest);
 
 struct Content *mutt_get_content_info(const char *fname, struct Body *b);
 
@@ -178,6 +179,7 @@ void mutt_format_s_tree(char *buf, size_t buflen, const char *prec, const char *
 void mutt_forward_intro(struct Context *ctx, struct Header *cur, FILE *fp);
 void mutt_forward_trailer(struct Context *ctx, struct Header *cur, FILE *fp);
 void mutt_free_color(int fg, int bg);
+void mutt_free_colors(void);
 void mutt_help(int menu);
 void mutt_check_lookup_list(struct Body *b, char *type, size_t len);
 void mutt_make_attribution(struct Context *ctx, struct Header *cur, FILE *out);
@@ -300,6 +302,7 @@ int mutt_rfc822_parse_line(struct Envelope *e, struct Header *hdr, char *line, c
 int mutt_parse_score(struct Buffer *buf, struct Buffer *s, unsigned long data, struct Buffer *err);
 int mutt_parse_unscore(struct Buffer *buf, struct Buffer *s, unsigned long data, struct Buffer *err);
 int mutt_parse_unhook(struct Buffer *buf, struct Buffer *s, unsigned long data, struct Buffer *err);
+void mutt_delete_hooks(int type);
 int mutt_pipe_attachment(FILE *fp, struct Body *b, const char *path, char *outfile);
 int mutt_print_attachment(FILE *fp, struct Body *a);
 int mutt_query_complete(char *buf, size_t buflen);

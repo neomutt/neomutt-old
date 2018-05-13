@@ -779,7 +779,7 @@ struct Address *mutt_addr_append(struct Address **a, struct Address *b, bool pru
 /**
  * mutt_addr_valid_msgid - Is this a valid Message ID?
  * @param msgid Message ID
- * @retval bool True if it is valid
+ * @retval true It is a valid message ID
  *
  * Incomplete. Only used to thwart the APOP MD5 attack (#2846).
  */
@@ -1136,6 +1136,7 @@ done:
  * @param buflen  Length of the buffer
  * @param addr    Address to display
  * @param display This address will be displayed to the user
+ * @retval num Bytes written to the buffer
  *
  * If 'display' is set, then it doesn't matter if the transformation isn't
  * reversible.

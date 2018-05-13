@@ -21,7 +21,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* NOTE: This code used to be the parser for GnuPG's output.
+/**
+ * @page crypt_gnupg Parse the output of CLI PGP program
+ *
+ * Parse the output of CLI PGP program
+ *
+ * @note This code used to be the parser for GnuPG's output.
  *
  * Nowadays, we are using an external pubring lister with PGP which mimics
  * gpg's output format.
@@ -375,6 +380,13 @@ bail:
   return NULL;
 }
 
+/**
+ * pgp_get_candidates - Find PGP keys matching a list of hints
+ * @param keyring PGP Keyring
+ * @param hints   List of strings to match
+ * @retval ptr  Key list
+ * @retval NULL Error
+ */
 struct PgpKeyInfo *pgp_get_candidates(enum PgpRing keyring, struct ListHead *hints)
 {
   FILE *fp = NULL;

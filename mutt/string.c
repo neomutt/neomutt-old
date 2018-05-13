@@ -102,6 +102,7 @@ static const struct SysExits
 /**
  * mutt_str_sysexit - Return a string matching an error code
  * @param e Error code, e.g. EX_NOPERM
+ * @retval ptr string representing the error code
  */
 const char *mutt_str_sysexit(int e)
 {
@@ -217,9 +218,8 @@ int mutt_str_atoi(const char *str, int *dst)
  * @retval -1 Invalid input
  * @retval -2 Input out of range
  *
- * @note
- * This function's return value differs from the other functions.
- * They return -1 if there is input beyond the number.
+ * @note This function's return value differs from the other functions.
+ *       They return -1 if there is input beyond the number.
  */
 int mutt_str_atoui(const char *str, unsigned int *dst)
 {
@@ -248,9 +248,8 @@ int mutt_str_atoui(const char *str, unsigned int *dst)
  * @retval  0 Successful conversion
  * @retval -1 Invalid input
  *
- * @note
- * This function's return value differs from the other functions.
- * They return -1 if there is input beyond the number.
+ * @note This function's return value differs from the other functions.
+ *       They return -1 if there is input beyond the number.
  */
 int mutt_str_atoul(const char *str, unsigned long *dst)
 {
@@ -278,7 +277,7 @@ int mutt_str_atoul(const char *str, unsigned long *dst)
  * mutt_str_strdup - Copy a string, safely
  * @param str String to copy
  * @retval ptr  Copy of the string
- * @retval NULL if s was NULL
+ * @retval NULL if str was NULL
  */
 char *mutt_str_strdup(const char *str)
 {
@@ -634,12 +633,17 @@ void mutt_str_remove_trailing_ws(char *s)
  * @param dest  Buffer for the result
  * @param src   String to copy
  * @param dsize Destination buffer size
- * @retval len Destination string length
+ * @retval num Destination string length
  */
 size_t mutt_str_strfcpy(char *dest, const char *src, size_t dsize)
 {
-  if (dsize == 0)
+  if (!dest || (dsize == 0))
     return 0;
+  if (!src)
+  {
+    dest[0] = '\0';
+    return 0;
+  }
 
   char *dest0 = dest;
   while ((--dsize > 0) && (*src != '\0'))
@@ -659,17 +663,17 @@ size_t mutt_str_strfcpy(char *dest, const char *src, size_t dsize)
  */
 char *mutt_str_skip_email_wsp(const char *s)
 {
-  if (s)
-    return (char *) (s + strspn(s, EMAIL_WSP));
-  return (char *) s;
+  if (!s)
+    return NULL;
+  return (char *) (s + strspn(s, EMAIL_WSP));
 }
 
 /**
  * mutt_str_is_email_wsp - Is this a whitespace character (for an email header)
  * @param c Character to test
- * @retval boolean
+ * @retval true It is whitespcae
  */
-int mutt_str_is_email_wsp(char c)
+bool mutt_str_is_email_wsp(char c)
 {
   return c && (strchr(EMAIL_WSP, c) != NULL);
 }
@@ -680,7 +684,7 @@ int mutt_str_is_email_wsp(char c)
  * @param src   String to copy
  * @param n     Maximum number of characters to copy
  * @param dsize Destination buffer size
- * @retval len Destination string length
+ * @retval num Destination string length
  */
 size_t mutt_str_strnfcpy(char *dest, const char *src, size_t n, size_t dsize)
 {
@@ -862,7 +866,7 @@ int mutt_str_word_casecmp(const char *a, const char *b)
  * mutt_str_is_ascii - Is a string ASCII (7-bit)?
  * @param p   String to examine
  * @param len Length of string
- * @retval bool True if there are no 8-bit chars
+ * @retval true There are no 8-bit chars
  */
 bool mutt_str_is_ascii(const char *p, size_t len)
 {

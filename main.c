@@ -22,6 +22,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page main Command line processing
+ *
+ * Command line processing
+ */
+
 #define MAIN_C 1
 
 #include "config.h"
@@ -70,6 +76,10 @@
 #include "nntp.h"
 #endif
 
+/**
+ * mutt_exit - Leave NeoMutt NOW
+ * @param code Value to return to the calling environment
+ */
 void mutt_exit(int code)
 {
   mutt_endwin();
@@ -77,52 +87,74 @@ void mutt_exit(int code)
 }
 
 // clang-format off
+/**
+ * usage - Display NeoMutt command line
+ */
 static void usage(void)
 {
   puts(mutt_make_version());
 
-  puts(_("usage: neomutt [<options>] [-z] [-f <file> | -yZ]\n"
-         "       neomutt [<options>] [-Ex] [-Hi <file>] [-s <subj>] [-bc <addr>] [-a <file> [...] --] <addr> [...]\n"
-         "       neomutt [<options>] [-x] [-s <subj>] [-bc <addr>] [-a <file> [...] --] <addr> [...] < message\n"
-         "       neomutt [<options>] -p\n"
-         "       neomutt [<options>] -A <alias> [...]\n"
-         "       neomutt [<options>] -Q <query> [...]\n"
-         "       neomutt [<options>] -B\n"
-         "       neomutt [<options>] -D [-S]\n"
-         "       neomutt -v[v]\n"));
+  /* L10N: Try to limit to 80 columns */
+  puts(_("usage:\n"
+         "  neomutt [-Enx] [-e <command>] [-F <config>] [-H <draft>] [-i <include>]\n"
+         "          [-b <address>] [-c <address>] [-s <subject>] [-a <file> [...] --]\n"
+         "          <address> [...]\n"
+         "  neomutt [-nx] [-e <command>] [-F <config>] [-b <address>] [-c <address>]\n"
+         "          [-s <subject>] [-a <file> [...] --] <address> [...] < message\n"
+         "  neomutt [-nRy] [-e <command>] [-F <config>] [-f <mailbox>] [-m <type>]\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -A <alias>\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -B\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -D [-S]\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -d <level> -l <file>\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -G\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -g <server>\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -p\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -Q <variable>\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -Z\n"
+         "  neomutt [-n] [-e <command>] [-F <config>] -z [-f <mailbox>]\n"
+         "  neomutt -v[v]\n"));
 
+  /* L10N: Try to limit to 80 columns
+           If more space is needed add an indented line */
   puts(_("options:\n"
-         "  -A <alias>    expand the given alias\n"
-         "  -a <file> [...] --    attach file(s) to the message\n"
-         "                the list of files must be terminated with the \"--\" sequence\n"
-         "  -b <address>  specify a blind carbon-copy (BCC) address\n"
-         "  -c <address>  specify a carbon-copy (CC) address\n"
-         "  -D            print the value of all variables to stdout\n"
-         "  -D -S         like -D, but hide the value of sensitive variables\n"
-         "  -B            run in batch mode (do not start the ncurses UI)"));
-  puts(_("  -d <level>    log debugging output to ~/.neomuttdebug0"));
-  puts(_(
-         "  -E            edit the draft (-H) or include (-i) file\n"
-         "  -e <command>  specify a command to be executed after initialization\n"
-         "  -f <file>     specify which mailbox to read\n"
-         "  -F <file>     specify an alternate neomuttrc file\n"
-         "  -g <server>   specify a news server (if compiled with NNTP)\n"
-         "  -G            select a newsgroup (if compiled with NNTP)\n"
-         "  -H <file>     specify a draft file to read header and body from\n"
-         "  -i <file>     specify a file which NeoMutt should include in the body\n"
-         "  -m <type>     specify a default mailbox type\n"
-         "  -n            causes NeoMutt not to read the system neomuttrc\n"
-         "  -p            recall a postponed message"));
-
-  puts(_("  -Q <variable> query a configuration variable\n"
-         "  -R            open mailbox in read-only mode\n"
-         "  -s <subj>     specify a subject (must be in quotes if it has spaces)\n"
-         "  -v            show version and compile-time definitions\n"
-         "  -x            simulate the mailx send mode\n"
-         "  -y            select a mailbox specified in your 'mailboxes' list\n"
-         "  -z            exit immediately if there are no messages in the mailbox\n"
-         "  -Z            open the first folder with new message, exit immediately if none\n"
-         "  -h            this help message"));
+         "  --            Special argument forces NeoMutt to stop option parsing and treat\n"
+         "                remaining arguments as addresses even if they start with a dash\n"
+         "  -A <alias>    Print an expanded version of the given alias to stdout and exit\n"
+         "  -a <file>     Attach one or more files to a message (must be the last option)\n"
+         "                Add any addresses after the '--' argument\n"
+         "  -B            Run in batch mode (do not start the ncurses UI)\n"
+         "  -b <address>  Specify a blind carbon copy (Bcc) recipient\n"
+         "  -c <address>  Specify a carbon copy (Cc) recipient\n"
+         "  -D            Dump all config variables as 'name=value' pairs to stdout\n"
+         "  -D -S         Like -D, but hide the value of sensitive variables\n"
+         "  -d <level>    Log debugging output to a file (default is \"~/.neomuttdebug0\")\n"
+         "                The level can range from 1-5 and affects verbosity\n"
+         "  -E            Edit draft (-H) or include (-i) file during message composition\n"
+         "  -e <command>  Specify a command to be run after reading the config files\n"
+         "  -F <config>   Specify an alternative initialization file to read\n"
+         "  -f <mailbox>  Specify a mailbox (as defined with 'mailboxes' command) to load\n"
+         "  -G            Start NeoMutt with a listing of subscribed newsgroups\n"
+         "  -g <server>   Like -G, but start at specified news server\n"
+         "  -H <draft>    Specify a draft file with header and body for message composing\n"
+         "  -h            Print this help message and exit\n"
+         "  -i <include>  Specify an include file to be embedded in the body of a message\n"
+         "  -l <file>     Specify a file for debugging output (default \"~/.neomuttdebug0\")\n"
+         "  -m <type>     Specify a default mailbox format type for newly created folders\n"
+         "                The type is either MH, MMDF, Maildir or mbox (case-insensitive)\n"
+         "  -n            Do not read the system-wide configuration file\n"
+         "  -p            Resume a prior postponed message, if any\n"
+         "  -Q <variable> Query a configuration variable and print its value to stdout\n"
+         "                (after the config has been read and any commands executed)\n"
+         "  -R            Open mailbox in read-only mode\n"
+         "  -s <subject>  Specify a subject (must be enclosed in quotes if it has spaces)\n"
+         "  -v            Print the NeoMutt version and compile-time definitions and exit\n"
+         "  -vv           Print the NeoMutt license and copyright information and exit\n"
+         "  -x            Simulate the mailx(1) send mode\n"
+         "  -y            Start NeoMutt with a listing of all defined mailboxes\n"
+         "  -Z            Open the first mailbox with new message or exit immediately with\n"
+         "                exit code 1 if none is found in all defined mailboxes\n"
+         "  -z            Open the first or specified (-f) mailbox if it holds any message\n"
+         "                or exit immediately with exit code 1 otherwise"));
 }
 // clang-format on
 
@@ -174,32 +206,59 @@ static int start_curses(void)
 #define MUTT_NEWS (1 << 5) /* -g and -G */
 #endif
 
+/**
+ * init_locale - Initialise the Locale/NLS settings
+ */
+void init_locale(void)
+{
+  setlocale(LC_ALL, "");
+
+#ifdef ENABLE_NLS
+  const char *domdir = mutt_str_getenv("TEXTDOMAINDIR");
+  if (domdir)
+    bindtextdomain(PACKAGE, domdir);
+  else
+    bindtextdomain(PACKAGE, MUTTLOCALEDIR);
+  textdomain(PACKAGE);
+#endif
+#ifndef LOCALES_HACK
+  const char *p = NULL;
+  /* Do we have a locale definition? */
+  if ((p = mutt_str_getenv("LC_ALL")) || (p = mutt_str_getenv("LANG")) ||
+      (p = mutt_str_getenv("LC_CTYPE")))
+  {
+    OptLocales = true;
+  }
+#endif
+}
+
+/**
+ * get_user_info - Find the user's name, home and shell
+ * @retval 0 Success
+ * @retval 1 Error
+ *
+ * Find the login name, real name, home directory and shell.
+ */
 static int get_user_info(void)
 {
-  const char *p = mutt_str_getenv("HOME");
-  if (p)
-    HomeDir = mutt_str_strdup(p);
+  Username = mutt_str_strdup(mutt_str_getenv("USER"));
+  HomeDir = mutt_str_strdup(mutt_str_getenv("HOME"));
+  Shell = mutt_str_strdup(mutt_str_getenv("SHELL"));
 
   /* Get some information about the user */
   struct passwd *pw = getpwuid(getuid());
   if (pw)
   {
-    char rnbuf[STRING];
-
-    Username = mutt_str_strdup(pw->pw_name);
+    if (!Username)
+      Username = mutt_str_strdup(pw->pw_name);
     if (!HomeDir)
       HomeDir = mutt_str_strdup(pw->pw_dir);
+    if (!Shell)
+      Shell = mutt_str_strdup(pw->pw_shell);
 
-    RealName = mutt_str_strdup(mutt_gecos_name(rnbuf, sizeof(rnbuf), pw));
-    Shell = mutt_str_strdup(pw->pw_shell);
+    char rnbuf[STRING];
+    Realname = mutt_str_strdup(mutt_gecos_name(rnbuf, sizeof(rnbuf), pw));
     endpwent();
-  }
-
-  if (!Username)
-  {
-    p = mutt_str_getenv("USER");
-    if (p)
-      Username = mutt_str_strdup(p);
   }
 
   if (!Username)
@@ -215,12 +274,7 @@ static int get_user_info(void)
   }
 
   if (!Shell)
-  {
-    p = mutt_str_getenv("SHELL");
-    if (!p)
-      p = "/bin/sh";
-    Shell = mutt_str_strdup(p);
-  }
+    Shell = mutt_str_strdup("/bin/sh");
 
   return 0;
 }
@@ -229,9 +283,9 @@ static int get_user_info(void)
  * main - Start NeoMutt
  * @param argc Number of command line arguments
  * @param argv List of command line arguments
- * @param env  Copy of the environment
- * @retval 0 on success
- * @retval 1 on error
+ * @param envp Copy of the environment
+ * @retval 0 Success
+ * @retval 1 Error
  */
 int main(int argc, char *argv[], char *envp[])
 {
@@ -276,19 +330,7 @@ int main(int argc, char *argv[], char *envp[])
     goto main_exit; // TEST01: neomutt (as root, chgrp mail neomutt; chmod +s neomutt)
   }
 
-  setlocale(LC_ALL, "");
-
-#ifdef ENABLE_NLS
-  /* FIXME what about the LOCALES_HACK in mutt_init() [init.c] ? */
-  {
-    const char *domdir = mutt_str_getenv("TEXTDOMAINDIR");
-    if (domdir)
-      bindtextdomain(PACKAGE, domdir);
-    else
-      bindtextdomain(PACKAGE, MUTTLOCALEDIR);
-    textdomain(PACKAGE);
-  }
-#endif
+  init_locale();
 
   int out = 0;
   if (mutt_randbuf(&out, sizeof(out)) < 0)
@@ -416,7 +458,7 @@ int main(int argc, char *argv[], char *envp[])
           break;
         default:
           usage();
-          OPT_NO_CURSES = true;
+          OptNoCurses = true;
           goto main_ok; // TEST03: neomutt -9
       }
     }
@@ -435,7 +477,7 @@ int main(int argc, char *argv[], char *envp[])
       print_version();
     else
       print_copyright();
-    OPT_NO_CURSES = true;
+    OptNoCurses = true;
     goto main_ok; // TEST04: neomutt -v
   }
 
@@ -500,7 +542,7 @@ int main(int argc, char *argv[], char *envp[])
   if (!isatty(0) || !STAILQ_EMPTY(&queries) || !STAILQ_EMPTY(&alias_queries) ||
       dump_variables || batch_mode)
   {
-    OPT_NO_CURSES = true;
+    OptNoCurses = true;
     sendflags = SENDBATCH;
     MuttLogger = log_disp_terminal;
     log_queue_flush(log_disp_terminal);
@@ -512,7 +554,7 @@ int main(int argc, char *argv[], char *envp[])
 
   /* This must come before mutt_init() because curses needs to be started
    * before calling the init_pair() function to set the color scheme.  */
-  if (!OPT_NO_CURSES)
+  if (!OptNoCurses)
   {
     int crc = start_curses();
     /* Now that curses is set up, we drop back to normal screen mode.
@@ -548,16 +590,16 @@ int main(int argc, char *argv[], char *envp[])
   mutt_list_free(&commands);
 
 #ifdef USE_NNTP
-  /* "$news_server" precedence: command line, environment, config file, system file */
-  const char *env_nntp = NULL;
+  /* "$news_server" precedence: command line, config file, environment, system file */
   if (cli_nntp)
     mutt_str_replace(&NewsServer, cli_nntp);
-  else if ((env_nntp = mutt_str_getenv("NNTPSERVER")))
-    mutt_str_replace(&NewsServer, env_nntp);
-  else if (!NewsServer)
+  if (!NewsServer)
+    NewsServer = mutt_str_strdup(mutt_str_getenv("NNTPSERVER"));
+  if (!NewsServer)
   {
     char buffer[1024];
-    char *server = mutt_file_read_keyword(SYSCONFDIR "/nntpserver", buffer, sizeof(buffer));
+    char *server =
+        mutt_file_read_keyword(SYSCONFDIR "/nntpserver", buffer, sizeof(buffer));
     NewsServer = mutt_str_strdup(server);
   }
   if (NewsServer)
@@ -578,6 +620,7 @@ int main(int argc, char *argv[], char *envp[])
     for (; optind < argc; optind++)
       mutt_list_insert_tail(&queries, mutt_str_strdup(argv[optind]));
     rc = mutt_query_variables(&queries);
+    mutt_list_free(&queries);
     goto main_curses;
   }
 
@@ -613,7 +656,7 @@ int main(int argc, char *argv[], char *envp[])
     goto main_curses; // TEST20: neomutt -A alias
   }
 
-  if (!OPT_NO_CURSES)
+  if (!OptNoCurses)
   {
     NORMAL_COLOR;
     clear();
@@ -623,7 +666,7 @@ int main(int argc, char *argv[], char *envp[])
   }
 
   /* Create the Folder directory if it doesn't exist. */
-  if (!OPT_NO_CURSES && Folder)
+  if (!OptNoCurses && Folder)
   {
     struct stat sb;
     char fpath[_POSIX_PATH_MAX];
@@ -657,7 +700,7 @@ int main(int argc, char *argv[], char *envp[])
 
   if (sendflags & SENDPOSTPONED)
   {
-    if (!OPT_NO_CURSES)
+    if (!OptNoCurses)
       mutt_flushinp();
     if (ci_send_message(SENDPOSTPONED, NULL, NULL, NULL, NULL) == 0)
       rc = 0;
@@ -677,7 +720,7 @@ int main(int argc, char *argv[], char *envp[])
     int rv = 0;
     char expanded_infile[_POSIX_PATH_MAX];
 
-    if (!OPT_NO_CURSES)
+    if (!OptNoCurses)
       mutt_flushinp();
 
     if (!msg)
@@ -966,7 +1009,7 @@ int main(int argc, char *argv[], char *envp[])
 #ifdef USE_NNTP
       if (flags & MUTT_NEWS)
       {
-        OPT_NEWS = true;
+        OptNews = true;
         CurrentNewsSrv = nntp_select_server(NewsServer, false);
         if (!CurrentNewsSrv)
           goto main_curses; // TEST38: neomutt -G (unset news_server)
@@ -988,17 +1031,17 @@ int main(int argc, char *argv[], char *envp[])
 
     if (!folder[0])
     {
-      if (SpoolFile)
-        mutt_str_strfcpy(folder, NONULL(SpoolFile), sizeof(folder));
+      if (Spoolfile)
+        mutt_str_strfcpy(folder, NONULL(Spoolfile), sizeof(folder));
       else if (Folder)
         mutt_str_strfcpy(folder, NONULL(Folder), sizeof(folder));
       /* else no folder */
     }
 
 #ifdef USE_NNTP
-    if (OPT_NEWS)
+    if (OptNews)
     {
-      OPT_NEWS = false;
+      OptNews = false;
       nntp_expand_path(folder, sizeof(folder), &CurrentNewsSrv->conn->account);
     }
     else
@@ -1045,7 +1088,6 @@ int main(int argc, char *argv[], char *envp[])
 #endif
     log_queue_empty();
     mutt_log_stop();
-    mutt_free_opts();
     mutt_window_free();
     // TEST43: neomutt (no change to mailbox)
     // TEST44: neomutt (change mailbox)
@@ -1062,5 +1104,7 @@ main_curses:
     puts(ErrorBuf);
 main_exit:
   mutt_envlist_free();
+  mutt_free_opts();
+  mutt_free_keys();
   return rc;
 }

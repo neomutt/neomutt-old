@@ -467,7 +467,7 @@ int pop_query_d(struct PopData *pop_data, char *buf, size_t buflen, char *msg)
     mutt_debug(MUTT_SOCK_LOG_CMD, "> %s", msg);
   }
 
-  mutt_socket_write_d(pop_data->conn, buf, -1, dbg);
+  mutt_socket_send_d(pop_data->conn, buf, dbg);
 
   c = strpbrk(buf, " \r\n");
   if (c)
@@ -557,8 +557,8 @@ int pop_fetch_data(struct PopData *pop_data, char *query, struct Progress *progr
  * check_uidl - find message with this UIDL and set refno
  * @param line String containing UIDL
  * @param data POP data
- * @retval 0 on success
- * @retval -1 on error
+ * @retval  0 Success
+ * @retval -1 Error
  */
 static int check_uidl(char *line, void *data)
 {
@@ -589,8 +589,8 @@ static int check_uidl(char *line, void *data)
 /**
  * pop_reconnect - reconnect and verify indexes if connection was lost
  * @param ctx Context
- * @retval 0 on success
- * @retval -1 on error
+ * @retval  0 Success
+ * @retval -1 Error
  */
 int pop_reconnect(struct Context *ctx)
 {

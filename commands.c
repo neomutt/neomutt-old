@@ -97,7 +97,8 @@ int mutt_display_message(struct Header *cur)
     else if (cur->security & SIGN)
     {
       /* find out whether or not the verify signature */
-      if (query_quadoption(CryptVerifySig, _("Verify PGP signature?")) == MUTT_YES)
+      /* L10N: Used for the $crypt_verify_sig prompt */
+      if (query_quadoption(CryptVerifySig, _("Verify signature?")) == MUTT_YES)
       {
         cmflags |= MUTT_CM_VERIFY;
       }
@@ -235,7 +236,7 @@ int mutt_display_message(struct Header *cur)
     if (r == -1)
       mutt_error(_("Error running \"%s\"!"), buf);
     unlink(tempfile);
-    if (!OPT_NO_CURSES)
+    if (!OptNoCurses)
       keypad(stdscr, true);
     if (r != -1)
       mutt_set_flag(Context, cur, MUTT_READ, 1);
@@ -259,11 +260,13 @@ void ci_bounce_message(struct Header *h)
   struct Address *addr = NULL;
   char *err = NULL;
   int rc;
+  int msgcount; // for L10N with ngettext
 
   /* RFC5322 mandates a From: header, so warn before bouncing
    * messages without one */
   if (h)
   {
+    msgcount = 1;
     if (!h->env->from)
     {
       mutt_error(_("Warning: message contains no From: header"));
@@ -271,15 +274,22 @@ void ci_bounce_message(struct Header *h)
   }
   else if (Context)
   {
+    msgcount = 0; // count the precise number of messages.
     for (rc = 0; rc < Context->msgcount; rc++)
     {
       if (message_is_tagged(Context, rc) && !Context->hdrs[rc]->env->from)
       {
-        mutt_error(_("Warning: message contains no From: header"));
-        break;
+        msgcount++;
+        if (!Context->hdrs[rc]->env->from)
+        {
+          mutt_error(_("Warning: message contains no From: header"));
+          break;
+        }
       }
     }
   }
+  else
+    msgcount = 0;
 
   if (h)
     mutt_str_strfcpy(prompt, _("Bounce message to: "), sizeof(prompt));
@@ -312,7 +322,7 @@ void ci_bounce_message(struct Header *h)
 
 #define EXTRA_SPACE (15 + 7 + 2)
   snprintf(scratch, sizeof(scratch),
-           (h ? _("Bounce message to %s") : _("Bounce messages to %s")), buf);
+           ngettext("Bounce message to %s", "Bounce messages to %s", msgcount), buf);
 
   if (mutt_strwidth(prompt) > MuttMessageWindow->cols - EXTRA_SPACE)
   {
@@ -327,7 +337,7 @@ void ci_bounce_message(struct Header *h)
   {
     mutt_addr_free(&addr);
     mutt_window_clearline(MuttMessageWindow, 0);
-    mutt_message(h ? _("Message not bounced.") : _("Messages not bounced."));
+    mutt_message(ngettext("Message not bounced.", "Messages not bounced.", msgcount));
     return;
   }
 
@@ -337,7 +347,7 @@ void ci_bounce_message(struct Header *h)
   mutt_addr_free(&addr);
   /* If no error, or background, display message. */
   if ((rc == 0) || (rc == S_BKG))
-    mutt_message(h ? _("Message bounced.") : _("Messages bounced."));
+    mutt_message(ngettext("Message bounced.", "Messages bounced.", msgcount));
 }
 
 static void pipe_set_flags(int decode, int print, int *cmflags, int *chflags)
@@ -409,11 +419,11 @@ static int pipe_message(struct Header *h, char *cmd, int decode, int print,
       return 1;
     }
 
-    OPT_KEEP_QUIET = true;
+    OptKeepQuiet = true;
     pipe_msg(h, fpout, decode, print);
     mutt_file_fclose(&fpout);
     rc = mutt_wait_filter(thepid);
-    OPT_KEEP_QUIET = false;
+    OptKeepQuiet = false;
   }
   else
   {
@@ -450,7 +460,7 @@ static int pipe_message(struct Header *h, char *cmd, int decode, int print,
           mutt_perror(_("Can't create filter process"));
           return 1;
         }
-        OPT_KEEP_QUIET = true;
+        OptKeepQuiet = true;
         pipe_msg(Context->hdrs[i], fpout, decode, print);
         /* add the message separator */
         if (sep)
@@ -458,7 +468,7 @@ static int pipe_message(struct Header *h, char *cmd, int decode, int print,
         mutt_file_fclose(&fpout);
         if (mutt_wait_filter(thepid) != 0)
           rc = 1;
-        OPT_KEEP_QUIET = false;
+        OptKeepQuiet = false;
       }
     }
     else
@@ -470,7 +480,7 @@ static int pipe_message(struct Header *h, char *cmd, int decode, int print,
         mutt_perror(_("Can't create filter process"));
         return 1;
       }
-      OPT_KEEP_QUIET = true;
+      OptKeepQuiet = true;
       for (int i = 0; i < Context->msgcount; i++)
       {
         if (!message_is_tagged(Context, i))
@@ -485,7 +495,7 @@ static int pipe_message(struct Header *h, char *cmd, int decode, int print,
       mutt_file_fclose(&fpout);
       if (mutt_wait_filter(thepid) != 0)
         rc = 1;
-      OPT_KEEP_QUIET = false;
+      OptKeepQuiet = false;
     }
   }
 
@@ -511,6 +521,20 @@ void mutt_pipe_message(struct Header *h)
 
 void mutt_print_message(struct Header *h)
 {
+  int i;
+  int msgcount; // for L10N with ngettext
+  if (h)
+    msgcount = 1;
+  else if (Context)
+  {
+    msgcount = 0; // count the precise number of messages.
+    for (i = 0; i < Context->msgcount; i++)
+      if (message_is_tagged(Context, i))
+        msgcount++;
+  }
+  else
+    msgcount = 0;
+
   if (Print && (!PrintCommand || !*PrintCommand))
   {
     mutt_message(_("No printing command has been defined."));
@@ -523,9 +547,10 @@ void mutt_print_message(struct Header *h)
   }
 
   if (pipe_message(h, PrintCommand, PrintDecode, 1, PrintSplit, "\f") == 0)
-    mutt_message(h ? _("Message printed") : _("Messages printed"));
+    mutt_message(ngettext("Message printed", "Messages printed", msgcount));
   else
-    mutt_message(h ? _("Message could not be printed") : _("Messages could not be printed"));
+    mutt_message(ngettext("Message could not be printed",
+                          "Messages could not be printed", msgcount));
 }
 
 int mutt_select_sort(int reverse)
@@ -605,24 +630,24 @@ void mutt_shell_escape(void)
   char buf[LONG_STRING];
 
   buf[0] = '\0';
-  if (mutt_get_field(_("Shell command: "), buf, sizeof(buf), MUTT_CMD) == 0)
-  {
-    if (!buf[0] && Shell)
-      mutt_str_strfcpy(buf, Shell, sizeof(buf));
-    if (buf[0])
-    {
-      mutt_window_clearline(MuttMessageWindow, 0);
-      mutt_endwin();
-      fflush(stdout);
-      int rc = mutt_system(buf);
-      if (rc == -1)
-        mutt_debug(1, "Error running \"%s\"!", buf);
+  if (mutt_get_field(_("Shell command: "), buf, sizeof(buf), MUTT_CMD) != 0)
+    return;
 
-      if ((rc != 0) || WaitKey)
-        mutt_any_key_to_continue(NULL);
-      mutt_buffy_check(true);
-    }
-  }
+  if (!buf[0] && Shell)
+    mutt_str_strfcpy(buf, Shell, sizeof(buf));
+  if (!buf[0])
+    return;
+
+  mutt_window_clearline(MuttMessageWindow, 0);
+  mutt_endwin();
+  fflush(stdout);
+  int rc = mutt_system(buf);
+  if (rc == -1)
+    mutt_debug(1, "Error running \"%s\"!", buf);
+
+  if ((rc != 0) || WaitKey)
+    mutt_any_key_to_continue(NULL);
+  mutt_buffy_check(true);
 }
 
 /**
@@ -748,22 +773,35 @@ int mutt_save_message_ctx(struct Header *h, int delete, int decode, int decrypt,
 
 /**
  * mutt_save_message - Save an email
- * @retval 0 if the copy/save was successful
- * @retval -1 on error/abort
+ * @retval  0 Copy/save was successful
+ * @retval -1 Error/abort
  */
 int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
 {
   int need_passphrase = 0, app = 0;
-  char prompt[SHORT_STRING], buf[_POSIX_PATH_MAX];
+  char buf[_POSIX_PATH_MAX];
+  const char *prompt = NULL;
   struct Context ctx;
   struct stat st;
 
-  snprintf(prompt, sizeof(prompt),
-           decode ?
-               (delete ? _("Decode-save%s to mailbox") : _("Decode-copy%s to mailbox")) :
-               (decrypt ? (delete ? _("Decrypt-save%s to mailbox") : _("Decrypt-copy%s to mailbox")) :
-                          (delete ? _("Save%s to mailbox") : _("Copy%s to mailbox"))),
-           h ? "" : _(" tagged"));
+  if (delete)
+  {
+    if (decode)
+      prompt = h ? _("Decode-save to mailbox") : _("Decode-save tagged to mailbox");
+    else if (decrypt)
+      prompt = h ? _("Decrypt-save to mailbox") : _("Decrypt-save tagged to mailbox");
+    else
+      prompt = h ? _("Save to mailbox") : _("Save tagged to mailbox");
+  }
+  else
+  {
+    if (decode)
+      prompt = h ? _("Decode-copy to mailbox") : _("Decode-copy tagged to mailbox");
+    else if (decrypt)
+      prompt = h ? _("Decrypt-copy to mailbox") : _("Decrypt-copy tagged to mailbox");
+    else
+      prompt = h ? _("Copy to mailbox") : _("Copy tagged to mailbox");
+  }
 
   if (h)
   {
@@ -1008,9 +1046,9 @@ int mutt_edit_content_type(struct Header *h, struct Body *b, FILE *fp)
   {
     if (type_changed)
       mutt_sleep(1);
-    mutt_message(_("Character set changed to %s; %s."),
-                 mutt_param_get(&b->parameter, "charset"),
-                 b->noconv ? _("not converting") : _("converting"));
+    mutt_message(b->noconv ? _("Character set changed to %s; not converting.") :
+                             _("Character set changed to %s; converting."),
+                 mutt_param_get(&b->parameter, "charset"));
   }
 
   b->force_charset |= charset_changed ? 1 : 0;

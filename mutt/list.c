@@ -114,6 +114,27 @@ void mutt_list_free(struct ListHead *h)
 }
 
 /**
+ * mutt_list_free_type - Free a List of type
+ * @param h Head of the List
+ * @param fn Function to free contents of ListNode
+ */
+void mutt_list_free_type(struct ListHead *h, list_free_t fn)
+{
+  if (!h || !fn)
+    return;
+
+  struct ListNode *np = STAILQ_FIRST(h), *next = NULL;
+  while (np)
+  {
+    next = STAILQ_NEXT(np, entries);
+    fn((void **) &np->data);
+    FREE(&np);
+    np = next;
+  }
+  STAILQ_INIT(h);
+}
+
+/**
  * mutt_list_clear - Free a list, but NOT its strings
  * @param h Head of the List
  *
@@ -135,7 +156,7 @@ void mutt_list_clear(struct ListHead *h)
  * mutt_list_match - Is the string in the list (see notes)
  * @param s String to match
  * @param h Head of the List
- * @return true String matches a List item (or List contains "*")
+ * @retval true String matches a List item (or List contains "*")
  *
  * This is a very specific function.  It searches a List of strings looking for
  * a match.  If the list contains a string "*", then it match any input string.
@@ -159,7 +180,7 @@ bool mutt_list_match(const char *s, struct ListHead *h)
  * mutt_list_compare - Compare two string lists
  * @param ah First string list
  * @param bh Second string list
- * @retval bool True if lists are identical
+ * @retval true Lists are identical
  *
  * To be identical, the lists must both be the same length and contain the same
  * strings.  Two empty lists are identical.

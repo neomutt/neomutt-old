@@ -20,7 +20,10 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* RFC1524 defines a format for the Multimedia Mail Configuration, which is the
+/**
+ * @page rfc1524 RFC1524 Mailcap routines
+ *
+ * RFC1524 defines a format for the Multimedia Mail Configuration, which is the
  * standard mailcap file format under Unix which specifies what external
  * programs should be used to view/compose/edit multimedia files based on
  * content type.
@@ -43,6 +46,13 @@
 
 /**
  * rfc1524_expand_command - Expand expandos in a command
+ * @param a        Email Body
+ * @param filename File containing the email text
+ * @param type     Type, e.g. "text/plain"
+ * @param command  Buffer containing command
+ * @param clen     Length of buffer
+ * @retval 0 Command works on a file
+ * @retval 1 Command works on a pipe
  *
  * The command semantics include the following:
  * %s is the filename that contains the mail body data
@@ -53,9 +63,6 @@
  * by neomutt, and can probably just be done by piping the message to metamail
  * %n is the integer number of sub-parts in the multipart
  * %F is "content-type filename" repeated for each sub-part
- *
- * In addition, this function returns a 0 if the command works on a file,
- * and 1 if the command works on a pipe.
  */
 int rfc1524_expand_command(struct Body *a, char *filename, char *type, char *command, int clen)
 {
@@ -150,6 +157,16 @@ static char *get_field(char *s)
   return ch;
 }
 
+/**
+ * get_field_text - Get the matching text from a mailcap
+ * @param field    String to parse
+ * @param entry    Save the entry here
+ * @param type     Type, e.g. "text/plain"
+ * @param filename Mailcap filename
+ * @param line     Mailcap line
+ * @retval 1 Success
+ * @retval 0 Failure
+ */
 static int get_field_text(char *field, char **entry, char *type, char *filename, int line)
 {
   field = mutt_str_skip_whitespace(field);
@@ -171,6 +188,16 @@ static int get_field_text(char *field, char **entry, char *type, char *filename,
   }
 }
 
+/**
+ * rfc1524_mailcap_parse - Parse a mailcap entry
+ * @param a        Email Body
+ * @param filename Filename
+ * @param type     Type, e.g. "text/plain"
+ * @param entry    Entry, e.g. "compose"
+ * @param opt      Option, e.g. #MUTT_EDIT
+ * @retval 1 Success
+ * @retval 0 Failure
+ */
 static int rfc1524_mailcap_parse(struct Body *a, char *filename, char *type,
                                  struct Rfc1524MailcapEntry *entry, int opt)
 {
@@ -386,8 +413,8 @@ void rfc1524_free_entry(struct Rfc1524MailcapEntry **entry)
  * @param type   Text type in "type/subtype" format
  * @param entry  struct Rfc1524MailcapEntry to populate with results
  * @param opt    Type of mailcap entry to lookup
- * @retval 1 on success. If *entry is not NULL it populates it with the mailcap entry
- * @retval 0 if no matching entry is found
+ * @retval 1 Success. If *entry is not NULL it populates it with the mailcap entry
+ * @retval 0 No matching entry is found
  *
  * opt can be one of: #MUTT_EDIT, #MUTT_COMPOSE, #MUTT_PRINT, #MUTT_AUTOVIEW
  *

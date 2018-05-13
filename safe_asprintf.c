@@ -20,20 +20,30 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page safe_asprintf Wrapper for vasprintf()
+ *
+ * Wrapper for vasprintf()
+ *
+ * @note Currently there is no check in configure for vasprintf(3).  The
+ * undefined behavior of the error condition makes it difficult to write a safe
+ * version using it.
+ */
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include "mutt/mutt.h"
 
-/* NOTE: Currently there is no check in configure.ac for vasprintf(3).  the
- * undefined behavior of the error condition makes it difficult to write a safe
- * version using it.
- */
-
-/**
- * safe_asprintf - Wrapper for vasprintf()
- */
 #ifdef HAVE_VASPRINTF
+/**
+ * safe_asprintf - Format a string, allocating space as necessary
+ * @param strp New string saved here
+ * @param fmt  Format string
+ * @param ...  Format arguments
+ * @retval num Characters written
+ * @retval -1  Error
+ */
 int safe_asprintf(char **strp, const char *fmt, ...)
 {
   va_list ap;

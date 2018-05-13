@@ -20,6 +20,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page crypt_crypt_mod Register crypto modules
+ *
+ * Register crypto modules
+ */
+
 #include "config.h"
 #include "mutt/mutt.h"
 #include "mutt/queue.h"
@@ -35,8 +41,7 @@ struct CryptModule
   struct CryptModuleSpecs *specs;
   STAILQ_ENTRY(CryptModule) entries;
 };
-STAILQ_HEAD(CryptModules, CryptModule)
-modules = STAILQ_HEAD_INITIALIZER(modules);
+static STAILQ_HEAD(, CryptModule) CryptModules = STAILQ_HEAD_INITIALIZER(CryptModules);
 
 /**
  * crypto_module_register - Register a new crypto module
@@ -45,7 +50,7 @@ void crypto_module_register(struct CryptModuleSpecs *specs)
 {
   struct CryptModule *module = mutt_mem_calloc(1, sizeof(struct CryptModule));
   module->specs = specs;
-  STAILQ_INSERT_HEAD(&modules, module, entries);
+  STAILQ_INSERT_HEAD(&CryptModules, module, entries);
 }
 
 /**
@@ -57,7 +62,7 @@ void crypto_module_register(struct CryptModuleSpecs *specs)
 struct CryptModuleSpecs *crypto_module_lookup(int identifier)
 {
   struct CryptModule *module = NULL;
-  STAILQ_FOREACH(module, &modules, entries)
+  STAILQ_FOREACH(module, &CryptModules, entries)
   {
     if (module->specs->identifier == identifier)
     {

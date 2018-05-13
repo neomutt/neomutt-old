@@ -58,7 +58,7 @@ typedef size_t (*encoder_t)(char *str, const char *buf, size_t buflen, const cha
  * @param buf    Buffer for result
  * @param buflen Length of buffer
  * @param tocode Character encoding
- * @retval num Number of bytes written to buffer
+ * @retval num Bytes written to buffer
  */
 static size_t b_encoder(char *str, const char *buf, size_t buflen, const char *tocode)
 {
@@ -96,7 +96,7 @@ static size_t b_encoder(char *str, const char *buf, size_t buflen, const char *t
  * @param buf    Buffer for result
  * @param buflen Length of buffer
  * @param tocode Character encoding
- * @retval num Number of bytes written to buffer
+ * @retval num Bytes written to buffer
  */
 static size_t q_encoder(char *str, const char *buf, size_t buflen, const char *tocode)
 {
@@ -153,7 +153,8 @@ static char *parse_encoded_word(char *str, enum ContentEncoding *enc, char **cha
                             "\\?"
                             "([qQbB])" /* encoding */
                             "\\?"
-                            "([^? ]+)" /* encoded text */
+                            "([^?]+)" /* encoded text - we accept whitespace
+                                         as some mailers do that, see #1189. */
                             "\\?=",
                             REG_EXTENDED);
     assert(re && "Something is wrong with your RE engine.");
@@ -308,7 +309,7 @@ static size_t encode_block(char *str, char *buf, size_t buflen, const char *from
  * @param tocode   New encoding
  * @param encoder  Encoding function
  * @param wlen     Number of characters converted
- * @retval num Number of bytes that can be converted
+ * @retval num Bytes that can be converted
  *
  * Discover how much of the data (d, dlen) can be converted into a single
  * encoded word. Return how much data can be converted, and set the length
@@ -439,7 +440,7 @@ static int rfc2047_encode(const char *d, size_t dlen, int col, const char *fromc
 
   /* Try to convert to UTF-8. */
   char *u = mutt_str_substr_dup(d, d + dlen);
-  if (mutt_ch_convert_string(&u, fromcode, icode, 0))
+  if (mutt_ch_convert_string(&u, fromcode, icode, 0) != 0)
   {
     rc = 1;
     icode = 0;

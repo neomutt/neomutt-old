@@ -21,6 +21,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page compress Compressed mbox local mailbox type
+ *
+ * Compressed mbox local mailbox type
+ */
+
 #include "config.h"
 #include <limits.h>
 #include <stdio.h>
@@ -169,8 +175,8 @@ static int setup_paths(struct Context *ctx)
 /**
  * get_size - Get the size of a file
  * @param path File to measure
- * @retval n Size in bytes
- * @retval 0 On error
+ * @retval num Size in bytes
+ * @retval 0   Error
  */
 static int get_size(const char *path)
 {
@@ -206,8 +212,8 @@ static void store_size(const struct Context *ctx)
  * find_hook - Find a hook to match a path
  * @param type Type of hook, e.g. #MUTT_CLOSEHOOK
  * @param path Filename to test
- * @retval string Matching hook command
- * @retval NULL   No matches
+ * @retval ptr  Matching hook command
+ * @retval NULL No matches
  *
  * Each hook has a type and a pattern.
  * Find a command that matches the type and path supplied. e.g.
@@ -234,7 +240,7 @@ static const char *find_hook(int type, const char *path)
  * set_compress_info - Find the compress hooks for a mailbox
  * @param ctx Mailbox to examine
  * @retval ptr  CompressInfo Hook info for the mailbox's path
- * @retval NULL On error
+ * @retval NULL Error
  *
  * When a mailbox is opened, we check if there are any matching hooks.
  */
@@ -400,9 +406,9 @@ static void expand_command_str(const struct Context *ctx, const char *cmd, char 
 
 /**
  * execute_command - Run a system command
- * @param ctx         Mailbox to work with
- * @param command     Command string to execute
- * @param progress    Message to show the user
+ * @param ctx      Mailbox to work with
+ * @param command  Command string to execute
+ * @param progress Message to show the user
  * @retval 1 Success
  * @retval 0 Failure
  *
@@ -441,6 +447,8 @@ static int execute_command(struct Context *ctx, const char *command, const char 
 /**
  * comp_open_mailbox - Open a compressed mailbox
  * @param ctx Mailbox to open
+ * @retval  0 Success
+ * @retval -1 Error
  *
  * Set up a compressed mailbox to be read.
  * Decompress the mailbox and set up the paths and hooks needed.
@@ -703,6 +711,11 @@ static int comp_check_mailbox(struct Context *ctx, int *index_hint)
 
 /**
  * comp_open_message - Delegated to mbox handler
+ * @param ctx   Mailbox
+ * @param msg   Message to open
+ * @param msgno Message number
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int comp_open_message(struct Context *ctx, struct Message *msg, int msgno)
 {
@@ -723,6 +736,10 @@ static int comp_open_message(struct Context *ctx, struct Message *msg, int msgno
 
 /**
  * comp_close_message - Delegated to mbox handler
+ * @param ctx Mailbox
+ * @param msg Message to close
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int comp_close_message(struct Context *ctx, struct Message *msg)
 {
@@ -743,6 +760,10 @@ static int comp_close_message(struct Context *ctx, struct Message *msg)
 
 /**
  * comp_commit_message - Delegated to mbox handler
+ * @param ctx Mailbox
+ * @param msg Message to commit
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int comp_commit_message(struct Context *ctx, struct Message *msg)
 {
@@ -763,6 +784,11 @@ static int comp_commit_message(struct Context *ctx, struct Message *msg)
 
 /**
  * comp_open_new_message - Delegated to mbox handler
+ * @param msg Message to commit
+ * @param ctx Mailbox
+ * @param hdr Email header
+ * @retval  0 Success
+ * @retval -1 Failure
  */
 static int comp_open_new_message(struct Message *msg, struct Context *ctx, struct Header *hdr)
 {

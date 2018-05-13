@@ -21,6 +21,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page enter GUI ask the user to enter a string
+ *
+ * GUI ask the user to enter a string
+ */
+
 #include "config.h"
 #include <stddef.h>
 #include <stdbool.h>
@@ -50,6 +56,12 @@ enum RedrawFlags
 /* combining mark / non-spacing character */
 #define COMB_CHAR(wc) (IsWPrint(wc) && !wcwidth(wc))
 
+/**
+ * my_addwch - Display one wide character on screen
+ * @param wc Character to display
+ * @retval OK  Success
+ * @retval ERR Failure
+ */
 static int my_addwch(wchar_t wc)
 {
   int n = wcwidth(wc);
@@ -64,8 +76,9 @@ static int my_addwch(wchar_t wc)
 
 /**
  * replace_part - Search and replace on a buffer
- *
- * Replace part of the wchar_t buffer, from FROM to CURPOS, by BUF.
+ * @param state Current state of the input buffer
+ * @param from  Starting point for the replacement
+ * @param buf   Replacement string
  */
 static void replace_part(struct EnterState *state, size_t from, char *buf)
 {
@@ -100,7 +113,7 @@ static void replace_part(struct EnterState *state, size_t from, char *buf)
 }
 
 /**
- * mutt_enter_string_simple - Ask the user for a string
+ * mutt_enter_string - Ask the user for a string
  * @param buf    Buffer to store the string
  * @param buflen Buffer length
  * @param col    Initial cursor position
@@ -759,6 +772,10 @@ bye:
   return rc;
 }
 
+/**
+ * mutt_enter_state_free - Free an EnterState
+ * @param esp EnterState to free
+ */
 void mutt_enter_state_free(struct EnterState **esp)
 {
   if (!esp)
@@ -767,10 +784,3 @@ void mutt_enter_state_free(struct EnterState **esp)
   FREE(&(*esp)->wbuf);
   FREE(esp);
 }
-
-/*
- * TODO:
- * very narrow screen might crash it
- * sort out the input side
- * unprintable chars
- */

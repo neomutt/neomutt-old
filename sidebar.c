@@ -23,6 +23,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page sidebar GUI display the mailboxes in a side panel
+ *
+ * GUI display the mailboxes in a side panel
+ */
+
 #include "config.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -674,8 +680,8 @@ static bool prepare_sidebar(int page_size)
  * draw_divider - Draw a line between the sidebar and the rest of neomutt
  * @param num_rows   Height of the Sidebar
  * @param num_cols   Width of the Sidebar
- * @retval 0 Empty string
- * @retval n Character occupies n screen columns
+ * @retval 0   Empty string
+ * @retval num Character occupies n screen columns
  *
  * Draw a divider using characters from the config option "sidebar_divider_char".
  * This can be an ASCII or Unicode character.
@@ -835,7 +841,7 @@ static void draw_sidebar(int num_rows, int num_cols, int div_width)
     else if (b->msg_flagged > 0)
       SETCOLOR(MT_COLOR_FLAGGED);
     else if ((ColorDefs[MT_COLOR_SB_SPOOLFILE] != 0) &&
-             (mutt_str_strcmp(b->path, SpoolFile) == 0))
+             (mutt_str_strcmp(b->path, Spoolfile) == 0))
     {
       SETCOLOR(MT_COLOR_SB_SPOOLFILE);
     }
@@ -1072,7 +1078,7 @@ void mutt_sb_set_buffystats(const struct Context *ctx)
 
 /**
  * mutt_sb_get_highlight - Get the Buffy that's highlighted in the sidebar
- * @retval string Mailbox path
+ * @retval ptr Mailbox path
  *
  * Get the path of the mailbox that's highlighted in the sidebar.
  */
@@ -1113,6 +1119,8 @@ void mutt_sb_set_open_buffy(void)
 
 /**
  * mutt_sb_notify_mailbox - The state of a Buffy is about to change
+ * @param b       Folder
+ * @param created True if folder created, false if deleted
  *
  * We receive a notification:
  *      After a new Buffy has been created

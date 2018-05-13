@@ -114,8 +114,8 @@ static struct BodyCache *msg_cache_open(struct ImapData *idata)
  * msg_cache_get - Get the message cache entry for an email
  * @param idata Server data
  * @param h     Email header
- * @retval FILE* Success, handle of cache entry
- * @retval NULL  Failure
+ * @retval ptr  Success, handle of cache entry
+ * @retval NULL Failure
  */
 static FILE *msg_cache_get(struct ImapData *idata, struct Header *h)
 {
@@ -133,8 +133,8 @@ static FILE *msg_cache_get(struct ImapData *idata, struct Header *h)
  * msg_cache_put - Put an email into the message cache
  * @param idata Server data
  * @param h     Email header
- * @retval FILE* Success, handle of cache entry
- * @retval NULL  Failure
+ * @retval ptr  Success, handle of cache entry
+ * @retval NULL Failure
  */
 static FILE *msg_cache_put(struct ImapData *idata, struct Header *h)
 {
@@ -579,18 +579,18 @@ static void set_changed_flag(struct Context *ctx, struct Header *h,
    * cmd_parse_fetch().  We don't want to count a local modification
    * to the header flag as a "change".
    */
-  if ((old_hd_flag != new_hd_flag) || (!local_changes))
-  {
-    if (new_hd_flag != h_flag)
-    {
-      if (server_changes)
-        *server_changes = 1;
+  if ((old_hd_flag == new_hd_flag) && local_changes)
+    return;
 
-      /* Local changes have priority */
-      if (!local_changes)
-        mutt_set_flag(ctx, h, flag_name, new_hd_flag);
-    }
-  }
+  if (new_hd_flag == h_flag)
+    return;
+
+  if (server_changes)
+    *server_changes = 1;
+
+  /* Local changes have priority */
+  if (!local_changes)
+    mutt_set_flag(ctx, h, flag_name, new_hd_flag);
 }
 
 /**
@@ -989,6 +989,7 @@ int imap_fetch_message(struct Context *ctx, struct Message *msg, int msgno)
   unsigned int uid;
   int cacheno;
   struct ImapCache *cache = NULL;
+  bool retried = false;
   bool read;
   int rc;
 
@@ -1178,6 +1179,14 @@ parsemsg:
   rewind(msg->fp);
   HEADER_DATA(h)->parsed = true;
 
+  /* retry message parse if cached message is empty */
+  if (!retried && ((h->lines == 0) || (h->content->length == 0)))
+  {
+    imap_cache_del(idata, h);
+    retried = true;
+    goto parsemsg;
+  }
+
   return 0;
 
 bail:
@@ -1330,7 +1339,7 @@ int imap_append_message(struct Context *ctx, struct Message *msg)
   if (len)
     flush_buffer(buf, &len, idata->conn);
 
-  mutt_socket_write(idata->conn, "\r\n");
+  mutt_socket_send(idata->conn, "\r\n");
   mutt_file_fclose(&fp);
 
   do
@@ -1449,7 +1458,8 @@ int imap_copy_messages(struct Context *ctx, struct Header *h, char *dest, int de
         goto out;
       }
       else
-        mutt_message(_("Copying %d messages to %s..."), rc, mbox);
+        mutt_message(ngettext("Copying %d message to %s...", "Copying %d messages to %s...", rc),
+                     rc, mbox);
     }
     else
     {
@@ -1579,13 +1589,13 @@ int imap_cache_clean(struct ImapData *idata)
  */
 void imap_free_header_data(struct ImapHeaderData **data)
 {
-  if (*data)
-  {
-    /* this should be safe even if the list wasn't used */
-    FREE(&((*data)->flags_system));
-    FREE(&((*data)->flags_remote));
-    FREE(data);
-  }
+  if (!data || !*data)
+    return;
+
+  /* this should be safe even if the list wasn't used */
+  FREE(&((*data)->flags_system));
+  FREE(&((*data)->flags_remote));
+  FREE(data);
 }
 
 /**

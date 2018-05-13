@@ -20,6 +20,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page complete String auto-completion routines
+ *
+ * String auto-completion routines
+ */
+
 #include "config.h"
 #include <dirent.h>
 #include <errno.h>
@@ -65,7 +71,7 @@ int mutt_complete(char *s, size_t slen)
   mutt_debug(2, "completing %s\n", s);
 
 #ifdef USE_NNTP
-  if (OPT_NEWS)
+  if (OptNews)
   {
     struct NntpServer *nserv = CurrentNewsSrv;
     unsigned int n = 0;
@@ -128,7 +134,7 @@ int mutt_complete(char *s, size_t slen)
   if (*s == '=' || *s == '+' || *s == '!')
   {
     if (*s == '!')
-      p = NONULL(SpoolFile);
+      p = NONULL(Spoolfile);
     else
       p = NONULL(Folder);
 
@@ -146,7 +152,7 @@ int mutt_complete(char *s, size_t slen)
     dirpart[0] = *s;
     dirpart[1] = '\0';
     if (*s == '!')
-      mutt_str_strfcpy(exp_dirpart, NONULL(SpoolFile), sizeof(exp_dirpart));
+      mutt_str_strfcpy(exp_dirpart, NONULL(Spoolfile), sizeof(exp_dirpart));
     else
       mutt_str_strfcpy(exp_dirpart, NONULL(Folder), sizeof(exp_dirpart));
     p = strrchr(s, '/');

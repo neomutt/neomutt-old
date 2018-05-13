@@ -27,6 +27,12 @@
  * crypt_gpgme.c - GPGME based crypto operations
  */
 
+/**
+ * @page crypt_crypt_gpgme Wrapper for PGP/SMIME calls to GPGME
+ *
+ * Wrapper for PGP/SMIME calls to GPGME
+ */
+
 #include "config.h"
 #include <ctype.h>
 #include <errno.h>
@@ -254,8 +260,8 @@ static const char *crypt_fpr(struct CryptKeyInfo *k)
 /**
  * crypt_fpr_or_lkeyid - Find the fingerprint of a key
  * @param k Key to examine
- * @retval string fingerprint if available
- * @retval string otherwise the long keyid
+ * @retval ptr Fingerprint if available
+ * @retval ptr Otherwise the long keyid
  */
 static const char *crypt_fpr_or_lkeyid(struct CryptKeyInfo *k)
 {
@@ -455,6 +461,7 @@ static int crypt_id_matches_addr(struct Address *addr, struct Address *u_addr,
 /**
  * create_gpgme_context - Create a new GPGME context
  * @param for_smime If set, protocol of the context is set to CMS
+ * @retval ptr New GPGME context
  */
 static gpgme_ctx_t create_gpgme_context(int for_smime)
 {
@@ -782,7 +789,7 @@ static gpgme_key_t *create_recipient_set(const char *keylist, gpgme_protocol_t p
 
 /**
  * set_signer - Make sure that the correct signer is set
- * @retval 0 on success
+ * @retval 0 Success
  */
 static int set_signer(gpgme_ctx_t ctx, int for_smime)
 {
@@ -980,7 +987,7 @@ static struct Body *sign_message(struct Body *a, int use_smime)
   gpgme_data_t message, signature;
   gpgme_sign_result_t sigres;
 
-  convert_to_7bit(a); /* Signed data _must_ be in 7-bit format. */
+  crypt_convert_to_7bit(a); /* Signed data _must_ be in 7-bit format. */
 
   message = body_to_data_object(a, 1);
   if (!message)
@@ -1116,7 +1123,7 @@ struct Body *pgp_gpgme_encrypt_message(struct Body *a, char *keylist, int sign)
     return NULL;
 
   if (sign)
-    convert_to_7bit(a);
+    crypt_convert_to_7bit(a);
   gpgme_data_t plaintext = body_to_data_object(a, 0);
   if (!plaintext)
   {
@@ -1905,7 +1912,7 @@ restart:
 
 /**
  * pgp_gpgme_decrypt_mime - Decrypt a PGP/MIME message
- * @retval 0 on success
+ * @retval 0 Success
  *
  * The message in FPIN and B and return a new body and the stream in CUR and
  * FPOUT.
@@ -1998,7 +2005,7 @@ bail:
 
 /**
  * smime_gpgme_decrypt_mime - Decrypt a S/MIME message
- * @retval 0 on success
+ * @retval 0 Success
  *
  * The message in FPIN and B and return a new body and
  * the stream in CUR and FPOUT.
@@ -2394,7 +2401,7 @@ void pgp_gpgme_invoke_import(const char *fname)
  *
  * strip the signature and PGP's dash-escaping.
  *
- * XXX - charset handling: We assume that it is safe to do character set
+ * XXX charset handling: We assume that it is safe to do character set
  * decoding first, dash decoding second here, while we do it the other way
  * around in the main handler.
  *
@@ -2514,7 +2521,7 @@ int pgp_gpgme_application_handler(struct Body *m, struct State *s)
       }
       else
       {
-        /* XXX - we may wish to recode here */
+        /* XXX we may wish to recode here */
         if (s->prefix)
           state_puts(s->prefix, s);
         state_puts(buf, s);
@@ -2672,7 +2679,7 @@ int pgp_gpgme_application_handler(struct Body *m, struct State *s)
     else
     {
       /* A traditional PGP part may mix signed and unsigned content */
-      /* XXX - we may wish to recode here */
+      /* XXX we may wish to recode here */
       if (s->prefix)
         state_puts(s->prefix, s);
       state_puts(buf, s);
@@ -3895,8 +3902,12 @@ leave:
 
 /**
  * list_to_pattern - Convert STailQ to GPGME-compatible pattern
+ * @param list List of strings to convert
+ * @retval ptr GPGME-compatible pattern
  *
  * We need to convert spaces in an item into a '+' and '%' into "%25".
+ *
+ * @note The caller must free the returned pattern
  */
 static char *list_to_pattern(struct ListHead *list)
 {
@@ -3952,6 +3963,11 @@ static char *list_to_pattern(struct ListHead *list)
 
 /**
  * get_candidates - Get a list of keys which are candidates for the selection
+ * @param hints  List of strings to match
+ * @param app    Application type, e.g. #APPLICATION_PGP
+ * @param secret If true, only match secret keys
+ * @retval ptr  Key List
+ * @retval NULL Error
  *
  * Select by looking at the HINTS list.
  */
@@ -4100,17 +4116,21 @@ static struct CryptKeyInfo *get_candidates(struct ListHead *hints, unsigned int 
 }
 
 /**
- * crypt_add_string_to_hints - Add the string STR to the list HINTS
+ * crypt_add_string_to_hints - Split a string and add the parts to a List
+ * @param[in]  str   String to parse
+ * @param[out] hints List of string parts
  *
- * This list is later used to match addresses.
+ * The string str is split by whitespace and punctuation and the parts added to
+ * hints.  This list is later used to match addresses.
  */
-static void crypt_add_string_to_hints(struct ListHead *hints, const char *str)
+static void crypt_add_string_to_hints(const char *str, struct ListHead *hints)
 {
   char *scratch = mutt_str_strdup(str);
   if (!scratch)
     return;
 
-  for (char *t = strtok(scratch, " ,.:\"()<>\n"); t; t = strtok(NULL, " ,.:\"()<>\n"))
+  for (char *t = strtok(scratch, " ,.:\"()<>\n"); t;
+       t = strtok(NULL, " ,.:\"()<>\n"))
   {
     if (strlen(t) > 3)
       mutt_list_insert_tail(hints, mutt_str_strdup(t));
@@ -4250,7 +4270,7 @@ static struct CryptKeyInfo *crypt_select_key(struct CryptKeyInfo *keys,
       case OP_GENERIC_SELECT_ENTRY:
         /* FIXME make error reporting more verbose - this should be
              easy because gpgme provides more information */
-        if (OPT_PGP_CHECK_TRUST)
+        if (OptPgpCheckTrust)
         {
           if (!crypt_key_is_valid(key_table[menu->current]))
           {
@@ -4260,37 +4280,40 @@ static struct CryptKeyInfo *crypt_select_key(struct CryptKeyInfo *keys,
           }
         }
 
-        if (OPT_PGP_CHECK_TRUST && (!crypt_id_is_valid(key_table[menu->current]) ||
-                                    !crypt_id_is_strong(key_table[menu->current])))
+        if (OptPgpCheckTrust && (!crypt_id_is_valid(key_table[menu->current]) ||
+                                 !crypt_id_is_strong(key_table[menu->current])))
         {
           const char *warn_s = NULL;
           char buf2[LONG_STRING];
 
           if (key_table[menu->current]->flags & KEYFLAG_CANTUSE)
-            warn_s = N_("ID is expired/disabled/revoked.");
+            warn_s = _("ID is expired/disabled/revoked. Do you really want to "
+                       "use the key?");
           else
           {
             warn_s = "??";
             switch (key_table[menu->current]->validity)
             {
               case GPGME_VALIDITY_NEVER:
-                warn_s = N_("ID is not valid.");
+                warn_s =
+                    _("ID is not valid. Do you really want to use the key?");
                 break;
               case GPGME_VALIDITY_MARGINAL:
-                warn_s = N_("ID is only marginally valid.");
+                warn_s = _("ID is only marginally valid. Do you really want to "
+                           "use the key?");
                 break;
               case GPGME_VALIDITY_FULL:
               case GPGME_VALIDITY_ULTIMATE:
                 break;
               case GPGME_VALIDITY_UNKNOWN:
               case GPGME_VALIDITY_UNDEFINED:
-                warn_s = N_("ID has undefined validity.");
+                warn_s = _("ID has undefined validity. Do you really want to "
+                           "use the key?");
                 break;
             }
           }
 
-          snprintf(buf2, sizeof(buf2),
-                   _("%s Do you really want to use the key?"), _(warn_s));
+          snprintf(buf2, sizeof(buf2), "%s", warn_s);
 
           if (mutt_yesorno(buf2, 0) != MUTT_YES)
           {
@@ -4339,9 +4362,9 @@ static struct CryptKeyInfo *crypt_getkeybyaddr(struct Address *a,
   *forced_valid = 0;
 
   if (a && a->mailbox)
-    crypt_add_string_to_hints(&hints, a->mailbox);
+    crypt_add_string_to_hints(a->mailbox, &hints);
   if (a && a->personal)
-    crypt_add_string_to_hints(&hints, a->personal);
+    crypt_add_string_to_hints(a->personal, &hints);
 
   if (!oppenc_mode)
     mutt_message(_("Looking for keys matching \"%s\"..."), a ? a->mailbox : "");
@@ -4458,7 +4481,7 @@ static struct CryptKeyInfo *crypt_getkeybystr(char *p, short abilities,
   *forced_valid = 0;
 
   const char *pfcopy = crypt_get_fingerprint_or_id(p, &phint, &pl, &ps);
-  crypt_add_string_to_hints(&hints, phint);
+  crypt_add_string_to_hints(phint, &hints);
   struct CryptKeyInfo *keys = get_candidates(&hints, app, (abilities & KEYFLAG_CANSIGN));
   mutt_list_free(&hints);
 
@@ -4574,7 +4597,11 @@ static struct CryptKeyInfo *crypt_ask_for_key(char *tag, char *whatfor, short ab
 
 /**
  * find_keys - Find keys of the recipients of the message
- * @retval NULL if any of the keys can not be found
+ * @param addrlist    Address List
+ * @param app         Application type, e.g. #APPLICATION_PGP
+ * @param oppenc_mode If true, use opportunistic encryption
+ * @retval ptr  Space-separated string of keys
+ * @retval NULL At least one of the keys can't be found
  *
  * If oppenc_mode is true, only keys that can be determined without prompting
  * will be used.
@@ -4723,9 +4750,10 @@ struct Body *pgp_gpgme_make_key_attachment(char *tempf)
   char buf[LONG_STRING];
   struct stat sb;
 
-  OPT_PGP_CHECK_TRUST = false;
+  OptPgpCheckTrust = false;
 
-  struct CryptKeyInfo *key = crypt_ask_for_key(_("Please enter the key ID: "), NULL, 0, APPLICATION_PGP, NULL);
+  struct CryptKeyInfo *key = crypt_ask_for_key(_("Please enter the key ID: "),
+                                               NULL, 0, APPLICATION_PGP, NULL);
   if (!key)
     goto bail;
   export_keys[0] = key->kobj;
@@ -4784,15 +4812,15 @@ static void init_common(void)
   /* this initialization should only run one time, but it may be called by
    * either pgp_gpgme_init or smime_gpgme_init */
   static bool has_run = false;
-  if (!has_run)
-  {
-    gpgme_check_version(NULL);
-    gpgme_set_locale(NULL, LC_CTYPE, setlocale(LC_CTYPE, NULL));
+  if (has_run)
+    return;
+
+  gpgme_check_version(NULL);
+  gpgme_set_locale(NULL, LC_CTYPE, setlocale(LC_CTYPE, NULL));
 #ifdef ENABLE_NLS
-    gpgme_set_locale(NULL, LC_MESSAGES, setlocale(LC_MESSAGES, NULL));
+  gpgme_set_locale(NULL, LC_MESSAGES, setlocale(LC_MESSAGES, NULL));
 #endif
-    has_run = true;
-  }
+  has_run = true;
 }
 
 static void init_pgp(void)

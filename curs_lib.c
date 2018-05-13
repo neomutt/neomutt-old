@@ -64,14 +64,14 @@
  */
 
 /* These are used for macros and exec/push commands.
- * They can be temporarily ignored by setting OPT_IGNORE_MACRO_EVENTS
+ * They can be temporarily ignored by setting OptIgnoreMacroEvents
  */
 static size_t MacroBufferCount = 0;
 static size_t MacroBufferLen = 0;
 static struct Event *MacroEvents;
 
 /* These are used in all other "normal" situations, and are not
- * ignored when setting OPT_IGNORE_MACRO_EVENTS
+ * ignored when setting OptIgnoreMacroEvents
  */
 static size_t UngetCount = 0;
 static size_t UngetLen = 0;
@@ -80,11 +80,11 @@ static struct Event *UngetKeyEvents;
 void mutt_refresh(void)
 {
   /* don't refresh when we are waiting for a child. */
-  if (OPT_KEEP_QUIET)
+  if (OptKeepQuiet)
     return;
 
   /* don't refresh in the middle of macros unless necessary */
-  if (MacroBufferCount && !OPT_FORCE_REFRESH && !OPT_IGNORE_MACRO_EVENTS)
+  if (MacroBufferCount && !OptForceRefresh && !OptIgnoreMacroEvents)
     return;
 
   /* else */
@@ -115,7 +115,7 @@ struct Event mutt_getch(void)
   if (UngetCount)
     return UngetKeyEvents[--UngetCount];
 
-  if (!OPT_IGNORE_MACRO_EVENTS && MacroBufferCount)
+  if (!OptIgnoreMacroEvents && MacroBufferCount)
     return MacroEvents[--MacroBufferCount];
 
   SigInt = 0;
@@ -195,9 +195,9 @@ int mutt_get_field_unbuffered(char *msg, char *buf, size_t buflen, int flags)
 {
   int rc;
 
-  OPT_IGNORE_MACRO_EVENTS = true;
+  OptIgnoreMacroEvents = true;
   rc = mutt_get_field(msg, buf, buflen, flags);
-  OPT_IGNORE_MACRO_EVENTS = false;
+  OptIgnoreMacroEvents = false;
 
   return rc;
 }
@@ -374,10 +374,10 @@ void mutt_query_exit(void)
 
 void mutt_show_error(void)
 {
-  if (OPT_KEEP_QUIET || !ErrorBufMessage)
+  if (OptKeepQuiet || !ErrorBufMessage)
     return;
 
-  SETCOLOR(OPT_MSG_ERR ? MT_COLOR_ERROR : MT_COLOR_MESSAGE);
+  SETCOLOR(OptMsgErr ? MT_COLOR_ERROR : MT_COLOR_MESSAGE);
   mutt_window_mvaddstr(MuttMessageWindow, 0, 0, ErrorBuf);
   NORMAL_COLOR;
   mutt_window_clrtoeol(MuttMessageWindow);
@@ -385,7 +385,7 @@ void mutt_show_error(void)
 
 void mutt_endwin(void)
 {
-  if (OPT_NO_CURSES)
+  if (OptNoCurses)
     return;
 
   int e = errno;
@@ -941,7 +941,7 @@ void mutt_paddstr(int n, const char *s)
  * @param[in]  maxlen Maximum length of string in bytes
  * @param[in]  maxwid Maximum width in screen columns
  * @param[out] width  Save the truncated screen column width
- * @retval n Number of bytes to use
+ * @retval num Bytes to use
  *
  * See how many bytes to copy from string so it's at most maxlen bytes long and
  * maxwid columns wide
@@ -994,7 +994,7 @@ out:
 /**
  * mutt_strwidth - Measure a string's width in screen cells
  * @param s String to be measured
- * @retval n Number of screen cells string would use
+ * @retval num Screen cells string would use
  */
 int mutt_strwidth(const char *s)
 {
@@ -1036,7 +1036,7 @@ int mutt_strwidth(const char *s)
  * message_is_visible - Is a message in the index within limit
  * @param ctx   Open mailbox
  * @param index Message ID (index into `ctx->hdrs[]`
- * @retval bool True if the message is within limit
+ * @retval true The message is within limit
  *
  * If no limit is in effect, all the messages are visible.
  */
@@ -1052,7 +1052,7 @@ bool message_is_visible(struct Context *ctx, int index)
  * message_is_tagged - Is a message in the index tagged (and within limit)
  * @param ctx   Open mailbox
  * @param index Message ID (index into `ctx->hdrs[]`
- * @retval bool True if the message is both tagged and within limit
+ * @retval true The message is both tagged and within limit
  *
  * If a limit is in effect, the message must be visible within it.
  */

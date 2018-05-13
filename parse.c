@@ -107,6 +107,11 @@ char *mutt_rfc822_read_line(FILE *f, char *line, size_t *linelen)
   /* not reached */
 }
 
+/**
+ * parse_references - Parse references from an email header
+ * @param head List to receive the references
+ * @param s    String to parse
+ */
 static void parse_references(struct ListHead *head, char *s)
 {
   char *m = NULL;
@@ -378,6 +383,20 @@ void mutt_parse_content_type(char *s, struct Body *ct)
   }
 }
 
+/**
+ * mutt_parse_content_language - Read the content's language
+ * @param s  Language string
+ * @param ct Body of the email
+ */
+static void mutt_parse_content_language(char *s, struct Body *ct)
+{
+  if (!s || !ct)
+    return;
+
+  mutt_debug(2, "RFC8255 >> Content-Language set to %s\n", s);
+  ct->language = mutt_str_strdup(s);
+}
+
 static void parse_content_disposition(const char *s, struct Body *ct)
 {
   struct ParameterList parms;
@@ -409,9 +428,10 @@ static void parse_content_disposition(const char *s, struct Body *ct)
 /**
  * mutt_read_mime_header - Parse a MIME header
  * @param fp      stream to read from
- * @param digest  1 if reading subparts of a multipart/digest, 0 otherwise
+ * @param digest  true if reading subparts of a multipart/digest
+ * @retval ptr New Body containing parsed structure
  */
-struct Body *mutt_read_mime_header(FILE *fp, int digest)
+struct Body *mutt_read_mime_header(FILE *fp, bool digest)
 {
   struct Body *p = mutt_body_new();
   char *c = NULL;
@@ -448,6 +468,8 @@ struct Body *mutt_read_mime_header(FILE *fp, int digest)
     {
       if (mutt_str_strcasecmp("type", line + 8) == 0)
         mutt_parse_content_type(c, p);
+      else if (mutt_str_strcasecmp("language", line + 8) == 0)
+        mutt_parse_content_language(c, p);
       else if (mutt_str_strcasecmp("transfer-encoding", line + 8) == 0)
         p->encoding = mutt_check_encoding(c);
       else if (mutt_str_strcasecmp("disposition", line + 8) == 0)
@@ -534,6 +556,7 @@ void mutt_parse_part(FILE *fp, struct Body *b)
  * mutt_rfc822_parse_message - parse a Message/RFC822 body
  * @param fp     stream to read from
  * @param parent info about the message/rfc822 body part
+ * @retval ptr New Body containing parsed message
  *
  * NOTE: this assumes that `parent->length' has been set!
  */
@@ -563,9 +586,10 @@ struct Body *mutt_rfc822_parse_message(FILE *fp, struct Body *parent)
  * @param boundary body separator
  * @param end_off  length of the multipart body (used when the final
  *                 boundary is missing to avoid reading too far)
- * @param digest   1 if reading a multipart/digest, 0 otherwise
+ * @param digest   true if reading a multipart/digest
+ * @retval ptr New Body containing parsed structure
  */
-struct Body *mutt_parse_multipart(FILE *fp, const char *boundary, LOFF_T end_off, int digest)
+struct Body *mutt_parse_multipart(FILE *fp, const char *boundary, LOFF_T end_off, bool digest)
 {
   char buffer[LONG_STRING];
   struct Body *head = NULL, *last = NULL, *new = NULL;
@@ -791,6 +815,12 @@ int mutt_rfc822_parse_line(struct Envelope *e, struct Header *hdr, char *line,
         {
           if (hdr)
             mutt_parse_content_type(p, hdr->content);
+          matched = 1;
+        }
+        else if (mutt_str_strcasecmp(line + 8, "language") == 0)
+        {
+          if (hdr)
+            mutt_parse_content_language(p, hdr->content);
           matched = 1;
         }
         else if (mutt_str_strcasecmp(line + 8, "transfer-encoding") == 0)
@@ -1295,6 +1325,10 @@ struct Envelope *mutt_rfc822_read_header(FILE *f, struct Header *hdr,
 
 /**
  * count_body_parts_check - Compares mime types to the ok and except lists
+ * @param checklist List of AttachMatch
+ * @param b         Email Body
+ * @param dflt      Log whether the matches are OK, or Excluded
+ * @retval true Attachment should be counted
  */
 static bool count_body_parts_check(struct ListHead *checklist, struct Body *b, bool dflt)
 {
