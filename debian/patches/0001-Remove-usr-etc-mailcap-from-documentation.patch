@@ -1,0 +1,57 @@
+From 9136c007e55090735b9c701f2ee0d0a740879ddf Mon Sep 17 00:00:00 2001
+From: Elimar Riesebieter <riesebie@lxtec.de>
+Date: Thu, 5 Apr 2018 18:33:12 +0200
+Subject: [PATCH] Remove /usr/etc/mailcap from documentation.
+
+/usr/etc isn't listed in the FHS and is not know to be used by any distro.
+---
+ doc/manual.xml.head | 5 -----
+ init.h              | 2 +-
+ rfc1524.c           | 2 +-
+ 3 files changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/doc/manual.xml.head b/doc/manual.xml.head
+index 46672a4f..1ff7b72c 100644
+--- a/doc/manual.xml.head
++++ b/doc/manual.xml.head
+@@ -8366,11 +8366,6 @@ audio/x-aiff                    aif aifc aiff
+             <literal>/etc/mailcap</literal>
+           </para>
+         </listitem>
+-        <listitem>
+-          <para>
+-            <literal>/usr/etc/mailcap</literal>
+-          </para>
+-        </listitem>
+         <listitem>
+           <para>
+             <literal>/usr/local/etc/mailcap</literal>
+diff --git a/init.h b/init.h
+index 3c13f450..dc624aab 100644
+--- a/init.h
++++ b/init.h
+@@ -1717,7 +1717,7 @@ struct Option MuttVars[] = {
+   ** When $$mail_check_stats is \fIset\fP, this variable configures
+   ** how often (in seconds) NeoMutt will update message counts.
+   */
+-  { "mailcap_path",     DT_STRING,  R_NONE, &MailcapPath, IP "~/.mailcap:" PKGDATADIR "/mailcap:" SYSCONFDIR "/mailcap:/etc/mailcap:/usr/etc/mailcap:/usr/local/etc/mailcap" },
++  { "mailcap_path",     DT_STRING,  R_NONE, &MailcapPath, IP "~/.mailcap:" PKGDATADIR "/mailcap:" SYSCONFDIR "/mailcap:/etc/mailcap:/usr/local/etc/mailcap" },
+   /*
+   ** .pp
+   ** This variable specifies which files to consult when attempting to
+diff --git a/rfc1524.c b/rfc1524.c
+index b44a9fb4..6722f7b8 100644
+--- a/rfc1524.c
++++ b/rfc1524.c
+@@ -402,7 +402,7 @@ int rfc1524_mailcap_lookup(struct Body *a, char *type,
+ 
+   /* rfc1524 specifies that a path of mailcap files should be searched.
+    * joy.  They say
+-   * $HOME/.mailcap:/etc/mailcap:/usr/etc/mailcap:/usr/local/etc/mailcap, etc
++   * $HOME/.mailcap:/etc/mailcap:/usr/local/etc/mailcap, etc
+    * and overridden by the MAILCAPS environment variable, and, just to be nice,
+    * we'll make it specifiable in .neomuttrc
+    */
+-- 
+2.17.0
+
