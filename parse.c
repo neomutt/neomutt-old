@@ -31,6 +31,7 @@
 #include "mutt/mutt.h"
 #include "mutt.h"
 #include "body.h"
+#include "dump.h"
 #include "envelope.h"
 #include "globals.h"
 #include "header.h"
@@ -784,6 +785,11 @@ void mutt_parse_mime_message(struct Context *ctx, struct Header *cur)
       mx_close_message(ctx, &msg);
     }
   } while (0);
+
+  // mutt_endwin();
+  // printf("HEADER4: %p\n", (void *) cur);
+  // dump_header(cur, 4);
+  // exit(1);
 
   cur->attach_valid = false;
 }

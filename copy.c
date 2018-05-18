@@ -36,6 +36,7 @@
 #include "copy.h"
 #include "body.h"
 #include "context.h"
+#include "dump.h"
 #include "envelope.h"
 #include "globals.h"
 #include "header.h"

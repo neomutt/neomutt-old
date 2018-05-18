@@ -37,6 +37,7 @@
 #include "buffy.h"
 #include "context.h"
 #include "copy.h"
+#include "dump.h"
 #include "envelope.h"
 #include "filter.h"
 #include "format_flags.h"
@@ -181,6 +182,11 @@ int mutt_display_message(struct Header *cur)
     mutt_file_fclose(&fpout_autocrypt);
     mutt_wait_filter(autocryptpid);
   }
+
+  // mutt_endwin();
+  // printf("HEADER2: %p\n", (void *) cur);
+  // dump_header(cur, 4);
+  // exit(1);
 
   if ((mutt_file_fclose(&fpout) != 0 && errno != EPIPE) || res < 0)
   {

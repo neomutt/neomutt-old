@@ -23,10 +23,10 @@
 #ifndef _MUTT_BODY_H
 #define _MUTT_BODY_H
 
+#include "config.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
-
 #include "mutt/parameter.h"
 
 /**

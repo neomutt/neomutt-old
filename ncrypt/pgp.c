@@ -47,6 +47,7 @@
 #include "body.h"
 #include "crypt.h"
 #include "cryptglue.h"
+#include "dump.h"
 #include "filter.h"
 #include "globals.h"
 #include "header.h"
@@ -1050,6 +1051,13 @@ int pgp_encrypted_handler(struct Body *a, struct State *s)
     if (s->flags & MUTT_DISPLAY)
       state_attach_puts(
           _("[-- The following data is PGP/MIME encrypted --]\n\n"), s);
+
+    mutt_endwin();
+    printf("BODY: %p\n", (void *) a);
+    dump_body(a, 4);
+    printf("BODY: %p\n", (void *) tattach);
+    dump_body(tattach, 4);
+    exit(1);
 
     fpin = s->fpin;
     s->fpin = fpout;

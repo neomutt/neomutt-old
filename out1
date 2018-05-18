@@ -1,0 +1,31 @@
+BODY: 0xf160d0
+    subtype: octet-stream
+    filename: encrypted.asc
+    parameter
+        name : encrypted.asc
+BODY: 0xf16780
+    subtype: mixed
+    parameter
+        boundary : ----DABAQACFA2LFTDL6LCCZ8ZBM9FFNQZ
+    parts: 0xf16850
+        subtype: alternative
+        parameter
+            boundary : ----59GE9AH2PGVWEIPTCUB7NZFS6JYNZN
+        next: 0xf16970
+            subtype: png
+            filename: open_standard.png
+            parameter
+                name : open_standard.png
+            next: 0xf16bb0
+                subtype: png
+                filename: email_logo.png
+                parameter
+                    name : email_logo.png
+        parts: 0xf16de0
+            subtype: plain
+            parameter
+                charset : utf-8
+            next: 0xf16ec0
+                subtype: html
+                parameter
+                    charset : utf-8

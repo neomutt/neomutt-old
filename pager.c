@@ -39,6 +39,7 @@
 #include "attach.h"
 #include "body.h"
 #include "context.h"
+#include "dump.h"
 #include "envelope.h"
 #include "format_flags.h"
 #include "globals.h"
@@ -2064,6 +2065,11 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
   int err, first = 1;
   int r = -1, searchctx = 0;
   bool wrapped = false;
+
+  // mutt_endwin();
+  // printf("HEADER: %p\n", (void *) extra->hdr);
+  // dump_header(extra->hdr, 4);
+  // exit(1);
 
   struct Menu *pager_menu = NULL;
   int old_PagerIndexLines; /* some people want to resize it
