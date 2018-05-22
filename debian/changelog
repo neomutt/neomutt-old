@@ -1,3 +1,9 @@
+neomutt (1:20180512-2-1lxtec1) unstable; urgency=medium
+
+  * fix build from Richard Russon
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 22 May 2018 12:01:05 +0200
+
 neomutt (1:20180512-1lxtec1) unstable; urgency=medium
 
   * New upstream release neomutt-20180512
@@ -5,7 +11,7 @@ neomutt (1:20180512-1lxtec1) unstable; urgency=medium
   * Introduced 0001-Remove-usr-etc-mailcap-from-documentation
   * Refreshed version patch.
 
- -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 10 Apr 2018 13:25:37 +0200
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Sun, 13 May 2018 08:25:37 +0200
 
 neomutt (1:20180405-1lxtec1) unstable; urgency=medium
 
