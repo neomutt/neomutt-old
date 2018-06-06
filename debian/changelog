@@ -1,3 +1,9 @@
+neomutt (1:20180512-2-1lxtec2) unstable; urgency=medium
+
+  * Install contrib/colorschemes
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Wed, 06 Jun 2018 16:29:40 +0200
+
 neomutt (1:20180512-2-1lxtec1) unstable; urgency=medium
 
   * fix build from Richard Russon

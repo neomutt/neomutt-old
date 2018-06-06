@@ -2,6 +2,7 @@ contrib/hcache-bench
 contrib/keybase
 contrib/lua
 contrib/vim-keys
+contrib/colorschemes
 debian/extra/samples/*
 debian/tmp/etc/neomuttrc
 debian/tmp/usr/share/doc/neomutt/samples/*
