@@ -38,6 +38,7 @@
 #include "context.h"
 #include "envelope.h"
 #include "globals.h"
+#include "handler.h"
 #include "header.h"
 #include "mailbox.h"
 #include "mutt_curses.h"
@@ -127,11 +128,15 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
         if ((flags & (CH_UPDATE | CH_XMIT | CH_NOSTATUS)) &&
             ((mutt_str_strncasecmp("Status:", buf, 7) == 0) ||
              (mutt_str_strncasecmp("X-Status:", buf, 9) == 0)))
+        {
           continue;
+        }
         if ((flags & (CH_UPDATE_LEN | CH_XMIT | CH_NOLEN)) &&
             ((mutt_str_strncasecmp("Content-Length:", buf, 15) == 0) ||
              (mutt_str_strncasecmp("Lines:", buf, 6) == 0)))
+        {
           continue;
+        }
         if ((flags & CH_UPDATE_REFS) && (mutt_str_strncasecmp("References:", buf, 11) == 0))
           continue;
         if ((flags & CH_UPDATE_IRT) && (mutt_str_strncasecmp("In-Reply-To:", buf, 12) == 0))
@@ -399,8 +404,10 @@ int mutt_copy_hdr(FILE *in, FILE *out, LOFF_T off_start, LOFF_T off_end,
 int mutt_copy_header(FILE *in, struct Header *h, FILE *out, int flags, const char *prefix)
 {
   if (h->env)
+  {
     flags |= (h->env->irt_changed ? CH_UPDATE_IRT : 0) |
              (h->env->refs_changed ? CH_UPDATE_REFS : 0);
+  }
 
   if (mutt_copy_hdr(in, out, h->offset, h->content->offset, flags, prefix) == -1)
     return -1;
@@ -576,7 +583,6 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
 {
   struct Body *body = hdr->content;
   char prefix[SHORT_STRING];
-  struct State s;
   LOFF_T new_offset = -1;
   int rc = 0;
 
@@ -676,7 +682,7 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
   if (flags & MUTT_CM_DECODE)
   {
     /* now make a text/plain version of the message */
-    memset(&s, 0, sizeof(struct State));
+    struct State s = { 0 };
     s.fpin = fpin;
     s.fpout = fpout;
     if (flags & MUTT_CM_PREFIX)
@@ -786,7 +792,7 @@ int mutt_copy_message_fp(FILE *fpout, FILE *fpin, struct Header *hdr, int flags,
 int mutt_copy_message_ctx(FILE *fpout, struct Context *src, struct Header *hdr,
                           int flags, int chflags)
 {
-  struct Message *msg = mx_open_message(src, hdr->msgno);
+  struct Message *msg = mx_msg_open(src, hdr->msgno);
   if (!msg)
     return -1;
   if (!hdr->content)
@@ -797,7 +803,7 @@ int mutt_copy_message_ctx(FILE *fpout, struct Context *src, struct Header *hdr,
     mutt_debug(1, "failed to detect EOF!\n");
     r = -1;
   }
-  mx_close_message(src, &msg);
+  mx_msg_close(src, &msg);
   return r;
 }
 
@@ -824,14 +830,14 @@ static int append_message(struct Context *dest, FILE *fpin, struct Context *src,
   if (fgets(buf, sizeof(buf), fpin) == NULL)
     return -1;
 
-  msg = mx_open_new_message(dest, hdr, is_from(buf, NULL, 0, NULL) ? 0 : MUTT_ADD_FROM);
+  msg = mx_msg_open_new(dest, hdr, is_from(buf, NULL, 0, NULL) ? 0 : MUTT_ADD_FROM);
   if (!msg)
     return -1;
   if (dest->magic == MUTT_MBOX || dest->magic == MUTT_MMDF)
     chflags |= CH_FROM | CH_FORCE_FROM;
   chflags |= (dest->magic == MUTT_MAILDIR ? CH_NOSTATUS : CH_UPDATE);
   r = mutt_copy_message_fp(msg->fp, fpin, hdr, flags, chflags);
-  if (mx_commit_message(msg, dest) != 0)
+  if (mx_msg_commit(dest, msg) != 0)
     r = -1;
 
 #ifdef USE_NOTMUCH
@@ -839,7 +845,7 @@ static int append_message(struct Context *dest, FILE *fpin, struct Context *src,
     nm_update_filename(src, NULL, msg->commited_path, hdr);
 #endif
 
-  mx_close_message(dest, &msg);
+  mx_msg_close(dest, &msg);
   return r;
 }
 
@@ -856,11 +862,11 @@ static int append_message(struct Context *dest, FILE *fpin, struct Context *src,
 int mutt_append_message(struct Context *dest, struct Context *src,
                         struct Header *hdr, int cmflags, int chflags)
 {
-  struct Message *msg = mx_open_message(src, hdr->msgno);
+  struct Message *msg = mx_msg_open(src, hdr->msgno);
   if (!msg)
     return -1;
   int r = append_message(dest, msg->fp, src, hdr, cmflags, chflags);
-  mx_close_message(src, &msg);
+  mx_msg_close(src, &msg);
   return r;
 }
 

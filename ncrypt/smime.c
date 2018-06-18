@@ -47,6 +47,7 @@
 #include "filter.h"
 #include "format_flags.h"
 #include "globals.h"
+#include "handler.h"
 #include "header.h"
 #include "keymap.h"
 #include "mutt_curses.h"
@@ -75,9 +76,9 @@ struct SmimeCommandContext
 char SmimePass[STRING];
 time_t SmimeExptime = 0; /* when does the cached passphrase expire? */
 
-static char SmimeKeyToUse[_POSIX_PATH_MAX] = { 0 };
-static char SmimeCertToUse[_POSIX_PATH_MAX];
-static char SmimeIntermediateToUse[_POSIX_PATH_MAX];
+static char SmimeKeyToUse[PATH_MAX] = { 0 };
+static char SmimeCertToUse[PATH_MAX];
+static char SmimeIntermediateToUse[PATH_MAX];
 
 static void smime_free_key(struct SmimeKey **keylist)
 {
@@ -121,15 +122,19 @@ static struct SmimeKey *smime_copy_key(struct SmimeKey *key)
  *     Queries and passphrase handling.
  */
 
-/* these are copies from pgp.c */
-
-void smime_void_passphrase(void)
+/**
+ * smime_class_void_passphrase - Implements CryptModuleSpecs::void_passphrase()
+ */
+void smime_class_void_passphrase(void)
 {
   memset(SmimePass, 0, sizeof(SmimePass));
   SmimeExptime = 0;
 }
 
-int smime_valid_passphrase(void)
+/**
+ * smime_class_valid_passphrase - Implements CryptModuleSpecs::valid_passphrase()
+ */
+int smime_class_valid_passphrase(void)
 {
   time_t now = time(NULL);
 
@@ -139,7 +144,7 @@ int smime_valid_passphrase(void)
     return 1;
   }
 
-  smime_void_passphrase();
+  smime_class_void_passphrase();
 
   if (mutt_get_password(_("Enter S/MIME passphrase:"), SmimePass, sizeof(SmimePass)) == 0)
   {
@@ -176,7 +181,7 @@ static const char *fmt_smime_command(char *buf, size_t buflen, size_t col, int c
     {
       if (!optional)
       {
-        char path[_POSIX_PATH_MAX];
+        char path[PATH_MAX];
         char buf1[LONG_STRING], buf2[LONG_STRING];
         struct stat sb;
 
@@ -308,10 +313,8 @@ static pid_t smime_invoke(FILE **smimein, FILE **smimeout, FILE **smimeerr,
                           const char *digestalg, const char *key, const char *certificates,
                           const char *intermediates, const char *format)
 {
-  struct SmimeCommandContext cctx;
+  struct SmimeCommandContext cctx = { 0 };
   char cmd[HUGE_STRING];
-
-  memset(&cctx, 0, sizeof(cctx));
 
   if (!format || !*format)
     return (pid_t) -1;
@@ -620,7 +623,7 @@ static struct SmimeKey *smime_parse_key(char *buf)
 
 static struct SmimeKey *smime_get_candidates(char *search, short public)
 {
-  char index_file[_POSIX_PATH_MAX];
+  char index_file[PATH_MAX];
   char buf[LONG_STRING];
   struct SmimeKey *key = NULL, *results = NULL;
   struct SmimeKey **results_end = &results;
@@ -843,14 +846,14 @@ static void getkeys(char *mailbox)
       return;
     }
     else
-      smime_void_passphrase();
+      smime_class_void_passphrase();
 
     snprintf(SmimeKeyToUse, sizeof(SmimeKeyToUse), "%s/%s", NONULL(SmimeKeys), k);
 
     snprintf(SmimeCertToUse, sizeof(SmimeCertToUse), "%s/%s", NONULL(SmimeCertificates), k);
 
     if (mutt_str_strcasecmp(k, SmimeDefaultKey) != 0)
-      smime_void_passphrase();
+      smime_class_void_passphrase();
 
     smime_free_key(&key);
     return;
@@ -864,7 +867,7 @@ static void getkeys(char *mailbox)
       return;
     }
 
-    smime_void_passphrase();
+    smime_class_void_passphrase();
   }
 
   snprintf(SmimeKeyToUse, sizeof(SmimeKeyToUse), "%s/%s", NONULL(SmimeKeys),
@@ -874,7 +877,10 @@ static void getkeys(char *mailbox)
            NONULL(SmimeCertificates), NONULL(SmimeDefaultKey));
 }
 
-void smime_getkeys(struct Envelope *env)
+/**
+ * smime_class_getkeys - Implements CryptModuleSpecs::smime_getkeys()
+ */
+void smime_class_getkeys(struct Envelope *env)
 {
   struct Address *t = NULL;
   bool found = false;
@@ -913,13 +919,9 @@ void smime_getkeys(struct Envelope *env)
 }
 
 /**
- * smime_find_keys - Find the keys of the recipients of a message
- * @retval NULL if any of the keys can not be found
- *
- * If oppenc_mode is true, only keys that can be determined without
- * prompting will be used.
+ * smime_class_find_keys - Implements CryptModuleSpecs::find_keys()
  */
-char *smime_find_keys(struct Address *addrlist, int oppenc_mode)
+char *smime_class_find_keys(struct Address *addrlist, bool oppenc_mode)
 {
   struct SmimeKey *key = NULL;
   char *keyID = NULL, *keylist = NULL;
@@ -960,7 +962,7 @@ char *smime_find_keys(struct Address *addrlist, int oppenc_mode)
 static int smime_handle_cert_email(char *certificate, char *mailbox, int copy,
                                    char ***buffer, int *num)
 {
-  char tmpfname[_POSIX_PATH_MAX];
+  char tmpfname[PATH_MAX];
   char email[STRING];
   int rc = -1, count = 0;
   pid_t thepid;
@@ -1054,8 +1056,8 @@ static int smime_handle_cert_email(char *certificate, char *mailbox, int copy,
 
 static char *smime_extract_certificate(char *infile)
 {
-  char pk7out[_POSIX_PATH_MAX], certfile[_POSIX_PATH_MAX];
-  char tmpfname[_POSIX_PATH_MAX];
+  char pk7out[PATH_MAX], certfile[PATH_MAX];
+  char tmpfname[PATH_MAX];
   pid_t thepid;
   int empty;
 
@@ -1159,8 +1161,8 @@ static char *smime_extract_certificate(char *infile)
 
 static char *smime_extract_signer_certificate(char *infile)
 {
-  char certfile[_POSIX_PATH_MAX];
-  char tmpfname[_POSIX_PATH_MAX];
+  char certfile[PATH_MAX];
+  char tmpfname[PATH_MAX];
   pid_t thepid;
   int empty;
 
@@ -1220,11 +1222,11 @@ static char *smime_extract_signer_certificate(char *infile)
 }
 
 /**
- * smime_invoke_import - Add a certificate and update index file (externally)
+ * smime_class_invoke_import - Implements CryptModuleSpecs::smime_invoke_import()
  */
-void smime_invoke_import(char *infile, char *mailbox)
+void smime_class_invoke_import(char *infile, char *mailbox)
 {
-  char tmpfname[_POSIX_PATH_MAX], *certfile = NULL, buf[STRING];
+  char tmpfname[PATH_MAX], *certfile = NULL, buf[STRING];
   FILE *smimein = NULL;
 
   mutt_mktemp(tmpfname, sizeof(tmpfname));
@@ -1294,9 +1296,12 @@ void smime_invoke_import(char *infile, char *mailbox)
   mutt_file_fclose(&fperr);
 }
 
-int smime_verify_sender(struct Header *h)
+/**
+ * smime_class_verify_sender - Implements CryptModuleSpecs::smime_verify_sender()
+ */
+int smime_class_verify_sender(struct Header *h)
 {
-  char *mbox = NULL, *certfile = NULL, tempfname[_POSIX_PATH_MAX];
+  char *mbox = NULL, *certfile = NULL, tempfname[PATH_MAX];
   int retval = 1;
 
   mutt_mktemp(tempfname, sizeof(tempfname));
@@ -1308,8 +1313,10 @@ int smime_verify_sender(struct Header *h)
   }
 
   if (h->security & ENCRYPT)
+  {
     mutt_copy_message_ctx(fpout, Context, h, MUTT_CM_DECODE_CRYPT & MUTT_CM_DECODE_SMIME,
                           CH_MIME | CH_WEED | CH_NONEWLINE);
+  }
   else
     mutt_copy_message_ctx(fpout, Context, h, 0, 0);
 
@@ -1374,11 +1381,14 @@ static pid_t smime_invoke_sign(FILE **smimein, FILE **smimeout, FILE **smimeerr,
                       SmimeCertToUse, SmimeIntermediateToUse, SmimeSignCommand);
 }
 
-struct Body *smime_build_smime_entity(struct Body *a, char *certlist)
+/**
+ * smime_class_build_smime_entity - Implements CryptModuleSpecs::smime_build_smime_entity()
+ */
+struct Body *smime_class_build_smime_entity(struct Body *a, char *certlist)
 {
-  char buf[LONG_STRING], certfile[LONG_STRING];
-  char tempfile[_POSIX_PATH_MAX], smimeerrfile[_POSIX_PATH_MAX];
-  char smimeinfile[_POSIX_PATH_MAX];
+  char buf[LONG_STRING], certfile[PATH_MAX];
+  char tempfile[PATH_MAX], smimeerrfile[PATH_MAX];
+  char smimeinfile[PATH_MAX];
   char *cert_start, *cert_end;
   FILE *smimein = NULL;
   int err = 0, empty, off;
@@ -1524,10 +1534,13 @@ static char *openssl_md_to_smime_micalg(char *md)
   return micalg;
 }
 
-struct Body *smime_sign_message(struct Body *a)
+/**
+ * smime_class_sign_message - Implements CryptModuleSpecs::sign_message()
+ */
+struct Body *smime_class_sign_message(struct Body *a)
 {
   char buffer[LONG_STRING];
-  char signedfile[_POSIX_PATH_MAX], filetosign[_POSIX_PATH_MAX];
+  char signedfile[PATH_MAX], filetosign[PATH_MAX];
   FILE *smimein = NULL, *smimeout = NULL, *smimeerr = NULL, *sfp = NULL;
   int err = 0;
   int empty = 0;
@@ -1679,9 +1692,12 @@ static pid_t smime_invoke_decrypt(FILE **smimein, FILE **smimeout,
                       SmimeCertToUse, NULL, SmimeDecryptCommand);
 }
 
-int smime_verify_one(struct Body *sigbdy, struct State *s, const char *tempfile)
+/**
+ * smime_class_verify_one - Implements CryptModuleSpecs::verify_one()
+ */
+int smime_class_verify_one(struct Body *sigbdy, struct State *s, const char *tempfile)
 {
-  char signedfile[_POSIX_PATH_MAX], smimeerrfile[_POSIX_PATH_MAX];
+  char signedfile[PATH_MAX], smimeerrfile[PATH_MAX];
   FILE *smimeout = NULL;
   pid_t thepid;
   int badsig = -1;
@@ -1792,8 +1808,8 @@ int smime_verify_one(struct Body *sigbdy, struct State *s, const char *tempfile)
  */
 static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *out_file)
 {
-  char outfile[_POSIX_PATH_MAX], errfile[_POSIX_PATH_MAX];
-  char tmpfname[_POSIX_PATH_MAX];
+  char outfile[PATH_MAX], errfile[PATH_MAX];
+  char tmpfname[PATH_MAX];
   FILE *smimeout = NULL, *smimein = NULL, *smimeerr = NULL;
   FILE *tmpfp = NULL, *tmpfp_buffer = NULL, *fpout = NULL;
   struct stat info;
@@ -1846,8 +1862,10 @@ static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *o
     mutt_file_fclose(&smimeout);
     mutt_file_unlink(tmpfname);
     if (s->flags & MUTT_DISPLAY)
+    {
       state_attach_puts(
           _("[-- Error: unable to create OpenSSL subprocess! --]\n"), s);
+    }
     mutt_file_fclose(&smimeerr);
     return NULL;
   }
@@ -1858,16 +1876,18 @@ static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *o
     mutt_file_fclose(&smimeout);
     mutt_file_unlink(tmpfname);
     if (s->flags & MUTT_DISPLAY)
+    {
       state_attach_puts(
           _("[-- Error: unable to create OpenSSL subprocess! --]\n"), s);
+    }
     mutt_file_fclose(&smimeerr);
     return NULL;
   }
 
   if (type & ENCRYPT)
   {
-    if (!smime_valid_passphrase())
-      smime_void_passphrase();
+    if (!smime_class_valid_passphrase())
+      smime_class_void_passphrase();
     fputs(SmimePass, smimein);
     fputc('\n', smimein);
   }
@@ -1893,9 +1913,11 @@ static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *o
     }
 
     if (type & ENCRYPT)
+    {
       state_attach_puts(_("[-- The following data is S/MIME"
                           " encrypted --]\n"),
                         s);
+    }
     else
       state_attach_puts(_("[-- The following data is S/MIME signed --]\n"), s);
   }
@@ -1905,7 +1927,7 @@ static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *o
     fflush(smimeout);
     rewind(smimeout);
 
-    char tmptmpfname[_POSIX_PATH_MAX];
+    char tmptmpfname[PATH_MAX];
     if (out_file)
       fpout = out_file;
     else
@@ -1993,10 +2015,13 @@ static struct Body *smime_handle_entity(struct Body *m, struct State *s, FILE *o
   return p;
 }
 
-int smime_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Body **cur)
+/**
+ * smime_class_decrypt_mime - Implements CryptModuleSpecs::decrypt_mime()
+ */
+int smime_class_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Body **cur)
 {
-  char tempfile[_POSIX_PATH_MAX];
-  struct State s;
+  char tempfile[PATH_MAX];
+  struct State s = { 0 };
   LOFF_T tmpoffset = b->offset;
   size_t tmplength = b->length;
   int orig_type = b->type;
@@ -2009,7 +2034,6 @@ int smime_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Body **c
   if (b->parts)
     return -1;
 
-  memset(&s, 0, sizeof(s));
   s.fpin = fpin;
   fseeko(s.fpin, b->offset, SEEK_SET);
 
@@ -2062,12 +2086,18 @@ bail:
   return rc;
 }
 
-int smime_application_smime_handler(struct Body *m, struct State *s)
+/**
+ * smime_class_application_handler - Implements CryptModuleSpecs::application_handler()
+ */
+int smime_class_application_handler(struct Body *m, struct State *s)
 {
   return smime_handle_entity(m, s, NULL) ? 0 : -1;
 }
 
-int smime_send_menu(struct Header *msg)
+/**
+ * smime_class_send_menu - Implements CryptModuleSpecs::send_menu()
+ */
+int smime_class_send_menu(struct Header *msg)
 {
   struct SmimeKey *key = NULL;
   char *prompt = NULL, *letters = NULL, *choices = NULL;

@@ -231,8 +231,8 @@ header_cache_t *imap_hcache_open(struct ImapData *idata, const char *path)
 {
   struct ImapMbox mx;
   struct Url url;
-  char cachepath[LONG_STRING];
-  char mbox[LONG_STRING];
+  char cachepath[PATH_MAX];
+  char mbox[PATH_MAX];
 
   if (path)
     imap_cachepath(idata, path, mbox, sizeof(mbox));
@@ -406,8 +406,10 @@ int imap_parse_path(const char *path, struct ImapMbox *mx)
     if (!c)
       return -1;
     else
+    {
       /* walk past closing '}' */
       mx->mbox = mutt_str_strdup(c + 1);
+    }
 
     c = strrchr(tmp, '@');
     if (c)
@@ -519,9 +521,11 @@ void imap_pretty_mailbox(char *path)
       if (hlen == 0)
         home_match = true;
       else if (ImapDelimChars)
+      {
         for (delim = ImapDelimChars; *delim != '\0'; delim++)
           if (target.mbox[hlen] == *delim)
             home_match = true;
+      }
     }
     FREE(&home.mbox);
   }
@@ -581,9 +585,6 @@ struct ImapData *imap_new_idata(void)
   struct ImapData *idata = mutt_mem_calloc(1, sizeof(struct ImapData));
 
   idata->cmdbuf = mutt_buffer_new();
-  if (!idata->cmdbuf)
-    FREE(&idata);
-
   idata->cmdslots = ImapPipelineDepth + 2;
   idata->cmds = mutt_mem_calloc(idata->cmdslots, sizeof(*idata->cmds));
 

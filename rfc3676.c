@@ -139,7 +139,7 @@ static size_t print_indent(int ql, struct State *s, int add_suffix)
   if (space_quotes(s))
     ql *= 2;
 
-  return ql + add_suffix + wid;
+  return (ql + add_suffix + wid);
 }
 
 static void flush_par(struct State *s, struct FlowedState *fst)
@@ -271,9 +271,7 @@ int rfc3676_handler(struct Body *a, struct State *s)
   unsigned int quotelevel = 0;
   int delsp = 0;
   size_t sz = 0;
-  struct FlowedState fst;
-
-  memset(&fst, 0, sizeof(fst));
+  struct FlowedState fst = { 0 };
 
   /* respect DelSp of RFC3676 only with f=f parts */
   char *t = mutt_param_get(&a->parameter, "delsp");
@@ -356,7 +354,7 @@ void rfc3676_space_stuff(struct Header *hdr)
   unsigned char c = '\0';
   FILE *in = NULL, *out = NULL;
   char buf[LONG_STRING];
-  char tmpfile[_POSIX_PATH_MAX];
+  char tmpfile[PATH_MAX];
 
   if (!hdr || !hdr->content || !hdr->content->filename)
     return;

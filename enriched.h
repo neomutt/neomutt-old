@@ -1,9 +1,9 @@
 /**
  * @file
- * Struct to store the cursor position when entering text
+ * Rich text handler
  *
  * @authors
- * Copyright (C) 2017 Richard Russon <rich@flatcap.org>
+ * Copyright (C) 2018 Richard Russon <rich@flatcap.org>
  *
  * @copyright
  * This program is free software: you can redistribute it and/or modify it under
@@ -20,25 +20,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _MUTT_ENTER_STATE_H
-#define _MUTT_ENTER_STATE_H
+#ifndef _MUTT_ENRICHED_H
+#define _MUTT_ENRICHED_H
 
-#include <stddef.h>
+struct Body;
+struct State;
 
-/**
- * struct EnterState - Keep our place when entering a string
- */
-struct EnterState
-{
-  wchar_t *wbuf;
-  size_t wbuflen;
-  size_t lastchar;
-  size_t curpos;
-  size_t begin;
-  int tabs;
-};
+int text_enriched_handler(struct Body *a, struct State *s);
 
-void mutt_enter_state_free(struct EnterState **esp);
-struct EnterState *mutt_enter_state_new(void);
-
-#endif /* _MUTT_ENTER_STATE_H */
+#endif /* _MUTT_ENRICHED_H */

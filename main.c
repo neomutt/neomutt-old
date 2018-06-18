@@ -76,6 +76,15 @@
 #include "nntp.h"
 #endif
 
+#define MUTT_IGNORE (1 << 0)  /* -z */
+#define MUTT_BUFFY (1 << 1)   /* -Z */
+#define MUTT_NOSYSRC (1 << 2) /* -n */
+#define MUTT_RO (1 << 3)      /* -R */
+#define MUTT_SELECT (1 << 4)  /* -y */
+#ifdef USE_NNTP
+#define MUTT_NEWS (1 << 5) /* -g and -G */
+#endif
+
 /**
  * mutt_exit - Leave NeoMutt NOW
  * @param code Value to return to the calling environment
@@ -158,6 +167,11 @@ static void usage(void)
 }
 // clang-format on
 
+/**
+ * start_curses - Start the curses or slang UI
+ * @retval 0 Success
+ * @retval 1 Failure
+ */
 static int start_curses(void)
 {
   km_init(); /* must come before mutt_init */
@@ -197,19 +211,10 @@ static int start_curses(void)
   return 0;
 }
 
-#define MUTT_IGNORE (1 << 0)  /* -z */
-#define MUTT_BUFFY (1 << 1)   /* -Z */
-#define MUTT_NOSYSRC (1 << 2) /* -n */
-#define MUTT_RO (1 << 3)      /* -R */
-#define MUTT_SELECT (1 << 4)  /* -y */
-#ifdef USE_NNTP
-#define MUTT_NEWS (1 << 5) /* -g and -G */
-#endif
-
 /**
  * init_locale - Initialise the Locale/NLS settings
  */
-void init_locale(void)
+static void init_locale(void)
 {
   setlocale(LC_ALL, "");
 
@@ -289,7 +294,7 @@ static int get_user_info(void)
  */
 int main(int argc, char *argv[], char *envp[])
 {
-  char folder[_POSIX_PATH_MAX] = "";
+  char folder[PATH_MAX] = "";
   char *subject = NULL;
   char *include_file = NULL;
   char *draft_file = NULL;
@@ -669,7 +674,7 @@ int main(int argc, char *argv[], char *envp[])
   if (!OptNoCurses && Folder)
   {
     struct stat sb;
-    char fpath[_POSIX_PATH_MAX];
+    char fpath[PATH_MAX];
 
     mutt_str_strfcpy(fpath, Folder, sizeof(fpath));
     mutt_expand_path(fpath, sizeof(fpath));
@@ -718,7 +723,7 @@ int main(int argc, char *argv[], char *envp[])
     char *tempfile = NULL, *infile = NULL;
     char *bodytext = NULL, *bodyfile = NULL;
     int rv = 0;
-    char expanded_infile[_POSIX_PATH_MAX];
+    char expanded_infile[PATH_MAX];
 
     if (!OptNoCurses)
       mutt_flushinp();
@@ -1069,7 +1074,7 @@ int main(int argc, char *argv[], char *envp[])
     mutt_startup_shutdown_hook(MUTT_STARTUPHOOK);
 
     repeat_error = true;
-    Context = mx_open_mailbox(
+    Context = mx_mbox_open(
         folder, ((flags & MUTT_RO) || ReadOnly) ? MUTT_READONLY : 0, NULL);
     if (Context || !explicit_folder)
     {

@@ -363,7 +363,7 @@ static int check_attachments(struct AttachCtx *actx)
 {
   int r;
   struct stat st;
-  char pretty[_POSIX_PATH_MAX], msg[_POSIX_PATH_MAX + SHORT_STRING];
+  char pretty[PATH_MAX], msg[PATH_MAX + SHORT_STRING];
 
   for (int i = 0; i < actx->idxlen; i++)
   {
@@ -479,7 +479,7 @@ static void edit_address_list(int line, struct Address **addr)
 
   if (mutt_addrlist_to_intl(*addr, &err) != 0)
   {
-    mutt_error(_("Warning: '%s' is a bad IDN."), err);
+    mutt_error(_("Bad IDN: '%s'"), err);
     mutt_refresh();
     FREE(&err);
   }
@@ -814,7 +814,7 @@ int mutt_compose_menu(struct Header *msg, char *fcc, size_t fcclen,
 {
   char helpstr[LONG_STRING];
   char buf[LONG_STRING];
-  char fname[_POSIX_PATH_MAX];
+  char fname[PATH_MAX];
   struct AttachPtr *new = NULL;
   int i, close = 0;
   int r = -1; /* return value */
@@ -1013,7 +1013,7 @@ int mutt_compose_menu(struct Header *msg, char *fcc, size_t fcclen,
           mutt_edit_headers(NONULL(Editor), msg->content->filename, msg, fcc, fcclen);
           if (mutt_env_to_intl(msg->env, &tag, &err))
           {
-            mutt_error(_("Bad IDN in \"%s\": '%s'"), tag, err);
+            mutt_error(_("Bad IDN in '%s': '%s'"), tag, err);
             FREE(&err);
           }
           if (CryptOpportunisticEncrypt)
@@ -1044,7 +1044,7 @@ int mutt_compose_menu(struct Header *msg, char *fcc, size_t fcclen,
         if (!(WithCrypto & APPLICATION_PGP))
           break;
         new = mutt_mem_calloc(1, sizeof(struct AttachPtr));
-        new->content = crypt_pgp_make_key_attachment(NULL);
+        new->content = crypt_pgp_make_key_attachment();
         if (new->content)
         {
           update_idx(menu, actx, new);
@@ -1279,12 +1279,16 @@ int mutt_compose_menu(struct Header *msg, char *fcc, size_t fcclen,
         if (mutt_enter_fname_full(prompt, fname, sizeof(fname), 0, 1, &files,
                                   &numfiles, MUTT_SEL_MULTI) == -1 ||
             *fname == '\0')
+        {
           break;
+        }
 
         int error = 0;
         if (numfiles > 1)
+        {
           mutt_message(ngettext("Attaching selected file...",
                                 "Attaching selected files...", numfiles));
+        }
         for (i = 0; i < numfiles; i++)
         {
           char *att = files[i];
@@ -1368,7 +1372,7 @@ int mutt_compose_menu(struct Header *msg, char *fcc, size_t fcclen,
 
         menu->redraw = REDRAW_FULL;
 
-        ctx = mx_open_mailbox(fname, MUTT_READONLY, NULL);
+        ctx = mx_mbox_open(fname, MUTT_READONLY, NULL);
         if (!ctx)
         {
           mutt_error(_("Unable to open mailbox %s"), fname);
@@ -1377,7 +1381,7 @@ int mutt_compose_menu(struct Header *msg, char *fcc, size_t fcclen,
 
         if (!ctx->msgcount)
         {
-          mx_close_mailbox(ctx, NULL);
+          mx_mbox_close(ctx, NULL);
           FREE(&ctx);
           mutt_error(_("No messages in that folder."));
           break;
@@ -1422,7 +1426,7 @@ int mutt_compose_menu(struct Header *msg, char *fcc, size_t fcclen,
         menu->redraw |= REDRAW_FULL;
 
         if (close == OP_QUIT)
-          mx_close_mailbox(Context, NULL);
+          mx_mbox_close(Context, NULL);
         else
           mx_fastclose_mailbox(Context);
         FREE(&Context);

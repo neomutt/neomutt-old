@@ -35,6 +35,7 @@
 #include <unistd.h>
 #include "mutt/mutt.h"
 #include "mutt.h"
+#include "handler.h"
 #include "pgppacket.h"
 #include "protos.h"
 #include "state.h"
@@ -65,9 +66,7 @@ static void pgp_dearmor(FILE *in, FILE *out)
   LOFF_T end;
   char *r = NULL;
 
-  struct State state;
-
-  memset(&state, 0, sizeof(struct State));
+  struct State state = { 0 };
   state.fpin = in;
   state.fpout = out;
 
@@ -129,7 +128,7 @@ static void pgp_dearmor(FILE *in, FILE *out)
     return;
   }
 
-  mutt_decode_base64(&state, end - start, 0, (iconv_t) -1);
+  mutt_decode_base64(&state, end - start, false, (iconv_t) -1);
 }
 
 static short pgp_mic_from_packet(unsigned char *p, size_t len)
@@ -160,7 +159,7 @@ static short pgp_mic_from_packet(unsigned char *p, size_t len)
 
 static short pgp_find_hash(const char *fname)
 {
-  char tempfile[_POSIX_PATH_MAX];
+  char tempfile[PATH_MAX];
   size_t l;
   short rc = -1;
 

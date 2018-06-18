@@ -43,6 +43,7 @@
 #include "envelope.h"
 #include "format_flags.h"
 #include "globals.h"
+#include "handler.h"
 #include "header.h"
 #include "keymap.h"
 #include "mailbox.h"
@@ -134,7 +135,7 @@ int mutt_num_postponed(int force)
   {
     /* if we have a maildir mailbox, we need to stat the "new" dir */
 
-    char buf[_POSIX_PATH_MAX];
+    char buf[PATH_MAX];
 
     snprintf(buf, sizeof(buf), "%s/new", Postponed);
     if (access(buf, F_OK) == 0 && stat(buf, &st) == -1)
@@ -158,7 +159,7 @@ int mutt_num_postponed(int force)
     if (optnews)
       OptNews = false;
 #endif
-    if (mx_open_mailbox(Postponed, MUTT_NOSORT | MUTT_QUIET, &ctx) == NULL)
+    if (mx_mbox_open(Postponed, MUTT_NOSORT | MUTT_QUIET, &ctx) == NULL)
       PostCount = 0;
     else
       PostCount = ctx.msgcount;
@@ -285,7 +286,7 @@ int mutt_get_postponed(struct Context *ctx, struct Header *hdr,
   if (!Postponed)
     return -1;
 
-  PostContext = mx_open_mailbox(Postponed, MUTT_NOSORT, NULL);
+  PostContext = mx_mbox_open(Postponed, MUTT_NOSORT, NULL);
   if (!PostContext)
   {
     PostCount = 0;
@@ -296,7 +297,7 @@ int mutt_get_postponed(struct Context *ctx, struct Header *hdr,
   if (!PostContext->msgcount)
   {
     PostCount = 0;
-    mx_close_mailbox(PostContext, NULL);
+    mx_mbox_close(PostContext, NULL);
     FREE(&PostContext);
     mutt_error(_("No postponed messages."));
     return -1;
@@ -309,7 +310,7 @@ int mutt_get_postponed(struct Context *ctx, struct Header *hdr,
   }
   else if ((h = select_msg()) == NULL)
   {
-    mx_close_mailbox(PostContext, NULL);
+    mx_mbox_close(PostContext, NULL);
     FREE(&PostContext);
     return -1;
   }
@@ -331,7 +332,7 @@ int mutt_get_postponed(struct Context *ctx, struct Header *hdr,
   /* avoid the "purge deleted messages" prompt */
   opt_delete = Delete;
   Delete = MUTT_YES;
-  mx_close_mailbox(PostContext, NULL);
+  mx_mbox_close(PostContext, NULL);
   Delete = opt_delete;
 
   FREE(&PostContext);
@@ -385,10 +386,9 @@ int mutt_get_postponed(struct Context *ctx, struct Header *hdr,
 #ifdef MIXMASTER
     else if (mutt_str_strncmp("X-Mutt-Mix:", np->data, 11) == 0)
     {
-      char *t = NULL;
       mutt_list_free(&hdr->chain);
 
-      t = strtok(np->data + 11, " \t\n");
+      char *t = strtok(np->data + 11, " \t\n");
       while (t)
       {
         mutt_list_insert_tail(&hdr->chain, mutt_str_strdup(t));
@@ -442,9 +442,11 @@ int mutt_parse_crypt_hdr(const char *p, int set_empty_signas, int crypt_app)
 
         if (*(p + 1) == '<')
         {
-          for (p += 2; *p && *p != '>' && q < smime_cryptalg + sizeof(smime_cryptalg) - 1;
+          for (p += 2; *p && (*p != '>') &&
+                       (q < (smime_cryptalg + sizeof(smime_cryptalg) - 1));
                *q++ = *p++)
-            ;
+          {
+          }
 
           if (*p != '>')
           {
@@ -475,7 +477,7 @@ int mutt_parse_crypt_hdr(const char *p, int set_empty_signas, int crypt_app)
       case 'M':
         if (*(p + 1) == '<')
         {
-          for (p += 2; *p && *p != '>'; p++)
+          for (p += 2; *p && (*p != '>'); p++)
             ;
           if (*p != '>')
           {
@@ -498,8 +500,10 @@ int mutt_parse_crypt_hdr(const char *p, int set_empty_signas, int crypt_app)
 
         if (*(p + 1) == '<')
         {
-          for (p += 2; *p && *p != '>' && q < sign_as + sizeof(sign_as) - 1; *q++ = *p++)
-            ;
+          for (p += 2; *p && (*p != '>') && (q < (sign_as + sizeof(sign_as) - 1));
+               *q++ = *p++)
+          {
+          }
 
           if (*p != '>')
           {
@@ -554,16 +558,14 @@ int mutt_prepare_template(FILE *fp, struct Context *ctx, struct Header *newhdr,
                           struct Header *hdr, short resend)
 {
   struct Message *msg = NULL;
-  char file[_POSIX_PATH_MAX];
+  char file[PATH_MAX];
   struct Body *b = NULL;
   FILE *bfp = NULL;
   int rc = -1;
-  struct State s;
+  struct State s = { 0 };
   int sec_type;
 
-  memset(&s, 0, sizeof(s));
-
-  if (!fp && (msg = mx_open_message(ctx, hdr->msgno)) == NULL)
+  if (!fp && (msg = mx_msg_open(ctx, hdr->msgno)) == NULL)
     return -1;
 
   if (!fp)
@@ -623,7 +625,9 @@ int mutt_prepare_template(FILE *fp, struct Context *ctx, struct Header *newhdr,
         (mutt_str_strcasecmp(
              mutt_param_get(&newhdr->content->parameter, "protocol"),
              "application/pgp-signature") == 0))
+    {
       newhdr->security |= APPLICATION_PGP;
+    }
     else if (WithCrypto & APPLICATION_SMIME)
       newhdr->security |= APPLICATION_SMIME;
 
@@ -674,7 +678,9 @@ int mutt_prepare_template(FILE *fp, struct Context *ctx, struct Header *newhdr,
     {
       if (mutt_str_strcasecmp("yes",
                               mutt_param_get(&b->parameter, "x-mutt-noconv")) == 0)
+      {
         b->noconv = true;
+      }
       else
       {
         s.flags |= MUTT_CHARCONV;
@@ -774,7 +780,7 @@ bail:
   if (bfp != fp)
     mutt_file_fclose(&bfp);
   if (msg)
-    mx_close_message(ctx, &msg);
+    mx_msg_close(ctx, &msg);
 
   if (rc == -1)
   {

@@ -456,7 +456,7 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
       new_last_folder = mutt_str_strdup(Context->path);
     *oldcount = Context ? Context->msgcount : 0;
 
-    int check = mx_close_mailbox(Context, index_hint);
+    int check = mx_mbox_close(Context, index_hint);
     if (check != 0)
     {
       if (check == MUTT_NEW_MAIL || check == MUTT_REOPENED)
@@ -485,7 +485,7 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
    * switch statement would need to be run. */
   mutt_folder_hook(buf);
 
-  Context = mx_open_mailbox(
+  Context = mx_mbox_open(
       buf, (ReadOnly || (op == OP_MAIN_CHANGE_FOLDER_READONLY)) ? MUTT_READONLY : 0, NULL);
   if (Context)
   {
@@ -614,7 +614,7 @@ int index_color(int index_no)
  * Where regexes overlap, the one nearest the start will be used.
  * If two regexes start at the same place, the longer match will be used.
  */
-void mutt_draw_statusline(int cols, const char *buf, int buflen)
+void mutt_draw_statusline(int cols, const char *buf, size_t buflen)
 {
   size_t i = 0;
   size_t offset = 0;
@@ -901,7 +901,7 @@ int mutt_index_menu(void)
               CURHDR->index :
               0;
 
-      check = mx_check_mailbox(Context, &index_hint);
+      check = mx_mbox_check(Context, &index_hint);
       if (check < 0)
       {
         if (!Context->path)
@@ -917,8 +917,10 @@ int mutt_index_menu(void)
       {
         /* notify the user of new mail */
         if (check == MUTT_REOPENED)
+        {
           mutt_error(
               _("Mailbox was externally modified.  Flags may be wrong."));
+        }
         else if (check == MUTT_NEW_MAIL)
         {
           for (i = oldcount; i < Context->msgcount; i++)
@@ -1008,8 +1010,10 @@ int mutt_index_menu(void)
       else if (BrailleFriendly)
         mutt_window_move(MuttIndexWindow, menu->current - menu->top + menu->offset, 0);
       else
+      {
         mutt_window_move(MuttIndexWindow, menu->current - menu->top + menu->offset,
                          MuttIndexWindow->cols - 1);
+      }
       mutt_refresh();
 
       if (SigWinch)
@@ -1374,7 +1378,11 @@ int mutt_index_menu(void)
         CHECK_VISIBLE;
         CHECK_READONLY;
         /* L10N: CHECK_ACL */
-        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot delete message(s)"));
+        /* L10N: Due to the implementation details we do not know whether we
+           delete zero, 1, 12, ... messages. So in English we use
+           "messages". Your language might have other means to express this.
+         */
+        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot delete messages"));
 
         CHECK_ATTACH;
         mutt_pattern_func(MUTT_DELETE, _("Delete messages matching: "));
@@ -1445,20 +1453,20 @@ int mutt_index_menu(void)
           {
             snprintf(buf2, sizeof(buf2), "!~R!~D~s%s",
                      Context->pattern ? Context->pattern : ".*");
-            OptHideRead = true;
           }
           else
           {
             mutt_str_strfcpy(buf2, Context->pattern + 8, sizeof(buf2));
             if (!*buf2 || (strncmp(buf2, ".*", 2) == 0))
               snprintf(buf2, sizeof(buf2), "~A");
-            OptHideRead = false;
           }
           FREE(&Context->pattern);
           Context->pattern = mutt_str_strdup(buf2);
+          mutt_pattern_func(MUTT_LIMIT, NULL);
         }
 
         if (((op == OP_LIMIT_CURRENT_THREAD) && mutt_limit_current_thread(CURHDR)) ||
+            (op == OP_TOGGLE_READ) ||
             ((op == OP_MAIN_LIMIT) &&
              (mutt_pattern_func(MUTT_LIMIT,
                                 _("Limit to messages matching: ")) == 0)))
@@ -1505,7 +1513,7 @@ int mutt_index_menu(void)
 
           mutt_startup_shutdown_hook(MUTT_SHUTDOWNHOOK);
 
-          if (!Context || (check = mx_close_mailbox(Context, &index_hint)) == 0)
+          if (!Context || (check = mx_mbox_close(Context, &index_hint)) == 0)
             done = true;
           else
           {
@@ -1603,7 +1611,11 @@ int mutt_index_menu(void)
         CHECK_VISIBLE;
         CHECK_READONLY;
         /* L10N: CHECK_ACL */
-        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot undelete message(s)"));
+        /* L10N: Due to the implementation details we do not know whether we
+           undelete zero, 1, 12, ... messages. So in English we use
+           "messages". Your language might have other means to express this.
+         */
+        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot undelete messages"));
 
         if (mutt_pattern_func(MUTT_UNDELETE,
                               _("Undelete messages matching: ")) == 0)
@@ -1641,7 +1653,7 @@ int mutt_index_menu(void)
       case OP_MAIN_IMAP_LOGOUT_ALL:
         if (Context && Context->magic == MUTT_IMAP)
         {
-          if (mx_close_mailbox(Context, &index_hint) != 0)
+          if (mx_mbox_close(Context, &index_hint) != 0)
           {
             OptSearchInvalid = true;
             menu->redraw = REDRAW_FULL;
@@ -1683,7 +1695,7 @@ int mutt_index_menu(void)
               newhdr = Context->hdrs[Context->v2r[newidx]];
           }
 
-          check = mx_sync_mailbox(Context, &index_hint);
+          check = mx_mbox_sync(Context, &index_hint);
           if (check == 0)
           {
             if (newhdr && Context->vcount != ovc)
@@ -1703,7 +1715,7 @@ int mutt_index_menu(void)
             update_index(menu, Context, check, oc, index_hint);
 
           /*
-           * do a sanity check even if mx_sync_mailbox failed.
+           * do a sanity check even if mx_mbox_sync failed.
            */
 
           if (menu->current < 0 || menu->current >= Context->vcount)
@@ -1799,7 +1811,7 @@ int mutt_index_menu(void)
         char *tags = NULL;
         if (!tag)
           tags = driver_tags_get_with_hidden(&CURHDR->tags);
-        rc = mx_tags_editor(Context, tags, buf, sizeof(buf));
+        rc = mx_tags_edit(Context, tags, buf, sizeof(buf));
         FREE(&tags);
         if (rc < 0)
           break;
@@ -2181,8 +2193,10 @@ int mutt_index_menu(void)
             menu->redraw |= REDRAW_INDEX;
         }
         else
+        {
           mutt_error(
               _("Thread cannot be broken, message is not part of a thread"));
+        }
 
         break;
 
@@ -2383,6 +2397,7 @@ int mutt_index_menu(void)
         CHECK_MSGCOUNT;
         CHECK_VISIBLE;
 
+        const int saved_current = menu->current;
         i = menu->current;
         menu->current = -1;
         for (j = 0; j != Context->vcount; j++)
@@ -2392,7 +2407,6 @@ int mutt_index_menu(void)
             i++;
             if (i > Context->vcount - 1)
             {
-              mutt_message(_("Search wrapped to top."));
               i = 0;
             }
           }
@@ -2401,7 +2415,6 @@ int mutt_index_menu(void)
             i--;
             if (i < 0)
             {
-              mutt_message(_("Search wrapped to bottom."));
               i = Context->vcount - 1;
             }
           }
@@ -2427,16 +2440,22 @@ int mutt_index_menu(void)
           if ((op == OP_MAIN_NEXT_NEW || op == OP_MAIN_PREV_NEW ||
                op == OP_MAIN_NEXT_NEW_THEN_UNREAD || op == OP_MAIN_PREV_NEW_THEN_UNREAD) &&
               first_new != -1)
+          {
             break;
+          }
         }
         if ((op == OP_MAIN_NEXT_NEW || op == OP_MAIN_PREV_NEW ||
              op == OP_MAIN_NEXT_NEW_THEN_UNREAD || op == OP_MAIN_PREV_NEW_THEN_UNREAD) &&
             first_new != -1)
+        {
           menu->current = first_new;
+        }
         else if ((op == OP_MAIN_NEXT_UNREAD || op == OP_MAIN_PREV_UNREAD ||
                   op == OP_MAIN_NEXT_NEW_THEN_UNREAD || op == OP_MAIN_PREV_NEW_THEN_UNREAD) &&
                  first_unread != -1)
+        {
           menu->current = first_unread;
+        }
 
         if (menu->current == -1)
         {
@@ -2455,8 +2474,22 @@ int mutt_index_menu(void)
             else
               mutt_error(_("No unread messages."));
           }
+          break;
         }
-        else if (menu->menu == MENU_PAGER)
+
+        if (op == OP_MAIN_NEXT_NEW || op == OP_MAIN_NEXT_UNREAD || op == OP_MAIN_NEXT_NEW_THEN_UNREAD)
+        {
+          if (saved_current > menu->current)
+          {
+            mutt_message(_("Search wrapped to top."));
+          }
+        }
+        else if (saved_current < menu->current)
+        {
+          mutt_message(_("Search wrapped to bottom."));
+        }
+
+        if (menu->menu == MENU_PAGER)
         {
           op = OP_DISPLAY_MESSAGE;
           continue;
@@ -2478,8 +2511,10 @@ int mutt_index_menu(void)
           for (j = 0; j < Context->msgcount; j++)
           {
             if (message_is_tagged(Context, j))
+            {
               mutt_set_flag(Context, Context->hdrs[j], MUTT_FLAG,
                             !Context->hdrs[j]->flagged);
+            }
           }
 
           menu->redraw |= REDRAW_INDEX;
@@ -2769,7 +2804,11 @@ int mutt_index_menu(void)
         CHECK_VISIBLE;
         CHECK_READONLY;
         /* L10N: CHECK_ACL */
-        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot delete message(s)"));
+        /* L10N: Due to the implementation details we do not know whether we
+           delete zero, 1, 12, ... messages. So in English we use
+           "messages". Your language might have other means to express this.
+         */
+        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot delete messages"));
 
         {
           int subthread = (op == OP_DELETE_SUBTHREAD);
@@ -3003,7 +3042,11 @@ int mutt_index_menu(void)
         CHECK_VISIBLE;
         CHECK_READONLY;
         /* L10N: CHECK_ACL */
-        CHECK_ACL(MUTT_ACL_SEEN, _("Cannot mark message(s) as read"));
+        /* L10N: Due to the implementation details we do not know whether we
+           mark zero, 1, 12, ... messages as read. So in English we use
+           "messages". Your language might have other means to express this.
+         */
+        CHECK_ACL(MUTT_ACL_SEEN, _("Cannot mark messages as read"));
 
         rc = mutt_thread_set_flag(CURHDR, MUTT_READ, 1, op == OP_MAIN_READ_THREAD ? 0 : 1);
 
@@ -3058,9 +3101,11 @@ int mutt_index_menu(void)
           }
         }
         else
+        {
           /* L10N: This error is printed if <mark-message> cannot find a
              Message-ID for the currently selected message in the index. */
           mutt_error(_("No message ID to macro."));
+        }
         break;
 
       case OP_RECALL_MESSAGE:
@@ -3200,12 +3245,18 @@ int mutt_index_menu(void)
         CHECK_VISIBLE;
         CHECK_READONLY;
         /* L10N: CHECK_ACL */
-        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot undelete message(s)"));
+        /* L10N: Due to the implementation details we do not know whether we
+           undelete zero, 1, 12, ... messages. So in English we use
+           "messages". Your language might have other means to express this.
+         */
+        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot undelete messages"));
 
         rc = mutt_thread_set_flag(CURHDR, MUTT_DELETE, 0, op == OP_UNDELETE_THREAD ? 0 : 1);
         if (rc != -1)
+        {
           rc = mutt_thread_set_flag(CURHDR, MUTT_PURGE, 0,
                                     op == OP_UNDELETE_THREAD ? 0 : 1);
+        }
         if (rc != -1)
         {
           if (Resolve)
@@ -3294,12 +3345,10 @@ int mutt_index_menu(void)
 void mutt_set_header_color(struct Context *ctx, struct Header *curhdr)
 {
   struct ColorLine *color = NULL;
-  struct PatternCache cache;
+  struct PatternCache cache = { 0 };
 
   if (!curhdr)
     return;
-
-  memset(&cache, 0, sizeof(cache));
 
   STAILQ_FOREACH(color, &ColorIndexList, entries)
   {

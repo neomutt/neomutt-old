@@ -52,7 +52,7 @@
  */
 struct PgpCommandContext
 {
-  short need_passphrase; /**< %p */
+  bool need_passphrase;  /**< %p */
   const char *fname;     /**< %f */
   const char *sig_fname; /**< %s */
   const char *signas;    /**< %a */
@@ -153,13 +153,11 @@ static void mutt_pgp_command(char *buf, size_t buflen,
  */
 
 static pid_t pgp_invoke(FILE **pgpin, FILE **pgpout, FILE **pgperr, int pgpinfd, int pgpoutfd,
-                        int pgperrfd, short need_passphrase, const char *fname,
+                        int pgperrfd, bool need_passphrase, const char *fname,
                         const char *sig_fname, const char *ids, const char *format)
 {
-  struct PgpCommandContext cctx;
+  struct PgpCommandContext cctx = { 0 };
   char cmd[HUGE_STRING];
-
-  memset(&cctx, 0, sizeof(cctx));
 
   if (!format || !*format)
     return (pid_t) -1;
@@ -185,7 +183,7 @@ static pid_t pgp_invoke(FILE **pgpin, FILE **pgpout, FILE **pgperr, int pgpinfd,
  */
 
 pid_t pgp_invoke_decode(FILE **pgpin, FILE **pgpout, FILE **pgperr, int pgpinfd,
-                        int pgpoutfd, int pgperrfd, const char *fname, short need_passphrase)
+                        int pgpoutfd, int pgperrfd, const char *fname, bool need_passphrase)
 {
   return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd,
                     need_passphrase, fname, NULL, NULL, PgpDecodeCommand);
@@ -194,34 +192,38 @@ pid_t pgp_invoke_decode(FILE **pgpin, FILE **pgpout, FILE **pgperr, int pgpinfd,
 pid_t pgp_invoke_verify(FILE **pgpin, FILE **pgpout, FILE **pgperr, int pgpinfd,
                         int pgpoutfd, int pgperrfd, const char *fname, const char *sig_fname)
 {
-  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, 0,
+  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, false,
                     fname, sig_fname, NULL, PgpVerifyCommand);
 }
 
 pid_t pgp_invoke_decrypt(FILE **pgpin, FILE **pgpout, FILE **pgperr, int pgpinfd,
                          int pgpoutfd, int pgperrfd, const char *fname)
 {
-  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, 1,
+  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, true,
                     fname, NULL, NULL, PgpDecryptCommand);
 }
 
 pid_t pgp_invoke_sign(FILE **pgpin, FILE **pgpout, FILE **pgperr, int pgpinfd,
                       int pgpoutfd, int pgperrfd, const char *fname)
 {
-  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, 1,
+  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, true,
                     fname, NULL, NULL, PgpSignCommand);
 }
 
 pid_t pgp_invoke_encrypt(FILE **pgpin, FILE **pgpout, FILE **pgperr,
                          int pgpinfd, int pgpoutfd, int pgperrfd,
-                         const char *fname, const char *uids, int sign)
+                         const char *fname, const char *uids, bool sign)
 {
   if (sign)
-    return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, 1,
+  {
+    return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, true,
                       fname, NULL, uids, PgpEncryptSignCommand);
+  }
   else
-    return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, 0,
+  {
+    return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, false,
                       fname, NULL, uids, PgpEncryptOnlyCommand);
+  }
 }
 
 pid_t pgp_invoke_traditional(FILE **pgpin, FILE **pgpout, FILE **pgperr,
@@ -229,21 +231,26 @@ pid_t pgp_invoke_traditional(FILE **pgpin, FILE **pgpout, FILE **pgperr,
                              const char *fname, const char *uids, int flags)
 {
   if (flags & ENCRYPT)
+  {
     return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd,
-                      (flags & SIGN) ? 1 : 0, fname, NULL, uids,
+                      (flags & SIGN), fname, NULL, uids,
                       (flags & SIGN) ? PgpEncryptSignCommand : PgpEncryptOnlyCommand);
+  }
   else
-    return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, 1,
+  {
+    return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, true,
                       fname, NULL, NULL, PgpClearsignCommand);
+  }
 }
 
-void pgp_invoke_import(const char *fname)
+/**
+ * pgp_class_invoke_import - Implements CryptModuleSpecs::pgp_invoke_import()
+ */
+void pgp_class_invoke_import(const char *fname)
 {
-  char tmp_fname[_POSIX_PATH_MAX + SHORT_STRING];
+  char tmp_fname[PATH_MAX + SHORT_STRING];
   char cmd[HUGE_STRING];
-  struct PgpCommandContext cctx;
-
-  memset(&cctx, 0, sizeof(cctx));
+  struct PgpCommandContext cctx = { 0 };
 
   mutt_file_quote_filename(tmp_fname, sizeof(tmp_fname), fname);
   cctx.fname = tmp_fname;
@@ -257,21 +264,22 @@ void pgp_invoke_import(const char *fname)
     mutt_debug(1, "Error running \"%s\"!", cmd);
 }
 
-void pgp_invoke_getkeys(struct Address *addr)
+/**
+ * pgp_class_invoke_getkeys - Implements CryptModuleSpecs::pgp_invoke_getkeys()
+ */
+void pgp_class_invoke_getkeys(struct Address *addr)
 {
-  char buf[LONG_STRING];
+  char buf[PATH_MAX];
   char tmp[LONG_STRING];
   char cmd[HUGE_STRING];
   int devnull;
 
   char *personal = NULL;
 
-  struct PgpCommandContext cctx;
+  struct PgpCommandContext cctx = { 0 };
 
   if (!PgpGetkeysCommand)
     return;
-
-  memset(&cctx, 0, sizeof(cctx));
 
   personal = addr->personal;
   addr->personal = NULL;
@@ -305,14 +313,14 @@ void pgp_invoke_getkeys(struct Address *addr)
 pid_t pgp_invoke_export(FILE **pgpin, FILE **pgpout, FILE **pgperr, int pgpinfd,
                         int pgpoutfd, int pgperrfd, const char *uids)
 {
-  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, 0, NULL,
+  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, false, NULL,
                     NULL, uids, PgpExportCommand);
 }
 
 pid_t pgp_invoke_verify_key(FILE **pgpin, FILE **pgpout, FILE **pgperr, int pgpinfd,
                             int pgpoutfd, int pgperrfd, const char *uids)
 {
-  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, 0, NULL,
+  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, false, NULL,
                     NULL, uids, PgpVerifyKeyCommand);
 }
 
@@ -347,6 +355,6 @@ pid_t pgp_invoke_list_keys(FILE **pgpin, FILE **pgpout, FILE **pgperr,
     strcpy(uids, tmpuids);
   }
 
-  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, 0, NULL, NULL,
+  return pgp_invoke(pgpin, pgpout, pgperr, pgpinfd, pgpoutfd, pgperrfd, false, NULL, NULL,
                     uids, keyring == PGP_SECRING ? PgpListSecringCommand : PgpListPubringCommand);
 }

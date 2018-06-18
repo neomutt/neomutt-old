@@ -513,8 +513,10 @@ static int nntp_auth(struct NntpServer *nserv)
           if (DebugLevel < MUTT_SOCK_LOG_FULL)
           {
             if (strchr(buf, ' '))
+            {
               mutt_debug(MUTT_SOCK_LOG_CMD, "%d> AUTHINFO SASL %s%s\n",
                          conn->fd, method, client_len ? " sasl_data" : "");
+            }
             else
               mutt_debug(MUTT_SOCK_LOG_CMD, "%d> sasl_data\n", conn->fd);
           }
@@ -695,11 +697,13 @@ int nntp_open_connection(struct NntpServer *nserv)
   if (nserv->use_tls != 1 && (nserv->hasSTARTTLS || SslForceTls))
   {
     if (nserv->use_tls == 0)
+    {
       nserv->use_tls =
           SslForceTls || query_quadoption(SslStarttls,
                                           _("Secure connection with TLS?")) == MUTT_YES ?
               2 :
               1;
+    }
     if (nserv->use_tls == 2)
     {
       if (mutt_socket_send(conn, "STARTTLS\r\n") < 0 ||
@@ -1325,13 +1329,17 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
     }
   }
   else
+  {
     for (current = first; current <= last; current++)
       fc.messages[current - first] = 1;
+  }
 
   /* fetching header from cache or server, or fallback to fetch overview */
   if (!ctx->quiet)
+  {
     mutt_progress_init(&fc.progress, _("Fetching message headers..."),
                        MUTT_PROGRESS_MSG, ReadInc, last - first + 1);
+  }
   for (current = first; current <= last && rc == 0; current++)
   {
     if (!ctx->quiet)
@@ -1383,10 +1391,12 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
 
     /* fallback to fetch overview */
     else if (nntp_data->nserv->hasOVER || nntp_data->nserv->hasXOVER)
+    {
       if (NntpListgroup && nntp_data->nserv->hasLISTGROUP)
         break;
       else
         continue;
+    }
 
     /* fetch header from server */
     else
@@ -1478,12 +1488,9 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
 }
 
 /**
- * nntp_open_mailbox - Open newsgroup
- * @param ctx Mailbox
- * @retval  0 Success
- * @retval -1 Failure
+ * nntp_mbox_open - Implements MxOps::mbox_open()
  */
-static int nntp_open_mailbox(struct Context *ctx)
+static int nntp_mbox_open(struct Context *ctx)
 {
   struct NntpServer *nserv = NULL;
   struct NntpData *nntp_data = NULL;
@@ -1615,14 +1622,9 @@ static int nntp_open_mailbox(struct Context *ctx)
 }
 
 /**
- * nntp_open_message - Fetch message
- * @param ctx   Mailbox
- * @param msg   Message to fetch
- * @param msgno Message number
- * @retval  0 Success
- * @retval -1 Failure
+ * nntp_msg_open - Implements MxOps::msg_open()
  */
-static int nntp_open_message(struct Context *ctx, struct Message *msg, int msgno)
+static int nntp_msg_open(struct Context *ctx, struct Message *msg, int msgno)
 {
   struct NntpData *nntp_data = ctx->data;
   struct Header *hdr = ctx->hdrs[msgno];
@@ -1654,7 +1656,7 @@ static int nntp_open_message(struct Context *ctx, struct Message *msg, int msgno
   }
   else
   {
-    char buf[_POSIX_PATH_MAX];
+    char buf[PATH_MAX];
     /* don't try to fetch article from removed newsgroup */
     if (nntp_data->deleted)
       return -1;
@@ -1694,8 +1696,10 @@ static int nntp_open_message(struct Context *ctx, struct Message *msg, int msgno
       if (rc > 0)
       {
         if (mutt_str_strncmp(NHDR(hdr)->article_num ? "423" : "430", buf, 3) == 0)
+        {
           mutt_error(_("Article %d not found on the server."),
                      NHDR(hdr)->article_num ? article : hdr->env->message_id);
+        }
         else
           mutt_error("ARTICLE: %s", buf);
       }
@@ -1743,13 +1747,11 @@ static int nntp_open_message(struct Context *ctx, struct Message *msg, int msgno
 }
 
 /**
- * nntp_close_message - Close message
- * @param ctx Mailbox
- * @param msg Message to close
- * @retval 0   Success
- * @retval EOF Error, see errno
+ * nntp_msg_close - Implements MxOps::msg_close()
+ *
+ * @note May also return EOF Failure, see errno
  */
-static int nntp_close_message(struct Context *ctx, struct Message *msg)
+static int nntp_msg_close(struct Context *ctx, struct Message *msg)
 {
   return mutt_file_fclose(&msg->fp);
 }
@@ -1823,7 +1825,9 @@ int nntp_post(const char *msg)
        mutt_socket_send_d(nntp_data->nserv->conn, "\r\n", MUTT_SOCK_LOG_HDR) < 0) ||
       mutt_socket_send_d(nntp_data->nserv->conn, ".\r\n", MUTT_SOCK_LOG_HDR) < 0 ||
       mutt_socket_readln(buf, sizeof(buf), nntp_data->nserv->conn) < 0)
+  {
     return nntp_connect_error(nntp_data->nserv);
+  }
   if (buf[0] != '2')
   {
     mutt_error(_("Can't post article: %s"), buf);
@@ -2098,7 +2102,7 @@ static int check_mailbox(struct Context *ctx)
 }
 
 /**
- * nntp_check_mailbox - Check current newsgroup for new articles
+ * nntp_mbox_check - Implements MxOps::mbox_check()
  * @param ctx        Mailbox
  * @param index_hint Current message (UNUSED)
  * @retval #MUTT_REOPENED Articles have been renumbered or removed from server
@@ -2106,7 +2110,7 @@ static int check_mailbox(struct Context *ctx)
  * @retval  0             No change
  * @retval -1             Lost connection
  */
-static int nntp_check_mailbox(struct Context *ctx, int *index_hint)
+static int nntp_mbox_check(struct Context *ctx, int *index_hint)
 {
   int ret = check_mailbox(ctx);
   if (ret == 0)
@@ -2119,15 +2123,11 @@ static int nntp_check_mailbox(struct Context *ctx, int *index_hint)
 }
 
 /**
- * nntp_sync_mailbox - Save changes to .newsrc and cache
- * @param ctx        Mailbox
- * @param index_hint Current message (UNUSED)
- * @retval  0 Success
- * @retval -1 Failure
+ * nntp_mbox_sync - Implements MxOps::mbox_sync()
  *
  * @note May also return values from check_mailbox()
  */
-static int nntp_sync_mailbox(struct Context *ctx, int *index_hint)
+static int nntp_mbox_sync(struct Context *ctx, int *index_hint)
 {
   struct NntpData *nntp_data = ctx->data;
   int rc;
@@ -2185,11 +2185,10 @@ static int nntp_sync_mailbox(struct Context *ctx, int *index_hint)
 }
 
 /**
- * nntp_close_mailbox - Free up memory associated with the newsgroup context
- * @param ctx Mailbox
+ * nntp_mbox_close - Implements MxOps::mbox_close()
  * @retval 0 Always
  */
-static int nntp_close_mailbox(struct Context *ctx)
+static int nntp_mbox_close(struct Context *ctx)
 {
   struct NntpData *nntp_data = ctx->data, *nntp_tmp = NULL;
 
@@ -2565,8 +2564,10 @@ int nntp_check_children(struct Context *ctx, const char *msgid)
       if (mutt_str_strncmp("500", buf, 3) != 0)
         mutt_error("XPAT: %s", buf);
       else
+      {
         mutt_error(_("Unable to find child articles because server does not "
                      "support XPAT command."));
+      }
     }
     return -1;
   }
@@ -2588,19 +2589,24 @@ int nntp_check_children(struct Context *ctx, const char *msgid)
 #endif
   ctx->quiet = quiet;
   FREE(&cc.child);
-  return rc < 0 ? -1 : 0;
+  return (rc < 0) ? -1 : 0;
 }
 
+// clang-format off
+/**
+ * struct mx_nntp_ops - Mailbox callback functions for NNTP mailboxes
+ */
 struct MxOps mx_nntp_ops = {
-  .open = nntp_open_mailbox,
-  .open_append = NULL,
-  .close = nntp_close_mailbox,
-  .check = nntp_check_mailbox,
-  .sync = nntp_sync_mailbox,
-  .open_msg = nntp_open_message,
-  .close_msg = nntp_close_message,
-  .commit_msg = NULL,
-  .open_new_msg = NULL,
-  .edit_msg_tags = NULL,
-  .commit_msg_tags = NULL,
+  .mbox_open        = nntp_mbox_open,
+  .mbox_open_append = NULL,
+  .mbox_check       = nntp_mbox_check,
+  .mbox_sync        = nntp_mbox_sync,
+  .mbox_close       = nntp_mbox_close,
+  .msg_open         = nntp_msg_open,
+  .msg_open_new     = NULL,
+  .msg_commit       = NULL,
+  .msg_close        = nntp_msg_close,
+  .tags_edit        = NULL,
+  .tags_commit      = NULL,
 };
+// clang-format on

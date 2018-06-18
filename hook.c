@@ -65,13 +65,15 @@ static TAILQ_HEAD(, Hook) Hooks = TAILQ_HEAD_INITIALIZER(Hooks);
 static int current_hook_type = 0;
 
 /**
- * mutt_parse_hook - Parse a hook command
+ * mutt_parse_hook - Parse the 'hook' family of commands
  * @param buf  Temporary Buffer
  * @param s    Buffer containing command
  * @param data Data from Command definition
  * @param err  Buffer for error messages
  * @retval  0 Success
  * @retval -1 Failure
+ *
+ * This is used by 'account-hook', 'append-hook' and many more.
  */
 int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
                     struct Buffer *err)
@@ -82,7 +84,7 @@ int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
   bool not = false;
   regex_t *rx = NULL;
   struct Pattern *pat = NULL;
-  char path[_POSIX_PATH_MAX];
+  char path[PATH_MAX];
 
   mutt_buffer_init(&pattern);
   mutt_buffer_init(&command);
@@ -134,7 +136,7 @@ int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
     }
 
     mutt_str_strfcpy(path, pattern.data, sizeof(path));
-    mutt_expand_path_regex(path, sizeof(path), 1);
+    mutt_expand_path_regex(path, sizeof(path), true);
 
     /* Check for other mailbox shortcuts that expand to the empty string.
      * This is likely a mistake too */
@@ -315,7 +317,7 @@ void mutt_delete_hooks(int type)
 }
 
 /**
- * mutt_parse_unhook - Parse an unhook command
+ * mutt_parse_unhook - Parse the 'unhook' command
  * @param buf  Temporary Buffer
  * @param s    Buffer containing command
  * @param data Data from Command definition
@@ -333,8 +335,7 @@ int mutt_parse_unhook(struct Buffer *buf, struct Buffer *s, unsigned long data,
     {
       if (current_hook_type)
       {
-        snprintf(err->data, err->dsize, "%s",
-                 _("unhook: Can't do unhook * from within a hook."));
+        mutt_buffer_printf(err, "%s", _("unhook: Can't do unhook * from within a hook."));
         return -1;
       }
       mutt_delete_hooks(0);
@@ -346,7 +347,7 @@ int mutt_parse_unhook(struct Buffer *buf, struct Buffer *s, unsigned long data,
 
       if (!type)
       {
-        snprintf(err->data, err->dsize, _("unhook: unknown hook type: %s"), buf->data);
+        mutt_buffer_printf(err, _("unhook: unknown hook type: %s"), buf->data);
         return -1;
       }
       if (type & (MUTT_CHARSETHOOK | MUTT_ICONVHOOK))
@@ -356,8 +357,8 @@ int mutt_parse_unhook(struct Buffer *buf, struct Buffer *s, unsigned long data,
       }
       if (current_hook_type == type)
       {
-        snprintf(err->data, err->dsize, _("unhook: Can't delete a %s from within a %s."),
-                 buf->data, buf->data);
+        mutt_buffer_printf(err, _("unhook: Can't delete a %s from within a %s."),
+                           buf->data, buf->data);
         return -1;
       }
       mutt_delete_hooks(type);
@@ -441,7 +442,7 @@ void mutt_message_hook(struct Context *ctx, struct Header *hdr, int type)
 {
   struct Buffer err, token;
   struct Hook *hook = NULL;
-  struct PatternCache cache;
+  struct PatternCache cache = { 0 };
 
   current_hook_type = type;
 
@@ -449,7 +450,6 @@ void mutt_message_hook(struct Context *ctx, struct Header *hdr, int type)
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
   mutt_buffer_init(&token);
-  memset(&cache, 0, sizeof(cache));
   TAILQ_FOREACH(hook, &Hooks, entries)
   {
     if (!hook->command)
@@ -485,7 +485,7 @@ void mutt_message_hook(struct Context *ctx, struct Header *hdr, int type)
  * addr_hook - Perform an address hook (get a path)
  * @param path    Buffer for path
  * @param pathlen Length of buffer
- * @param type    Type e.g. XXX
+ * @param type    Type e.g. #MUTT_FCCHOOK
  * @param ctx     Mailbox Context
  * @param hdr     Email Header
  * @retval  0 Success
@@ -495,9 +495,8 @@ static int addr_hook(char *path, size_t pathlen, int type, struct Context *ctx,
                      struct Header *hdr)
 {
   struct Hook *hook = NULL;
-  struct PatternCache cache;
+  struct PatternCache cache = { 0 };
 
-  memset(&cache, 0, sizeof(cache));
   /* determine if a matching hook exists */
   TAILQ_FOREACH(hook, &Hooks, entries)
   {
@@ -546,7 +545,7 @@ void mutt_default_save(char *path, size_t pathlen, struct Header *hdr)
     addr = NULL;
   if (addr)
   {
-    char tmp[_POSIX_PATH_MAX];
+    char tmp[PATH_MAX];
     mutt_safe_path(tmp, sizeof(tmp), addr);
     snprintf(path, pathlen, "=%s", tmp);
   }
@@ -566,7 +565,7 @@ void mutt_select_fcc(char *path, size_t pathlen, struct Header *hdr)
     if ((SaveName || ForceName) && (env->to || env->cc || env->bcc))
     {
       struct Address *addr = env->to ? env->to : (env->cc ? env->cc : env->bcc);
-      char buf[_POSIX_PATH_MAX];
+      char buf[PATH_MAX];
       mutt_safe_path(buf, sizeof(buf), addr);
       mutt_file_concat_path(path, NONULL(Folder), buf, pathlen);
       if (!ForceName && mx_access(path, W_OK) != 0)
@@ -662,6 +661,12 @@ void mutt_account_hook(const char *url)
 }
 #endif
 
+/**
+ * mutt_timeout_hook - Execute any timeout hooks
+ *
+ * The user can configure hooks to be run on timeout.
+ * This function finds all the matching hooks and executes them.
+ */
 void mutt_timeout_hook(void)
 {
   struct Hook *hook = NULL;
@@ -681,6 +686,7 @@ void mutt_timeout_hook(void)
     if (mutt_parse_rc_line(hook->command, &token, &err) == -1)
     {
       mutt_error("%s", err.data);
+      mutt_buffer_reset(&err);
 
       /* The hooks should be independent of each other, so even though this on
        * failed, we'll carry on with the others. */
@@ -715,6 +721,7 @@ void mutt_startup_shutdown_hook(int type)
     if (mutt_parse_rc_line(hook->command, &token, &err) == -1)
     {
       mutt_error("%s", err.data);
+      mutt_buffer_reset(&err);
     }
   }
   FREE(&token.data);

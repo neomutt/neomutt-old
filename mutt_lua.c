@@ -323,7 +323,7 @@ static void lua_expose_command(void *p, const struct Command *cmd)
 {
   lua_State *l = (lua_State *) p;
   char buf[LONG_STRING];
-  snprintf(buf, LONG_STRING, "mutt.command.%s = function (...); mutt.call('%s', ...); end",
+  snprintf(buf, sizeof(buf), "mutt.command.%s = function (...); mutt.call('%s', ...); end",
            cmd->name, cmd->name);
   (void) luaL_dostring(l, buf);
 }
@@ -390,6 +390,15 @@ static bool lua_init(lua_State **l)
 
 lua_State *Lua = NULL;
 
+/**
+ * mutt_lua_parse - Parse the 'lua' command
+ * @param tmp  Temporary Buffer space
+ * @param s    Buffer containing string to be parsed
+ * @param data Flags associated with the command
+ * @param err  Buffer for error messages
+ * @retval  0 Success
+ * @retval -1 Error
+ */
 int mutt_lua_parse(struct Buffer *tmp, struct Buffer *s, unsigned long data, struct Buffer *err)
 {
   lua_init(&Lua);
@@ -398,7 +407,7 @@ int mutt_lua_parse(struct Buffer *tmp, struct Buffer *s, unsigned long data, str
   if (luaL_dostring(Lua, s->dptr))
   {
     mutt_debug(2, " * %s -> failure\n", s->dptr);
-    snprintf(err->data, err->dsize, "%s: %s", s->dptr, lua_tostring(Lua, -1));
+    mutt_buffer_printf(err, "%s: %s", s->dptr, lua_tostring(Lua, -1));
     /* pop error message from the stack */
     lua_pop(Lua, 1);
     return -1;
@@ -407,6 +416,15 @@ int mutt_lua_parse(struct Buffer *tmp, struct Buffer *s, unsigned long data, str
   return 2;
 }
 
+/**
+ * mutt_lua_source_file - Parse the 'lua-source' command
+ * @param tmp  Temporary Buffer space
+ * @param s    Buffer containing string to be parsed
+ * @param data Flags associated with the command
+ * @param err  Buffer for error messages
+ * @retval  0 Success
+ * @retval -1 Error
+ */
 int mutt_lua_source_file(struct Buffer *tmp, struct Buffer *s,
                          unsigned long data, struct Buffer *err)
 {
@@ -414,11 +432,11 @@ int mutt_lua_source_file(struct Buffer *tmp, struct Buffer *s,
 
   lua_init(&Lua);
 
-  char path[_POSIX_PATH_MAX];
+  char path[PATH_MAX];
 
   if (mutt_extract_token(tmp, s, 0) != 0)
   {
-    snprintf(err->data, err->dsize, _("source: error at %s"), s->dptr);
+    mutt_buffer_printf(err, _("source: error at %s"), s->dptr);
     return -1;
   }
   if (MoreArgs(s))

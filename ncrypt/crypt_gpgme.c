@@ -56,6 +56,7 @@
 #include "envelope.h"
 #include "format_flags.h"
 #include "globals.h"
+#include "handler.h"
 #include "header.h"
 #include "keymap.h"
 #include "mutt_curses.h"
@@ -460,10 +461,10 @@ static int crypt_id_matches_addr(struct Address *addr, struct Address *u_addr,
 
 /**
  * create_gpgme_context - Create a new GPGME context
- * @param for_smime If set, protocol of the context is set to CMS
+ * @param for_smime If true, protocol of the context is set to CMS
  * @retval ptr New GPGME context
  */
-static gpgme_ctx_t create_gpgme_context(int for_smime)
+static gpgme_ctx_t create_gpgme_context(bool for_smime)
 {
   gpgme_error_t err;
   gpgme_ctx_t ctx;
@@ -516,7 +517,7 @@ static gpgme_data_t create_gpgme_data(void)
  */
 static gpgme_data_t body_to_data_object(struct Body *a, int convert)
 {
-  char tempfile[_POSIX_PATH_MAX];
+  char tempfile[PATH_MAX];
   int err = 0;
   gpgme_data_t data;
 
@@ -639,24 +640,19 @@ static int data_object_to_stream(gpgme_data_t data, FILE *fp)
 /**
  * data_object_to_tempfile - Copy a data object to a temporary file
  *
- * The tempfile name may be optionally passed in.
  * If ret_fp is passed in, the file will be rewound, left open, and returned
  * via that parameter.
  * The tempfile name is returned, and must be freed.
  */
-static char *data_object_to_tempfile(gpgme_data_t data, char *tempf, FILE **ret_fp)
+static char *data_object_to_tempfile(gpgme_data_t data, FILE **ret_fp)
 {
   int err;
-  char tempfb[_POSIX_PATH_MAX];
+  char tempf[PATH_MAX];
   FILE *fp = NULL;
   ssize_t nread = 0;
 
-  if (!tempf)
-  {
-    mutt_mktemp(tempfb, sizeof(tempfb));
-    tempf = tempfb;
-  }
-  fp = mutt_file_fopen(tempf, tempf == tempfb ? "w+" : "a+");
+  mutt_mktemp(tempf, sizeof(tempf));
+  fp = mutt_file_fopen(tempf, "w+");
   if (!fp)
   {
     mutt_perror(_("Can't create temporary file"));
@@ -789,9 +785,12 @@ static gpgme_key_t *create_recipient_set(const char *keylist, gpgme_protocol_t p
 
 /**
  * set_signer - Make sure that the correct signer is set
- * @retval 0 Success
+ * @param ctx       gpgme Context
+ * @param for_smime Use S/MIME
+ * @retval  0 Success
+ * @retval -1 Error
  */
-static int set_signer(gpgme_ctx_t ctx, int for_smime)
+static int set_signer(gpgme_ctx_t ctx, bool for_smime)
 {
   char *signid = for_smime ? SmimeDefaultKey : PgpSignAs;
   gpgme_error_t err;
@@ -857,7 +856,7 @@ static gpgme_error_t set_pka_sig_notation(gpgme_ctx_t ctx)
  * a PGP message is signed and encrypted.  Returns NULL in case of error
  */
 static char *encrypt_gpgme_object(gpgme_data_t plaintext, gpgme_key_t *rset,
-                                  int use_smime, int combined_signed)
+                                  bool use_smime, bool combined_signed)
 {
   gpgme_error_t err;
   gpgme_ctx_t ctx;
@@ -905,7 +904,7 @@ static char *encrypt_gpgme_object(gpgme_data_t plaintext, gpgme_key_t *rset,
 
   gpgme_release(ctx);
 
-  outfile = data_object_to_tempfile(ciphertext, NULL, NULL);
+  outfile = data_object_to_tempfile(ciphertext, NULL);
   gpgme_data_release(ciphertext);
   return outfile;
 }
@@ -966,10 +965,6 @@ static void print_time(time_t t, struct State *s)
   state_puts(p, s);
 }
 
-/*
- * Implementation of `sign_message'.
- */
-
 /**
  * sign_message - Sign a message
  * @param a         Message to sign
@@ -977,7 +972,7 @@ static void print_time(time_t t, struct State *s)
  * @retval ptr  new Body
  * @retval NULL error
  */
-static struct Body *sign_message(struct Body *a, int use_smime)
+static struct Body *sign_message(struct Body *a, bool use_smime)
 {
   struct Body *t = NULL;
   char *sigfile = NULL;
@@ -1041,7 +1036,7 @@ static struct Body *sign_message(struct Body *a, int use_smime)
     return NULL;
   }
 
-  sigfile = data_object_to_tempfile(signature, NULL, NULL);
+  sigfile = data_object_to_tempfile(signature, NULL);
   gpgme_data_release(signature);
   if (!sigfile)
   {
@@ -1096,27 +1091,26 @@ static struct Body *sign_message(struct Body *a, int use_smime)
   return a;
 }
 
+/**
+ * pgp_gpgme_sign_message - Implements CryptModuleSpecs::sign_message()
+ */
 struct Body *pgp_gpgme_sign_message(struct Body *a)
 {
-  return sign_message(a, 0);
+  return sign_message(a, false);
 }
-
-struct Body *smime_gpgme_sign_message(struct Body *a)
-{
-  return sign_message(a, 1);
-}
-
-/*
- * Implementation of `encrypt_message'.
- */
 
 /**
- * pgp_gpgme_encrypt_message - Encrypt a message
- *
- * Encrypt the mail body A to all keys given as space separated keyids
- * or fingerprints in KEYLIST and return the encrypted body.
+ * smime_gpgme_sign_message - Implements CryptModuleSpecs::sign_message()
  */
-struct Body *pgp_gpgme_encrypt_message(struct Body *a, char *keylist, int sign)
+struct Body *smime_gpgme_sign_message(struct Body *a)
+{
+  return sign_message(a, true);
+}
+
+/**
+ * pgp_gpgme_encrypt_message - Implements CryptModuleSpecs::pgp_encrypt_message()
+ */
+struct Body *pgp_gpgme_encrypt_message(struct Body *a, char *keylist, bool sign)
 {
   gpgme_key_t *rset = create_recipient_set(keylist, GPGME_PROTOCOL_OpenPGP);
   if (!rset)
@@ -1131,7 +1125,7 @@ struct Body *pgp_gpgme_encrypt_message(struct Body *a, char *keylist, int sign)
     return NULL;
   }
 
-  char *outfile = encrypt_gpgme_object(plaintext, rset, 0, sign);
+  char *outfile = encrypt_gpgme_object(plaintext, rset, false, sign);
   gpgme_data_release(plaintext);
   free_recipient_set(&rset);
   if (!outfile)
@@ -1166,15 +1160,8 @@ struct Body *pgp_gpgme_encrypt_message(struct Body *a, char *keylist, int sign)
   return t;
 }
 
-/*
- * Implementation of `smime_build_smime_entity'.
- */
-
 /**
- * smime_gpgme_build_smime_entity - Encrypt the email body to all recipients
- *
- * Encrypt the mail body A to all keys given as space separated fingerprints in
- * KEYLIST and return the S/MIME encrypted body.
+ * smime_gpgme_build_smime_entity - Implements CryptModuleSpecs::smime_build_smime_entity()
  */
 struct Body *smime_gpgme_build_smime_entity(struct Body *a, char *keylist)
 {
@@ -1193,7 +1180,7 @@ struct Body *smime_gpgme_build_smime_entity(struct Body *a, char *keylist)
     return NULL;
   }
 
-  char *outfile = encrypt_gpgme_object(plaintext, rset, 1, 0);
+  char *outfile = encrypt_gpgme_object(plaintext, rset, true, false);
   gpgme_data_release(plaintext);
   free_recipient_set(&rset);
   if (!outfile)
@@ -1215,10 +1202,6 @@ struct Body *smime_gpgme_build_smime_entity(struct Body *a, char *keylist)
 
   return t;
 }
-
-/*
- * Implementation of `verify_one'.
- */
 
 /**
  * show_sig_summary - Show a signature summary
@@ -1252,9 +1235,11 @@ static int show_sig_summary(unsigned long sum, gpgme_ctx_t ctx, gpgme_key_t key,
       state_puts("\n", s);
     }
     else
+    {
       state_puts(_("Warning: At least one certification key "
                    "has expired\n"),
                  s);
+    }
   }
 
   if ((sum & GPGME_SIGSUM_SIG_EXPIRED))
@@ -1274,9 +1259,11 @@ static int show_sig_summary(unsigned long sum, gpgme_ctx_t ctx, gpgme_key_t key,
   }
 
   if ((sum & GPGME_SIGSUM_KEY_MISSING))
+  {
     state_puts(_("Can't verify due to a missing "
                  "key or certificate\n"),
                s);
+  }
 
   if ((sum & GPGME_SIGSUM_CRL_MISSING))
   {
@@ -1615,7 +1602,7 @@ static int show_one_sig_status(gpgme_ctx_t ctx, int idx, struct State *s)
  *
  * With IS_SMIME set to true we assume S/MIME (surprise!)
  */
-static int verify_one(struct Body *sigbdy, struct State *s, const char *tempfile, int is_smime)
+static int verify_one(struct Body *sigbdy, struct State *s, const char *tempfile, bool is_smime)
 {
   int badsig = -1;
   int anywarn = 0;
@@ -1739,19 +1726,21 @@ static int verify_one(struct Body *sigbdy, struct State *s, const char *tempfile
   return badsig ? 1 : anywarn ? 2 : 0;
 }
 
+/**
+ * pgp_gpgme_verify_one - Implements CryptModuleSpecs::verify_one()
+ */
 int pgp_gpgme_verify_one(struct Body *sigbdy, struct State *s, const char *tempfile)
 {
-  return verify_one(sigbdy, s, tempfile, 0);
+  return verify_one(sigbdy, s, tempfile, false);
 }
 
+/**
+ * smime_gpgme_verify_one - Implements CryptModuleSpecs::verify_one()
+ */
 int smime_gpgme_verify_one(struct Body *sigbdy, struct State *s, const char *tempfile)
 {
-  return verify_one(sigbdy, s, tempfile, 1);
+  return verify_one(sigbdy, s, tempfile, true);
 }
-
-/*
- * Implementation of `decrypt_part'.
- */
 
 /**
  * decrypt_part - Decrypt a PGP or SMIME message
@@ -1763,7 +1752,7 @@ int smime_gpgme_verify_one(struct Body *sigbdy, struct State *s, const char *tem
  * encrypted but a signed message.
  */
 static struct Body *decrypt_part(struct Body *a, struct State *s, FILE *fpout,
-                                 int is_smime, int *r_is_signed)
+                                 bool is_smime, int *r_is_signed)
 {
   if (!a || !s || !fpout)
     return NULL;
@@ -1869,9 +1858,11 @@ restart:
       *r_is_signed = -1; /* A signature exists. */
 
     if ((s->flags & MUTT_DISPLAY))
+    {
       state_attach_puts(_("[-- Begin signature "
                           "information --]\n"),
                         s);
+    }
     for (idx = 0; (res = show_one_sig_status(ctx, idx, s)) != -1; idx++)
     {
       if (res == 1)
@@ -1883,9 +1874,11 @@ restart:
       *r_is_signed = anywarn ? 2 : 1; /* Good signature. */
 
     if ((s->flags & MUTT_DISPLAY))
+    {
       state_attach_puts(_("[-- End signature "
                           "information --]\n\n"),
                         s);
+    }
   }
   gpgme_release(ctx);
   ctx = NULL;
@@ -1911,16 +1904,12 @@ restart:
 }
 
 /**
- * pgp_gpgme_decrypt_mime - Decrypt a PGP/MIME message
- * @retval 0 Success
- *
- * The message in FPIN and B and return a new body and the stream in CUR and
- * FPOUT.
+ * pgp_gpgme_decrypt_mime - Implements CryptModuleSpecs::decrypt_mime()
  */
 int pgp_gpgme_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Body **cur)
 {
-  char tempfile[_POSIX_PATH_MAX];
-  struct State s;
+  char tempfile[PATH_MAX];
+  struct State s = { 0 };
   struct Body *first_part = b;
   int is_signed = 0;
   bool need_decode = false;
@@ -1943,7 +1932,6 @@ int pgp_gpgme_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Body
   else
     return -1;
 
-  memset(&s, 0, sizeof(s));
   s.fpin = fpin;
 
   if (need_decode)
@@ -1984,7 +1972,7 @@ int pgp_gpgme_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Body
   }
   unlink(tempfile);
 
-  *cur = decrypt_part(b, &s, *fpout, 0, &is_signed);
+  *cur = decrypt_part(b, &s, *fpout, false, &is_signed);
   if (!*cur)
     rc = -1;
   rewind(*fpout);
@@ -2004,16 +1992,12 @@ bail:
 }
 
 /**
- * smime_gpgme_decrypt_mime - Decrypt a S/MIME message
- * @retval 0 Success
- *
- * The message in FPIN and B and return a new body and
- * the stream in CUR and FPOUT.
+ * smime_gpgme_decrypt_mime - Implements CryptModuleSpecs::decrypt_mime()
  */
 int smime_gpgme_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Body **cur)
 {
-  char tempfile[_POSIX_PATH_MAX];
-  struct State s;
+  char tempfile[PATH_MAX];
+  struct State s = { 0 };
   FILE *tmpfp = NULL;
   int is_signed;
   LOFF_T saved_b_offset;
@@ -2033,7 +2017,6 @@ int smime_gpgme_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Bo
   saved_b_type = b->type;
   saved_b_offset = b->offset;
   saved_b_length = b->length;
-  memset(&s, 0, sizeof(s));
   s.fpin = fpin;
   fseeko(s.fpin, b->offset, SEEK_SET);
   mutt_mktemp(tempfile, sizeof(tempfile));
@@ -2064,7 +2047,7 @@ int smime_gpgme_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Bo
   }
   mutt_file_unlink(tempfile);
 
-  *cur = decrypt_part(b, &s, *fpout, 1, &is_signed);
+  *cur = decrypt_part(b, &s, *fpout, true, &is_signed);
   if (*cur)
     (*cur)->goodsig = is_signed > 0;
   b->type = saved_b_type;
@@ -2121,7 +2104,7 @@ int smime_gpgme_decrypt_mime(FILE *fpin, FILE **fpout, struct Body *b, struct Bo
     }
     mutt_file_unlink(tempfile);
 
-    tmp_b = decrypt_part(bb, &s, *fpout, 1, &is_signed);
+    tmp_b = decrypt_part(bb, &s, *fpout, true, &is_signed);
     if (tmp_b)
       tmp_b->goodsig = is_signed > 0;
     bb->type = saved_b_type;
@@ -2139,8 +2122,8 @@ static int pgp_gpgme_extract_keys(gpgme_data_t keydata, FILE **fp, int dryrun)
 {
   /* there's no side-effect free way to view key data in GPGME,
    * so we import the key into a temporary keyring */
-  char tmpdir[_POSIX_PATH_MAX];
-  char tmpfile[_POSIX_PATH_MAX];
+  char tmpdir[PATH_MAX];
+  char tmpfile[PATH_MAX];
   gpgme_ctx_t tmpctx;
   gpgme_error_t err;
   gpgme_engine_info_t engineinfo;
@@ -2223,11 +2206,15 @@ static int pgp_gpgme_extract_keys(gpgme_data_t keydata, FILE **fp, int dryrun)
       strftime(date, sizeof(date), "%Y-%m-%d", localtime(&tt));
 
       if (!more)
+      {
         fprintf(*fp, "pub %5.5s %d/%8s %s %s\n", gpgme_pubkey_algo_name(subkey->pubkey_algo),
                 subkey->length, shortid, date, uid->uid);
+      }
       else
+      {
         fprintf(*fp, "sub %5.5s %d/%8s %s\n", gpgme_pubkey_algo_name(subkey->pubkey_algo),
                 subkey->length, shortid, date);
+      }
       subkey = subkey->next;
       more = 1;
     }
@@ -2282,12 +2269,9 @@ static int line_compare(const char *a, size_t n, const char *b)
 #define BEGIN_PGP_SIGNATURE(_y)                                                \
   _LINE_COMPARE("-----BEGIN PGP SIGNATURE-----", _y)
 
-/*
- * Implementation of `pgp_check_traditional'.
- */
 static int pgp_check_traditional_one_body(FILE *fp, struct Body *b)
 {
-  char tempfile[_POSIX_PATH_MAX];
+  char tempfile[PATH_MAX];
   char buf[HUGE_STRING];
   FILE *tfp = NULL;
 
@@ -2341,14 +2325,17 @@ static int pgp_check_traditional_one_body(FILE *fp, struct Body *b)
   return 1;
 }
 
-int pgp_gpgme_check_traditional(FILE *fp, struct Body *b, int just_one)
+/**
+ * pgp_gpgme_check_traditional - Implements CryptModuleSpecs::pgp_check_traditional()
+ */
+int pgp_gpgme_check_traditional(FILE *fp, struct Body *b, bool just_one)
 {
   int rc = 0;
   int r;
   for (; b; b = b->next)
   {
     if (!just_one && is_multipart(b))
-      rc = (pgp_gpgme_check_traditional(fp, b->parts, 0) || rc);
+      rc = (pgp_gpgme_check_traditional(fp, b->parts, false) || rc);
     else if (b->type == TYPETEXT)
     {
       r = mutt_is_application_pgp(b);
@@ -2364,6 +2351,9 @@ int pgp_gpgme_check_traditional(FILE *fp, struct Body *b, int just_one)
   return rc;
 }
 
+/**
+ * pgp_gpgme_invoke_import - Implements CryptModuleSpecs::pgp_invoke_import()
+ */
 void pgp_gpgme_invoke_import(const char *fname)
 {
   gpgme_data_t keydata;
@@ -2392,10 +2382,6 @@ void pgp_gpgme_invoke_import(const char *fname)
   mutt_file_fclose(&out);
 }
 
-/*
- * Implementation of `application_handler'.
- */
-
 /**
  * copy_clearsigned - Copy a clearsigned message
  *
@@ -2414,7 +2400,7 @@ static void copy_clearsigned(gpgme_data_t data, struct State *s, char *charset)
   bool complete, armor_header;
   FILE *fp = NULL;
 
-  char *fname = data_object_to_tempfile(data, NULL, &fp);
+  char *fname = data_object_to_tempfile(data, &fp);
   if (!fname)
   {
     mutt_file_fclose(&fp);
@@ -2463,7 +2449,7 @@ static void copy_clearsigned(gpgme_data_t data, struct State *s, char *charset)
 }
 
 /**
- * pgp_gpgme_application_handler - Support for classic_application/pgp
+ * pgp_gpgme_application_handler - Implements CryptModuleSpecs::application_handler()
  */
 int pgp_gpgme_application_handler(struct Body *m, struct State *s)
 {
@@ -2543,7 +2529,7 @@ int pgp_gpgme_application_handler(struct Body *m, struct State *s)
         gpgme_ctx_t ctx;
 
         plaintext = create_gpgme_data();
-        ctx = create_gpgme_context(0);
+        ctx = create_gpgme_context(false);
 
         if (clearsign)
           err = gpgme_op_verify(ctx, armored_data, NULL, plaintext);
@@ -2609,7 +2595,7 @@ int pgp_gpgme_application_handler(struct Body *m, struct State *s)
                               s);
           }
 
-          tmpfname = data_object_to_tempfile(plaintext, NULL, &pgpout);
+          tmpfname = data_object_to_tempfile(plaintext, &pgpout);
           if (!tmpfname)
           {
             mutt_file_fclose(&pgpout);
@@ -2700,19 +2686,15 @@ int pgp_gpgme_application_handler(struct Body *m, struct State *s)
   return err;
 }
 
-/*
- * Implementation of `encrypted_handler'.
- */
-
 /**
- * pgp_gpgme_encrypted_handler - MIME handler for pgp/mime encrypted messages
+ * pgp_gpgme_encrypted_handler - Implements CryptModuleSpecs::encrypted_handler()
  *
  * This handler is passed the application/octet-stream directly.
  * The caller must propagate a->goodsig to its parent.
  */
 int pgp_gpgme_encrypted_handler(struct Body *a, struct State *s)
 {
-  char tempfile[_POSIX_PATH_MAX];
+  char tempfile[PATH_MAX];
   int is_signed;
   int rc = 0;
 
@@ -2723,23 +2705,27 @@ int pgp_gpgme_encrypted_handler(struct Body *a, struct State *s)
   if (!fpout)
   {
     if (s->flags & MUTT_DISPLAY)
+    {
       state_attach_puts(_("[-- Error: could not create temporary file! "
                           "--]\n"),
                         s);
+    }
     return -1;
   }
 
-  struct Body *tattach = decrypt_part(a, s, fpout, 0, &is_signed);
+  struct Body *tattach = decrypt_part(a, s, fpout, false, &is_signed);
   if (tattach)
   {
     tattach->goodsig = is_signed > 0;
 
     if (s->flags & MUTT_DISPLAY)
+    {
       state_attach_puts(
           is_signed ? _("[-- The following data is PGP/MIME signed and "
                         "encrypted --]\n\n") :
                       _("[-- The following data is PGP/MIME encrypted --]\n\n"),
           s);
+    }
 
     {
       FILE *savefp = s->fpin;
@@ -2748,11 +2734,10 @@ int pgp_gpgme_encrypted_handler(struct Body *a, struct State *s)
       s->fpin = savefp;
     }
 
-    /*
-       * if a multipart/signed is the _only_ sub-part of a
-       * multipart/encrypted, cache signature verification
-       * status.
-       */
+    /* if a multipart/signed is the _only_ sub-part of a
+     * multipart/encrypted, cache signature verification
+     * status.
+     */
     if (mutt_is_multipart_signed(tattach) && !tattach->next)
       a->goodsig |= tattach->goodsig;
 
@@ -2782,12 +2767,12 @@ int pgp_gpgme_encrypted_handler(struct Body *a, struct State *s)
 }
 
 /**
- * smime_gpgme_application_handler - Support for application/smime
+ * smime_gpgme_application_handler - Implements CryptModuleSpecs::application_handler()
  */
 int smime_gpgme_application_handler(struct Body *a, struct State *s)
 {
-  char tempfile[_POSIX_PATH_MAX];
-  int is_signed;
+  char tempfile[PATH_MAX];
+  int is_signed = 0;
   int rc = 0;
 
   mutt_debug(2, "Entering handler\n");
@@ -2798,22 +2783,26 @@ int smime_gpgme_application_handler(struct Body *a, struct State *s)
   if (!fpout)
   {
     if (s->flags & MUTT_DISPLAY)
+    {
       state_attach_puts(_("[-- Error: could not create temporary file! "
                           "--]\n"),
                         s);
+    }
     return -1;
   }
 
-  struct Body *tattach = decrypt_part(a, s, fpout, 1, &is_signed);
+  struct Body *tattach = decrypt_part(a, s, fpout, true, &is_signed);
   if (tattach)
   {
     tattach->goodsig = is_signed > 0;
 
     if (s->flags & MUTT_DISPLAY)
+    {
       state_attach_puts(
           is_signed ? _("[-- The following data is S/MIME signed --]\n\n") :
                       _("[-- The following data is S/MIME encrypted --]\n\n"),
           s);
+    }
 
     {
       FILE *savefp = s->fpin;
@@ -3128,7 +3117,7 @@ static int compare_key_address(const void *a, const void *b)
 
   r = mutt_str_strcasecmp((*s)->uid, (*t)->uid);
   if (r != 0)
-    return r > 0;
+    return (r > 0);
   else
     return (mutt_str_strcasecmp(crypt_fpr_or_lkeyid(*s), crypt_fpr_or_lkeyid(*t)) > 0);
 }
@@ -3150,7 +3139,7 @@ static int compare_keyid(const void *a, const void *b)
 
   r = mutt_str_strcasecmp(crypt_fpr_or_lkeyid(*s), crypt_fpr_or_lkeyid(*t));
   if (r != 0)
-    return r > 0;
+    return (r > 0);
   else
     return (mutt_str_strcasecmp((*s)->uid, (*t)->uid) > 0);
 }
@@ -3202,20 +3191,20 @@ static int compare_key_trust(const void *a, const void *b)
 
   r = (((*s)->flags & (KEYFLAG_RESTRICTIONS)) - ((*t)->flags & (KEYFLAG_RESTRICTIONS)));
   if (r != 0)
-    return r > 0;
+    return (r > 0);
 
   ts = (*s)->validity;
   tt = (*t)->validity;
   r = (tt - ts);
   if (r != 0)
-    return r < 0;
+    return (r < 0);
 
   if ((*s)->kobj->subkeys)
     ts = (*s)->kobj->subkeys->length;
   if ((*t)->kobj->subkeys)
     tt = (*t)->kobj->subkeys->length;
   if (ts != tt)
-    return ts > tt;
+    return (ts > tt);
 
   if ((*s)->kobj->subkeys && ((*s)->kobj->subkeys->timestamp > 0))
     ts = (*s)->kobj->subkeys->timestamp;
@@ -3228,7 +3217,7 @@ static int compare_key_trust(const void *a, const void *b)
 
   r = mutt_str_strcasecmp((*s)->uid, (*t)->uid);
   if (r != 0)
-    return r > 0;
+    return (r > 0);
   return (mutt_str_strcasecmp(crypt_fpr_or_lkeyid((*s)), crypt_fpr_or_lkeyid((*t))) > 0);
 }
 
@@ -3667,7 +3656,7 @@ static void print_key_info(gpgme_key_t key, FILE *fp)
   fprintf(fp, "%*s", KeyInfoPadding[KIP_KEY_TYPE], _(KeyInfoPrompts[KIP_KEY_TYPE]));
   /* L10N: This is printed after "Key Type: " and looks like this:
    *       PGP, 2048 bit RSA */
-  fprintf(fp, _("%s, %lu bit %s\n"), s2, aval, s);
+  fprintf(fp, ngettext("%s, %lu bit %s\n", "%s, %lu bit %s\n", aval), s2, aval, s);
 
   fprintf(fp, "%*s", KeyInfoPadding[KIP_KEY_USAGE], _(KeyInfoPrompts[KIP_KEY_USAGE]));
   delim = "";
@@ -3726,8 +3715,10 @@ static void print_key_info(gpgme_key_t key, FILE *fp)
   {
     s = key->issuer_serial;
     if (s)
+    {
       fprintf(fp, "%*s0x%s\n", KeyInfoPadding[KIP_SERIAL_NO],
               _(KeyInfoPrompts[KIP_SERIAL_NO]), s);
+    }
   }
 
   if (key->issuer_name)
@@ -3805,7 +3796,9 @@ static void print_key_info(gpgme_key_t key, FILE *fp)
       aval = subkey->length;
 
       fprintf(fp, "%*s", KeyInfoPadding[KIP_KEY_TYPE], _(KeyInfoPrompts[KIP_KEY_TYPE]));
-      fprintf(fp, _("%s, %lu bit %s\n"), "PGP", aval, s);
+      /* L10N: This is printed after "Key Type: " and looks like this:
+       *       PGP, 2048 bit RSA */
+      fprintf(fp, ngettext("%s, %lu bit %s\n", "%s, %lu bit %s\n", aval), "PGP", aval, s);
 
       fprintf(fp, "%*s", KeyInfoPadding[KIP_KEY_USAGE], _(KeyInfoPrompts[KIP_KEY_USAGE]));
       delim = "";
@@ -3834,7 +3827,7 @@ static void print_key_info(gpgme_key_t key, FILE *fp)
  */
 static void verify_key(struct CryptKeyInfo *key)
 {
-  char cmd[LONG_STRING], tempfile[_POSIX_PATH_MAX];
+  char cmd[LONG_STRING], tempfile[PATH_MAX];
   const char *s = NULL;
   gpgme_ctx_t listctx = NULL;
   gpgme_error_t err;
@@ -3895,10 +3888,6 @@ leave:
   snprintf(cmd, sizeof(cmd), _("Key ID: 0x%s"), crypt_keyid(key));
   mutt_do_pager(cmd, tempfile, 0, NULL);
 }
-
-/*
- * Implementation of `findkeys'.
- */
 
 /**
  * list_to_pattern - Convert STailQ to GPGME-compatible pattern
@@ -4239,15 +4228,19 @@ static struct CryptKeyInfo *crypt_select_key(struct CryptKeyInfo *keys,
       ts = _("keys matching");
 
     if (p)
+    {
       /* L10N:
          %1$s is one of the previous four entries.
          %2$s is an address.
          e.g. "S/MIME keys matching <me@mutt.org>." */
       snprintf(buf, sizeof(buf), _("%s <%s>."), ts, p->mailbox);
+    }
     else
+    {
       /* L10N:
          e.g. 'S/MIME keys matching "Michael Elkins".' */
       snprintf(buf, sizeof(buf), _("%s \"%s\"."), ts, s);
+    }
     menu->title = buf;
   }
 
@@ -4287,8 +4280,10 @@ static struct CryptKeyInfo *crypt_select_key(struct CryptKeyInfo *keys,
           char buf2[LONG_STRING];
 
           if (key_table[menu->current]->flags & KEYFLAG_CANTUSE)
+          {
             warn_s = _("ID is expired/disabled/revoked. Do you really want to "
                        "use the key?");
+          }
           else
           {
             warn_s = "??";
@@ -4606,7 +4601,7 @@ static struct CryptKeyInfo *crypt_ask_for_key(char *tag, char *whatfor, short ab
  * If oppenc_mode is true, only keys that can be determined without prompting
  * will be used.
  */
-static char *find_keys(struct Address *addrlist, unsigned int app, int oppenc_mode)
+static char *find_keys(struct Address *addrlist, unsigned int app, bool oppenc_mode)
 {
   struct ListHead crypt_hook_list = STAILQ_HEAD_INITIALIZER(crypt_hook_list);
   struct ListNode *crypt_hook = NULL;
@@ -4729,19 +4724,28 @@ static char *find_keys(struct Address *addrlist, unsigned int app, int oppenc_mo
   return keylist;
 }
 
-char *pgp_gpgme_findkeys(struct Address *addrlist, int oppenc_mode)
+/**
+ * pgp_gpgme_find_keys - Implements CryptModuleSpecs::find_keys()
+ */
+char *pgp_gpgme_find_keys(struct Address *addrlist, bool oppenc_mode)
 {
   return find_keys(addrlist, APPLICATION_PGP, oppenc_mode);
 }
 
-char *smime_gpgme_findkeys(struct Address *addrlist, int oppenc_mode)
+/**
+ * smime_gpgme_find_keys - Implements CryptModuleSpecs::find_keys()
+ */
+char *smime_gpgme_find_keys(struct Address *addrlist, bool oppenc_mode)
 {
   return find_keys(addrlist, APPLICATION_SMIME, oppenc_mode);
 }
 
-#ifdef HAVE_GPGME_OP_EXPORT_KEYS
-struct Body *pgp_gpgme_make_key_attachment(char *tempf)
+/**
+ * pgp_gpgme_make_key_attachment - Implements CryptModuleSpecs::pgp_make_key_attachment()
+ */
+struct Body *pgp_gpgme_make_key_attachment(void)
 {
+#ifdef HAVE_GPGME_OP_EXPORT_KEYS
   gpgme_ctx_t context = NULL;
   gpgme_key_t export_keys[2];
   gpgme_data_t keydata = NULL;
@@ -4759,7 +4763,7 @@ struct Body *pgp_gpgme_make_key_attachment(char *tempf)
   export_keys[0] = key->kobj;
   export_keys[1] = NULL;
 
-  context = create_gpgme_context(0);
+  context = create_gpgme_context(false);
   gpgme_set_armor(context, 1);
   keydata = create_gpgme_data();
   err = gpgme_op_export_keys(context, export_keys, 0, keydata);
@@ -4769,7 +4773,7 @@ struct Body *pgp_gpgme_make_key_attachment(char *tempf)
     goto bail;
   }
 
-  tempf = data_object_to_tempfile(keydata, tempf, NULL);
+  char *tempf = data_object_to_tempfile(keydata, NULL);
   if (!tempf)
     goto bail;
 
@@ -4797,12 +4801,10 @@ bail:
   gpgme_release(context);
 
   return att;
-}
+#else
+  return NULL;
 #endif
-
-/*
- * Implementation of `init'.
- */
+}
 
 /**
  * init_common - Initialise code common to PGP and SMIME parts of GPGME
@@ -4839,12 +4841,18 @@ static void init_smime(void)
   }
 }
 
+/**
+ * pgp_gpgme_init - Implements CryptModuleSpecs::init()
+ */
 void pgp_gpgme_init(void)
 {
   init_common();
   init_pgp();
 }
 
+/**
+ * smime_gpgme_init - Implements CryptModuleSpecs::init()
+ */
 void smime_gpgme_init(void)
 {
   init_common();
@@ -5013,11 +5021,17 @@ static int gpgme_send_menu(struct Header *msg, int is_smime)
   return msg->security;
 }
 
+/**
+ * pgp_gpgme_send_menu - Implements CryptModuleSpecs::send_menu()
+ */
 int pgp_gpgme_send_menu(struct Header *msg)
 {
   return gpgme_send_menu(msg, 0);
 }
 
+/**
+ * smime_gpgme_send_menu - Implements CryptModuleSpecs::send_menu()
+ */
 int smime_gpgme_send_menu(struct Header *msg)
 {
   return gpgme_send_menu(msg, 1);
@@ -5098,12 +5112,18 @@ static int verify_sender(struct Header *h)
   return rc;
 }
 
+/**
+ * smime_gpgme_verify_sender - Implements CryptModuleSpecs::smime_verify_sender()
+ */
 int smime_gpgme_verify_sender(struct Header *h)
 {
   return verify_sender(h);
 }
 
-void mutt_gpgme_set_sender(const char *sender)
+/**
+ * pgp_gpgme_set_sender - Implements CryptModuleSpecs::set_sender()
+ */
+void pgp_gpgme_set_sender(const char *sender)
 {
   mutt_debug(2, "setting to: %s\n", sender);
   FREE(&current_sender);

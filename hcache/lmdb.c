@@ -80,8 +80,10 @@ static int mdb_get_r_txn(struct HcacheLmdbCtx *ctx)
   if (rc == MDB_SUCCESS)
     ctx->txn_mode = TXN_READ;
   else
+  {
     mutt_debug(2, "%s: %s\n", ctx->txn ? "mdb_txn_renew" : "mdb_txn_begin",
                mdb_strerror(rc));
+  }
 
   return rc;
 }
@@ -114,7 +116,7 @@ static int mdb_get_w_txn(struct HcacheLmdbCtx *ctx)
 }
 
 /**
- * hcache_lmdb_open - Implements #hcache_open_t
+ * hcache_lmdb_open - Implements HcacheOps::open()
  */
 static void *hcache_lmdb_open(const char *path)
 {
@@ -169,7 +171,7 @@ fail_env:
 }
 
 /**
- * hcache_lmdb_fetch - Implements #hcache_fetch_t
+ * hcache_lmdb_fetch - Implements HcacheOps::fetch()
  */
 static void *hcache_lmdb_fetch(void *vctx, const char *key, size_t keylen)
 {
@@ -208,7 +210,7 @@ static void *hcache_lmdb_fetch(void *vctx, const char *key, size_t keylen)
 }
 
 /**
- * hcache_lmdb_free - Implements #hcache_free_t
+ * hcache_lmdb_free - Implements HcacheOps::free()
  */
 static void hcache_lmdb_free(void *vctx, void **data)
 {
@@ -216,7 +218,7 @@ static void hcache_lmdb_free(void *vctx, void **data)
 }
 
 /**
- * hcache_lmdb_store - Implements #hcache_store_t
+ * hcache_lmdb_store - Implements HcacheOps::store()
  */
 static int hcache_lmdb_store(void *vctx, const char *key, size_t keylen, void *data, size_t dlen)
 {
@@ -251,7 +253,7 @@ static int hcache_lmdb_store(void *vctx, const char *key, size_t keylen, void *d
 }
 
 /**
- * hcache_lmdb_delete - Implements #hcache_delete_t
+ * hcache_lmdb_delete - Implements HcacheOps::delete()
  */
 static int hcache_lmdb_delete(void *vctx, const char *key, size_t keylen)
 {
@@ -284,7 +286,7 @@ static int hcache_lmdb_delete(void *vctx, const char *key, size_t keylen)
 }
 
 /**
- * hcache_lmdb_close - Implements #hcache_close_t
+ * hcache_lmdb_close - Implements HcacheOps::close()
  */
 static void hcache_lmdb_close(void **vctx)
 {
@@ -305,7 +307,7 @@ static void hcache_lmdb_close(void **vctx)
 }
 
 /**
- * hcache_lmdb_backend - Implements #hcache_backend_t
+ * hcache_lmdb_backend - Implements HcacheOps::backend()
  */
 static const char *hcache_lmdb_backend(void)
 {

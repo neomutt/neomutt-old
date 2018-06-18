@@ -63,11 +63,11 @@
 static const char *ExtPagerProgress = "all";
 
 /** The folder the user last saved to.  Used by ci_save_message() */
-static char LastSaveFolder[_POSIX_PATH_MAX] = "";
+static char LastSaveFolder[PATH_MAX] = "";
 
 int mutt_display_message(struct Header *cur)
 {
-  char tempfile[_POSIX_PATH_MAX], buf[LONG_STRING];
+  char tempfile[PATH_MAX], buf[LONG_STRING];
   int rc = 0;
   bool builtin = false;
   int cmflags = MUTT_CM_DECODE | MUTT_CM_DISPLAY | MUTT_CM_CHARCONV;
@@ -193,8 +193,6 @@ int mutt_display_message(struct Header *cur)
 
   if (builtin)
   {
-    struct Pager info;
-
     if ((WithCrypto != 0) && (cur->security & APPLICATION_SMIME) && (cmflags & MUTT_CM_VERIFY))
     {
       if (cur->security & GOODSIGN)
@@ -220,8 +218,8 @@ int mutt_display_message(struct Header *cur)
         mutt_message(_("PGP signature could NOT be verified."));
     }
 
+    struct Pager info = { 0 };
     /* Invoke the builtin pager */
-    memset(&info, 0, sizeof(struct Pager));
     info.hdr = cur;
     info.ctx = Context;
     rc = mutt_pager(NULL, tempfile, MUTT_PAGER_MESSAGE, &info);
@@ -230,11 +228,12 @@ int mutt_display_message(struct Header *cur)
   {
     int r;
 
+    char cmd[HUGE_STRING];
     mutt_endwin();
-    snprintf(buf, sizeof(buf), "%s %s", NONULL(Pager), tempfile);
-    r = mutt_system(buf);
+    snprintf(cmd, sizeof(cmd), "%s %s", NONULL(Pager), tempfile);
+    r = mutt_system(cmd);
     if (r == -1)
-      mutt_error(_("Error running \"%s\"!"), buf);
+      mutt_error(_("Error running \"%s\"!"), cmd);
     unlink(tempfile);
     if (!OptNoCurses)
       keypad(stdscr, true);
@@ -549,8 +548,10 @@ void mutt_print_message(struct Header *h)
   if (pipe_message(h, PrintCommand, PrintDecode, 1, PrintSplit, "\f") == 0)
     mutt_message(ngettext("Message printed", "Messages printed", msgcount));
   else
+  {
     mutt_message(ngettext("Message could not be printed",
                           "Messages could not be printed", msgcount));
+  }
 }
 
 int mutt_select_sort(int reverse)
@@ -718,7 +719,9 @@ static void set_copy_flags(struct Header *hdr, int decode, int decrypt,
     }
     else if (((WithCrypto & APPLICATION_PGP) != 0) &&
              mutt_is_application_pgp(hdr->content) & ENCRYPT)
+    {
       decode = 1;
+    }
     else if (((WithCrypto & APPLICATION_SMIME) != 0) &&
              mutt_is_application_smime(hdr->content) & ENCRYPT)
     {
@@ -778,8 +781,9 @@ int mutt_save_message_ctx(struct Header *h, int delete, int decode, int decrypt,
  */
 int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
 {
-  int need_passphrase = 0, app = 0;
-  char buf[_POSIX_PATH_MAX];
+  bool need_passphrase = false;
+  int app = 0;
+  char buf[PATH_MAX];
   const char *prompt = NULL;
   struct Context ctx;
   struct stat st;
@@ -807,7 +811,7 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
   {
     if (WithCrypto)
     {
-      need_passphrase = h->security & ENCRYPT;
+      need_passphrase = (h->security & ENCRYPT);
       app = h->security;
     }
     mutt_message_hook(Context, h, MUTT_MESSAGEHOOK);
@@ -831,7 +835,7 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
       mutt_default_save(buf, sizeof(buf), h);
       if (WithCrypto)
       {
-        need_passphrase = h->security & ENCRYPT;
+        need_passphrase = (h->security & ENCRYPT);
         app = h->security;
       }
       h = NULL;
@@ -866,7 +870,9 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
 
   if ((WithCrypto != 0) && need_passphrase && (decode || decrypt) &&
       !crypt_valid_passphrase(app))
+  {
     return -1;
+  }
 
   mutt_message(_("Copying to %s..."), buf);
 
@@ -889,7 +895,7 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
   }
 #endif
 
-  if (mx_open_mailbox(buf, MUTT_APPEND, &ctx) != NULL)
+  if (mx_mbox_open(buf, MUTT_APPEND, &ctx) != NULL)
   {
 #ifdef USE_COMPRESSED
     /* If we're saving to a compressed mailbox, the stats won't be updated
@@ -905,7 +911,7 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
     {
       if (mutt_save_message_ctx(h, delete, decode, decrypt, &ctx) != 0)
       {
-        mx_close_mailbox(&ctx, NULL);
+        mx_mbox_close(&ctx, NULL);
         return -1;
       }
 #ifdef USE_COMPRESSED
@@ -954,14 +960,14 @@ int mutt_save_message(struct Header *h, int delete, int decode, int decrypt)
 #endif
       if (rc != 0)
       {
-        mx_close_mailbox(&ctx, NULL);
+        mx_mbox_close(&ctx, NULL);
         return -1;
       }
     }
 
     const int need_buffy_cleanup = (ctx.magic == MUTT_MBOX || ctx.magic == MUTT_MMDF);
 
-    mx_close_mailbox(&ctx, NULL);
+    mx_mbox_close(&ctx, NULL);
 
     if (need_buffy_cleanup)
       mutt_buffy_cleanup(buf, &st);
@@ -1089,10 +1095,10 @@ static int check_traditional_pgp(struct Header *h, int *redraw)
   h->security |= PGP_TRADITIONAL_CHECKED;
 
   mutt_parse_mime_message(Context, h);
-  struct Message *msg = mx_open_message(Context, h->msgno);
+  struct Message *msg = mx_msg_open(Context, h->msgno);
   if (!msg)
     return 0;
-  if (crypt_pgp_check_traditional(msg->fp, h->content, 0))
+  if (crypt_pgp_check_traditional(msg->fp, h->content, false))
   {
     h->security = crypt_query(h->content);
     *redraw |= REDRAW_FULL;
@@ -1100,7 +1106,7 @@ static int check_traditional_pgp(struct Header *h, int *redraw)
   }
 
   h->security |= PGP_TRADITIONAL_CHECKED;
-  mx_close_message(Context, &msg);
+  mx_msg_close(Context, &msg);
   return rc;
 }
 

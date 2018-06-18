@@ -214,7 +214,7 @@ static int dup_hash_inc(struct Hash *dup_hash, char *str)
  */
 static void shrink_histfile(void)
 {
-  char tmpfname[_POSIX_PATH_MAX];
+  char tmpfname[PATH_MAX];
   FILE *tmp = NULL;
   int n[HC_LAST] = { 0 };
   int line, hclass, read;
@@ -463,7 +463,7 @@ static void history_entry(char *buf, size_t buflen, struct Menu *menu, int num)
 {
   char *entry = ((char **) menu->data)[num];
 
-  mutt_expando_format(buf, buflen, 0, MuttIndexWindow->cols, "%buf", history_format_str,
+  mutt_expando_format(buf, buflen, 0, MuttIndexWindow->cols, "%s", history_format_str,
                       (unsigned long) entry, MUTT_FORMAT_ARROWCURSOR);
 }
 

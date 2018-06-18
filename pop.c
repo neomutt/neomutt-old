@@ -327,8 +327,10 @@ static int pop_fetch_headers(struct Context *ctx)
   }
 
   if (!ctx->quiet)
+  {
     mutt_progress_init(&progress, _("Fetching message headers..."),
                        MUTT_PROGRESS_MSG, ReadInc, new_count - old_count);
+  }
 
   if (ret == 0)
   {
@@ -458,7 +460,7 @@ static int pop_fetch_headers(struct Context *ctx)
  */
 static int pop_open_mailbox(struct Context *ctx)
 {
-  char buf[LONG_STRING];
+  char buf[PATH_MAX];
   struct Connection *conn = NULL;
   struct Account acct;
   struct PopData *pop_data = NULL;
@@ -587,7 +589,7 @@ static int pop_fetch_message(struct Context *ctx, struct Message *msg, int msgno
 {
   void *uidl = NULL;
   char buf[LONG_STRING];
-  char path[_POSIX_PATH_MAX];
+  char path[PATH_MAX];
   struct Progress progressbar;
   struct PopData *pop_data = (struct PopData *) ctx->data;
   struct PopCache *cache = NULL;
@@ -946,17 +948,20 @@ void pop_fetch_mail(void)
     goto finish;
   }
 
-  if (mx_open_mailbox(NONULL(Spoolfile), MUTT_APPEND, &ctx) == NULL)
+  if (mx_mbox_open(NONULL(Spoolfile), MUTT_APPEND, &ctx) == NULL)
     goto finish;
 
   delanswer = query_quadoption(PopDelete, _("Delete messages from server?"));
 
-  snprintf(msgbuf, sizeof(msgbuf), _("Reading new messages (%d bytes)..."), bytes);
+  snprintf(msgbuf, sizeof(msgbuf),
+           ngettext("Reading new messages (%d byte)...",
+                    "Reading new messages (%d bytes)...", bytes),
+           bytes);
   mutt_message("%s", msgbuf);
 
   for (int i = last + 1; i <= msgs; i++)
   {
-    msg = mx_open_new_message(&ctx, NULL, MUTT_ADD_FROM);
+    msg = mx_msg_open_new(&ctx, NULL, MUTT_ADD_FROM);
     if (!msg)
       ret = -3;
     else
@@ -966,13 +971,13 @@ void pop_fetch_mail(void)
       if (ret == -3)
         rset = 1;
 
-      if (ret == 0 && mx_commit_message(msg, &ctx) != 0)
+      if (ret == 0 && mx_msg_commit(&ctx, msg) != 0)
       {
         rset = 1;
         ret = -3;
       }
 
-      mx_close_message(&ctx, &msg);
+      mx_msg_close(&ctx, &msg);
     }
 
     if (ret == 0 && delanswer == MUTT_YES)
@@ -984,7 +989,7 @@ void pop_fetch_mail(void)
 
     if (ret == -1)
     {
-      mx_close_mailbox(&ctx, NULL);
+      mx_mbox_close(&ctx, NULL);
       goto fail;
     }
     if (ret == -2)
@@ -1005,7 +1010,7 @@ void pop_fetch_mail(void)
                  msgbuf, i - last, msgs - last);
   }
 
-  mx_close_mailbox(&ctx, NULL);
+  mx_mbox_close(&ctx, NULL);
 
   if (rset)
   {
@@ -1030,19 +1035,21 @@ fail:
   FREE(&pop_data);
 }
 
+// clang-format off
 /**
- * mx_comp_ops - Mailbox callback functions
+ * mx_pop_ops - Mailbox callback functions for POP mailboxes
  */
 struct MxOps mx_pop_ops = {
-  .open = pop_open_mailbox,
-  .open_append = NULL,
-  .close = pop_close_mailbox,
-  .open_msg = pop_fetch_message,
-  .close_msg = pop_close_message,
-  .check = pop_check_mailbox,
-  .commit_msg = NULL,
-  .open_new_msg = NULL,
-  .sync = pop_sync_mailbox,
-  .edit_msg_tags = NULL,
-  .commit_msg_tags = NULL,
+  .mbox_open        = pop_open_mailbox,
+  .mbox_open_append = NULL,
+  .mbox_check       = pop_check_mailbox,
+  .mbox_sync        = pop_sync_mailbox,
+  .mbox_close       = pop_close_mailbox,
+  .msg_open         = pop_fetch_message,
+  .msg_open_new     = NULL,
+  .msg_commit       = NULL,
+  .msg_close        = pop_close_message,
+  .tags_edit        = NULL,
+  .tags_commit      = NULL,
 };
+// clang-format on

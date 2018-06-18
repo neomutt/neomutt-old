@@ -84,7 +84,12 @@ union Validate {
 };
 
 #define HCACHE_BACKEND(name) extern const struct HcacheOps hcache_##name##_ops;
-HCACHE_BACKEND_LIST
+HCACHE_BACKEND(bdb)
+HCACHE_BACKEND(gdbm)
+HCACHE_BACKEND(kyotocabinet)
+HCACHE_BACKEND(lmdb)
+HCACHE_BACKEND(qdbm)
+HCACHE_BACKEND(tokyocabinet)
 #undef HCACHE_BACKEND
 
 #define hcache_get_ops() hcache_get_backend_ops(HeaderCacheBackend)
@@ -140,35 +145,35 @@ static const struct HcacheOps *hcache_get_backend_ops(const char *backend)
 
 /**
  * lazy_malloc - Allocate some memory
- * @param siz Minimum size to allocate
+ * @param size Minimum size to allocate
  * @retval ptr Allocated memory
  *
  * This block is likely to be lazy_realloc()'d repeatedly.
  * It starts off with a minimum size of 4KiB.
  */
-static void *lazy_malloc(size_t siz)
+static void *lazy_malloc(size_t size)
 {
-  if (siz < 4096)
-    siz = 4096;
+  if (size < 4096)
+    size = 4096;
 
-  return mutt_mem_malloc(siz);
+  return mutt_mem_malloc(size);
 }
 
 /**
  * lazy_realloc - Reallocate some memory
  * @param ptr Pointer to resize
- * @param siz Minimum size
+ * @param size Minimum size
  *
  * The minimum size is 4KiB to avoid repeated resizing.
  */
-static void lazy_realloc(void *ptr, size_t siz)
+static void lazy_realloc(void *ptr, size_t size)
 {
   void **p = (void **) ptr;
 
-  if (p != NULL && siz < 4096)
+  if (p != NULL && size < 4096)
     return;
 
-  mutt_mem_realloc(ptr, siz);
+  mutt_mem_realloc(ptr, size);
 }
 
 /**
@@ -688,7 +693,7 @@ static bool create_hcache_dir(const char *path)
   if (!path)
     return false;
 
-  static char dir[_POSIX_PATH_MAX];
+  static char dir[PATH_MAX];
   mutt_str_strfcpy(dir, path, sizeof(dir));
 
   char *p = strrchr(dir, '/');
@@ -729,7 +734,7 @@ static bool create_hcache_dir(const char *path)
  */
 static const char *hcache_per_folder(const char *path, const char *folder, hcache_namer_t namer)
 {
-  static char hcpath[_POSIX_PATH_MAX];
+  static char hcpath[PATH_MAX];
   char suffix[32] = "";
   struct stat sb;
 
@@ -759,7 +764,7 @@ static const char *hcache_per_folder(const char *path, const char *folder, hcach
   else
   {
     unsigned char m[16]; /* binary md5sum */
-    char name[_POSIX_PATH_MAX];
+    char name[PATH_MAX];
     snprintf(name, sizeof(name), "%s|%s", hcache_get_ops()->name, folder);
     mutt_md5(name, m);
     mutt_md5_toascii(m, name);
@@ -892,7 +897,7 @@ static char *get_foldername(const char *folder)
 }
 
 /**
- * mutt_hcache_open - Multiplexor for #hcache_open_t
+ * mutt_hcache_open - Multiplexor for HcacheOps::open
  */
 header_cache_t *mutt_hcache_open(const char *path, const char *folder, hcache_namer_t namer)
 {
@@ -970,7 +975,7 @@ header_cache_t *mutt_hcache_open(const char *path, const char *folder, hcache_na
 }
 
 /**
- * mutt_hcache_close - Multiplexor for #hcache_close_t
+ * mutt_hcache_close - Multiplexor for HcacheOps::close
  */
 void mutt_hcache_close(header_cache_t *h)
 {
@@ -984,7 +989,7 @@ void mutt_hcache_close(header_cache_t *h)
 }
 
 /**
- * mutt_hcache_fetch - Multiplexor for #hcache_fetch_t
+ * mutt_hcache_fetch - Multiplexor for HcacheOps::fetch
  */
 void *mutt_hcache_fetch(header_cache_t *h, const char *key, size_t keylen)
 {
@@ -1011,7 +1016,7 @@ void *mutt_hcache_fetch(header_cache_t *h, const char *key, size_t keylen)
  */
 void *mutt_hcache_fetch_raw(header_cache_t *h, const char *key, size_t keylen)
 {
-  char path[_POSIX_PATH_MAX];
+  char path[PATH_MAX];
   const struct HcacheOps *ops = hcache_get_ops();
 
   if (!h || !ops)
@@ -1023,7 +1028,7 @@ void *mutt_hcache_fetch_raw(header_cache_t *h, const char *key, size_t keylen)
 }
 
 /**
- * mutt_hcache_free - Multiplexor for #hcache_free_t
+ * mutt_hcache_free - Multiplexor for HcacheOps::free
  */
 void mutt_hcache_free(header_cache_t *h, void **data)
 {
@@ -1036,7 +1041,7 @@ void mutt_hcache_free(header_cache_t *h, void **data)
 }
 
 /**
- * mutt_hcache_store - Multiplexor for #hcache_store_t
+ * mutt_hcache_store - Multiplexor for HcacheOps::store
  */
 int mutt_hcache_store(header_cache_t *h, const char *key, size_t keylen,
                       struct Header *header, unsigned int uidvalidity)
@@ -1069,7 +1074,7 @@ int mutt_hcache_store(header_cache_t *h, const char *key, size_t keylen,
 int mutt_hcache_store_raw(header_cache_t *h, const char *key, size_t keylen,
                           void *data, size_t dlen)
 {
-  char path[_POSIX_PATH_MAX];
+  char path[PATH_MAX];
   const struct HcacheOps *ops = hcache_get_ops();
 
   if (!h || !ops)
@@ -1081,11 +1086,11 @@ int mutt_hcache_store_raw(header_cache_t *h, const char *key, size_t keylen,
 }
 
 /**
- * mutt_hcache_delete - Multiplexor for #hcache_delete_t
+ * mutt_hcache_delete - Multiplexor for HcacheOps::delete
  */
 int mutt_hcache_delete(header_cache_t *h, const char *key, size_t keylen)
 {
-  char path[_POSIX_PATH_MAX];
+  char path[PATH_MAX];
   const struct HcacheOps *ops = hcache_get_ops();
 
   if (!h)
@@ -1127,5 +1132,5 @@ const char *mutt_hcache_backend_list(void)
  */
 int mutt_hcache_is_valid_backend(const char *s)
 {
-  return hcache_get_backend_ops(s) != NULL;
+  return (hcache_get_backend_ops(s) != NULL);
 }

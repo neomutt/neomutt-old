@@ -46,6 +46,7 @@
 #include "filter.h"
 #include "format_flags.h"
 #include "globals.h"
+#include "handler.h"
 #include "header.h"
 #include "mailbox.h"
 #include "mutt_curses.h"
@@ -332,7 +333,9 @@ int mutt_write_mime_header(struct Body *a, FILE *f)
 
       if ((mutt_str_strcasecmp(np->attribute, "boundary") == 0) &&
           (strcmp(buffer, tmp) == 0))
+      {
         snprintf(buffer, sizeof(buffer), "\"%s\"", tmp);
+      }
 
       FREE(&tmp);
 
@@ -511,21 +514,21 @@ void mutt_generate_boundary(struct ParameterList *parm)
  */
 struct ContentState
 {
-  int from;
+  bool from;
   int whitespace;
-  int dot;
+  bool dot;
   int linelen;
-  int was_cr;
+  bool was_cr;
 };
 
 static void update_content_info(struct Content *info, struct ContentState *s,
                                 char *d, size_t dlen)
 {
-  int from = s->from;
+  bool from = s->from;
   int whitespace = s->whitespace;
-  int dot = s->dot;
+  bool dot = s->dot;
   int linelen = s->linelen;
-  int was_cr = s->was_cr;
+  bool was_cr = s->was_cr;
 
   if (!d) /* This signals EOF */
   {
@@ -543,7 +546,7 @@ static void update_content_info(struct Content *info, struct ContentState *s,
 
     if (was_cr)
     {
-      was_cr = 0;
+      was_cr = false;
       if (ch != '\n')
       {
         info->binary = true;
@@ -557,7 +560,7 @@ static void update_content_info(struct Content *info, struct ContentState *s,
         if (linelen > info->linemax)
           info->linemax = linelen;
         whitespace = 0;
-        dot = 0;
+        dot = false;
         linelen = 0;
         continue;
       }
@@ -575,13 +578,13 @@ static void update_content_info(struct Content *info, struct ContentState *s,
         info->linemax = linelen;
       whitespace = 0;
       linelen = 0;
-      dot = 0;
+      dot = false;
     }
     else if (ch == '\r')
     {
       info->crlf++;
       info->cr = true;
-      was_cr = 1;
+      was_cr = true;
       continue;
     }
     else if (ch & 0x80)
@@ -603,25 +606,25 @@ static void update_content_info(struct Content *info, struct ContentState *s,
       if (linelen == 1)
       {
         if ((ch == 'F') || (ch == 'f'))
-          from = 1;
+          from = true;
         else
-          from = 0;
+          from = false;
         if (ch == '.')
-          dot = 1;
+          dot = true;
         else
-          dot = 0;
+          dot = false;
       }
       else if (from)
       {
         if (linelen == 2 && ch != 'r')
-          from = 0;
+          from = false;
         else if (linelen == 3 && ch != 'o')
-          from = 0;
+          from = false;
         else if (linelen == 4)
         {
           if (ch == 'm')
             info->from = true;
-          from = 0;
+          from = false;
         }
       }
       if (ch == ' ')
@@ -630,7 +633,7 @@ static void update_content_info(struct Content *info, struct ContentState *s,
     }
 
     if (linelen > 1)
-      dot = 0;
+      dot = false;
     if (ch != ' ' && ch != '\t')
       whitespace = 0;
   }
@@ -894,7 +897,7 @@ static size_t convert_file_from_to(FILE *file, const char *fromcodes, const char
 struct Content *mutt_get_content_info(const char *fname, struct Body *b)
 {
   struct Content *info = NULL;
-  struct ContentState state;
+  struct ContentState state = { 0 };
   FILE *fp = NULL;
   char *fromcode = NULL;
   char *tocode = NULL;
@@ -926,7 +929,6 @@ struct Content *mutt_get_content_info(const char *fname, struct Body *b)
   }
 
   info = mutt_mem_calloc(1, sizeof(struct Content));
-  memset(&state, 0, sizeof(state));
 
   if (b != NULL && b->type == TYPETEXT && (!b->noconv && !b->force_charset))
   {
@@ -960,9 +962,11 @@ struct Content *mutt_get_content_info(const char *fname, struct Body *b)
   mutt_file_fclose(&fp);
 
   if (b != NULL && b->type == TYPETEXT && (!b->noconv && !b->force_charset))
+  {
     mutt_param_set(&b->parameter, "charset",
                    (!info->hibin ? "us-ascii" :
                                    Charset && !mutt_ch_is_us_ascii(Charset) ? Charset : "unknown-8bit"));
+  }
 
   return info;
 }
@@ -983,7 +987,7 @@ int mutt_lookup_mime_type(struct Body *att, const char *path)
 {
   FILE *f = NULL;
   char *p = NULL, *q = NULL, *ct = NULL;
-  char buf[LONG_STRING];
+  char buf[PATH_MAX];
   char subtype[STRING], xtype[STRING];
   int szf, sze, cur_sze;
   int type;
@@ -1105,11 +1109,10 @@ bye:
 
 static void transform_to_7bit(struct Body *a, FILE *fpin)
 {
-  char buf[_POSIX_PATH_MAX];
-  struct State s;
+  char buf[PATH_MAX];
+  struct State s = { 0 };
   struct stat sb;
 
-  memset(&s, 0, sizeof(s));
   for (; a; a = a->next)
   {
     if (a->type == TYPEMULTIPART)
@@ -1160,7 +1163,7 @@ static void transform_to_7bit(struct Body *a, FILE *fpin)
 
 void mutt_message_to_7bit(struct Body *a, FILE *fp)
 {
-  char temp[_POSIX_PATH_MAX];
+  char temp[PATH_MAX];
   char *line = NULL;
   FILE *fpin = NULL;
   FILE *fpout = NULL;
@@ -2288,7 +2291,7 @@ static int send_msg(const char *path, char **args, const char *msg, char **tempf
 
   if (SendmailWait >= 0 && tempfile)
   {
-    char tmp[_POSIX_PATH_MAX];
+    char tmp[PATH_MAX];
 
     mutt_mktemp(tmp, sizeof(tmp));
     *tempfile = mutt_str_strdup(tmp);
@@ -2709,7 +2712,7 @@ static int bounce_message(FILE *fp, struct Header *h, struct Address *to,
 {
   int rc = 0;
   FILE *f = NULL;
-  char tempfile[_POSIX_PATH_MAX];
+  char tempfile[PATH_MAX];
   struct Message *msg = NULL;
 
   if (!h)
@@ -2722,7 +2725,7 @@ static int bounce_message(FILE *fp, struct Header *h, struct Address *to,
   }
 
   /* If we failed to open a message, return with error */
-  if (!fp && (msg = mx_open_message(Context, h->msgno)) == NULL)
+  if (!fp && (msg = mx_msg_open(Context, h->msgno)) == NULL)
     return -1;
 
   if (!fp)
@@ -2766,7 +2769,7 @@ static int bounce_message(FILE *fp, struct Header *h, struct Address *to,
   }
 
   if (msg)
-    mx_close_message(Context, &msg);
+    mx_msg_close(Context, &msg);
 
   return rc;
 }
@@ -2890,8 +2893,8 @@ static void set_noconv_flags(struct Body *b, short flag)
 int mutt_write_multiple_fcc(const char *path, struct Header *hdr, const char *msgid,
                             int post, char *fcc, char **finalpath)
 {
-  char fcc_tok[_POSIX_PATH_MAX];
-  char fcc_expanded[_POSIX_PATH_MAX];
+  char fcc_tok[PATH_MAX];
+  char fcc_expanded[PATH_MAX];
 
   mutt_str_strfcpy(fcc_tok, path, sizeof(fcc_tok));
 
@@ -2928,7 +2931,7 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
 {
   struct Context f;
   struct Message *msg = NULL;
-  char tempfile[_POSIX_PATH_MAX];
+  char tempfile[PATH_MAX];
   FILE *tempfp = NULL;
   int rc = -1;
   bool need_buffy_cleanup = false;
@@ -2942,7 +2945,7 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
 #ifdef RECORD_FOLDER_HOOK
   mutt_folder_hook(path);
 #endif
-  if (mx_open_mailbox(path, MUTT_APPEND | MUTT_QUIET, &f) == NULL)
+  if (mx_mbox_open(path, MUTT_APPEND | MUTT_QUIET, &f) == NULL)
   {
     mutt_debug(1, "unable to open mailbox %s in append-mode, aborting.\n", path);
     goto done;
@@ -2958,7 +2961,7 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
     if (!tempfp)
     {
       mutt_perror(tempfile);
-      mx_close_mailbox(&f, NULL);
+      mx_mbox_close(&f, NULL);
       goto done;
     }
     /* remember new mail status before appending message */
@@ -2970,11 +2973,11 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
   onm_flags = MUTT_ADD_FROM;
   if (post)
     onm_flags |= MUTT_SET_DRAFT;
-  msg = mx_open_new_message(&f, hdr, onm_flags);
+  msg = mx_msg_open_new(&f, hdr, onm_flags);
   if (!msg)
   {
     mutt_file_fclose(&tempfp);
-    mx_close_mailbox(&f, NULL);
+    mx_mbox_close(&f, NULL);
     goto done;
   }
 
@@ -3090,9 +3093,9 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
       mutt_debug(1, "%s: write failed.\n", tempfile);
       mutt_file_fclose(&tempfp);
       unlink(tempfile);
-      mx_commit_message(msg, &f); /* XXX - really? */
-      mx_close_message(&f, &msg);
-      mx_close_mailbox(&f, NULL);
+      mx_msg_commit(&f, msg); /* XXX - really? */
+      mx_msg_close(&f, &msg);
+      mx_mbox_close(&f, NULL);
       goto done;
     }
 
@@ -3118,12 +3121,12 @@ int mutt_write_fcc(const char *path, struct Header *hdr, const char *msgid,
     rc = mutt_write_mime_body(hdr->content, msg->fp);
   }
 
-  if (mx_commit_message(msg, &f) != 0)
+  if (mx_msg_commit(&f, msg) != 0)
     rc = -1;
   else if (finalpath)
     *finalpath = mutt_str_strdup(msg->commited_path);
-  mx_close_message(&f, &msg);
-  mx_close_mailbox(&f, NULL);
+  mx_msg_close(&f, &msg);
+  mx_mbox_close(&f, NULL);
 
   if (!post && need_buffy_cleanup)
     mutt_buffy_cleanup(path, &st);

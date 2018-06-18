@@ -100,7 +100,7 @@ static void update_context(struct ImapData *idata, int oldmsgcount)
  */
 static struct BodyCache *msg_cache_open(struct ImapData *idata)
 {
-  char mailbox[_POSIX_PATH_MAX];
+  char mailbox[PATH_MAX];
 
   if (idata->bcache)
     return idata->bcache;
@@ -119,12 +119,11 @@ static struct BodyCache *msg_cache_open(struct ImapData *idata)
  */
 static FILE *msg_cache_get(struct ImapData *idata, struct Header *h)
 {
-  char id[_POSIX_PATH_MAX];
-
   if (!idata || !h)
     return NULL;
 
   idata->bcache = msg_cache_open(idata);
+  char id[64];
   snprintf(id, sizeof(id), "%u-%u", idata->uid_validity, HEADER_DATA(h)->uid);
   return mutt_bcache_get(idata->bcache, id);
 }
@@ -138,12 +137,11 @@ static FILE *msg_cache_get(struct ImapData *idata, struct Header *h)
  */
 static FILE *msg_cache_put(struct ImapData *idata, struct Header *h)
 {
-  char id[_POSIX_PATH_MAX];
-
   if (!idata || !h)
     return NULL;
 
   idata->bcache = msg_cache_open(idata);
+  char id[64];
   snprintf(id, sizeof(id), "%u-%u", idata->uid_validity, HEADER_DATA(h)->uid);
   return mutt_bcache_put(idata->bcache, id);
 }
@@ -157,12 +155,11 @@ static FILE *msg_cache_put(struct ImapData *idata, struct Header *h)
  */
 static int msg_cache_commit(struct ImapData *idata, struct Header *h)
 {
-  char id[_POSIX_PATH_MAX];
-
   if (!idata || !h)
     return -1;
 
   idata->bcache = msg_cache_open(idata);
+  char id[64];
   snprintf(id, sizeof(id), "%u-%u", idata->uid_validity, HEADER_DATA(h)->uid);
 
   return mutt_bcache_commit(idata->bcache, id);
@@ -609,7 +606,7 @@ int imap_read_headers(struct ImapData *idata, unsigned int msn_begin, unsigned i
 {
   char *hdrreq = NULL;
   FILE *fp = NULL;
-  char tempfile[_POSIX_PATH_MAX];
+  char tempfile[PATH_MAX];
   int msgno, idx;
   struct ImapHeader h;
   struct ImapStatus *status = NULL;
@@ -942,8 +939,10 @@ int imap_read_headers(struct ImapData *idata, unsigned int msn_begin, unsigned i
     idata->uidnext = maxuid + 1;
   }
   if (idata->uidnext > 1)
+  {
     mutt_hcache_store_raw(idata->hcache, "/UIDNEXT", 8, &idata->uidnext,
                           sizeof(idata->uidnext));
+  }
 
   imap_hcache_close(idata);
 #endif /* USE_HCACHE */
@@ -971,18 +970,13 @@ error_out_0:
 }
 
 /**
- * imap_fetch_message - Fetch an email from an IMAP server
- * @param ctx   Context
- * @param msg   Message to fetch
- * @param msgno Index into ctr->hdrs
- * @retval  0 Success
- * @retval -1 Failure
+ * imap_msg_open - Implements MxOps::msg_open()
  */
-int imap_fetch_message(struct Context *ctx, struct Message *msg, int msgno)
+int imap_msg_open(struct Context *ctx, struct Message *msg, int msgno)
 {
   struct Envelope *newenv = NULL;
   char buf[LONG_STRING];
-  char path[_POSIX_PATH_MAX];
+  char path[PATH_MAX];
   char *pc = NULL;
   unsigned int bytes;
   struct Progress progressbar;
@@ -1081,8 +1075,10 @@ int imap_fetch_message(struct Context *ctx, struct Message *msg, int msgno)
           if (mutt_str_atoui(pc, &uid) < 0)
             goto bail;
           if (uid != HEADER_DATA(h)->uid)
+          {
             mutt_error(_(
                 "The message index is incorrect. Try reopening the mailbox."));
+          }
         }
         else if ((mutt_str_strncasecmp("RFC822", pc, 6) == 0) ||
                  (mutt_str_strncasecmp("BODY[]", pc, 6) == 0))
@@ -1090,7 +1086,7 @@ int imap_fetch_message(struct Context *ctx, struct Message *msg, int msgno)
           pc = imap_next_word(pc);
           if (imap_get_literal_count(pc, &bytes) < 0)
           {
-            imap_error("imap_fetch_message()", buf);
+            imap_error("imap_msg_open()", buf);
             goto bail;
           }
           if (output_progress)
@@ -1202,30 +1198,24 @@ bail:
 }
 
 /**
- * imap_close_message - Close an email
- * @param ctx Context
- * @param msg Email info
- * @retval 0   Success
- * @retval EOF Failure, see errno
+ * imap_msg_close - Close an email
+ *
+ * @note May also return EOF Failure, see errno
  */
-int imap_close_message(struct Context *ctx, struct Message *msg)
+int imap_msg_close(struct Context *ctx, struct Message *msg)
 {
   return mutt_file_fclose(&msg->fp);
 }
 
 /**
- * imap_commit_message - Save changes to an email
- * @param ctx Context
- * @param msg Email info
- * @retval 0   Success
- * @retval EOF fclose() failed, see errno
- * @retval -1  Failure
+ * imap_msg_commit - Implements MxOps::msg_commit()
+ *
+ * @note May also return EOF Failure, see errno
  */
-int imap_commit_message(struct Context *ctx, struct Message *msg)
+int imap_msg_commit(struct Context *ctx, struct Message *msg)
 {
   int r = mutt_file_fclose(&msg->fp);
-
-  if (r)
+  if (r != 0)
     return r;
 
   return imap_append_message(ctx, msg);
@@ -1377,9 +1367,9 @@ fail:
 int imap_copy_messages(struct Context *ctx, struct Header *h, char *dest, int delete)
 {
   struct Buffer cmd, sync_cmd;
-  char mbox[LONG_STRING];
-  char mmbox[LONG_STRING];
-  char prompt[LONG_STRING];
+  char mbox[PATH_MAX];
+  char mmbox[PATH_MAX];
+  char prompt[PATH_MAX + 64];
   int rc;
   struct ImapMbox mx;
   int err_continue = MUTT_NO;
@@ -1458,8 +1448,10 @@ int imap_copy_messages(struct Context *ctx, struct Header *h, char *dest, int de
         goto out;
       }
       else
+      {
         mutt_message(ngettext("Copying %d message to %s...", "Copying %d messages to %s...", rc),
                      rc, mbox);
+      }
     }
     else
     {
@@ -1548,7 +1540,7 @@ out:
     FREE(&sync_cmd.data);
   FREE(&mx.mbox);
 
-  return rc < 0 ? -1 : rc;
+  return (rc < 0) ? -1 : rc;
 }
 
 /**
@@ -1560,12 +1552,11 @@ out:
  */
 int imap_cache_del(struct ImapData *idata, struct Header *h)
 {
-  char id[_POSIX_PATH_MAX];
-
   if (!idata || !h)
     return -1;
 
   idata->bcache = msg_cache_open(idata);
+  char id[64];
   snprintf(id, sizeof(id), "%u-%u", idata->uid_validity, HEADER_DATA(h)->uid);
   return mutt_bcache_del(idata->bcache, id);
 }
@@ -1619,14 +1610,13 @@ void imap_free_header_data(struct ImapHeaderData **data)
 char *imap_set_flags(struct ImapData *idata, struct Header *h, char *s, int *server_changes)
 {
   struct Context *ctx = idata->ctx;
-  struct ImapHeader newh;
+  struct ImapHeader newh = { 0 };
   struct ImapHeaderData old_hd;
   bool readonly;
   int local_changes;
 
   local_changes = h->changed;
 
-  memset(&newh, 0, sizeof(newh));
   struct ImapHeaderData *hd = h->data;
   newh.data = hd;
 

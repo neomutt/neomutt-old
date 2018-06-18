@@ -115,7 +115,7 @@ const char *mutt_get_name(struct Address *a)
 
   if (a)
   {
-    if (ReverseAlias && (ali = alias_reverse_lookup(a)) && ali->personal)
+    if (ReverseAlias && (ali = mutt_alias_reverse_lookup(a)) && ali->personal)
       return ali->personal;
     else if (a->personal)
       return a->personal;
@@ -325,7 +325,7 @@ void mutt_sort_headers(struct Context *ctx, int init)
   if (OptNeedRescore && Score)
   {
     for (int i = 0; i < ctx->msgcount; i++)
-      mutt_score_message(ctx, ctx->hdrs[i], 1);
+      mutt_score_message(ctx, ctx->hdrs[i], true);
   }
   OptNeedRescore = false;
 

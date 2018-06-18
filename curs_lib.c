@@ -204,7 +204,7 @@ int mutt_get_field_unbuffered(char *msg, char *buf, size_t buflen, int flags)
 
 void mutt_edit_file(const char *editor, const char *data)
 {
-  char cmd[LONG_STRING];
+  char cmd[HUGE_STRING];
 
   mutt_endwin();
   mutt_expand_file_fmt(cmd, sizeof(cmd), editor, data);
@@ -838,9 +838,9 @@ void mutt_simple_format(char *buf, size_t buflen, int min_width, int max_width,
  * @param[in]  s        String to format
  * @param[in]  arboreal  If true, string contains graphical tree characters
  *
- * This formats a string rather like
- *   snprintf (fmt, sizeof (fmt), "%%%ss", prec);
- *   snprintf (buf, buflen, fmt, s);
+ * This formats a string rather like:
+ * - snprintf(fmt, sizeof(fmt), "%%%ss", prec);
+ * - snprintf(buf, buflen, fmt, s);
  * except that the numbers in the conversion specification refer to
  * the number of character cells when printed.
  */
@@ -1045,7 +1045,7 @@ bool message_is_visible(struct Context *ctx, int index)
   if (!ctx || !ctx->hdrs || (index >= ctx->msgcount))
     return false;
 
-  return !ctx->pattern || ctx->hdrs[index]->limited;
+  return (!ctx->pattern || ctx->hdrs[index]->limited);
 }
 
 /**

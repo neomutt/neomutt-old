@@ -204,7 +204,7 @@ static int edit_address(struct Address **a, /* const */ char *field)
     idna_ok = mutt_addrlist_to_intl(*a, &err);
     if (idna_ok != 0)
     {
-      mutt_error(_("Error: '%s' is a bad IDN."), err);
+      mutt_error(_("Bad IDN: '%s'"), err);
       FREE(&err);
     }
   } while (idna_ok != 0);
@@ -919,8 +919,10 @@ static int generate_body(FILE *tempfp, struct Header *msg, int flags,
     struct Body *b = NULL;
 
     if (((WithCrypto & APPLICATION_PGP) != 0) &&
-        (b = crypt_pgp_make_key_attachment(NULL)) == NULL)
+        (b = crypt_pgp_make_key_attachment()) == NULL)
+    {
       return -1;
+    }
 
     b->next = msg->content;
     msg->content = b;
@@ -1067,7 +1069,7 @@ struct Address *mutt_default_from(void)
 
 static int send_message(struct Header *msg)
 {
-  char tempfile[_POSIX_PATH_MAX];
+  char tempfile[PATH_MAX];
   int i;
 #ifdef USE_SMTP
   short old_write_bcc;
@@ -1121,8 +1123,10 @@ static int send_message(struct Header *msg)
   if (!OptNewsSend)
 #endif
     if (SmtpUrl)
+    {
       return mutt_smtp_send(msg->env->from, msg->env->to, msg->env->cc, msg->env->bcc,
                             tempfile, (msg->content->encoding == ENC8BIT));
+    }
 #endif /* USE_SMTP */
 
   i = mutt_invoke_sendmail(msg->env->from, msg->env->to, msg->env->cc, msg->env->bcc,
@@ -1242,7 +1246,9 @@ static bool search_attach_keyword(char *filename)
   /* Search for the regex in AbortNoattachRegex within a file */
   if (!AbortNoattachRegex || !AbortNoattachRegex->regex || !QuoteRegex ||
       !QuoteRegex->regex)
+  {
     return false;
+  }
 
   FILE *attf = mutt_file_fopen(filename, "r");
   if (!attf)
@@ -1280,7 +1286,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
                     struct Context *ctx, struct Header *cur)
 {
   char buffer[LONG_STRING];
-  char fcc[_POSIX_PATH_MAX] = ""; /* where to copy this message */
+  char fcc[PATH_MAX] = ""; /* where to copy this message */
   FILE *tempfp = NULL;
   struct Body *pbody = NULL;
   int i;
@@ -1442,8 +1448,10 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
      */
 
     if (msg->env->from)
+    {
       mutt_debug(5, "msg->env->from before set_reverse_name: %s\n",
                  msg->env->from->mailbox);
+    }
     msg->env->from = set_reverse_name(cur->env);
   }
   if (cur && ReplyWithXorig && !(flags & (SENDPOSTPONED | SENDRESEND | SENDFORWARD)))
@@ -1459,9 +1467,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
      */
     if (cur->env->x_original_to && !msg->env->from)
     {
-      msg->env->from = cur->env->x_original_to;
-      /* Not more than one from address */
-      msg->env->from->next = NULL;
+      msg->env->from = mutt_addr_copy(cur->env->x_original_to);
       mutt_debug(5, "msg->env->from extracted from X-Original-To: header: %s\n",
                  msg->env->from->mailbox);
     }
@@ -1913,7 +1919,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
 
   if (mutt_env_to_intl(msg->env, &tag, &err))
   {
-    mutt_error(_("Bad IDN in \"%s\": '%s'"), tag, err);
+    mutt_error(_("Bad IDN in '%s': '%s'"), tag, err);
     FREE(&err);
     if (!(flags & SENDBATCH))
       goto main_loop;
@@ -2046,14 +2052,14 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
       msg->content = clear_content;
 
     /* check to see if the user wants copies of all attachments */
-    if (query_quadoption(FccAttach, _("Save attachments in Fcc?")) != MUTT_YES &&
-        msg->content->type == TYPEMULTIPART)
+    if (msg->content->type == TYPEMULTIPART)
     {
       if ((WithCrypto != 0) && (msg->security & (ENCRYPT | SIGN)) &&
           ((mutt_str_strcmp(msg->content->subtype, "encrypted") == 0) ||
            (mutt_str_strcmp(msg->content->subtype, "signed") == 0)))
       {
-        if (clear_content->type == TYPEMULTIPART)
+        if (clear_content->type == TYPEMULTIPART &&
+              query_quadoption(FccAttach, _("Save attachments in Fcc?")) == MUTT_NO)
         {
           if (!(msg->security & ENCRYPT) && (msg->security & SIGN))
           {
@@ -2079,7 +2085,10 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
         }
       }
       else
-        msg->content = msg->content->parts;
+      {
+        if (query_quadoption(FccAttach, _("Save attachments in Fcc?")) == MUTT_NO)
+          msg->content = msg->content->parts;
+      }
     }
 
   full_fcc:

@@ -75,8 +75,10 @@ char *mutt_rfc822_read_line(FILE *f, char *line, size_t *linelen)
     {
       /* we did get a full line. remove trailing space */
       while (ISSPACE(*buf))
+      {
         *buf-- = 0; /* we cannot come beyond line's beginning because
-                         * it begins with a non-space */
+                     * it begins with a non-space */
+      }
 
       /* check to see if the next line is a continuation line */
       ch = fgetc(f);
@@ -376,10 +378,12 @@ void mutt_parse_content_type(char *s, struct Body *ct)
   {
     pc = mutt_param_get(&ct->parameter, "charset");
     if (!pc)
+    {
       mutt_param_set(&ct->parameter, "charset",
                      (AssumedCharset && *AssumedCharset) ?
                          (const char *) mutt_ch_get_default_charset() :
                          "us-ascii");
+    }
   }
 }
 
@@ -760,7 +764,7 @@ void mutt_parse_mime_message(struct Context *ctx, struct Header *cur)
     if (cur->content->parts)
       break; /* The message was parsed earlier. */
 
-    msg = mx_open_message(ctx, cur->msgno);
+    msg = mx_msg_open(ctx, cur->msgno);
     if (msg)
     {
       mutt_parse_part(msg->fp, cur->content);
@@ -768,7 +772,7 @@ void mutt_parse_mime_message(struct Context *ctx, struct Header *cur)
       if (WithCrypto)
         cur->security = crypt_query(cur->content);
 
-      mx_close_message(ctx, &msg);
+      mx_msg_close(ctx, &msg);
     }
   } while (0);
 
@@ -1301,7 +1305,9 @@ struct Envelope *mutt_rfc822_read_header(FILE *f, struct Header *hdr,
 
       if (ReplyRegex && ReplyRegex->regex &&
           (regexec(ReplyRegex->regex, e->subject, 1, pmatch, 0) == 0))
+      {
         e->real_subj = e->subject + pmatch[0].rm_eo;
+      }
       else
         e->real_subj = e->subject;
     }
@@ -1451,7 +1457,7 @@ static int count_body_parts(struct Body *body, int flags)
   }
 
   mutt_debug(5, "return %d\n", count < 0 ? 0 : count);
-  return count < 0 ? 0 : count;
+  return (count < 0) ? 0 : count;
 }
 
 int mutt_count_body_parts(struct Context *ctx, struct Header *hdr)

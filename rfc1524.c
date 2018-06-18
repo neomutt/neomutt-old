@@ -68,13 +68,13 @@ int rfc1524_expand_command(struct Body *a, char *filename, char *type, char *com
 {
   int x = 0, y = 0;
   int needspipe = true;
-  char buf[LONG_STRING];
+  char buf[HUGE_STRING];
   char type2[LONG_STRING];
 
   mutt_str_strfcpy(type2, type, sizeof(type2));
 
   if (MailcapSanitize)
-    mutt_file_sanitize_filename(type2, 0);
+    mutt_file_sanitize_filename(type2, false);
 
   while (x < clen - 1 && command[x] && y < sizeof(buf) - 1)
   {
@@ -101,7 +101,7 @@ int rfc1524_expand_command(struct Body *a, char *filename, char *type, char *com
         pvalue2 = mutt_param_get(&a->parameter, param);
         mutt_str_strfcpy(pvalue, NONULL(pvalue2), sizeof(pvalue));
         if (MailcapSanitize)
-          mutt_file_sanitize_filename(pvalue, 0);
+          mutt_file_sanitize_filename(pvalue, false);
 
         y += mutt_file_quote_filename(buf + y, sizeof(buf) - y, pvalue);
       }
@@ -239,7 +239,9 @@ static int rfc1524_mailcap_parse(struct Body *a, char *filename, char *type,
           ((mutt_str_strncasecmp(buf, type, btlen) != 0) ||
            (buf[btlen] != 0 &&                           /* implicit wild */
             (mutt_str_strcmp(buf + btlen, "/*") != 0)))) /* wildsubtype */
+      {
         continue;
+      }
 
       /* next field is the viewcommand */
       char *field = ch;
@@ -423,7 +425,7 @@ void rfc1524_free_entry(struct Rfc1524MailcapEntry **entry)
 int rfc1524_mailcap_lookup(struct Body *a, char *type,
                            struct Rfc1524MailcapEntry *entry, int opt)
 {
-  char path[_POSIX_PATH_MAX];
+  char path[PATH_MAX];
   int found = false;
   char *curr = MailcapPath;
 
@@ -493,8 +495,8 @@ int rfc1524_expand_filename(char *nametemplate, char *oldfile, char *newfile, si
   int i, j, k, ps;
   char *s = NULL;
   bool lmatch = false, rmatch = false;
-  char left[_POSIX_PATH_MAX];
-  char right[_POSIX_PATH_MAX];
+  char left[PATH_MAX];
+  char right[PATH_MAX];
 
   newfile[0] = 0;
 

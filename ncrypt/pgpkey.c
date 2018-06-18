@@ -325,10 +325,12 @@ static int compare_key_address(const void *a, const void *b)
 
   r = mutt_str_strcasecmp((*s)->addr, (*t)->addr);
   if (r != 0)
-    return r > 0;
+    return (r > 0);
   else
+  {
     return (mutt_str_strcasecmp(pgp_fpr_or_lkeyid((*s)->parent),
                                 pgp_fpr_or_lkeyid((*t)->parent)) > 0);
+  }
 }
 
 static int pgp_compare_address(const void *a, const void *b)
@@ -346,7 +348,7 @@ static int compare_keyid(const void *a, const void *b)
 
   r = mutt_str_strcasecmp(pgp_fpr_or_lkeyid((*s)->parent), pgp_fpr_or_lkeyid((*t)->parent));
   if (r != 0)
-    return r > 0;
+    return (r > 0);
   else
     return (mutt_str_strcasecmp((*s)->addr, (*t)->addr) > 0);
 }
@@ -476,7 +478,7 @@ static struct PgpKeyInfo *pgp_select_key(struct PgpKeyInfo *keys,
   int i;
   bool done = false;
   char helpstr[LONG_STRING], buf[LONG_STRING], tmpbuf[STRING];
-  char cmd[LONG_STRING], tempfile[_POSIX_PATH_MAX];
+  char cmd[LONG_STRING], tempfile[PATH_MAX];
   FILE *fp = NULL, *devnull = NULL;
   pid_t thepid;
   struct PgpKeyInfo *kp = NULL;
@@ -637,9 +639,12 @@ static struct PgpKeyInfo *pgp_select_key(struct PgpKeyInfo *keys,
           char buf2[LONG_STRING];
 
           if (KeyTable[menu->current]->flags & KEYFLAG_CANTUSE)
+          {
             str = _("ID is expired/disabled/revoked. Do you really want to use "
                     "the key?");
+          }
           else
+          {
             switch (KeyTable[menu->current]->trust & 0x03)
             {
               case 0:
@@ -654,6 +659,7 @@ static struct PgpKeyInfo *pgp_select_key(struct PgpKeyInfo *keys,
                         "use the key?");
                 break;
             }
+          }
 
           snprintf(buf2, sizeof(buf2), "%s", str);
 
@@ -734,13 +740,13 @@ struct PgpKeyInfo *pgp_ask_for_key(char *tag, char *whatfor, short abilities, en
 }
 
 /**
- * pgp_make_key_attachment - generate a public key attachment
+ * pgp_class_make_key_attachment - Implements CryptModuleSpecs::pgp_make_key_attachment()
  */
-struct Body *pgp_make_key_attachment(char *tempf)
+struct Body *pgp_class_make_key_attachment(void)
 {
   struct Body *att = NULL;
   char buf[LONG_STRING];
-  char tempfb[_POSIX_PATH_MAX], tmp[STRING];
+  char tempf[PATH_MAX], tmp[STRING];
   FILE *tempfp = NULL;
   FILE *devnull = NULL;
   struct stat sb;
@@ -756,13 +762,9 @@ struct Body *pgp_make_key_attachment(char *tempf)
   snprintf(tmp, sizeof(tmp), "0x%s", pgp_fpr_or_lkeyid(pgp_principal_key(key)));
   pgp_free_key(&key);
 
-  if (!tempf)
-  {
-    mutt_mktemp(tempfb, sizeof(tempfb));
-    tempf = tempfb;
-  }
+  mutt_mktemp(tempf, sizeof(tempf));
 
-  tempfp = mutt_file_fopen(tempf, tempf == tempfb ? "w" : "a");
+  tempfp = mutt_file_fopen(tempf, "w");
   if (!tempfp)
   {
     mutt_perror(_("Can't create temporary file"));
@@ -774,8 +776,7 @@ struct Body *pgp_make_key_attachment(char *tempf)
   {
     mutt_perror(_("Can't open /dev/null"));
     mutt_file_fclose(&tempfp);
-    if (tempf == tempfb)
-      unlink(tempf);
+    unlink(tempf);
     return NULL;
   }
 
@@ -846,7 +847,7 @@ static struct PgpKeyInfo **pgp_get_lastp(struct PgpKeyInfo *p)
 }
 
 struct PgpKeyInfo *pgp_getkeybyaddr(struct Address *a, short abilities,
-                                    enum PgpRing keyring, int oppenc_mode)
+                                    enum PgpRing keyring, bool oppenc_mode)
 {
   if (!a)
     return NULL;

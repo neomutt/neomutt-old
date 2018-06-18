@@ -211,7 +211,7 @@ static int add_entropy(const char *file)
     return 0;
 
   if (stat(file, &st) == -1)
-    return errno == ENOENT ? 0 : -1;
+    return (errno == ENOENT) ? 0 : -1;
 
   mutt_message(_("Filling entropy pool: %s...\n"), file);
 
@@ -433,7 +433,7 @@ static void x509_fingerprint(char *s, int l, X509 *cert, const EVP_MD *(*hashfun
     for (unsigned int i = 0; i < n; i++)
     {
       char ch[8];
-      snprintf(ch, 8, "%02X%s", md[i], (i % 2 ? " " : ""));
+      snprintf(ch, sizeof(ch), "%02X%s", md[i], (i % 2 ? " " : ""));
       mutt_str_strcat(s, l, ch);
     }
   }
@@ -595,7 +595,7 @@ static int ssl_init(void)
   if (!HAVE_ENTROPY())
   {
     /* load entropy from files */
-    char path[_POSIX_PATH_MAX];
+    char path[PATH_MAX];
     add_entropy(EntropyFile);
     add_entropy(RAND_file_name(path, sizeof(path)));
 
@@ -969,16 +969,20 @@ static int interactive_check_cert(X509 *cert, int idx, size_t len, SSL *ssl, int
   row++;
   x509_subject = X509_get_subject_name(cert);
   for (unsigned int u = 0; u < mutt_array_size(part); u++)
+  {
     snprintf(menu->dialog[row++], SHORT_STRING, "   %s",
              x509_get_part(x509_subject, part[u]));
+  }
 
   row++;
   mutt_str_strfcpy(menu->dialog[row], _("This certificate was issued by:"), SHORT_STRING);
   row++;
   x509_issuer = X509_get_issuer_name(cert);
   for (unsigned int u = 0; u < mutt_array_size(part); u++)
+  {
     snprintf(menu->dialog[row++], SHORT_STRING, "   %s",
              x509_get_part(x509_issuer, part[u]));
+  }
 
   row++;
   snprintf(menu->dialog[row++], SHORT_STRING, "%s", _("This certificate is valid"));
@@ -1376,9 +1380,11 @@ static int ssl_setup(struct Connection *conn)
   return 0;
 
 free_ssl:
-  FREE(&ssldata->ssl);
+  SSL_free (ssldata->ssl);
+  ssldata->ssl = 0;
 free_ctx:
-  FREE(&ssldata->ctx);
+  SSL_CTX_free (ssldata->ctx);
+  ssldata->ctx = 0;
 free_sasldata:
   FREE(&ssldata);
 

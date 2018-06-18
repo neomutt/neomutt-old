@@ -48,6 +48,7 @@
 #include "cryptglue.h"
 #include "envelope.h"
 #include "globals.h"
+#include "handler.h"
 #include "header.h"
 #include "mutt_curses.h"
 #include "ncrypt.h"
@@ -92,7 +93,13 @@ void crypt_forget_passphrase(void)
     crypt_smime_void_passphrase();
 
   if (WithCrypto)
-    mutt_message(_("Passphrase(s) forgotten."));
+  {
+    /* L10N: Due to the implementation details (e.g. some passwords are managed
+       by gpg-agent) we cannot know whether we forgot zero, 1, 12, ...
+       passwords. So in English we use "Passphrases". Your language might
+       have other means to express this. */
+    mutt_message(_("Passphrases forgotten."));
+  }
 }
 
 #ifndef DEBUG
@@ -281,7 +288,7 @@ int mutt_protect(struct Header *msg, char *keylist)
 
     if (((WithCrypto & APPLICATION_PGP) != 0) && (msg->security & APPLICATION_PGP))
     {
-      pbody = crypt_pgp_encrypt_message(tmp_pgp_pbody, keylist, flags & SIGN);
+      pbody = crypt_pgp_encrypt_message(tmp_pgp_pbody, keylist, (flags & SIGN));
       if (!pbody)
       {
         /* did we perform a retainable signature? */
@@ -362,7 +369,9 @@ int mutt_is_multipart_encrypted(struct Body *b)
       (mutt_str_strcasecmp(b->subtype, "encrypted") != 0) ||
       !(p = mutt_param_get(&b->parameter, "protocol")) ||
       (mutt_str_strcasecmp(p, "application/pgp-encrypted") != 0))
+  {
     return 0;
+  }
 
   return PGPENCRYPT;
 }
@@ -480,7 +489,9 @@ int mutt_is_application_pgp(struct Body *m)
          (p = mutt_param_get(&m->parameter, "x-action")) ||
          (p = mutt_param_get(&m->parameter, "action"))) &&
         (mutt_str_strncasecmp("pgp-sign", p, 8) == 0))
+    {
       t |= PGPSIGN;
+    }
     else if (p && (mutt_str_strncasecmp("pgp-encrypt", p, 11) == 0))
       t |= PGPENCRYPT;
     else if (p && (mutt_str_strncasecmp("pgp-keys", p, 7) == 0))
@@ -536,8 +547,10 @@ int mutt_is_application_smime(struct Body *m)
   if (!t)
   {
     if (complain)
+    {
       mutt_message(
           _("S/MIME messages with no hints on content are unsupported."));
+    }
     return 0;
   }
 
@@ -548,9 +561,11 @@ int mutt_is_application_smime(struct Body *m)
   {
     len++;
     if (mutt_str_strcasecmp((t + len), "p7m") == 0)
+    {
       /* Not sure if this is the correct thing to do, but
         it's required for compatibility with Outlook */
       return (SMIMESIGN | SMIMEOPAQUE);
+    }
     else if (mutt_str_strcasecmp((t + len), "p7s") == 0)
       return (SMIMESIGN | SMIMEOPAQUE);
   }
@@ -711,7 +726,7 @@ void crypt_convert_to_7bit(struct Body *a)
 
 void crypt_extract_keys_from_messages(struct Header *h)
 {
-  char tempfname[_POSIX_PATH_MAX], *mbox = NULL;
+  char tempfname[PATH_MAX], *mbox = NULL;
   struct Address *tmp = NULL;
   FILE *fpout = NULL;
 
@@ -758,9 +773,11 @@ void crypt_extract_keys_from_messages(struct Header *h)
       if (((WithCrypto & APPLICATION_SMIME) != 0) && (hi->security & APPLICATION_SMIME))
       {
         if (hi->security & ENCRYPT)
+        {
           mutt_copy_message_ctx(fpout, Context, hi,
                                 MUTT_CM_NOHEADER | MUTT_CM_DECODE_CRYPT | MUTT_CM_DECODE_SMIME,
                                 0);
+        }
         else
           mutt_copy_message_ctx(fpout, Context, hi, 0, 0);
         fflush(fpout);
@@ -799,9 +816,11 @@ void crypt_extract_keys_from_messages(struct Header *h)
       if (((WithCrypto & APPLICATION_SMIME) != 0) && (h->security & APPLICATION_SMIME))
       {
         if (h->security & ENCRYPT)
+        {
           mutt_copy_message_ctx(fpout, Context, h,
                                 MUTT_CM_NOHEADER | MUTT_CM_DECODE_CRYPT | MUTT_CM_DECODE_SMIME,
                                 0);
+        }
         else
           mutt_copy_message_ctx(fpout, Context, h, 0, 0);
 
@@ -839,7 +858,7 @@ void crypt_extract_keys_from_messages(struct Header *h)
  * If oppenc_mode is true, only keys that can be determined without
  * prompting will be used.
  */
-int crypt_get_keys(struct Header *msg, char **keylist, int oppenc_mode)
+int crypt_get_keys(struct Header *msg, char **keylist, bool oppenc_mode)
 {
   struct Address *addrlist = NULL, *last = NULL;
   const char *fqdn = mutt_fqdn(1);
@@ -869,7 +888,7 @@ int crypt_get_keys(struct Header *msg, char **keylist, int oppenc_mode)
   {
     if (((WithCrypto & APPLICATION_PGP) != 0) && (msg->security & APPLICATION_PGP))
     {
-      *keylist = crypt_pgp_findkeys(addrlist, oppenc_mode);
+      *keylist = crypt_pgp_find_keys(addrlist, oppenc_mode);
       if (!*keylist)
       {
         mutt_addr_free(&addrlist);
@@ -881,7 +900,7 @@ int crypt_get_keys(struct Header *msg, char **keylist, int oppenc_mode)
     }
     if (((WithCrypto & APPLICATION_SMIME) != 0) && (msg->security & APPLICATION_SMIME))
     {
-      *keylist = crypt_smime_findkeys(addrlist, oppenc_mode);
+      *keylist = crypt_smime_find_keys(addrlist, oppenc_mode);
       if (!*keylist)
       {
         mutt_addr_free(&addrlist);
@@ -1026,7 +1045,7 @@ int mutt_signed_handler(struct Body *a, struct State *s)
 
     if (sigcnt)
     {
-      char tempfile[_POSIX_PATH_MAX];
+      char tempfile[PATH_MAX];
       mutt_mktemp(tempfile, sizeof(tempfile));
       bool goodsig = true;
       if (crypt_write_signed(a, s, tempfile) == 0)

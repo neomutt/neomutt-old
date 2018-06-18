@@ -136,7 +136,7 @@ int mutt_regexlist_add(struct RegexList **rl, const char *str, int flags, struct
   rx = mutt_regex_compile(str, flags);
   if (!rx)
   {
-    snprintf(err->data, err->dsize, "Bad regex: %s\n", str);
+    mutt_buffer_printf(err, "Bad regex: %s\n", str);
     return -1;
   }
 
@@ -202,7 +202,7 @@ bool mutt_regexlist_match(struct RegexList *rl, const char *str)
   {
     if (!rl->regex || !rl->regex->regex)
       continue;
-    if (regexec(rl->regex->regex, str, (size_t) 0, (regmatch_t *) 0, (int) 0) == 0)
+    if (regexec(rl->regex->regex, str, 0, NULL, 0) == 0)
     {
       mutt_debug(5, "%s matches %s\n", str, rl->regex->pattern);
       return true;
@@ -280,7 +280,6 @@ int mutt_replacelist_add(struct ReplaceList **rl, const char *pat,
 {
   struct ReplaceList *t = NULL, *last = NULL;
   struct Regex *rx = NULL;
-  int n;
   const char *p = NULL;
 
   if (!pat || !*pat || !templ)
@@ -289,7 +288,7 @@ int mutt_replacelist_add(struct ReplaceList **rl, const char *pat,
   rx = mutt_regex_compile(pat, REG_ICASE);
   if (!rx)
   {
-    snprintf(err->data, err->dsize, _("Bad regex: %s"), pat);
+    mutt_buffer_printf(err, _("Bad regex: %s"), pat);
     return -1;
   }
 
@@ -337,7 +336,7 @@ int mutt_replacelist_add(struct ReplaceList **rl, const char *pat,
   {
     if (*p == '%')
     {
-      n = atoi(++p);
+      int n = atoi(++p);
       if (n > t->nmatch)
         t->nmatch = n;
       while (*p && isdigit((int) *p))
@@ -349,9 +348,7 @@ int mutt_replacelist_add(struct ReplaceList **rl, const char *pat,
 
   if (t->nmatch > t->regex->regex->re_nsub)
   {
-    snprintf(err->data, err->dsize, "%s",
-             _("Not enough subexpressions for "
-               "template"));
+    mutt_buffer_printf(err, "%s", _("Not enough subexpressions for template"));
     mutt_replacelist_remove(rl, pat);
     return -1;
   }
@@ -378,11 +375,10 @@ char *mutt_replacelist_apply(struct ReplaceList *rl, char *buf, size_t buflen, c
 {
   struct ReplaceList *l = NULL;
   static regmatch_t *pmatch = NULL;
-  static int nmatch = 0;
+  static size_t nmatch = 0;
   static char twinbuf[2][LONG_STRING];
   int switcher = 0;
   char *p = NULL;
-  int n;
   size_t cpysize, tlen;
   char *src = NULL, *dst = NULL;
 
@@ -440,7 +436,7 @@ char *mutt_replacelist_apply(struct ReplaceList *rl, char *buf, size_t buflen, c
             }
             else
             {
-              n = strtoul(p, &p, 10);             /* get subst number */
+              long n = strtoul(p, &p, 10);        /* get subst number */
               while (isdigit((unsigned char) *p)) /* skip subst token */
                 p++;
               for (int i = pmatch[n].rm_so;
@@ -503,7 +499,7 @@ void mutt_replacelist_free(struct ReplaceList **rl)
 bool mutt_replacelist_match(struct ReplaceList *rl, char *buf, size_t buflen, const char *str)
 {
   static regmatch_t *pmatch = NULL;
-  static int nmatch = 0;
+  static size_t nmatch = 0;
   int tlen = 0;
   char *p = NULL;
 
@@ -520,8 +516,7 @@ bool mutt_replacelist_match(struct ReplaceList *rl, char *buf, size_t buflen, co
     }
 
     /* Does this pattern match? */
-    if (regexec(rl->regex->regex, str, (size_t) rl->nmatch,
-                (regmatch_t *) pmatch, (int) 0) == 0)
+    if (regexec(rl->regex->regex, str, (size_t) rl->nmatch, pmatch, 0) == 0)
     {
       mutt_debug(5, "%s matches %s\n", str, rl->regex->pattern);
       mutt_debug(5, "%d subs\n", (int) rl->regex->regex->re_nsub);
@@ -533,10 +528,9 @@ bool mutt_replacelist_match(struct ReplaceList *rl, char *buf, size_t buflen, co
         if (*p == '%')
         {
           char *e = NULL; /* used as pointer to end of integer backreference in strtol() call */
-          int n;
 
           p++; /* skip over % char */
-          n = strtol(p, &e, 10);
+          long n = strtol(p, &e, 10);
           /* Ensure that the integer conversion succeeded (e!=p) and bounds check.  The upper bound check
            * should not strictly be necessary since add_to_spam_list() finds the largest value, and
            * the static array above is always large enough based on that value. */

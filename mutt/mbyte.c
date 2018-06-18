@@ -80,7 +80,7 @@ int mutt_mb_charlen(const char *s, int *width)
  * The function saves the first character from each word.  Words are delimited
  * by whitespace, or hyphens (so "Jean-Pierre" becomes "JP").
  */
-bool mutt_mb_get_initials(const char *name, char *buf, int buflen)
+bool mutt_mb_get_initials(const char *name, char *buf, size_t buflen)
 {
   if (!name || !buf)
     return false;
@@ -217,7 +217,7 @@ size_t mutt_mb_width_ceiling(const wchar_t *s, size_t n, int w1)
   for (; n; s++, n--)
     if ((w += mutt_mb_wcwidth(*s)) > w1)
       break;
-  return s - s0;
+  return (s - s0);
 }
 
 /**
@@ -331,7 +331,7 @@ size_t mutt_mb_mbstowcs(wchar_t **pwbuf, size_t *pwbuflen, size_t i, char *buf)
 bool mutt_mb_is_shell_char(wchar_t ch)
 {
   static const wchar_t shell_chars[] = L"<>&()$?*;{}| "; /* ! not included because it can be part of a pathname in NeoMutt */
-  return wcschr(shell_chars, ch) != NULL;
+  return (wcschr(shell_chars, ch) != NULL);
 }
 
 /**
@@ -414,8 +414,6 @@ int mutt_mb_filter_unprintable(char **s)
   mbstate_t mbstate1, mbstate2;
 
   struct Buffer *b = mutt_buffer_new();
-  if (!b)
-    return -1;
   memset(&mbstate1, 0, sizeof(mbstate1));
   memset(&mbstate2, 0, sizeof(mbstate2));
   for (; (k = mbrtowc(&wc, p, MB_LEN_MAX, &mbstate1)); p += k)

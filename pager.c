@@ -792,7 +792,7 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
       {
         STAILQ_FOREACH(color_line, &ColorHdrList, entries)
         {
-          if (REGEXEC(color_line->regex, buf) == 0)
+          if (regexec(&color_line->regex, buf, 0, NULL, 0) == 0)
           {
             line_info[n].type = MT_COLOR_HEADER;
             line_info[n].syntax[0].color = color_line->pair;
@@ -859,9 +859,11 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
         if (regexec(QuoteRegex->regex, buf, 1, pmatch, 0) == 0)
         {
           if (q_classify && line_info[n].quote == NULL)
+          {
             line_info[n].quote = classify_quote(quote_list, buf + pmatch[0].rm_so,
                                                 pmatch[0].rm_eo - pmatch[0].rm_so,
                                                 force_redraw, q_level);
+          }
           line_info[n].type = MT_COLOR_QUOTED;
         }
         else
@@ -875,9 +877,11 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
     else
     {
       if (q_classify && line_info[n].quote == NULL)
+      {
         line_info[n].quote = classify_quote(quote_list, buf + pmatch[0].rm_so,
                                             pmatch[0].rm_eo - pmatch[0].rm_so,
                                             force_redraw, q_level);
+      }
       line_info[n].type = MT_COLOR_QUOTED;
     }
   }
@@ -928,8 +932,10 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
                 break;
               }
               if (++(line_info[n].chunks) > 1)
+              {
                 mutt_mem_realloc(&(line_info[n].syntax),
                                  (line_info[n].chunks) * sizeof(struct Syntax));
+              }
             }
             i = line_info[n].chunks - 1;
             pmatch[0].rm_so += offset;
@@ -989,8 +995,10 @@ static void resolve_types(char *buf, char *raw, struct Line *line_info, int n,
             if (!found)
             {
               if (++(line_info[n].chunks) > 1)
+              {
                 mutt_mem_realloc(&(line_info[n].syntax),
                                  (line_info[n].chunks) * sizeof(struct Syntax));
+              }
             }
             i = line_info[n].chunks - 1;
             pmatch[0].rm_so += offset;
@@ -1539,8 +1547,10 @@ static int display_line(FILE *f, LOFF_T *last_pos, struct Line **line_info,
                    (offset ? REG_NOTBOL : 0)) == 0)
     {
       if (++((*line_info)[n].search_cnt) > 1)
+      {
         mutt_mem_realloc(&((*line_info)[n].search),
                          ((*line_info)[n].search_cnt) * sizeof(struct Syntax));
+      }
       else
         (*line_info)[n].search = mutt_mem_malloc(sizeof(struct Syntax));
       pmatch[0].rm_so += offset;
@@ -1985,17 +1995,25 @@ static void pager_menu_redraw(struct Menu *pager_menu)
   if (pager_menu->redraw & REDRAW_STATUS)
   {
     struct HdrFormatInfo hfi;
-    char pager_progress_str[4];
+    char pager_progress_str[65]; /* Lots of space for translations */
 
     hfi.ctx = Context;
     hfi.pager_progress = pager_progress_str;
 
     if (rd->last_pos < rd->sb.st_size - 1)
+    {
       snprintf(pager_progress_str, sizeof(pager_progress_str), OFF_T_FMT "%%",
                (100 * rd->last_offset / rd->sb.st_size));
+    }
     else
-      mutt_str_strfcpy(pager_progress_str, (rd->topline == 0) ? "all" : "end",
-                       sizeof(pager_progress_str));
+    {
+      const char *msg = (rd->topline == 0) ?
+                            /* L10N: Status bar message: the entire email is visible in the pager */
+                            _("all") :
+                            /* L10N: Status bar message: the end of the email is visible in the pager */
+                            _("end");
+      mutt_str_strfcpy(pager_progress_str, msg, sizeof(pager_progress_str));
+    }
 
     /* print out the pager status bar */
     mutt_window_move(rd->pager_status_window, 0, 0);
@@ -2196,7 +2214,7 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
     {
       oldcount = Context ? Context->msgcount : 0;
       /* check for new mail */
-      check = mx_check_mailbox(Context, &index_hint);
+      check = mx_mbox_check(Context, &index_hint);
       if (check < 0)
       {
         if (!Context->path)
@@ -2223,7 +2241,10 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
               break;
             }
           }
+        }
 
+        if ((check == MUTT_NEW_MAIL) || (check == MUTT_REOPENED))
+        {
           if (rd.index && Context)
           {
             /* After the mailbox has been updated,
@@ -2239,7 +2260,9 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
             rd.index->max = Context->vcount;
 
             /* If these header pointers don't match, then our email may have
-             * been deleted.  Make the pointer safe, then leave the pager */
+             * been deleted.  Make the pointer safe, then leave the pager.
+             * This have a unpleasant behaviour to close the pager even the
+             * deleted message is not the opened one, but at least it's safe. */
             if (extra->hdr != Context->hdrs[Context->v2r[rd.index->current]])
             {
               extra->hdr = Context->hdrs[Context->v2r[rd.index->current]];
@@ -2381,8 +2404,10 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
 
       case OP_HALF_UP:
         if (rd.topline)
+        {
           rd.topline = up_n_lines(rd.pager_window->rows / 2, rd.line_info,
                                   rd.topline, rd.hide_quoted);
+        }
         else
           mutt_error(_("Top of message is shown."));
         break;
@@ -2486,7 +2511,9 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
                                _("Search for: ") :
                                _("Reverse search for: "),
                            buffer, sizeof(buffer), MUTT_CLEAR) != 0)
+        {
           break;
+        }
 
         if (strcmp(buffer, searchbuf) == 0)
         {
@@ -2815,7 +2842,11 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
         CHECK_MODE(IsHeader(extra));
         CHECK_READONLY;
         /* L10N: CHECK_ACL */
-        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot delete message(s)"));
+        /* L10N: Due to the implementation details we do not know whether we
+           delete zero, 1, 12, ... messages. So in English we use
+           "messages". Your language might have other means to express this.
+         */
+        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot delete messages"));
 
         {
           int subthread = (ch == OP_DELETE_SUBTHREAD);
@@ -2966,8 +2997,10 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
             break;
           }
           if (IsMsgAttach(extra))
+          {
             mutt_attach_reply(extra->fp, extra->hdr, extra->actx, extra->bdy,
                               SENDNEWS | SENDREPLY);
+          }
           else
             ci_send_message(SENDNEWS | SENDREPLY, NULL, NULL, extra->ctx, extra->hdr);
           pager_menu->redraw = REDRAW_FULL;
@@ -2996,11 +3029,15 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
         CHECK_MODE(IsHeader(extra) || IsMsgAttach(extra));
         CHECK_ATTACH;
         if (IsMsgAttach(extra))
+        {
           mutt_attach_reply(extra->fp, extra->hdr, extra->actx, extra->bdy,
                             SENDREPLY | SENDGROUPREPLY);
+        }
         else
+        {
           ci_send_message(SENDREPLY | SENDGROUPREPLY, NULL, NULL, extra->ctx,
                           extra->hdr);
+        }
         pager_menu->redraw = REDRAW_FULL;
         break;
 
@@ -3008,11 +3045,15 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
         CHECK_MODE(IsHeader(extra) || IsMsgAttach(extra));
         CHECK_ATTACH;
         if (IsMsgAttach(extra))
+        {
           mutt_attach_reply(extra->fp, extra->hdr, extra->actx, extra->bdy,
                             SENDREPLY | SENDLISTREPLY);
+        }
         else
+        {
           ci_send_message(SENDREPLY | SENDLISTREPLY, NULL, NULL, extra->ctx,
                           extra->hdr);
+        }
         pager_menu->redraw = REDRAW_FULL;
         break;
 
@@ -3134,13 +3175,19 @@ int mutt_pager(const char *banner, const char *fname, int flags, struct Pager *e
         CHECK_MODE(IsHeader(extra));
         CHECK_READONLY;
         /* L10N: CHECK_ACL */
-        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot undelete message(s)"));
+        /* L10N: Due to the implementation details we do not know whether we
+           undelete zero, 1, 12, ... messages. So in English we use
+           "messages". Your language might have other means to express this.
+         */
+        CHECK_ACL(MUTT_ACL_DELETE, _("Cannot undelete messages"));
 
         r = mutt_thread_set_flag(extra->hdr, MUTT_DELETE, 0,
                                  ch == OP_UNDELETE_THREAD ? 0 : 1);
         if (r != -1)
+        {
           r = mutt_thread_set_flag(extra->hdr, MUTT_PURGE, 0,
                                    ch == OP_UNDELETE_THREAD ? 0 : 1);
+        }
         if (r != -1)
         {
           if (Resolve)

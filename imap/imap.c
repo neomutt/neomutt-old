@@ -528,33 +528,33 @@ static size_t longest_common_prefix(char *dest, const char *src, size_t start, s
 
 /**
  * complete_hosts - Look for completion matches for mailboxes
- * @param dest Partial mailbox name to complete
- * @param len  Length of buffer
+ * @param buf Partial mailbox name to complete
+ * @param buflen  Length of buffer
  * @retval  0 Success
  * @retval -1 Failure
  *
  * look for IMAP URLs to complete from defined mailboxes. Could be extended to
  * complete over open connections and account/folder hooks too.
  */
-static int complete_hosts(char *dest, size_t len)
+static int complete_hosts(char *buf, size_t buflen)
 {
   struct Buffy *mailbox = NULL;
   struct Connection *conn = NULL;
   int rc = -1;
   size_t matchlen;
 
-  matchlen = mutt_str_strlen(dest);
+  matchlen = mutt_str_strlen(buf);
   for (mailbox = Incoming; mailbox; mailbox = mailbox->next)
   {
-    if (mutt_str_strncmp(dest, mailbox->path, matchlen) == 0)
+    if (mutt_str_strncmp(buf, mailbox->path, matchlen) == 0)
     {
       if (rc)
       {
-        mutt_str_strfcpy(dest, mailbox->path, len);
+        mutt_str_strfcpy(buf, mailbox->path, buflen);
         rc = 0;
       }
       else
-        longest_common_prefix(dest, mailbox->path, matchlen, len);
+        longest_common_prefix(buf, mailbox->path, matchlen, buflen);
     }
   }
 
@@ -571,15 +571,15 @@ static int complete_hosts(char *dest, size_t len)
     url.user = NULL;
     url.path = NULL;
     url_tostring(&url, urlstr, sizeof(urlstr), 0);
-    if (mutt_str_strncmp(dest, urlstr, matchlen) == 0)
+    if (mutt_str_strncmp(buf, urlstr, matchlen) == 0)
     {
       if (rc)
       {
-        mutt_str_strfcpy(dest, urlstr, len);
+        mutt_str_strfcpy(buf, urlstr, buflen);
         rc = 0;
       }
       else
-        longest_common_prefix(dest, urlstr, matchlen, len);
+        longest_common_prefix(buf, urlstr, matchlen, buflen);
     }
   }
 
@@ -710,7 +710,7 @@ int imap_rename_mailbox(struct ImapData *idata, struct ImapMbox *mx, const char 
  */
 int imap_delete_mailbox(struct Context *ctx, struct ImapMbox *mx)
 {
-  char buf[LONG_STRING], mbox[LONG_STRING];
+  char buf[PATH_MAX], mbox[PATH_MAX];
   struct ImapData *idata = NULL;
 
   if (!ctx || !ctx->data)
@@ -992,8 +992,6 @@ struct ImapData *imap_conn_find(const struct Account *account, int flags)
     /* get root delimiter, '/' as default */
     idata->delim = '/';
     imap_exec(idata, "LIST \"\" \"\"", IMAP_CMD_QUEUE);
-    if (ImapCheckSubscribed)
-      imap_exec(idata, "LSUB \"\" \"*\"", IMAP_CMD_QUEUE);
     /* we may need the root delimiter before we open a mailbox */
     imap_exec(idata, NULL, IMAP_CMD_FAIL_OK);
   }
@@ -1182,11 +1180,6 @@ int imap_exec_msgset(struct ImapData *idata, const char *pre, const char *post,
   int count = 0;
 
   struct Buffer *cmd = mutt_buffer_new();
-  if (!cmd)
-  {
-    mutt_debug(1, "unable to allocate buffer\n");
-    return -1;
-  }
 
   /* We make a copy of the headers just in case resorting doesn't give
    exactly the original order (duplicate messages?), because other parts of
@@ -1423,11 +1416,11 @@ int imap_check(struct ImapData *idata, int force)
 /**
  * imap_buffy_check - Check for new mail in subscribed folders
  * @param check_stats Check for message stats too
- * @retval 0 Failure
+ * @retval num Number of mailboxes with new mail
+ * @retval 0   Failure
  *
  * Given a list of mailboxes rather than called once for each so that it can
- * batch the commands and save on round trips. Returns number of mailboxes with
- * new mail.
+ * batch the commands and save on round trips.
  */
 int imap_buffy_check(int check_stats)
 {
@@ -1489,11 +1482,15 @@ int imap_buffy_check(int check_stats)
 
     imap_munge_mbox_name(idata, munged, sizeof(munged), name);
     if (check_stats)
+    {
       snprintf(command, sizeof(command),
                "STATUS %s (UIDNEXT UIDVALIDITY UNSEEN RECENT MESSAGES)", munged);
+    }
     else
+    {
       snprintf(command, sizeof(command),
                "STATUS %s (UIDNEXT UIDVALIDITY UNSEEN RECENT)", munged);
+    }
 
     if (imap_exec(idata, command, IMAP_CMD_QUEUE | IMAP_CMD_POLL) < 0)
     {
@@ -1554,9 +1551,11 @@ int imap_status(char *path, int queue)
     imap_unmunge_mbox_name(idata, mbox);
   }
   else
+  {
     /* Server does not support STATUS, and this is not the current mailbox.
      * There is no lightweight way to check recent arrivals */
     return -1;
+  }
 
   if (queue)
   {
@@ -1763,8 +1762,8 @@ fail:
 
 /**
  * imap_complete - Try to complete an IMAP folder path
- * @param dest Buffer for result
- * @param dlen Length of buffer
+ * @param buf Buffer for result
+ * @param buflen Length of buffer
  * @param path Partial mailbox name to complete
  * @retval  0 Success
  * @retval -1 Failure
@@ -1772,11 +1771,11 @@ fail:
  * Given a partial IMAP folder path, return a string which adds as much to the
  * path as is unique
  */
-int imap_complete(char *dest, size_t dlen, char *path)
+int imap_complete(char *buf, size_t buflen, char *path)
 {
   struct ImapData *idata = NULL;
   char list[LONG_STRING];
-  char buf[LONG_STRING];
+  char tmp[LONG_STRING];
   struct ImapList listresp;
   char completion[LONG_STRING];
   int clen;
@@ -1787,8 +1786,8 @@ int imap_complete(char *dest, size_t dlen, char *path)
 
   if (imap_parse_path(path, &mx))
   {
-    mutt_str_strfcpy(dest, path, dlen);
-    return complete_hosts(dest, dlen);
+    mutt_str_strfcpy(buf, path, buflen);
+    return complete_hosts(buf, buflen);
   }
 
   /* don't open a new socket just for completion. Instead complete over
@@ -1797,8 +1796,8 @@ int imap_complete(char *dest, size_t dlen, char *path)
   if (!idata)
   {
     FREE(&mx.mbox);
-    mutt_str_strfcpy(dest, path, dlen);
-    return complete_hosts(dest, dlen);
+    mutt_str_strfcpy(buf, path, buflen);
+    return complete_hosts(buf, buflen);
   }
 
   /* reformat path for IMAP list, and append wildcard */
@@ -1809,9 +1808,9 @@ int imap_complete(char *dest, size_t dlen, char *path)
     list[0] = '\0';
 
   /* fire off command */
-  snprintf(buf, sizeof(buf), "%s \"\" \"%s%%\"", ImapListSubscribed ? "LSUB" : "LIST", list);
+  snprintf(tmp, sizeof(tmp), "%s \"\" \"%s%%\"", ImapListSubscribed ? "LSUB" : "LIST", list);
 
-  imap_cmd_start(idata, buf);
+  imap_cmd_start(idata, tmp);
 
   /* and see what the results are */
   mutt_str_strfcpy(completion, NONULL(mx.mbox), sizeof(completion));
@@ -1850,8 +1849,8 @@ int imap_complete(char *dest, size_t dlen, char *path)
   if (completions)
   {
     /* reformat output */
-    imap_qualify_path(dest, dlen, &mx, completion);
-    mutt_pretty_mailbox(dest, dlen);
+    imap_qualify_path(buf, buflen, &mx, completion);
+    mutt_pretty_mailbox(buf, buflen);
 
     FREE(&mx.mbox);
     return 0;
@@ -1972,21 +1971,18 @@ out:
   mutt_buffer_free(&sync_cmd);
   FREE(&mx.mbox);
 
-  return rc < 0 ? -1 : rc;
+  return (rc < 0) ? -1 : rc;
 }
 
 /**
- * imap_open_mailbox - Open an IMAP mailbox
- * @param ctx Context
- * @retval  0 Success
- * @retval -1 Failure
+ * imap_mbox_open - Implements MxOps::mbox_open()
  */
-static int imap_open_mailbox(struct Context *ctx)
+static int imap_mbox_open(struct Context *ctx)
 {
   struct ImapData *idata = NULL;
   struct ImapStatus *status = NULL;
-  char buf[LONG_STRING];
-  char bufout[LONG_STRING];
+  char buf[PATH_MAX];
+  char bufout[PATH_MAX];
   int count = 0;
   struct ImapMbox mx, pmx;
   int rc;
@@ -2058,6 +2054,8 @@ static int imap_open_mailbox(struct Context *ctx)
   }
   FREE(&pmx.mbox);
 
+  if (ImapCheckSubscribed)
+    imap_exec(idata, "LSUB \"\" \"*\"", IMAP_CMD_QUEUE);
   snprintf(bufout, sizeof(bufout), "%s %s", ctx->readonly ? "EXAMINE" : "SELECT", buf);
 
   idata->state = IMAP_SELECTED;
@@ -2174,7 +2172,9 @@ static int imap_open_mailbox(struct Context *ctx)
         mutt_bit_isset(idata->ctx->rights, MUTT_ACL_SEEN) ||
         mutt_bit_isset(idata->ctx->rights, MUTT_ACL_WRITE) ||
         mutt_bit_isset(idata->ctx->rights, MUTT_ACL_INSERT)))
+  {
     ctx->readonly = true;
+  }
 
   ctx->hdrmax = count;
   ctx->hdrs = mutt_mem_calloc(count, sizeof(struct Header *));
@@ -2200,17 +2200,12 @@ fail_noidata:
 }
 
 /**
- * imap_open_mailbox_append - Open an IMAP mailbox to append
- * @param ctx   Context
- * @param flags Mailbox flags (UNUSED)
- * @retval  0 Success
- * @retval -1 Failure
+ * imap_mbox_open_append - Implements MxOps::mbox_open_append()
  */
-static int imap_open_mailbox_append(struct Context *ctx, int flags)
+static int imap_mbox_open_append(struct Context *ctx, int flags)
 {
   struct ImapData *idata = NULL;
-  char buf[LONG_STRING];
-  char mailbox[LONG_STRING];
+  char mailbox[PATH_MAX];
   struct ImapMbox mx;
   int rc;
 
@@ -2241,6 +2236,7 @@ static int imap_open_mailbox_append(struct Context *ctx, int flags)
   if (rc == -1)
     return -1;
 
+  char buf[PATH_MAX + 64];
   snprintf(buf, sizeof(buf), _("Create %s?"), mailbox);
   if (Confirmcreate && mutt_yesorno(buf, 1) != MUTT_YES)
     return -1;
@@ -2252,18 +2248,17 @@ static int imap_open_mailbox_append(struct Context *ctx, int flags)
 }
 
 /**
- * imap_close_mailbox - Clean up IMAP data in Context
- * @param ctx Context
+ * imap_mbox_close - Implements MxOps::mbox_close()
  * @retval 0 Always
  */
-static int imap_close_mailbox(struct Context *ctx)
+static int imap_mbox_close(struct Context *ctx)
 {
   struct ImapData *idata = ctx->data;
   /* Check to see if the mailbox is actually open */
   if (!idata)
     return 0;
 
-  /* imap_open_mailbox_append() borrows the struct ImapData temporarily,
+  /* imap_mbox_open_append() borrows the struct ImapData temporarily,
    * just for the connection, but does not set idata->ctx to the
    * open-append ctx.
    *
@@ -2275,7 +2270,7 @@ static int imap_close_mailbox(struct Context *ctx)
   {
     if (idata->status != IMAP_FATAL && idata->state >= IMAP_SELECTED)
     {
-      /* mx_close_mailbox won't sync if there are no deleted messages
+      /* mx_mbox_close won't sync if there are no deleted messages
        * and the mailbox is unchanged, so we may have to close here */
       if (!ctx->deleted)
         imap_exec(idata, "CLOSE", IMAP_CMD_QUEUE);
@@ -2316,16 +2311,11 @@ static int imap_close_mailbox(struct Context *ctx)
 }
 
 /**
- * imap_open_new_message - Open an IMAP message
- * @param msg  Message to open
- * @param dest Context (UNUSED)
- * @param hdr  Header (UNUSED)
- * @retval  0 Success
- * @retval -1 Failure
+ * imap_msg_open_new - Implements MxOps::msg_open_new()
  */
-static int imap_open_new_message(struct Message *msg, struct Context *dest, struct Header *hdr)
+static int imap_msg_open_new(struct Context *ctx, struct Message *msg, struct Header *hdr)
 {
-  char tmp[_POSIX_PATH_MAX];
+  char tmp[PATH_MAX];
 
   mutt_mktemp(tmp, sizeof(tmp));
   msg->fp = mutt_file_fopen(tmp, "w");
@@ -2339,13 +2329,13 @@ static int imap_open_new_message(struct Message *msg, struct Context *dest, stru
 }
 
 /**
- * imap_check_mailbox_reopen - Check for new mail (reopen mailbox if necessary)
+ * imap_mbox_check - Implements MxOps::mbox_check()
  * @param ctx        Context
  * @param index_hint Remember our place in the index
  * @retval >0 Success, e.g. #MUTT_REOPENED
  * @retval -1 Failure
  */
-static int imap_check_mailbox_reopen(struct Context *ctx, int *index_hint)
+static int imap_mbox_check(struct Context *ctx, int *index_hint)
 {
   int rc;
   (void) index_hint;
@@ -2445,7 +2435,7 @@ int imap_sync_mailbox(struct Context *ctx, int expunge)
                               "Saving changed messages... [%d/%d]", ctx->msgcount),
                      i + 1, ctx->msgcount);
         if (!appendctx)
-          appendctx = mx_open_mailbox(ctx->path, MUTT_APPEND | MUTT_QUIET, NULL);
+          appendctx = mx_mbox_open(ctx->path, MUTT_APPEND | MUTT_QUIET, NULL);
         if (!appendctx)
           mutt_debug(1, "Error opening mailbox in append mode\n");
         else
@@ -2561,16 +2551,9 @@ out:
 }
 
 /**
- * imap_edit_message_tags - Prompt and validate new messages tags
- * @param ctx    Context
- * @param tags   Existing tags
- * @param buf    Buffer to store the tags
- * @param buflen Length of buffer
- * @retval -1 Error
- * @retval  0 No valid user input
- * @retval  1 Buf set
+ * imap_tags_edit - Implements MxOps::tags_edit()
  */
-static int imap_edit_message_tags(struct Context *ctx, const char *tags, char *buf, size_t buflen)
+static int imap_tags_edit(struct Context *ctx, const char *tags, char *buf, size_t buflen)
 {
   char *new = NULL;
   char *checker = NULL;
@@ -2644,12 +2627,7 @@ static int imap_edit_message_tags(struct Context *ctx, const char *tags, char *b
 }
 
 /**
- * imap_commit_message_tags - Add/Change/Remove flags from headers
- * @param ctx  Context
- * @param h    Header
- * @param tags List of tags
- * @retval  0 Success
- * @retval -1 Error
+ * imap_tags_commit - Implements MxOps::tags_commit()
  *
  * This method update the server flags on the server by
  * removing the last know custom flags of a header
@@ -2661,23 +2639,23 @@ static int imap_edit_message_tags(struct Context *ctx, const char *tags, char *b
  * Also this method check that each flags is support by the server
  * first and remove unsupported one.
  */
-static int imap_commit_message_tags(struct Context *ctx, struct Header *h, char *tags)
+static int imap_tags_commit(struct Context *ctx, struct Header *hdr, char *buf)
 {
   struct Buffer *cmd = NULL;
   char uid[11];
 
   struct ImapData *idata = ctx->data;
 
-  if (*tags == '\0')
-    tags = NULL;
+  if (*buf == '\0')
+    buf = NULL;
 
   if (!mutt_bit_isset(idata->ctx->rights, MUTT_ACL_WRITE))
     return 0;
 
-  snprintf(uid, sizeof(uid), "%u", HEADER_DATA(h)->uid);
+  snprintf(uid, sizeof(uid), "%u", HEADER_DATA(hdr)->uid);
 
   /* Remove old custom flags */
-  if (HEADER_DATA(h)->flags_remote)
+  if (HEADER_DATA(hdr)->flags_remote)
   {
     cmd = mutt_buffer_new();
     if (!cmd)
@@ -2689,7 +2667,7 @@ static int imap_commit_message_tags(struct Context *ctx, struct Header *h, char 
     mutt_buffer_addstr(cmd, "UID STORE ");
     mutt_buffer_addstr(cmd, uid);
     mutt_buffer_addstr(cmd, " -FLAGS.SILENT (");
-    mutt_buffer_addstr(cmd, HEADER_DATA(h)->flags_remote);
+    mutt_buffer_addstr(cmd, HEADER_DATA(hdr)->flags_remote);
     mutt_buffer_addstr(cmd, ")");
 
     /* Should we return here, or we are fine and we could
@@ -2705,7 +2683,7 @@ static int imap_commit_message_tags(struct Context *ctx, struct Header *h, char 
   }
 
   /* Add new custom flags */
-  if (tags)
+  if (buf)
   {
     cmd = mutt_buffer_new();
     if (!cmd)
@@ -2717,7 +2695,7 @@ static int imap_commit_message_tags(struct Context *ctx, struct Header *h, char 
     mutt_buffer_addstr(cmd, "UID STORE ");
     mutt_buffer_addstr(cmd, uid);
     mutt_buffer_addstr(cmd, " +FLAGS.SILENT (");
-    mutt_buffer_addstr(cmd, tags);
+    mutt_buffer_addstr(cmd, buf);
     mutt_buffer_addstr(cmd, ")");
 
     if (imap_exec(idata, cmd->data, 0) != 0)
@@ -2731,26 +2709,28 @@ static int imap_commit_message_tags(struct Context *ctx, struct Header *h, char 
   }
 
   /* We are good sync them */
-  mutt_debug(1, "NEW TAGS: %d\n", tags);
-  driver_tags_replace(&h->tags, tags);
-  FREE(&HEADER_DATA(h)->flags_remote);
-  HEADER_DATA(h)->flags_remote = driver_tags_get_with_hidden(&h->tags);
+  mutt_debug(1, "NEW TAGS: %d\n", buf);
+  driver_tags_replace(&hdr->tags, buf);
+  FREE(&HEADER_DATA(hdr)->flags_remote);
+  HEADER_DATA(hdr)->flags_remote = driver_tags_get_with_hidden(&hdr->tags);
   return 0;
 }
 
+// clang-format off
 /**
- * mx_imap_ops - Mailbox callback functions
+ * struct mx_imap_ops - Mailbox callback functions for IMAP mailboxes
  */
 struct MxOps mx_imap_ops = {
-  .open = imap_open_mailbox,
-  .open_append = imap_open_mailbox_append,
-  .close = imap_close_mailbox,
-  .open_msg = imap_fetch_message,
-  .close_msg = imap_close_message,
-  .commit_msg = imap_commit_message,
-  .open_new_msg = imap_open_new_message,
-  .check = imap_check_mailbox_reopen,
-  .sync = NULL, /* imap syncing is handled by imap_sync_mailbox */
-  .edit_msg_tags = imap_edit_message_tags,
-  .commit_msg_tags = imap_commit_message_tags,
+  .mbox_open        = imap_mbox_open,
+  .mbox_open_append = imap_mbox_open_append,
+  .mbox_check       = imap_mbox_check,
+  .mbox_sync        = NULL, /* imap syncing is handled by imap_sync_mailbox */
+  .mbox_close       = imap_mbox_close,
+  .msg_open         = imap_msg_open,
+  .msg_open_new     = imap_msg_open_new,
+  .msg_commit       = imap_msg_commit,
+  .msg_close        = imap_msg_close,
+  .tags_edit        = imap_tags_edit,
+  .tags_commit      = imap_tags_commit,
 };
+// clang-format on

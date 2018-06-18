@@ -98,8 +98,8 @@ struct Folder
   int num;
 };
 
-static char OldLastDir[_POSIX_PATH_MAX] = "";
-static char LastDir[_POSIX_PATH_MAX] = "";
+static char OldLastDir[PATH_MAX] = "";
+static char LastDir[PATH_MAX] = "";
 
 /**
  * destroy_state - Free the BrowserState
@@ -257,7 +257,7 @@ static void browser_sort(struct BrowserState *state)
 static int link_is_dir(const char *folder, const char *path)
 {
   struct stat st;
-  char fullpath[_POSIX_PATH_MAX];
+  char fullpath[PATH_MAX];
 
   mutt_file_concat_path(fullpath, folder, path, sizeof(fullpath));
 
@@ -630,11 +630,15 @@ static const char *group_index_format_str(char *buf, size_t buflen, size_t col, 
       if (flags & MUTT_FORMAT_OPTIONAL)
       {
         if (folder->ff->nd->unread != 0)
+        {
           mutt_expando_format(buf, buflen, col, cols, if_str,
                               group_index_format_str, data, flags);
+        }
         else
+        {
           mutt_expando_format(buf, buflen, col, cols, else_str,
                               group_index_format_str, data, flags);
+        }
       }
       else if (Context && Context->data == folder->ff->nd)
       {
@@ -732,7 +736,9 @@ static int examine_directory(struct Menu *menu, struct BrowserState *state,
         continue;
       if (Mask && Mask->regex &&
           !((regexec(Mask->regex, nntp_data->group, 0, NULL, 0) == 0) ^ Mask->not))
+      {
         continue;
+      }
       add_folder(menu, state, nntp_data->group, NULL, NULL, NULL, nntp_data);
     }
   }
@@ -742,7 +748,7 @@ static int examine_directory(struct Menu *menu, struct BrowserState *state,
     struct stat s;
     DIR *dp = NULL;
     struct dirent *de = NULL;
-    char buffer[_POSIX_PATH_MAX + SHORT_STRING];
+    char buffer[PATH_MAX + SHORT_STRING];
     struct Buffy *tmp = NULL;
 
     while (stat(d, &s) == -1)
@@ -791,7 +797,9 @@ static int examine_directory(struct Menu *menu, struct BrowserState *state,
       }
       if (Mask && Mask->regex &&
           !((regexec(Mask->regex, de->d_name, 0, NULL, 0) == 0) ^ Mask->not))
+      {
         continue;
+      }
 
       mutt_file_concat_path(buffer, d, de->d_name, sizeof(buffer));
       if (lstat(buffer, &s) == -1)
@@ -887,7 +895,7 @@ static int examine_mailboxes(struct Menu *menu, struct BrowserState *state)
         tmp->msg_unread = Context->unread;
       }
 
-      char buffer[LONG_STRING];
+      char buffer[PATH_MAX];
       mutt_str_strfcpy(buffer, tmp->path, sizeof(buffer));
       if (BrowserAbbreviateMailboxes)
         mutt_pretty_mailbox(buffer, sizeof(buffer));
@@ -922,7 +930,7 @@ static int examine_mailboxes(struct Menu *menu, struct BrowserState *state)
       if (mx_is_maildir(tmp->path))
       {
         struct stat st2;
-        char md[LONG_STRING];
+        char md[PATH_MAX];
 
         snprintf(md, sizeof(md), "%s/new", tmp->path);
         if (stat(md, &s) < 0)
@@ -973,14 +981,18 @@ static void folder_entry(char *buf, size_t buflen, struct Menu *menu, int num)
 
 #ifdef USE_NNTP
   if (OptNews)
+  {
     mutt_expando_format(buf, buflen, 0, MuttIndexWindow->cols,
                         NONULL(GroupIndexFormat), group_index_format_str,
                         (unsigned long) &folder, MUTT_FORMAT_ARROWCURSOR);
+  }
   else
 #endif
+  {
     mutt_expando_format(buf, buflen, 0, MuttIndexWindow->cols,
                         NONULL(FolderFormat), folder_format_str,
                         (unsigned long) &folder, MUTT_FORMAT_ARROWCURSOR);
+  }
 }
 
 #ifdef USE_NOTMUCH
@@ -1048,8 +1060,10 @@ static void init_menu(struct BrowserState *state, struct Menu *menu,
     if (buffy)
       snprintf(title, titlelen, _("Subscribed newsgroups"));
     else
+    {
       snprintf(title, titlelen, _("Newsgroups on server [%s]"),
                CurrentNewsSrv->conn->account.host);
+    }
   }
   else
 #endif
@@ -1061,7 +1075,7 @@ static void init_menu(struct BrowserState *state, struct Menu *menu,
     }
     else
     {
-      char path[_POSIX_PATH_MAX];
+      char path[PATH_MAX];
       menu->is_mailbox_list = 0;
       mutt_str_strfcpy(path, LastDir, sizeof(path));
       mutt_pretty_mailbox(path, sizeof(path));
@@ -1078,7 +1092,7 @@ static void init_menu(struct BrowserState *state, struct Menu *menu,
   int ldlen = mutt_str_strlen(LastDir);
   if ((ldlen > 0) && (mutt_str_strncmp(LastDir, OldLastDir, ldlen) == 0))
   {
-    char TargetDir[_POSIX_PATH_MAX] = "";
+    char TargetDir[PATH_MAX] = "";
 
 #ifdef USE_IMAP
     /* Use mx_is_imap to check what kind of dir is OldLastDir.
@@ -1126,7 +1140,7 @@ static int file_tag(struct Menu *menu, int n, int m)
   bool ot = ff->tagged;
   ff->tagged = (m >= 0 ? m : !ff->tagged);
 
-  return ff->tagged - ot;
+  return (ff->tagged - ot);
 }
 
 /**
@@ -1149,11 +1163,11 @@ void mutt_browser_select_dir(char *f)
 
 void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfiles)
 {
-  char buf[_POSIX_PATH_MAX];
-  char prefix[_POSIX_PATH_MAX] = "";
+  char buf[PATH_MAX];
+  char prefix[PATH_MAX] = "";
   char helpstr[LONG_STRING];
   char title[STRING];
-  struct BrowserState state;
+  struct BrowserState state = { 0 };
   struct Menu *menu = NULL;
   struct stat st;
   int i, kill_prefix = 0;
@@ -1164,11 +1178,9 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
   /* Keeps in memory the directory we were in when hitting '='
    * to go directly to $folder (Folder)
    */
-  char GotoSwapper[_POSIX_PATH_MAX] = "";
+  char GotoSwapper[PATH_MAX] = "";
 
   buffy = buffy && folder;
-
-  memset(&state, 0, sizeof(struct BrowserState));
 
 #ifdef USE_NNTP
   if (OptNews)
@@ -1428,8 +1440,10 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
           }
 #endif
           else
+          {
             mutt_file_concat_path(buf, LastDir, state.entry[menu->current].name,
                                   sizeof(buf));
+          }
 
           if ((mx_get_magic(buf) <= 0)
 #ifdef USE_IMAP
@@ -1487,7 +1501,7 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
 #endif
             else
             {
-              char tmp[_POSIX_PATH_MAX];
+              char tmp[PATH_MAX];
               mutt_file_concat_path(tmp, LastDir,
                                     state.entry[menu->current].name, sizeof(tmp));
               mutt_str_strfcpy(LastDir, tmp, sizeof(LastDir));
@@ -1567,7 +1581,7 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
               struct FolderFile ff = state.entry[j];
               if (ff.tagged)
               {
-                char full[_POSIX_PATH_MAX];
+                char full[PATH_MAX];
                 mutt_file_concat_path(full, LastDir, ff.name, sizeof(full));
                 mutt_expand_path(full, sizeof(full));
                 tfiles[k++] = mutt_str_strdup(full);
@@ -1677,8 +1691,10 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
               FREE(&((state.entry)[nentry].desc));
               /* and move all other entries up */
               if (nentry + 1 < state.entrylen)
+              {
                 memmove(state.entry + nentry, state.entry + nentry + 1,
                         sizeof(struct FolderFile) * (state.entrylen - (nentry + 1)));
+              }
               memset(&state.entry[state.entrylen - 1], 0, sizeof(struct FolderFile));
               state.entrylen--;
               mutt_message(_("Mailbox deleted."));
@@ -1749,7 +1765,7 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
             {
               /* in case dir is relative, make it relative to LastDir,
                * not current working dir */
-              char tmp[_POSIX_PATH_MAX];
+              char tmp[PATH_MAX];
               mutt_file_concat_path(tmp, LastDir, buf, sizeof(tmp));
               mutt_str_strfcpy(buf, tmp, sizeof(buf));
             }
@@ -2013,7 +2029,7 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
         }
         else
         {
-          char buf2[_POSIX_PATH_MAX];
+          char buf2[PATH_MAX];
 
           mutt_file_concat_path(buf2, LastDir, state.entry[menu->current].name,
                                 sizeof(buf2));
