@@ -1,3 +1,10 @@
+neomutt (1:20180617-1lxtec1) unstable; urgency=medium
+
+  * Testbuild
+  * Refreshed patches
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Mon, 18 Jun 2018 08:38:27 +0200
+
 neomutt (1:20180512-2-1lxtec2) unstable; urgency=medium
 
   * Install contrib/colorschemes
