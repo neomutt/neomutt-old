@@ -1,3 +1,10 @@
+neomutt (1:20180619-1lxtec1) unstable; urgency=medium
+
+  * Testbuild
+  * Refreshed patches
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 19 Jun 2018 07:23:31 +0200
+
 neomutt (1:20180618-1lxtec1) unstable; urgency=medium
 
   * Testbuild
