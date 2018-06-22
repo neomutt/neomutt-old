@@ -119,7 +119,6 @@ enum GroupState
   GS_ADDR
 };
 
-
 /**
  * add_to_stailq - Add a string to a list
  * @param head String list
@@ -1593,7 +1592,7 @@ static int parse_echo(struct Buffer *buf, struct Buffer *s, unsigned long data,
  * If the 'finish' command is found, we should stop reading the current file.
  */
 static int parse_finish(struct Buffer *buf, struct Buffer *s,
-                         unsigned long data, struct Buffer *err)
+                        unsigned long data, struct Buffer *err)
 {
   if (MoreArgs(s))
   {
@@ -2409,7 +2408,7 @@ static int parse_set(struct Buffer *buf, struct Buffer *s, unsigned long data,
       if (rc < 0 || !*buf->data)
       {
         snprintf(err->data, err->dsize, _("%s: invalid value (%s)"), buf->data,
-                rc == -1 ? _("format error") : _("number overflow"));
+                 rc == -1 ? _("format error") : _("number overflow"));
         r = -1;
         break;
       }
@@ -3589,12 +3588,12 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
       {
         /* recursively extract tokens to interpolate variables */
         mutt_extract_token(&cmd, tok,
-                           MUTT_TOKEN_QUOTE | MUTT_TOKEN_SPACE |
-                               MUTT_TOKEN_COMMENT | MUTT_TOKEN_SEMICOLON);
+                           MUTT_TOKEN_QUOTE | MUTT_TOKEN_SPACE | MUTT_TOKEN_COMMENT |
+                               MUTT_TOKEN_SEMICOLON | MUTT_TOKEN_NOSHELL);
       }
       else
       {
-          cmd.data = mutt_str_strdup(tok->dptr);
+        cmd.data = mutt_str_strdup(tok->dptr);
       }
       *pc = '`';
       pid = mutt_create_filter(cmd.data, NULL, &fp, NULL);
@@ -3647,12 +3646,20 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
 
       if (*tok->dptr == '{')
       {
-        tok->dptr++;
         pc = strchr(tok->dptr, '}');
         if (pc)
         {
-          var = mutt_str_substr_dup(tok->dptr, pc);
+          var = mutt_str_substr_dup(tok->dptr + 1, pc);
           tok->dptr = pc + 1;
+
+          if ((flags & MUTT_TOKEN_NOSHELL))
+          {
+            mutt_buffer_addch(dest, ch);
+            mutt_buffer_addch(dest, '{');
+            mutt_buffer_addstr(dest, var);
+            mutt_buffer_addch(dest, '}');
+            FREE(&var);
+          }
         }
       }
       else
@@ -3665,8 +3672,10 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
       if (var)
       {
         int idx;
-        if ((env = mutt_str_getenv(var)) || (env = myvar_get(var)))
+        if ((env = myvar_get(var)))
+        {
           mutt_buffer_addstr(dest, env);
+        }
         else if ((idx = mutt_option_index(var)) != -1)
         {
           /* expand settable neomutt variables */
@@ -3674,6 +3683,15 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
 
           if (var_to_string(idx, val, sizeof(val)))
             mutt_buffer_addstr(dest, val);
+        }
+        else if (!(flags & MUTT_TOKEN_NOSHELL) && (env = mutt_str_getenv(var)))
+        {
+          mutt_buffer_addstr(dest, env);
+        }
+        else
+        {
+          mutt_buffer_addch(dest, ch);
+          mutt_buffer_addstr(dest, var);
         }
         FREE(&var);
       }
@@ -4104,11 +4122,11 @@ int mutt_option_set(const struct Option *val, struct Buffer *err)
       case DT_REGEX:
       {
         char err_str[LONG_STRING] = "";
-        struct Buffer err2;
+        struct Buffer err2 = { 0 };
         err2.data = err_str;
         err2.dsize = sizeof(err_str);
 
-        struct Buffer tmp;
+        struct Buffer tmp = { 0 };
         tmp.data = (char *) val->var;
         tmp.dsize = strlen((char *) val->var);
 
