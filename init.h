@@ -767,7 +767,7 @@ struct Option MuttVars[] = {
   ** If this option is \fIset\fP, NeoMutt's received-attachments menu will not show the subparts of
   ** individual messages in a multipart/digest.  To see these subparts, press ``v'' on that menu.
   */
-  { "display_filter",   DT_PATH, R_PAGER, &DisplayFilter, 0 },
+  { "display_filter", DT_COMMAND, R_PAGER, &DisplayFilter, 0 },
   /*
   ** .pp
   ** When set, specifies a command used to filter messages.  When a message
@@ -848,7 +848,7 @@ struct Option MuttVars[] = {
   ** \fBNote\fP that changes made to the References: and Date: headers are
   ** ignored for interoperability reasons.
   */
-  { "editor",           DT_PATH, R_NONE, &Editor, IP "vi" },
+  { "editor", DT_COMMAND, R_NONE, &Editor, IP "vi" },
   /*
   ** .pp
   ** This variable specifies which editor is used by NeoMutt.
@@ -1654,7 +1654,7 @@ struct Option MuttVars[] = {
   ** ``$save-hook'', ``$fcc-hook'' and ``$fcc-save-hook'', too.
   */
 #ifdef USE_NNTP
-  { "inews",            DT_PATH, R_NONE, &Inews, 0 },
+  { "inews", DT_COMMAND, R_NONE, &Inews, 0 },
   /*
   ** .pp
   ** If set, specifies the program and arguments used to deliver news posted
@@ -1675,7 +1675,7 @@ struct Option MuttVars[] = {
   ** .te
   */
 #endif
-  { "ispell",           DT_PATH, R_NONE, &Ispell, IP ISPELL },
+  { "ispell", DT_COMMAND, R_NONE, &Ispell, IP ISPELL },
   /*
   ** .pp
   ** How to invoke ispell (GNU's spell-checking software).
@@ -1713,6 +1713,9 @@ struct Option MuttVars[] = {
   ** this operation is more performance intensive, it defaults to
   ** \fIunset\fP, and has a separate option, $$mail_check_stats_interval, to
   ** control how often to update these counts.
+  ** .pp
+  ** Message statistics can also be explicitly calculated by invoking the
+  ** \fC<check-stats>\fP function.
   */
   { "mail_check_stats_interval", DT_NUMBER, R_NONE, &MailCheckStatsInterval, 60 },
   /*
@@ -1944,7 +1947,7 @@ struct Option MuttVars[] = {
   ** is Usenet article, because MIME for news is nonstandard feature.
   */
 #endif
-  { "mime_type_query_command", DT_STRING, R_NONE, &MimeTypeQueryCommand, 0 },
+  { "mime_type_query_command", DT_COMMAND, R_NONE, &MimeTypeQueryCommand, 0 },
   /*
   ** .pp
   ** This specifies a command to run, to determine the mime type of a
@@ -1984,7 +1987,7 @@ struct Option MuttVars[] = {
   ** .dt %s .dd The remailer's short name
   ** .de
   */
-  { "mixmaster",        DT_PATH, R_NONE, &Mixmaster, IP MIXMASTER },
+  { "mixmaster", DT_COMMAND, R_NONE, &Mixmaster, IP MIXMASTER },
   /*
   ** .pp
   ** This variable contains the path to the Mixmaster binary on your
@@ -2020,7 +2023,7 @@ struct Option MuttVars[] = {
   ** See also $$read_inc, $$write_inc and $$net_inc.
   */
 #endif
-  { "new_mail_command", DT_PATH, R_NONE, &NewMailCommand, 0 },
+  { "new_mail_command", DT_COMMAND, R_NONE, &NewMailCommand, 0 },
   /*
   ** .pp
   ** If \fIset\fP, NeoMutt will call this command after a new message is received.
@@ -2201,7 +2204,7 @@ struct Option MuttVars[] = {
   ** connect to news server.
   */
 #endif
-  { "pager",            DT_PATH, R_NONE, &Pager, IP "builtin" },
+  { "pager", DT_COMMAND, R_NONE, &Pager, IP "builtin" },
   /*
   ** .pp
   ** This variable specifies which pager you would like to use to view
@@ -2308,7 +2311,7 @@ struct Option MuttVars[] = {
   ** against $$pgp_decryption_okay.
   ** (PGP only)
   */
-  { "pgp_clearsign_command",    DT_STRING, R_NONE, &PgpClearsignCommand, 0 },
+  { "pgp_clearsign_command", DT_COMMAND, R_NONE, &PgpClearsignCommand, 0 },
   /*
   ** .pp
   ** This format is used to create an old-style ``clearsigned'' PGP
@@ -2319,7 +2322,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (PGP only)
   */
-  { "pgp_decode_command",       DT_STRING, R_NONE, &PgpDecodeCommand, 0 },
+  { "pgp_decode_command", DT_COMMAND, R_NONE, &PgpDecodeCommand, 0 },
   /*
   ** .pp
   ** This format strings specifies a command which is used to decode
@@ -2343,7 +2346,7 @@ struct Option MuttVars[] = {
   ** alongside the documentation.
   ** (PGP only)
   */
-  { "pgp_decrypt_command",      DT_STRING, R_NONE, &PgpDecryptCommand, 0 },
+  { "pgp_decrypt_command", DT_COMMAND, R_NONE, &PgpDecryptCommand, 0 },
   /*
   ** .pp
   ** This command is used to decrypt a PGP encrypted message.
@@ -2378,7 +2381,7 @@ struct Option MuttVars[] = {
   ** variable, and should no longer be used.
   ** (PGP only)
   */
-  { "pgp_encrypt_only_command", DT_STRING, R_NONE, &PgpEncryptOnlyCommand, 0 },
+  { "pgp_encrypt_only_command", DT_COMMAND, R_NONE, &PgpEncryptOnlyCommand, 0 },
   /*
   ** .pp
   ** This command is used to encrypt a body part without signing it.
@@ -2387,7 +2390,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (PGP only)
   */
-  { "pgp_encrypt_sign_command", DT_STRING, R_NONE, &PgpEncryptSignCommand, 0 },
+  { "pgp_encrypt_sign_command", DT_COMMAND, R_NONE, &PgpEncryptSignCommand, 0 },
   /*
   ** .pp
   ** This command is used to both sign and encrypt a body part.
@@ -2417,7 +2420,7 @@ struct Option MuttVars[] = {
   ** .pp
   ** (PGP only)
   */
-  { "pgp_export_command",       DT_STRING, R_NONE, &PgpExportCommand, 0 },
+  { "pgp_export_command", DT_COMMAND, R_NONE, &PgpExportCommand, 0 },
   /*
   ** .pp
   ** This command is used to export a public key from the user's
@@ -2427,7 +2430,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (PGP only)
   */
-  { "pgp_getkeys_command",      DT_STRING, R_NONE, &PgpGetkeysCommand, 0 },
+  { "pgp_getkeys_command", DT_COMMAND, R_NONE, &PgpGetkeysCommand, 0 },
   /*
   ** .pp
   ** This command is invoked whenever NeoMutt needs to fetch the public key associated with
@@ -2454,7 +2457,7 @@ struct Option MuttVars[] = {
   ** if you want to play interesting key selection games.
   ** (PGP only)
   */
-  { "pgp_import_command",       DT_STRING, R_NONE, &PgpImportCommand, 0 },
+  { "pgp_import_command", DT_COMMAND, R_NONE, &PgpImportCommand, 0 },
   /*
   ** .pp
   ** This command is used to import a key from a message into
@@ -2464,7 +2467,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (PGP only)
   */
-  { "pgp_list_pubring_command", DT_STRING, R_NONE, &PgpListPubringCommand, 0 },
+  { "pgp_list_pubring_command", DT_COMMAND, R_NONE, &PgpListPubringCommand, 0 },
   /*
   ** .pp
   ** This command is used to list the public key ring's contents.  The
@@ -2481,7 +2484,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (PGP only)
   */
-  { "pgp_list_secring_command", DT_STRING, R_NONE, &PgpListSecringCommand, 0 },
+  { "pgp_list_secring_command", DT_COMMAND, R_NONE, &PgpListSecringCommand, 0 },
   /*
   ** .pp
   ** This command is used to list the secret key ring's contents.  The
@@ -2576,7 +2579,7 @@ struct Option MuttVars[] = {
   ** to specify your key (e.g. \fC0x00112233\fP).
   ** (PGP only)
   */
-  { "pgp_sign_command",         DT_STRING, R_NONE, &PgpSignCommand, 0 },
+  { "pgp_sign_command", DT_COMMAND, R_NONE, &PgpSignCommand, 0 },
   /*
   ** .pp
   ** This command is used to create the detached PGP signature for a
@@ -2626,7 +2629,7 @@ struct Option MuttVars[] = {
   ** NeoMutt no longer verifies if the agent is running.
   ** (PGP only)
   */
-  { "pgp_verify_command",       DT_STRING, R_NONE, &PgpVerifyCommand, 0 },
+  { "pgp_verify_command", DT_COMMAND, R_NONE, &PgpVerifyCommand, 0 },
   /*
   ** .pp
   ** This command is used to verify PGP signatures.
@@ -2635,7 +2638,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (PGP only)
   */
-  { "pgp_verify_key_command",   DT_STRING, R_NONE, &PgpVerifyKeyCommand, 0 },
+  { "pgp_verify_key_command", DT_COMMAND, R_NONE, &PgpVerifyKeyCommand, 0 },
   /*
   ** .pp
   ** This command is used to verify key information from the key selection
@@ -2831,7 +2834,7 @@ struct Option MuttVars[] = {
   ** This is set to ``ask-no'' by default, because some people
   ** accidentally hit ``p'' often.
   */
-  { "print_command",    DT_PATH, R_NONE, &PrintCommand, IP "lpr" },
+  { "print_command", DT_COMMAND, R_NONE, &PrintCommand, IP "lpr" },
   /*
   ** .pp
   ** This specifies the command pipe that should be used to print messages.
@@ -2868,7 +2871,7 @@ struct Option MuttVars[] = {
   ** than returning to the index menu.  If \fIunset\fP, NeoMutt will return to the
   ** index menu when the external pager exits.
   */
-  { "query_command",    DT_PATH, R_NONE, &QueryCommand, 0 },
+  { "query_command", DT_COMMAND, R_NONE, &QueryCommand, 0 },
   /*
   ** .pp
   ** This specifies the command NeoMutt will use to make external address
@@ -2973,7 +2976,7 @@ struct Option MuttVars[] = {
   ** command to create a ``Bcc:'' field with your email address in it.)
   ** .pp
   ** The value of \fI$$record\fP is overridden by the $$force_name and
-  ** $$save_name variables, and the ``$fcc-hook'' command.
+  ** $$save_name variables, and the ``$fcc-hook'' command.  Also see $$copy.
   */
   { "reflow_space_quotes",      DT_BOOL, R_NONE, &ReflowSpaceQuotes, true },
   /*
@@ -3232,7 +3235,7 @@ struct Option MuttVars[] = {
   ** In case the text cannot be converted into one of these exactly,
   ** NeoMutt uses $$charset as a fallback.
   */
-  { "sendmail",         DT_PATH, R_NONE, &Sendmail, IP SENDMAIL " -oem -oi" },
+  { "sendmail", DT_COMMAND, R_NONE, &Sendmail, IP SENDMAIL " -oem -oi" },
   /*
   ** .pp
   ** Specifies the program and arguments used to deliver mail sent by NeoMutt.
@@ -3259,7 +3262,7 @@ struct Option MuttVars[] = {
   ** process will be put in a temporary file.  If there is some error, you
   ** will be informed as to where to find the output.
   */
-  { "shell",            DT_PATH, R_NONE, &Shell, 0 },
+  { "shell", DT_COMMAND, R_NONE, &Shell, 0 },
   /*
   ** .pp
   ** Command to use when spawning a subshell.
@@ -3544,7 +3547,7 @@ struct Option MuttVars[] = {
   ** the following list: ~/.smime/ca-certificates.crt ~/.smime/ca-bundle.crt
   ** /etc/ssl/certs/ca-certificates.crt.
   */
-  { "smime_decrypt_command",    DT_STRING, R_NONE, &SmimeDecryptCommand, 0 },
+  { "smime_decrypt_command", DT_COMMAND, R_NONE, &SmimeDecryptCommand, 0 },
   /*
   ** .pp
   ** This format string specifies a command which is used to decrypt
@@ -3597,7 +3600,7 @@ struct Option MuttVars[] = {
   ** variable, and should no longer be used.
   ** (S/MIME only)
   */
-  { "smime_encrypt_command",    DT_STRING, R_NONE, &SmimeEncryptCommand, 0 },
+  { "smime_encrypt_command", DT_COMMAND, R_NONE, &SmimeEncryptCommand, 0 },
   /*
   ** .pp
   ** This command is used to create encrypted S/MIME messages.
@@ -3618,7 +3621,7 @@ struct Option MuttVars[] = {
   ** Valid choices are ``aes128'', ``aes192'', ``aes256'', ``des'', ``des3'', ``rc2-40'', ``rc2-64'', ``rc2-128''.
   ** (S/MIME only)
   */
-  { "smime_get_cert_command",   DT_STRING, R_NONE, &SmimeGetCertCommand, 0 },
+  { "smime_get_cert_command", DT_COMMAND, R_NONE, &SmimeGetCertCommand, 0 },
   /*
   ** .pp
   ** This command is used to extract X509 certificates from a PKCS7 structure.
@@ -3627,7 +3630,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (S/MIME only)
   */
-  { "smime_get_cert_email_command",     DT_STRING, R_NONE, &SmimeGetCertEmailCommand, 0 },
+  { "smime_get_cert_email_command", DT_COMMAND, R_NONE, &SmimeGetCertEmailCommand, 0 },
   /*
   ** .pp
   ** This command is used to extract the mail address(es) used for storing
@@ -3638,7 +3641,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (S/MIME only)
   */
-  { "smime_get_signer_cert_command",    DT_STRING, R_NONE, &SmimeGetSignerCertCommand, 0 },
+  { "smime_get_signer_cert_command", DT_COMMAND, R_NONE, &SmimeGetSignerCertCommand, 0 },
   /*
   ** .pp
   ** This command is used to extract only the signers X509 certificate from a S/MIME
@@ -3649,7 +3652,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (S/MIME only)
   */
-  { "smime_import_cert_command",        DT_STRING, R_NONE, &SmimeImportCertCommand, 0 },
+  { "smime_import_cert_command", DT_COMMAND, R_NONE, &SmimeImportCertCommand, 0 },
   /*
   ** .pp
   ** This command is used to import a certificate via smime_keys.
@@ -3680,7 +3683,7 @@ struct Option MuttVars[] = {
   ** edited. This option points to the location of the private keys.
   ** (S/MIME only)
   */
-  { "smime_pk7out_command",     DT_STRING, R_NONE, &SmimePk7outCommand, 0 },
+  { "smime_pk7out_command", DT_COMMAND, R_NONE, &SmimePk7outCommand, 0 },
   /*
   ** .pp
   ** This command is used to extract PKCS7 structures of S/MIME signatures,
@@ -3704,7 +3707,7 @@ struct Option MuttVars[] = {
   ** to the signing key. Most people will only need to set $$smime_default_key.
   ** (S/MIME only)
   */
-  { "smime_sign_command",       DT_STRING, R_NONE, &SmimeSignCommand, 0 },
+  { "smime_sign_command", DT_COMMAND, R_NONE, &SmimeSignCommand, 0 },
   /*
   ** .pp
   ** This command is used to created S/MIME signatures of type
@@ -3728,7 +3731,7 @@ struct Option MuttVars[] = {
   ** not used.
   ** (S/MIME only)
   */
-  { "smime_verify_command",     DT_STRING, R_NONE, &SmimeVerifyCommand, 0 },
+  { "smime_verify_command", DT_COMMAND, R_NONE, &SmimeVerifyCommand, 0 },
   /*
   ** .pp
   ** This command is used to verify S/MIME signatures of type \fCmultipart/signed\fP.
@@ -3737,7 +3740,7 @@ struct Option MuttVars[] = {
   ** possible \fCprintf(3)\fP-like sequences.
   ** (S/MIME only)
   */
-  { "smime_verify_opaque_command",      DT_STRING, R_NONE, &SmimeVerifyOpaqueCommand, 0 },
+  { "smime_verify_opaque_command", DT_COMMAND, R_NONE, &SmimeVerifyOpaqueCommand, 0 },
   /*
   ** .pp
   ** This command is used to verify S/MIME signatures of type
@@ -4377,7 +4380,7 @@ struct Option MuttVars[] = {
   ** virtual-mailboxes) as a spool file.
   */
 #endif
-  { "visual",           DT_PATH, R_NONE, &Visual, IP "vi" },
+  { "visual", DT_COMMAND, R_NONE, &Visual, IP "vi" },
   /*
   ** .pp
   ** Specifies the visual editor to invoke when the ``\fC~v\fP'' command is

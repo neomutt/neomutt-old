@@ -774,7 +774,7 @@ static int examine_directory(struct Menu *menu, struct BrowserState *state,
       return -1;
     }
 
-    mutt_buffy_check(false);
+    mutt_buffy_check(0);
 
     dp = opendir(d);
     if (!dp)
@@ -834,7 +834,7 @@ static int examine_vfolders(struct Menu *menu, struct BrowserState *state)
   if (!tmp)
     return -1;
 
-  mutt_buffy_check(false);
+  mutt_buffy_check(0);
 
   init_state(state, menu);
 
@@ -885,7 +885,7 @@ static int examine_mailboxes(struct Menu *menu, struct BrowserState *state)
 
     if (!Incoming)
       return -1;
-    mutt_buffy_check(false);
+    mutt_buffy_check(0);
 
     do
     {
@@ -1071,7 +1071,7 @@ static void init_menu(struct BrowserState *state, struct Menu *menu,
     if (buffy)
     {
       menu->is_mailbox_list = 1;
-      snprintf(title, titlelen, _("Mailboxes [%d]"), mutt_buffy_check(false));
+      snprintf(title, titlelen, _("Mailboxes [%d]"), mutt_buffy_check(0));
     }
     else
     {
@@ -1609,10 +1609,7 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
 
 #ifdef USE_IMAP
       case OP_BROWSER_TOGGLE_LSUB:
-        if (ImapListSubscribed)
-          ImapListSubscribed = false;
-        else
-          ImapListSubscribed = true;
+        ImapListSubscribed = !ImapListSubscribed;
 
         mutt_unget_event(0, OP_CHECK_NEW);
         break;
@@ -1879,7 +1876,8 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
       case OP_SORT_REVERSE:
 
       {
-        int resort = 1;
+        bool resort = true;
+        int sort = -1;
         int reverse = (i == OP_SORT_REVERSE);
 
         switch (mutt_multi_choice(
@@ -1894,45 +1892,46 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
             _("dazecwn")))
         {
           case -1: /* abort */
-            resort = 0;
+            resort = false;
             break;
 
           case 1: /* (d)ate */
-            SortBrowser = SORT_DATE;
+            sort = SORT_DATE;
             break;
 
           case 2: /* (a)lpha */
-            SortBrowser = SORT_SUBJECT;
+            sort = SORT_SUBJECT;
             break;
 
           case 3: /* si(z)e */
-            SortBrowser = SORT_SIZE;
+            sort = SORT_SIZE;
             break;
 
           case 4: /* d(e)scription */
-            SortBrowser = SORT_DESC;
+            sort = SORT_DESC;
             break;
 
           case 5: /* (c)ount */
-            SortBrowser = SORT_COUNT;
+            sort = SORT_COUNT;
             break;
 
           case 6: /* ne(w) count */
-            SortBrowser = SORT_UNREAD;
+            sort = SORT_UNREAD;
             break;
 
           case 7: /* do(n)'t sort */
-            SortBrowser = SORT_ORDER;
-            resort = 0;
+            sort = SORT_ORDER;
+            resort = false;
             break;
         }
         if (resort)
         {
-          SortBrowser |= reverse ? SORT_REVERSE : 0;
+          sort |= reverse ? SORT_REVERSE : 0;
           browser_sort(&state);
           browser_highlight_default(&state, menu);
           menu->redraw = REDRAW_FULL;
         }
+        SortBrowser = sort;
         break;
       }
 

@@ -115,7 +115,7 @@ static struct Address *expand_aliases_r(struct Address *a, struct ListHead *expn
     last->next = NULL;
   }
 
-  if (UseDomain && (fqdn = mutt_fqdn(1)))
+  if (UseDomain && (fqdn = mutt_fqdn(true)))
   {
     /* now qualify all local addresses */
     mutt_addr_qualify(head, fqdn);
@@ -442,7 +442,7 @@ retry_name:
     mutt_alias_free(&new);
     return;
   }
-  new->addr->personal = mutt_str_strdup(buf);
+  mutt_str_replace(&new->addr->personal, buf);
 
   buf[0] = '\0';
   mutt_addr_write(buf, sizeof(buf), new->addr, true);
@@ -682,13 +682,13 @@ bool mutt_addr_is_user(struct Address *addr)
     mutt_debug(5, "#2 yes, %s = %s @ %s\n", addr->mailbox, Username, ShortHostname);
     return true;
   }
-  fqdn = mutt_fqdn(0);
+  fqdn = mutt_fqdn(false);
   if (string_is_address(addr->mailbox, Username, fqdn))
   {
     mutt_debug(5, "#3 yes, %s = %s @ %s\n", addr->mailbox, Username, NONULL(fqdn));
     return true;
   }
-  fqdn = mutt_fqdn(1);
+  fqdn = mutt_fqdn(true);
   if (string_is_address(addr->mailbox, Username, fqdn))
   {
     mutt_debug(5, "#4 yes, %s = %s @ %s\n", addr->mailbox, Username, NONULL(fqdn));

@@ -896,7 +896,7 @@ static int generate_body(FILE *tempfp, struct Header *msg, int flags,
 
       if (cur)
       {
-        tmp = mutt_make_message_attach(ctx, cur, 0);
+        tmp = mutt_make_message_attach(ctx, cur, false);
         if (last)
           last->next = tmp;
         else
@@ -909,7 +909,7 @@ static int generate_body(FILE *tempfp, struct Header *msg, int flags,
           if (!message_is_tagged(ctx, i))
             continue;
 
-          tmp = mutt_make_message_attach(ctx, ctx->hdrs[i], 0);
+          tmp = mutt_make_message_attach(ctx, ctx->hdrs[i], false);
           if (last)
           {
             last->next = tmp;
@@ -997,7 +997,7 @@ void mutt_set_followup_to(struct Envelope *e)
      * but makes sure list-reply has the desired effect.
      */
 
-    if (e->mail_followup_to && !mutt_is_list_recipient(0, e->to, e->cc))
+    if (e->mail_followup_to && !mutt_is_list_recipient(false, e->to, e->cc))
     {
       if (e->reply_to)
         from = mutt_addr_copy_list(e->reply_to, false);
@@ -1069,7 +1069,6 @@ static struct Address *set_reverse_name(struct Envelope *env)
 struct Address *mutt_default_from(void)
 {
   struct Address *addr = NULL;
-  const char *fqdn = mutt_fqdn(1);
 
   /* Note: We let $from override $realname here.
    *       Is this the right thing to do?
@@ -1077,17 +1076,19 @@ struct Address *mutt_default_from(void)
 
   if (From)
     addr = mutt_addr_copy(From);
-  else if (UseDomain)
-  {
+  else {
     addr = mutt_addr_new();
-    addr->mailbox =
-        mutt_mem_malloc(mutt_str_strlen(Username) + mutt_str_strlen(fqdn) + 2);
-    sprintf(addr->mailbox, "%s@%s", NONULL(Username), NONULL(fqdn));
-  }
-  else
-  {
-    addr = mutt_addr_new();
-    addr->mailbox = mutt_str_strdup(NONULL(Username));
+    if (UseDomain)
+    {
+      const char *fqdn = mutt_fqdn(true);
+      addr->mailbox =
+          mutt_mem_malloc(mutt_str_strlen(Username) + mutt_str_strlen(fqdn) + 2);
+      sprintf(addr->mailbox, "%s@%s", NONULL(Username), NONULL(fqdn));
+    }
+    else
+    {
+      addr->mailbox = mutt_str_strdup(NONULL(Username));
+    }
   }
 
   return addr;
@@ -1926,7 +1927,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
       msg->old = false;
 
       mutt_encode_descriptions(msg->content, 1);
-      mutt_prepare_envelope(msg->env, 0);
+      mutt_prepare_envelope(msg->env, false);
       mutt_env_to_intl(msg->env, NULL, NULL); /* Handle bad IDNAs the next time. */
 
       if (!Postponed || mutt_write_fcc(NONULL(Postponed), msg,
@@ -2066,7 +2067,7 @@ int ci_send_message(int flags, struct Header *msg, char *tempfile,
   if (!OptNoCurses && !(flags & SENDMAILX))
     mutt_message(_("Sending message..."));
 
-  mutt_prepare_envelope(msg->env, 1);
+  mutt_prepare_envelope(msg->env, true);
 
   /* save a copy of the message, if necessary. */
 
