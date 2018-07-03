@@ -14,7 +14,7 @@ Index: neomutt/doc/manual.xml.head
 ===================================================================
 --- neomutt.orig/doc/manual.xml.head
 +++ neomutt/doc/manual.xml.head
-@@ -9318,11 +9318,6 @@ audio/x-aiff                    aif aifc
+@@ -9332,11 +9332,6 @@ audio/x-aiff                    aif aifc
          </listitem>
          <listitem>
            <para>
@@ -30,7 +30,7 @@ Index: neomutt/init.h
 ===================================================================
 --- neomutt.orig/init.h
 +++ neomutt/init.h
-@@ -1720,7 +1720,7 @@ struct Option MuttVars[] = {
+@@ -1723,7 +1723,7 @@ struct Option MuttVars[] = {
    ** When $$mail_check_stats is \fIset\fP, this variable configures
    ** how often (in seconds) NeoMutt will update message counts.
    */
