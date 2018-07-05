@@ -2,6 +2,7 @@ Source: neomutt
 Section: mail
 Priority: optional
 Maintainer: Elimar Riesebieter <riesebie@lxtec.de>
+Rules-Requires-Root: no
 Build-Depends: clang-6.0,
                debhelper (>= 11),
                dh-lua,
@@ -23,7 +24,7 @@ Build-Depends: clang-6.0,
                w3m,
                xsltproc,
                zlib1g-dev
-Standards-Version: 4.1.4
+Standards-Version: 4.1.5
 Homepage: https://www.neomutt.org/
 
 Package: neomutt-common
