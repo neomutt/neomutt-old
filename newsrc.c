@@ -592,7 +592,7 @@ int nntp_add_group(char *line, void *data)
 {
   struct NntpServer *nserv = data;
   struct NntpData *nntp_data = NULL;
-  char group[LONG_STRING];
+  char group[LONG_STRING] = "";
   char desc[HUGE_STRING] = "";
   char mod;
   anum_t first, last;
@@ -600,8 +600,12 @@ int nntp_add_group(char *line, void *data)
   if (!nserv || !line)
     return 0;
 
-  if (sscanf(line, "%s " ANUM " " ANUM " %c %[^\n]", group, &last, &first, &mod, desc) < 4)
+  /* These sscanf limits must match the sizes of the group and desc arrays */
+  if (sscanf(line, "%1023s " ANUM " " ANUM " %c %8191[^\n]", group, &last, &first, &mod, desc) < 4)
+  {
+    mutt_debug(4, "Cannot parse server line: %s\n", line);
     return 0;
+  }
 
   nntp_data = nntp_data_find(nserv, group);
   nntp_data->deleted = false;
@@ -711,7 +715,18 @@ int nntp_active_save_cache(struct NntpServer *nserv)
  */
 static int nntp_hcache_namer(const char *path, char *dest, size_t destlen)
 {
-  return snprintf(dest, destlen, "%s.hcache", path);
+  int count = snprintf(dest, destlen, "%s.hcache", path);
+
+  /* Strip out any directories in the path */
+  char *first = strchr(dest, '/');
+  char *last = strrchr(dest, '/');
+  if (first && last && (last > first))
+  {
+    memmove(first, last, strlen(last) + 1);
+    count -= (last - first);
+  }
+
+  return count;
 }
 
 /**
