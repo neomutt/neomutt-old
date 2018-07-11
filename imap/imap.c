@@ -464,7 +464,7 @@ static int compile_search(struct Context *ctx, const struct Pattern *pat, struct
           return -1;
         }
         *delim = '\0';
-        imap_quote_string(term, sizeof(term), pat->p.str);
+        imap_quote_string(term, sizeof(term), pat->p.str, false);
         mutt_buffer_addstr(buf, term);
         mutt_buffer_addch(buf, ' ');
 
@@ -472,17 +472,17 @@ static int compile_search(struct Context *ctx, const struct Pattern *pat, struct
         *delim = ':';
         delim++;
         SKIPWS(delim);
-        imap_quote_string(term, sizeof(term), delim);
+        imap_quote_string(term, sizeof(term), delim, false);
         mutt_buffer_addstr(buf, term);
         break;
       case MUTT_BODY:
         mutt_buffer_addstr(buf, "BODY ");
-        imap_quote_string(term, sizeof(term), pat->p.str);
+        imap_quote_string(term, sizeof(term), pat->p.str, false);
         mutt_buffer_addstr(buf, term);
         break;
       case MUTT_WHOLE_MSG:
         mutt_buffer_addstr(buf, "TEXT ");
-        imap_quote_string(term, sizeof(term), pat->p.str);
+        imap_quote_string(term, sizeof(term), pat->p.str, false);
         mutt_buffer_addstr(buf, term);
         break;
       case MUTT_SERVERSEARCH:
@@ -495,7 +495,7 @@ static int compile_search(struct Context *ctx, const struct Pattern *pat, struct
         }
       }
         mutt_buffer_addstr(buf, "X-GM-RAW ");
-        imap_quote_string(term, sizeof(term), pat->p.str);
+        imap_quote_string(term, sizeof(term), pat->p.str, false);
         mutt_buffer_addstr(buf, term);
         break;
     }
@@ -1709,6 +1709,7 @@ int imap_subscribe(char *path, bool subscribe)
   char errstr[STRING];
   struct Buffer err, token;
   struct ImapMbox mx;
+  size_t len = 0;
 
   if (!mx_is_imap(path) || imap_parse_path(path, &mx) || !mx.mbox)
   {
@@ -1729,7 +1730,8 @@ int imap_subscribe(char *path, bool subscribe)
     mutt_buffer_init(&err);
     err.data = errstr;
     err.dsize = sizeof(errstr);
-    snprintf(mbox, sizeof(mbox), "%smailboxes \"%s\"", subscribe ? "" : "un", path);
+	len = snprintf(mbox, sizeof(mbox), "%smailboxes ", subscribe ? "" : "un");
+	imap_quote_string(mbox + len, sizeof(mbox) - len, path, true);
     if (mutt_parse_rc_line(mbox, &token, &err))
       mutt_debug(1, "Error adding subscribed mailbox: %s\n", errstr);
     FREE(&token.data);
