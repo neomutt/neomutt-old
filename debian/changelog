@@ -1,3 +1,11 @@
+neomutt (1:20180716-1lxtec1) unstable; urgency=medium
+
+  * New upstream release neomutt-20180716.
+  * Merged neomutt-20180716.
+  * Refreshed patches.
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Tue, 17 Jul 2018 01:58:24 +0200
+
 neomutt (1:20180706-1lxtec1) unstable; urgency=medium
 
   * Testbuild
