@@ -212,6 +212,22 @@ static void mutt_keymap_free(struct Keymap **km)
 }
 
 /**
+ * mutt_keymaplist_free - Free a List of Keymaps
+ * @param km_list List of Keymaps to free
+ */
+static void mutt_keymaplist_free(struct Keymap **km_list)
+{
+  struct Keymap *map = NULL;
+  struct Keymap *next = NULL;
+  for (map = (*km_list); map; map = next)
+  {
+    next = map->next;
+    mutt_keymap_free(&map);
+  }
+  *km_list = NULL;
+}
+
+/**
  * alloc_keys - Allocate space for a sequence of keys
  * @param len  Number of keys
  * @param keys Array of keys
@@ -1657,17 +1673,8 @@ void mutt_what_key(void)
  */
 void mutt_keys_free(void)
 {
-  struct Keymap *map = NULL;
-  struct Keymap *next = NULL;
-
   for (int i = 0; i < MENU_MAX; i++)
   {
-    for (map = Keymaps[i]; map; map = next)
-    {
-      next = map->next;
-      mutt_keymap_free(&map);
-    }
-
-    Keymaps[i] = NULL;
+    mutt_keymaplist_free(&Keymaps[i]);
   }
 }
