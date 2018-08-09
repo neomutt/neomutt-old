@@ -1,3 +1,9 @@
+neomutt (1:20180716-1lxtec2) unstable; urgency=medium
+
+  * Corrected binary name in mailto-neomutt script
+
+ -- Elimar Riesebieter <riesebie@lxtec.de>  Thu, 09 Aug 2018 19:57:43 +0200
+
 neomutt (1:20180716-1lxtec1) unstable; urgency=medium
 
   * New upstream release neomutt-20180716.
