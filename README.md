@@ -5,6 +5,31 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2018-11-17
+
+These NeoMutt branches have been archived since NeoMutt 2018-11-17
+
+- [autoview-non-copious](https://github.com/neomutt/neomutt-old/tree/autoview-non-copious)
+  Change the behaviour of the mailcap 'copiousoutput' flag
+
+- [improve-logging](https://github.com/neomutt/neomutt-old/tree/improve-logging)
+  Configurable log filenames https://github.com/neomutt/neomutt/pull/633
+
+- [multicol-pager](https://github.com/neomutt/neomutt-old/tree/multicol-pager)
+  Split the pager into two panes https://github.com/neomutt/neomutt/pull/1245
+
+- [net-folder-format](https://github.com/neomutt/neomutt-old/tree/net-folder-format)
+  Add a `$folder_folder` for network mailboxes
+
+- [notmuch-thread-wo-vfolder](https://github.com/neomutt/neomutt-old/tree/notmuch-thread-wo-vfolder)
+  Reconstruct thread on-the-fly upon entire-thread and no vfolder
+
+- [realpath](https://github.com/neomutt/neomutt-old/tree/realpath)
+  Tidy filesystem paths https://github.com/neomutt/neomutt/pull/1066
+
+- [distro/macports](https://github.com/neomutt/neomutt-old/tree/distro/macports)
+  Test MacPort build
+
 ## NeoMutt 2017-12-15
 
 These NeoMutt branches have been archived since NeoMutt 2017-12-15
