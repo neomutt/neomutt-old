@@ -27,9 +27,6 @@ These NeoMutt branches have been archived since NeoMutt 2018-11-17
 - [realpath](https://github.com/neomutt/neomutt-old/tree/realpath)
   Tidy filesystem paths https://github.com/neomutt/neomutt/pull/1066
 
-- [distro/macports](https://github.com/neomutt/neomutt-old/tree/distro/macports)
-  Test MacPort build
-
 ## NeoMutt 2017-12-15
 
 These NeoMutt branches have been archived since NeoMutt 2017-12-15
@@ -54,9 +51,6 @@ These NeoMutt branches have been archived since NeoMutt 2017-12-15
 
 - [record-folder-hook](https://github.com/neomutt/neomutt-old/tree/record-folder-hook)
   Workaround for calling `folder-hook` for `$record` folders
-
-- [split-mailboxes](https://github.com/neomutt/neomutt-old/tree/split-mailboxes)
-  Put each mailbox type in a separate directory
 
 - [unused-macro](https://github.com/neomutt/neomutt-old/tree/unused-macro)
   Mark function parameters with `__attribute__((__unused__))`
