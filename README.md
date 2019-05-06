@@ -5,6 +5,13 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2019-05-06
+
+These NeoMutt branches have been archived since NeoMutt 2019-05-06
+
+- [self-encrypt](https://github.com/neomutt/neomutt-old/tree/self-encrypt)
+  Improvements to self-encrypt https://github.com/neomutt/neomutt/pull/1264
+
 ## NeoMutt 2018-11-17
 
 These NeoMutt branches have been archived since NeoMutt 2018-11-17
