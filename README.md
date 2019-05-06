@@ -9,6 +9,9 @@ They have simply been moved to keep the main repository tidier.
 
 These NeoMutt branches have been archived since NeoMutt 2019-05-06
 
+- [autocrypt](https://github.com/neomutt/neomutt-old/tree/autocrypt)
+  Autocrypt support for incoming messages https://github.com/neomutt/neomutt/pull/1193
+
 - [self-encrypt](https://github.com/neomutt/neomutt-old/tree/self-encrypt)
   Improvements to self-encrypt https://github.com/neomutt/neomutt/pull/1264
 
