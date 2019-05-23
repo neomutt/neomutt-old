@@ -1816,6 +1816,8 @@ struct Account *imap_ac_find(struct Account *a, const char *path)
     return NULL;
 
   struct Url *url = url_parse(path);
+  if (!url->user && C_ImapUser)
+    url->user = C_ImapUser;
 
   struct ImapAccountData *adata = a->adata;
   struct ConnAccount *ac = &adata->conn_account;

@@ -641,6 +641,12 @@ int imap_parse_path(const char *path, struct ConnAccount *account, char *mailbox
   if (url->scheme == U_IMAPS)
     account->flags |= MUTT_ACCT_SSL;
 
+  if (C_ImapUser)
+  {
+    mutt_str_strfcpy(account->user, C_ImapUser, sizeof(account->user));
+    account->flags |= MUTT_ACCT_USER;
+  }
+
   mutt_str_strfcpy(mailbox, url->path, mailboxlen);
 
   url_free(&url);
