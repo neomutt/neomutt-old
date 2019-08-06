@@ -44,6 +44,9 @@
 #include "mutt_window.h"
 #include "muttlib.h"
 #include "opcodes.h"
+#include "rxi-vec/vec.h"
+
+typedef vec_t(struct Alias*) AliasVector;
 
 /* These Config Variables are only used in addrbook.c */
 char *C_AliasFormat; ///< Config: printf-like format string for the alias menu
@@ -111,7 +114,7 @@ static void alias_make_entry(char *buf, size_t buflen, struct Menu *menu, int li
 {
   mutt_expando_format(buf, buflen, 0, menu->indexwin->cols,
                       NONULL(C_AliasFormat), alias_format_str,
-                      (unsigned long) ((struct Alias **) menu->data)[line],
+                      (unsigned long) (((AliasVector *) menu->data)->data[line]),
                       MUTT_FORMAT_ARROWCURSOR);
 }
 
@@ -194,7 +197,7 @@ void mutt_alias_menu(char *buf, size_t buflen, struct AliasList *aliases)
 {
   struct Alias *a = NULL, *last = NULL;
   struct Menu *menu = NULL;
-  struct Alias **alias_table = NULL;
+  AliasVector alias_table;
   int t = -1;
   int i;
   bool done = false;
@@ -215,6 +218,8 @@ void mutt_alias_menu(char *buf, size_t buflen, struct AliasList *aliases)
   menu->help = mutt_compile_help(helpstr, sizeof(helpstr), MENU_ALIAS, AliasHelp);
   mutt_menu_push_current(menu);
 
+  vec_init(&alias_table);
+
 new_aliases:
   omax = menu->max;
 
@@ -226,10 +231,10 @@ new_aliases:
     menu->max++;
   }
 
-  mutt_mem_realloc(&alias_table, menu->max * sizeof(struct Alias *));
-  menu->data = alias_table;
-  if (!alias_table)
+  if (vec_reserve(&alias_table, menu->max) == -1)
     return;
+
+  menu->data = &alias_table;
 
   if (last)
     a = TAILQ_NEXT(last, entries);
@@ -237,18 +242,18 @@ new_aliases:
   i = omax;
   TAILQ_FOREACH_FROM(a, aliases, entries)
   {
-    alias_table[i] = a;
+    vec_insert(&alias_table, i, a);
     i++;
   }
 
   if ((C_SortAlias & SORT_MASK) != SORT_ORDER)
   {
-    qsort(alias_table, menu->max, sizeof(struct Alias *),
+    vec_sort(&alias_table, 
           ((C_SortAlias & SORT_MASK) == SORT_ADDRESS) ? alias_sort_address : alias_sort_alias);
   }
 
   for (i = 0; i < menu->max; i++)
-    alias_table[i]->num = i;
+    alias_table.data[i]->num = i;
 
   last = TAILQ_LAST(aliases, AliasList);
 
@@ -268,13 +273,13 @@ new_aliases:
         if (menu->tagprefix)
         {
           for (i = 0; i < menu->max; i++)
-            if (alias_table[i]->tagged)
-              alias_table[i]->del = (op == OP_DELETE);
+            if (alias_table.data[i]->tagged)
+              alias_table.data[i]->del = (op == OP_DELETE);
           menu->redraw |= REDRAW_INDEX;
         }
         else
         {
-          alias_table[menu->current]->del = (op == OP_DELETE);
+          alias_table.data[menu->current]->del = (op == OP_DELETE);
           menu->redraw |= REDRAW_CURRENT;
           if (C_Resolve && (menu->current < menu->max - 1))
           {
@@ -295,19 +300,19 @@ new_aliases:
 
   for (i = 0; i < menu->max; i++)
   {
-    if (alias_table[i]->tagged)
+    if (alias_table.data[i]->tagged)
     {
-      mutt_addrlist_write(buf, buflen, &alias_table[i]->addr, true);
+      mutt_addrlist_write(buf, buflen, &alias_table.data[i]->addr, true);
       t = -1;
     }
   }
 
   if (t != -1)
   {
-    mutt_addrlist_write(buf, buflen, &alias_table[t]->addr, true);
+    mutt_addrlist_write(buf, buflen, &alias_table.data[t]->addr, true);
   }
 
   mutt_menu_pop_current(menu);
   mutt_menu_free(&menu);
-  FREE(&alias_table);
+  vec_deinit(&alias_table);
 }
