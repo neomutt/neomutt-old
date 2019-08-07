@@ -231,8 +231,7 @@ new_aliases:
     menu->max++;
   }
 
-  if (vec_reserve(&alias_table, menu->max) == -1)
-    return;
+  vec_reserve(&alias_table, menu->max);
 
   menu->data = &alias_table;
 

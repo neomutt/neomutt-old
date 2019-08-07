@@ -6,70 +6,55 @@
  */
 
 #include "vec.h"
+#include "mutt/memory.h"
 
 
-int vec_expand_(char **data, int *length, int *capacity, int memsz) {
+void vec_expand_(char **data, int *length, int *capacity, int memsz) {
   if (*length + 1 > *capacity) {
-    void *ptr;
     int n = (*capacity == 0) ? 1 : *capacity << 1;
-    ptr = realloc(*data, n * memsz);
-    if (ptr == NULL) return -1;
-    *data = ptr;
+    mutt_mem_realloc(data, n * memsz);
     *capacity = n;
   }
-  return 0;
 }
 
 
-int vec_reserve_(char **data, int *length, int *capacity, int memsz, int n) {
+void vec_reserve_(char **data, int *length, int *capacity, int memsz, int n) {
   (void) length;
   if (n > *capacity) {
-    void *ptr = realloc(*data, n * memsz);
-    if (ptr == NULL) return -1;
-    *data = ptr;
+    mutt_mem_realloc(data, n * memsz);
     *capacity = n;
   }
-  return 0;
 }
 
 
-int vec_reserve_po2_(
-  char **data, int *length, int *capacity, int memsz, int n
-) {
+void vec_reserve_po2_(char **data, int *length, int *capacity, int memsz, int n) {
   int n2 = 1;
-  if (n == 0) return 0;
+  if (n == 0) return;
   while (n2 < n) n2 <<= 1;
-  return vec_reserve_(data, length, capacity, memsz, n2);
+  vec_reserve_(data, length, capacity, memsz, n2);
 }
 
 
-int vec_compact_(char **data, int *length, int *capacity, int memsz) {
+void vec_compact_(char **data, int *length, int *capacity, int memsz) {
   if (*length == 0) {
-    free(*data);
+    mutt_mem_free(*data);
     *data = NULL;
     *capacity = 0;
-    return 0;
   } else {
-    void *ptr;
     int n = *length;
-    ptr = realloc(*data, n * memsz);
-    if (ptr == NULL) return -1;
+    mutt_mem_realloc(data, n * memsz);
     *capacity = n;
-    *data = ptr;
   }
-  return 0;
 }
 
 
-int vec_insert_(char **data, int *length, int *capacity, int memsz,
+void vec_insert_(char **data, int *length, int *capacity, int memsz,
                  int idx
 ) {
-  int err = vec_expand_(data, length, capacity, memsz);
-  if (err) return err;
+  vec_expand_(data, length, capacity, memsz);
   memmove(*data + (idx + 1) * memsz,
           *data + idx * memsz,
           (*length - idx) * memsz);
-  return 0;
 }
 
 

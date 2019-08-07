@@ -27,13 +27,17 @@
 
 
 #define vec_deinit(v)\
-  ( free((v)->data),\
-    vec_init(v) ) 
+  do { \
+    free((v)->data); \
+    vec_init(v); \
+  } while (0)
 
 
 #define vec_push(v, val)\
-  ( vec_expand_(vec_unpack_(v)) ? -1 :\
-    ((v)->data[(v)->length++] = (val), 0), 0 )
+  do { \
+    vec_expand_(vec_unpack_(v)); \
+    (v)->data[(v)->length++] = (val); \
+  } while (0)
 
 
 #define vec_pop(v)\
@@ -41,18 +45,29 @@
 
 
 #define vec_splice(v, start, count)\
-  ( vec_splice_(vec_unpack_(v), start, count),\
-    (v)->length -= (count) )
+  do { \
+    int s = (start); \
+    int c = (count); \
+    vec_splice_(vec_unpack_(v), s, c); \
+    (v)->length -= c; \
+  } while (0)
 
 
 #define vec_swapsplice(v, start, count)\
-  ( vec_swapsplice_(vec_unpack_(v), start, count),\
-    (v)->length -= (count) )
+  do { \
+    int s = (start); \
+    int c = (count); \
+    vec_swapsplice_(vec_unpack_(v), s, c); \
+    (v)->length -= count; \
+  } while (0)
 
 
 #define vec_insert(v, idx, val)\
-  ( vec_insert_(vec_unpack_(v), idx) ? -1 :\
-    ((v)->data[idx] = (val), 0), (v)->length++, 0 )
+  do { \
+    vec_insert_(vec_unpack_(v), idx); \
+    (v)->data[idx] = (val); \
+    (v)->length++; \
+  } while (0)
     
 
 #define vec_sort(v, fn)\
@@ -156,12 +171,11 @@
 
 
 
-int vec_expand_(char **data, int *length, int *capacity, int memsz);
-int vec_reserve_(char **data, int *length, int *capacity, int memsz, int n);
-int vec_reserve_po2_(char **data, int *length, int *capacity, int memsz,
-                     int n);
-int vec_compact_(char **data, int *length, int *capacity, int memsz);
-int vec_insert_(char **data, int *length, int *capacity, int memsz,
+void vec_expand_(char **data, int *length, int *capacity, int memsz);
+void vec_reserve_(char **data, int *length, int *capacity, int memsz, int n);
+void vec_reserve_po2_(char **data, int *length, int *capacity, int memsz, int n);
+void vec_compact_(char **data, int *length, int *capacity, int memsz);
+void vec_insert_(char **data, int *length, int *capacity, int memsz,
                 int idx);
 void vec_splice_(char **data, int *length, int *capacity, int memsz,
                  int start, int count);
