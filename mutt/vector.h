@@ -4,6 +4,7 @@
  *
  * @authors
  * Copyright (C) 2019 Tran Manh Tu <xxlaguna93@gmail.com>
+ * Copyright (C) 2019 Austin Ray <austin@austinray.io>
  *
  * @copyright
  * This program is free software: you can redistribute it and/or modify it under
@@ -50,13 +51,13 @@ typedef void (*vector_item_free_t)(void **ptr);
  */
 typedef void *(*vector_item_copy_t)(const void *item);
 
-void           vector_append    (struct Vector *v, void *item);
-struct Vector *vector_clone     (struct Vector *v, bool shrink, vector_item_copy_t copy);
-void           vector_free      (struct Vector **v, vector_item_free_t item_free);
-void *         vector_get       (struct Vector *v, size_t index, vector_item_copy_t copy);
-struct Vector *vector_new       (size_t item_size);
-void           vector_new_append(struct Vector **v, size_t item_size, void *item);
-void           vector_shrink    (struct Vector *v);
-void           vector_sort      (struct Vector *v, int (*compare)(const void *, const void *));
+void           mutt_vector_append    (struct Vector *v, void *item);
+struct Vector *mutt_vector_clone     (struct Vector *v, bool shrink, vector_item_copy_t copy);
+void           mutt_vector_free      (struct Vector **v, vector_item_free_t item_free);
+void *         mutt_vector_get       (struct Vector *v, size_t index, vector_item_copy_t copy);
+struct Vector *mutt_vector_new       (size_t item_size);
+void           mutt_vector_new_append(struct Vector **v, size_t item_size, void *item);
+void           mutt_vector_shrink    (struct Vector *v);
+void           mutt_vector_sort      (struct Vector *v, int (*compare)(const void *, const void *));
 
 #endif /* MUTT_HELP_VECTOR_H */
