@@ -43,6 +43,7 @@
 #include "mx.h"
 #include "protos.h"
 #include "sort.h"
+#include "rxi-vec/vec.h"
 
 /* These Config Variables are only used in mutt_thread.c */
 bool C_DuplicateThreads; ///< Config: Highlight messages with duplicated message IDs
@@ -643,6 +644,8 @@ static int compare_threads(const void *a, const void *b)
   }
 }
 
+typedef vec_t(struct MuttThread*) ThreadVector;
+
 /**
  * mutt_sort_subthreads - Sort the children of a thread
  * @param thread Thread to start at
@@ -651,9 +654,10 @@ static int compare_threads(const void *a, const void *b)
  */
 struct MuttThread *mutt_sort_subthreads(struct MuttThread *thread, bool init)
 {
-  struct MuttThread **array = NULL, *sort_key = NULL, *top = NULL, *tmp = NULL;
+  ThreadVector array;
+  struct MuttThread *sort_key = NULL, *top = NULL, *tmp = NULL;
   struct Email *oldsort_key = NULL;
-  int i, array_size, sort_top = 0;
+  int i, sort_top = 0;
 
   /* we put things into the array backwards to save some cycles,
    * but we want to have to move less stuff around if we're
@@ -665,8 +669,8 @@ struct MuttThread *mutt_sort_subthreads(struct MuttThread *thread, bool init)
 
   top = thread;
 
-  array_size = 256;
-  array = mutt_mem_calloc(array_size, sizeof(struct MuttThread *));
+  vec_init(&array);
+  vec_reserve(&array, 256);
   while (true)
   {
     if (init || !thread->sort_key)
@@ -701,31 +705,28 @@ struct MuttThread *mutt_sort_subthreads(struct MuttThread *thread, bool init)
       /* if it has siblings and needs to be sorted, sort it... */
       if (thread->prev && (thread->parent ? thread->parent->sort_children : sort_top))
       {
+        vec_clear(&array);
         /* put them into the array */
         for (i = 0; thread; i++, thread = thread->prev)
         {
-          if (i >= array_size)
-            mutt_mem_realloc(&array, (array_size *= 2) * sizeof(struct MuttThread *));
-
-          array[i] = thread;
+          vec_push(&array, thread);
         }
-
-        qsort((void *) array, i, sizeof(struct MuttThread *), *compare_threads);
+        vec_sort(&array, *compare_threads);
 
         /* attach them back together.  make thread the last sibling. */
-        thread = array[0];
+        thread = vec_first(&array);
         thread->next = NULL;
-        array[i - 1]->prev = NULL;
+        vec_last(&array)->prev = NULL;
 
         if (thread->parent)
-          thread->parent->child = array[i - 1];
+          thread->parent->child = vec_last(&array);
         else
-          top = array[i - 1];
+          top = vec_last(&array);
 
         while (--i)
         {
-          array[i - 1]->prev = array[i];
-          array[i]->next = array[i - 1];
+          array.data[i - 1]->prev = array.data[i];
+          array.data[i]->next = array.data[i - 1];
         }
       }
 
@@ -772,7 +773,7 @@ struct MuttThread *mutt_sort_subthreads(struct MuttThread *thread, bool init)
       else
       {
         C_Sort ^= SORT_REVERSE;
-        FREE(&array);
+        vec_deinit(&array);
         return top;
       }
     }
