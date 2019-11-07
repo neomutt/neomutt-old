@@ -5,6 +5,28 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2019-11-02
+
+These NeoMutt branches have been archived since NeoMutt 2019-11-02
+
+- [issue-1179](https://github.com/neomutt/neomutt-old/tree/issue-1179)
+  Convert Keymaps to use STAILQ
+
+- [issue-1663](https://github.com/neomutt/neomutt-old/tree/issue-1663)
+  Neomutt fails to work with multiple imap accounts
+
+- [prompt-close-with-esc](https://github.com/neomutt/neomutt-old/tree/prompt-close-with-esc)
+  Cancel prompts using \<Escape\>
+
+- [rxi-vec](https://github.com/neomutt/neomutt-old/tree/rxi-vec)
+  Refactor using Vector
+
+- [vector](https://github.com/neomutt/neomutt-old/tree/vector)
+  Refactor using Vector
+
+- [distro/debian](https://github.com/neomutt/neomutt-old/tree/distro/debian)
+  @riesebie's Debian package
+
 ## NeoMutt 2019-05-06
 
 These NeoMutt branches have been archived since NeoMutt 2019-05-06
