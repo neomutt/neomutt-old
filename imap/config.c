@@ -122,7 +122,7 @@ struct ConfigDef ImapVars[] = {
   { "imap_oauth_refresh_command", DT_STRING|DT_COMMAND|DT_SENSITIVE, &C_ImapOauthRefreshCommand, 0, 0, NULL,
     "(imap) External command to generate OAUTH refresh token"
   },
-  { "imap_pass", DT_STRING|DT_SENSITIVE, &C_ImapPass, 0, 0, NULL,
+  { "imap_pass", DT_STRING|DT_SENSITIVE|DT_INHERIT_ACC, &C_ImapPass, 0, 0, NULL,
     "(imap) Password for the IMAP server"
   },
   { "imap_pipeline_depth", DT_NUMBER|DT_NOT_NEGATIVE, &C_ImapPipelineDepth, 15, 0, NULL,
@@ -152,7 +152,7 @@ struct ConfigDef ImapVars[] = {
   { "imap_qresync", DT_BOOL, &C_ImapQresync, false, 0, NULL,
     "(imap) Enable the QRESYNC extension"
   },
-  { "imap_user", DT_STRING|DT_SENSITIVE, &C_ImapUser, 0, 0, NULL,
+  { "imap_user", DT_STRING|DT_SENSITIVE|DT_INHERIT_ACC, &C_ImapUser, 0, 0, NULL,
     "(imap) Username for the IMAP server"
   },
   { NULL, 0, NULL, 0, 0, NULL, NULL },
