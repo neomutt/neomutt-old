@@ -929,8 +929,22 @@ void index_make_entry(char *buf, size_t buflen, struct Menu *menu, int line)
     }
   }
 
-  mutt_make_string_flags(buf, buflen, menu->win_index->state.cols,
-                         NONULL(C_IndexFormat), m, Context->msg_in_pager, e, flags);
+  // struct Account *a = Context->mailbox->account;
+  m = Context->mailbox;
+  if (m)
+  {
+    struct Buffer *value = mutt_buffer_pool_get();
+    cs_subset_str_string_get(m->sub, "index_format", value);
+
+    mutt_make_string_flags(buf, buflen, menu->win_index->state.cols,
+                           mutt_buffer_string(value), m, Context->msg_in_pager, e, flags);
+    mutt_buffer_pool_release(&value);
+  }
+  else
+  {
+    mutt_make_string_flags(buf, buflen, menu->win_index->state.cols,
+                           NONULL(C_IndexFormat), m, Context->msg_in_pager, e, flags);
+  }
 }
 
 /**

@@ -40,6 +40,8 @@
 #include "hook.h"
 #include "keymap.h"
 #include "mutt_globals.h"
+#include "init.h"
+#include "mutt_account.h"
 #include "mutt_lua.h"
 #include "score.h"
 #ifdef USE_SIDEBAR
@@ -48,6 +50,7 @@
 
 static const struct Command mutt_commands[] = {
   // clang-format off
+  { "account",             mutt_parse_account,     0 },
   { "account-hook",        mutt_parse_hook,        MUTT_ACCOUNT_HOOK },
   { "alias",               parse_alias,            0 },
   { "alternates",          parse_alternates,       0 },
@@ -105,6 +108,7 @@ static const struct Command mutt_commands[] = {
   { "tag-transforms",      parse_tag_transforms,   0 },
   { "timeout-hook",        mutt_parse_hook,        MUTT_TIMEOUT_HOOK | MUTT_GLOBAL_HOOK },
   { "toggle",              parse_set,              MUTT_SET_INV },
+  { "unaccount",           mutt_parse_unaccount,   0 },
   { "unalias",             parse_unalias,          0 },
   { "unalternates",        parse_unalternates,     0 },
   { "unalternative_order", parse_unstailq,         IP &AlternativeOrderList },

@@ -139,3 +139,21 @@ void account_free(struct Account **ptr)
 
   FREE(ptr);
 }
+
+/**
+ * account_find - Find an Account by its name
+ * @param name Name to find
+ * @retval ptr  Matching Account
+ * @retval NULL None found
+ */
+struct Account *account_find(const char *name)
+{
+  struct Account *np = NULL;
+  TAILQ_FOREACH(np, &NeoMutt->accounts, entries)
+  {
+    if (mutt_str_cmp(name, np->name) == 0)
+      return np;
+  }
+
+  return NULL;
+}

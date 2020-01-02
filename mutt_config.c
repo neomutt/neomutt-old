@@ -332,7 +332,7 @@ struct ConfigDef MainVars[] = {
   { "flag_safe", DT_BOOL, &C_FlagSafe, false, 0, NULL,
     "Protect flagged messages from deletion"
   },
-  { "folder", DT_STRING|DT_MAILBOX, &C_Folder, IP "~/Mail", 0, NULL,
+  { "folder", DT_STRING|DT_MAILBOX|DT_INHERIT_ACC, &C_Folder, IP "~/Mail", 0, NULL,
     "Base folder for a set of mailboxes"
   },
   { "folder_format", DT_STRING|DT_NOT_EMPTY|R_MENU, &C_FolderFormat, IP "%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %i", 0, NULL,
@@ -409,7 +409,7 @@ struct ConfigDef MainVars[] = {
   { "indent_string", DT_STRING, &C_IndentString, IP "> ", 0, NULL,
     "String used to indent 'reply' text"
   },
-  { "index_format", DT_STRING|DT_NOT_EMPTY|R_INDEX|R_PAGER, &C_IndexFormat, IP "%4C %Z %{%b %d} %-15.15L (%?l?%4l&%4c?) %s", 0, NULL,
+  { "index_format", DT_STRING|DT_NOT_EMPTY|R_INDEX|R_PAGER|DT_INHERIT_ACC|DT_INHERIT_MBOX, &C_IndexFormat, IP "%4C %Z %{%b %d} %-15.15L (%?l?%4l&%4c?) %s", 0, NULL,
     "printf-like format string for the index menu (emails)"
   },
   { "keep_flagged", DT_BOOL, &C_KeepFlagged, false, 0, NULL,
@@ -696,7 +696,7 @@ struct ConfigDef MainVars[] = {
   { "tilde", DT_BOOL|R_PAGER, &C_Tilde, false, 0, NULL,
     "Character to pad blank lines in the pager"
   },
-  { "time_inc", DT_NUMBER|DT_NOT_NEGATIVE, &C_TimeInc, 0, 0, NULL,
+  { "time_inc", DT_NUMBER|DT_NOT_NEGATIVE|DT_INHERIT_ACC|DT_INHERIT_MBOX, &C_TimeInc, 0, 0, NULL,
     "Frequency of progress bar updates (milliseconds)"
   },
   { "timeout", DT_NUMBER|DT_NOT_NEGATIVE, &C_Timeout, 600, 0, NULL,
