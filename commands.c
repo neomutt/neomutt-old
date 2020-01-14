@@ -1164,7 +1164,7 @@ int mutt_save_message(struct Mailbox *m, struct EmailList *el,
 #endif
 
   mutt_file_resolve_symlink(buf);
-  struct Mailbox *m_save = mx_path_resolve(mutt_buffer_string(buf));
+  struct Mailbox *m_save = mx_path_resolve(mutt_buffer_string(buf), C_Folder);
   bool old_append = m_save->append;
   OpenMailboxFlags mbox_flags = MUTT_NEWFOLDER;
   /* Display a tagged message progress counter, rather than (for

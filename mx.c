@@ -572,7 +572,7 @@ static int trash_append(struct Mailbox *m)
   }
 #endif
 
-  struct Mailbox *m_trash = mx_path_resolve(C_Trash);
+  struct Mailbox *m_trash = mx_path_resolve(C_Trash, C_Folder);
   const bool old_append = m_trash->append;
   struct Context *ctx_trash = mx_mbox_open(m_trash, MUTT_APPEND);
   if (ctx_trash)
@@ -782,7 +782,7 @@ enum MxStatus mx_mbox_close(struct Context **ptr)
     else /* use regular append-copy mode */
 #endif
     {
-      struct Mailbox *m_read = mx_path_resolve(mutt_buffer_string(mbox));
+      struct Mailbox *m_read = mx_path_resolve(mutt_buffer_string(mbox), C_Folder);
       struct Context *ctx_read = mx_mbox_open(m_read, MUTT_APPEND);
       if (!ctx_read)
       {
@@ -1642,18 +1642,19 @@ done:
 
 /**
  * mx_mbox_find2 - Find a Mailbox on an Account
- * @param path Path to find
+ * @param path   Path to find
+ * @param folder Root mailbox path
  * @retval ptr  Mailbox
  * @retval NULL No match
  */
-struct Mailbox *mx_mbox_find2(const char *path)
+struct Mailbox *mx_mbox_find2(const char *path, const char *folder)
 {
   if (!path)
     return NULL;
 
   char buf[PATH_MAX];
   mutt_str_copy(buf, path, sizeof(buf));
-  mx_path_canon(buf, sizeof(buf), C_Folder, NULL);
+  mx_path_canon(buf, sizeof(buf), folder, NULL);
 
   struct Account *np = NULL;
   TAILQ_FOREACH(np, &NeoMutt->accounts, entries)
@@ -1668,24 +1669,25 @@ struct Mailbox *mx_mbox_find2(const char *path)
 
 /**
  * mx_path_resolve - Get a Mailbox for a path
- * @param path Mailbox path
+ * @param path   Mailbox path
+ * @param folder Root mailbox path
  * @retval ptr Mailbox
  *
  * If there isn't a Mailbox for the path, one will be created.
  */
-struct Mailbox *mx_path_resolve(const char *path)
+struct Mailbox *mx_path_resolve(const char *path, const char *folder)
 {
   if (!path)
     return NULL;
 
-  struct Mailbox *m = mx_mbox_find2(path);
+  struct Mailbox *m = mx_mbox_find2(path, folder);
   if (m)
     return m;
 
   m = mailbox_new(NULL);
   m->flags = MB_HIDDEN;
   mutt_str_replace(&m->path->orig, path);
-  mx_path_canon2(m, C_Folder);
+  mx_path_canon2(m, folder);
 
   return m;
 }
@@ -1752,7 +1754,7 @@ struct Mailbox *mx_resolve(const char *path_or_name)
   // a new Mailbox for us.
   struct Mailbox *m = mx_mbox_find_by_name(path_or_name);
   if (!m)
-    m = mx_path_resolve(path_or_name);
+    m = mx_path_resolve(path_or_name, C_Folder);
 
   return m;
 }

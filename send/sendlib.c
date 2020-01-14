@@ -1522,7 +1522,7 @@ int mutt_write_fcc(const char *path, struct Email *e, const char *msgid, bool po
 #ifdef RECORD_FOLDER_HOOK
   mutt_folder_hook(path, NULL);
 #endif
-  struct Mailbox *m_fcc = mx_path_resolve(path);
+  struct Mailbox *m_fcc = mx_path_resolve(path, C_Folder);
   bool old_append = m_fcc->append;
   struct Context *ctx_fcc = mx_mbox_open(m_fcc, MUTT_APPEND | MUTT_QUIET);
   if (!ctx_fcc)

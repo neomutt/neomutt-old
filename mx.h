@@ -541,14 +541,14 @@ int             mx_path_canon2     (struct Mailbox *m, const char *folder);
 int             mx_path_parent     (char *buf, size_t buflen);
 int             mx_path_pretty     (char *buf, size_t buflen, const char *folder);
 enum MailboxType mx_path_probe     (const char *path);
-struct Mailbox *mx_path_resolve    (const char *path);
+struct Mailbox *mx_path_resolve    (const char *path, const char *folder);
 struct Mailbox *mx_resolve         (const char *path_or_name);
 int             mx_tags_commit     (struct Mailbox *m, struct Email *e, char *tags);
 int             mx_tags_edit       (struct Mailbox *m, const char *tags, char *buf, size_t buflen);
 
 struct Account *mx_ac_find     (struct Mailbox *m);
 struct Mailbox *mx_mbox_find   (struct Account *a, const char *path);
-struct Mailbox *mx_mbox_find2  (const char *path);
+struct Mailbox *mx_mbox_find2  (const char *path, const char *folder);
 bool            mx_mbox_ac_link(struct Mailbox *m);
 bool            mx_ac_add      (struct Account *a, struct Mailbox *m);
 int             mx_ac_remove   (struct Mailbox *m);
