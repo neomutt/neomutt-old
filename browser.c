@@ -784,7 +784,7 @@ static int examine_directory(struct Menu *menu, struct BrowserState *state,
           break;
       }
 
-      if (np && m && mutt_str_equal(np->mailbox->realpath, m->realpath))
+      if (np && m && mutt_str_equal(np->mailbox->path->canon, m->path->canon))
       {
         np->mailbox->msg_count = m->msg_count;
         np->mailbox->msg_unread = m->msg_unread;
@@ -853,7 +853,7 @@ static int examine_mailboxes(struct Menu *menu, struct BrowserState *state)
       if (!np->mailbox)
         continue;
 
-      if (m && mutt_str_equal(np->mailbox->realpath, m->realpath))
+      if (m && mutt_str_equal(np->mailbox->path->canon, m->path->canon))
       {
         np->mailbox->msg_count = m->msg_count;
         np->mailbox->msg_unread = m->msg_unread;
@@ -868,11 +868,11 @@ static int examine_mailboxes(struct Menu *menu, struct BrowserState *state)
         case MUTT_IMAP:
         case MUTT_POP:
           add_folder(menu, state, mutt_buffer_string(mailbox),
-                     np->mailbox->name, NULL, np->mailbox, NULL);
+                     np->mailbox->path->desc, NULL, np->mailbox, NULL);
           continue;
         case MUTT_NOTMUCH:
         case MUTT_NNTP:
-          add_folder(menu, state, mailbox_path(np->mailbox), np->mailbox->name,
+          add_folder(menu, state, mailbox_path(np->mailbox), np->mailbox->path->desc,
                      NULL, np->mailbox, NULL);
           continue;
         default: /* Continue */
@@ -899,7 +899,7 @@ static int examine_mailboxes(struct Menu *menu, struct BrowserState *state)
           s.st_mtime = st2.st_mtime;
       }
 
-      add_folder(menu, state, mutt_buffer_string(mailbox), np->mailbox->name,
+      add_folder(menu, state, mutt_buffer_string(mailbox), np->mailbox->path->desc,
                  &s, np->mailbox, NULL);
     }
     neomutt_mailboxlist_clear(&ml);

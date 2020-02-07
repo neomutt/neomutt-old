@@ -28,8 +28,8 @@
  *
  * @note
  * Any references to compressed files also apply to encrypted files.
- * - mailbox->path     == plaintext file
- * - mailbox->realpath == compressed file
+ * - mailbox->path->orig  == plaintext file
+ * - mailbox->path->canon == compressed file
  */
 
 #include "config.h"
@@ -70,7 +70,7 @@ void mutt_comp_init(void)
 }
 
 /**
- * lock_realpath - Try to lock the ctx->realpath
+ * lock_realpath - Try to lock the ctx->path->canon
  * @param m    Mailbox to lock
  * @param excl Lock exclusively?
  * @retval true  Success (locked or readonly)
@@ -91,12 +91,12 @@ static bool lock_realpath(struct Mailbox *m, bool excl)
     return true;
 
   if (excl)
-    ci->fp_lock = fopen(m->realpath, "a");
+    ci->fp_lock = fopen(m->path->canon, "a");
   else
-    ci->fp_lock = fopen(m->realpath, "r");
+    ci->fp_lock = fopen(m->path->canon, "r");
   if (!ci->fp_lock)
   {
-    mutt_perror(m->realpath);
+    mutt_perror(m->path->canon);
     return false;
   }
 
@@ -114,7 +114,7 @@ static bool lock_realpath(struct Mailbox *m, bool excl)
 }
 
 /**
- * unlock_realpath - Unlock the mailbox->realpath
+ * unlock_realpath - Unlock the mailbox->path->canon
  * @param m Mailbox to unlock
  *
  * Unlock a mailbox previously locked by lock_mailbox().
@@ -141,7 +141,7 @@ static void unlock_realpath(struct Mailbox *m)
  * @retval  0 Success
  * @retval -1 Error
  *
- * Save the compressed filename in mailbox->realpath.
+ * Save the compressed filename in mailbox->path->canon.
  * Create a temporary filename and put its name in mailbox->path.
  * The temporary file is created to prevent symlink attacks.
  */
@@ -151,12 +151,12 @@ static int setup_paths(struct Mailbox *m)
     return -1;
 
   /* Setup the right paths */
-  mutt_str_replace(&m->realpath, mailbox_path(m));
+  mutt_str_replace(&m->path->canon, mailbox_path(m));
 
   /* We will uncompress to TMPDIR */
   struct Buffer *buf = mutt_buffer_pool_get();
   mutt_buffer_mktemp(buf);
-  mutt_buffer_copy(&m->pathbuf, buf);
+  mutt_str_replace(&m->path->orig, mutt_buffer_string(buf));
   mutt_buffer_pool_release(&buf);
 
   FILE *fp = mutt_file_fopen(mailbox_path(m), "w");
@@ -180,7 +180,7 @@ static void store_size(const struct Mailbox *m)
 
   struct CompressInfo *ci = m->compress_info;
 
-  ci->size = mutt_file_get_size(m->realpath);
+  ci->size = mutt_file_get_size(m->path->canon);
 }
 
 /**
@@ -263,7 +263,7 @@ static const char *compress_format_str(char *buf, size_t buflen, size_t col, int
   {
     case 'f':
       /* Compressed file */
-      mutt_buffer_quote_filename(quoted, m->realpath, false);
+      mutt_buffer_quote_filename(quoted, m->path->canon, false);
       snprintf(buf, buflen, "%s", mutt_buffer_string(quoted));
       break;
     case 't':
@@ -320,7 +320,7 @@ static int execute_command(struct Mailbox *m, const char *command, const char *p
     return 0;
 
   if (m->verbose)
-    mutt_message(progress, m->realpath);
+    mutt_message(progress, m->path->canon);
 
   int rc = 1;
   char sys_cmd[STR_COMMAND];
@@ -520,7 +520,7 @@ static bool comp_mbox_open_append(struct Mailbox *m, OpenMailboxFlags flags)
   }
 
   /* Open the existing mailbox, unless we are appending */
-  if (!ci->cmd_append && (mutt_file_get_size(m->realpath) > 0))
+  if (!ci->cmd_append && (mutt_file_get_size(m->path->canon) > 0))
   {
     int rc = execute_command(m, ci->cmd_open, _("Decompressing %s"));
     if (rc == 0)
@@ -583,7 +583,7 @@ static enum MxStatus comp_mbox_check(struct Mailbox *m)
   if (!ops)
     return MX_STATUS_ERROR;
 
-  int size = mutt_file_get_size(m->realpath);
+  int size = mutt_file_get_size(m->path->canon);
   if (size == ci->size)
     return MX_STATUS_OK;
 
@@ -683,7 +683,7 @@ static enum MxStatus comp_mbox_close(struct Mailbox *m)
     const char *msg = NULL;
 
     /* The file exists and we can append */
-    if ((access(m->realpath, F_OK) == 0) && ci->cmd_append)
+    if ((access(m->path->canon, F_OK) == 0) && ci->cmd_append)
     {
       append = ci->cmd_append;
       msg = _("Compressed-appending to %s...");
@@ -710,7 +710,7 @@ static enum MxStatus comp_mbox_close(struct Mailbox *m)
     /* If the file was removed, remove the compressed folder too */
     if ((access(mailbox_path(m), F_OK) != 0) && !C_SaveEmpty)
     {
-      remove(m->realpath);
+      remove(m->path->canon);
     }
     else
     {

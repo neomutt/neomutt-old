@@ -693,7 +693,7 @@ static void change_folder_mailbox(struct Menu *menu, struct Mailbox *m, int *old
 
   struct Mailbox *m_ctx = ctx_mailbox(Context);
   /* keepalive failure in mutt_enter_fname may kill connection. */
-  if (m_ctx && (mutt_buffer_is_empty(&m_ctx->pathbuf)))
+  if (m_ctx && !m_ctx->path->orig)
     ctx_free(&Context);
 
   if (m_ctx)
@@ -703,8 +703,8 @@ static void change_folder_mailbox(struct Menu *menu, struct Mailbox *m, int *old
     int monitor_remove_rc = mutt_monitor_remove(NULL);
 #endif
 #ifdef USE_COMP_MBOX
-    if (m_ctx->compress_info && (m_ctx->realpath[0] != '\0'))
-      new_last_folder = mutt_str_dup(m_ctx->realpath);
+    if (m_ctx->compress_info && (m_ctx->path->canon[0] != '\0'))
+      new_last_folder = mutt_str_dup(m_ctx->path->canon);
     else
 #endif
       new_last_folder = mutt_str_dup(mailbox_path(m_ctx));
@@ -735,7 +735,7 @@ static void change_folder_mailbox(struct Menu *menu, struct Mailbox *m, int *old
   // TODO: Refactor this function to avoid the need for an observer
   notify_observer_add(m->notify, NT_MAILBOX, mailbox_index_observer, &m);
   char *dup_path = mutt_str_dup(mailbox_path(m));
-  char *dup_name = mutt_str_dup(m->name);
+  char *dup_name = mutt_str_dup(m->path->desc);
 
   mutt_folder_hook(dup_path, dup_name);
   if (m)
@@ -1235,7 +1235,7 @@ int mutt_index_menu(struct MuttWindow *dlg)
 
       if (check == MX_STATUS_ERROR)
       {
-        if (mutt_buffer_is_empty(&Context->mailbox->pathbuf))
+        if (!Context->mailbox->path->orig)
         {
           /* fatal error occurred */
           ctx_free(&Context);
@@ -2095,7 +2095,7 @@ int mutt_index_menu(struct MuttWindow *dlg)
         }
 
         /* check for a fatal error, or all messages deleted */
-        if (ctx_mailbox(Context) && mutt_buffer_is_empty(&Context->mailbox->pathbuf))
+        if (ctx_mailbox(Context) && !Context->mailbox->path->orig)
           ctx_free(&Context);
 
         /* if we were in the pager, redisplay the message */
@@ -2332,7 +2332,7 @@ int mutt_index_menu(struct MuttWindow *dlg)
                                   (op == OP_MAIN_VFOLDER_FROM_QUERY_READONLY));
         if (m_query)
         {
-          m_query->name = query_unencoded;
+          m_query->path->desc = query_unencoded;
           query_unencoded = NULL;
         }
         else
@@ -2438,8 +2438,7 @@ int mutt_index_menu(struct MuttWindow *dlg)
           read_only = false;
         }
 
-        if (C_ChangeFolderNext && ctx_mailbox(Context) &&
-            !mutt_buffer_is_empty(&Context->mailbox->pathbuf))
+        if (C_ChangeFolderNext && ctx_mailbox(Context) && Context->mailbox->path->orig)
         {
           mutt_buffer_strcpy(folderbuf, mailbox_path(Context->mailbox));
           mutt_buffer_pretty_mailbox(folderbuf);
@@ -2503,8 +2502,7 @@ int mutt_index_menu(struct MuttWindow *dlg)
           read_only = false;
         }
 
-        if (C_ChangeFolderNext && ctx_mailbox(Context) &&
-            !mutt_buffer_is_empty(&Context->mailbox->pathbuf))
+        if (C_ChangeFolderNext && ctx_mailbox(Context) && Context->mailbox->path->orig)
         {
           mutt_buffer_strcpy(folderbuf, mailbox_path(Context->mailbox));
           mutt_buffer_pretty_mailbox(folderbuf);

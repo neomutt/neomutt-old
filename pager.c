@@ -2385,7 +2385,7 @@ int mutt_pager(const char *banner, const char *fname, PagerFlags flags, struct P
       enum MxStatus check = mx_mbox_check(m);
       if (check == MX_STATUS_ERROR)
       {
-        if (!m || mutt_buffer_is_empty(&m->pathbuf))
+        if (!m || !m->path->orig)
         {
           /* fatal error occurred */
           ctx_free(&Context);

@@ -291,7 +291,7 @@ static const char *sidebar_format_str(char *buf, size_t buflen, size_t col, int 
 
   struct Mailbox *m_ctx = ctx_mailbox(Context);
 
-  bool c = m_ctx && mutt_str_equal(m_ctx->realpath, m->realpath);
+  bool c = m_ctx && mutt_str_equal(m_ctx->path->canon, m->path->canon);
 
   bool optional = (flags & MUTT_FORMAT_OPTIONAL);
 
@@ -304,7 +304,7 @@ static const char *sidebar_format_str(char *buf, size_t buflen, size_t col, int 
       size_t ilen = sizeof(indented);
       size_t off = add_indent(indented, ilen, sbe);
       snprintf(indented + off, ilen - off, "%s",
-               ((op == 'D') && sbe->mailbox->name) ? sbe->mailbox->name : sbe->box);
+               ((op == 'D') && sbe->mailbox->path->desc) ? sbe->mailbox->path->desc : sbe->box);
       mutt_format_s(buf, buflen, prec, indented);
       break;
     }
@@ -503,14 +503,14 @@ static void update_entries_visibility(struct SidebarWindowData *wdata)
       continue;
     }
 
-    if (Context && mutt_str_equal(sbe->mailbox->realpath, Context->mailbox->realpath))
+    if (Context && mutt_str_equal(sbe->mailbox->path->canon, Context->mailbox->path->canon))
     {
       /* Spool directories are always visible */
       continue;
     }
 
     if (mutt_list_find(&SidebarWhitelist, mailbox_path(sbe->mailbox)) ||
-        mutt_list_find(&SidebarWhitelist, sbe->mailbox->name))
+        mutt_list_find(&SidebarWhitelist, sbe->mailbox->path->desc))
     {
       /* Explicitly asked to be visible */
       continue;
@@ -676,8 +676,8 @@ int sb_recalc(struct MuttWindow *win)
     entry->color =
         calc_color(m, (entryidx == wdata->opn_index), (entryidx == wdata->hil_index));
 
-    if (m_ctx && (m_ctx->realpath[0] != '\0') &&
-        mutt_str_equal(m->realpath, m_ctx->realpath))
+    if (m_ctx && (m_ctx->path->canon[0] != '\0') &&
+        mutt_str_equal(m->path->canon, m_ctx->path->canon))
     {
       m->msg_unread = m_ctx->msg_unread;
       m->msg_count = m_ctx->msg_count;

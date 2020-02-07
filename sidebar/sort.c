@@ -69,7 +69,7 @@ static int sb_sort_desc(const void *a, const void *b)
   const struct Mailbox *m1 = sbe1->mailbox;
   const struct Mailbox *m2 = sbe2->mailbox;
 
-  int rc = mutt_str_cmp(m1->name, m2->name);
+  int rc = mutt_str_cmp(m1->path->desc, m2->path->desc);
 
   if (sb_sort_reverse)
     rc = -rc;

@@ -141,9 +141,9 @@ static const char *status_format_str(char *buf, size_t buflen, size_t col, int c
 
     case 'D':
       // If there's a descriptive name, use it. Otherwise, fall-through
-      if (m && m->name)
+      if (m && m->path->desc)
       {
-        mutt_str_copy(tmp, m->name, sizeof(tmp));
+        mutt_str_copy(tmp, m->path->desc, sizeof(tmp));
         snprintf(fmt, sizeof(fmt), "%%%ss", prec);
         snprintf(buf, buflen, fmt, tmp);
         break;
@@ -151,18 +151,18 @@ static const char *status_format_str(char *buf, size_t buflen, size_t col, int c
     /* fallthrough */
     case 'f':
 #ifdef USE_COMP_MBOX
-      if (m && m->compress_info && (m->realpath[0] != '\0'))
+      if (m && m->compress_info && (m->path->canon[0] != '\0'))
       {
-        mutt_str_copy(tmp, m->realpath, sizeof(tmp));
+        mutt_str_copy(tmp, m->path->canon, sizeof(tmp));
         mutt_pretty_mailbox(tmp, sizeof(tmp));
       }
       else
 #endif
-          if (m && (m->type == MUTT_NOTMUCH) && m->name)
+          if (m && (m->type == MUTT_NOTMUCH) && m->path->desc)
       {
-        mutt_str_copy(tmp, m->name, sizeof(tmp));
+        mutt_str_copy(tmp, m->path->desc, sizeof(tmp));
       }
-      else if (m && !mutt_buffer_is_empty(&m->pathbuf))
+      else if (m && m->path->orig)
       {
         mutt_str_copy(tmp, mailbox_path(m), sizeof(tmp));
         mutt_pretty_mailbox(tmp, sizeof(tmp));

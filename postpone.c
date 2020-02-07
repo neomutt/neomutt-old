@@ -111,7 +111,7 @@ int mutt_num_postponed(struct Mailbox *m, bool force)
     return 0;
 
   // We currently are in the `$postponed` mailbox so just pick the current status
-  if (m && mutt_str_equal(C_Postponed, m->realpath))
+  if (m && mutt_str_equal(C_Postponed, m->path->canon))
   {
     PostCount = m->msg_count - m->msg_deleted;
     return PostCount;

@@ -93,7 +93,7 @@ void sb_add_mailbox(struct SidebarWindowData *wdata, struct Mailbox *m)
   if (wdata->bot_index < 0)
     wdata->bot_index = ARRAY_SIZE(&wdata->entries);
   if ((wdata->opn_index < 0) && Context &&
-      mutt_str_equal(m->realpath, Context->mailbox->realpath))
+      mutt_str_equal(m->path->canon, Context->mailbox->path->canon))
   {
     wdata->opn_index = ARRAY_SIZE(&wdata->entries);
   }
@@ -111,7 +111,7 @@ void sb_remove_mailbox(struct SidebarWindowData *wdata, struct Mailbox *m)
   struct SbEntry **sbep = NULL;
   ARRAY_FOREACH(sbep, &wdata->entries)
   {
-    if (mutt_str_equal((*sbep)->mailbox->realpath, m->realpath))
+    if (mutt_str_equal((*sbep)->mailbox->path->canon, m->path->canon))
     {
       struct SbEntry *sbe_remove = *sbep;
       ARRAY_REMOVE(&wdata->entries, sbep);
@@ -169,7 +169,7 @@ void sb_set_current_mailbox(struct SidebarWindowData *wdata, struct Mailbox *m)
   {
     if (m)
     {
-      if (mutt_str_equal((*sbep)->mailbox->realpath, m->realpath))
+      if (mutt_str_equal((*sbep)->mailbox->path->canon, m->path->canon))
       {
         wdata->opn_index = ARRAY_FOREACH_IDX;
         wdata->hil_index = ARRAY_FOREACH_IDX;

@@ -2433,7 +2433,7 @@ static enum MxStatus nm_mbox_sync(struct Mailbox *m)
     else
       email_get_fullpath(e, old_file, sizeof(old_file));
 
-    mutt_buffer_strcpy(&m->pathbuf, edata->folder);
+    mutt_str_replace(&m->path->orig, edata->folder);
     m->type = edata->type;
 
     bool ok = maildir_sync_mailbox_message(m, i, h);
@@ -2452,7 +2452,7 @@ static enum MxStatus nm_mbox_sync(struct Mailbox *m)
       nm_db_release(m);
     }
 
-    mutt_buffer_strcpy(&m->pathbuf, url);
+    mutt_str_replace(&m->path->orig, url);
     m->type = MUTT_NOTMUCH;
 
     if (!ok)
@@ -2485,7 +2485,7 @@ static enum MxStatus nm_mbox_sync(struct Mailbox *m)
         mh_sync_errors);
   }
 
-  mutt_buffer_strcpy(&m->pathbuf, url);
+  mutt_str_replace(&m->path->orig, url);
   m->type = MUTT_NOTMUCH;
 
   nm_db_release(m);

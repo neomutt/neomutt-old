@@ -1481,19 +1481,19 @@ int mx_path_canon2(struct Mailbox *m, const char *folder)
 
   char buf[PATH_MAX];
 
-  if (m->realpath)
-    mutt_str_copy(buf, m->realpath, sizeof(buf));
+  if (m->path->canon)
+    mutt_str_copy(buf, m->path->canon, sizeof(buf));
   else
     mutt_str_copy(buf, mailbox_path(m), sizeof(buf));
 
   int rc = mx_path_canon(buf, sizeof(buf), folder, &m->type);
 
-  mutt_str_replace(&m->realpath, buf);
+  mutt_str_replace(&m->path->canon, buf);
 
   if (rc >= 0)
   {
     m->mx_ops = mx_get_ops(m->type);
-    mutt_buffer_strcpy(&m->pathbuf, m->realpath);
+    mutt_str_replace(&m->path->orig, m->path->canon);
   }
 
   return rc;
@@ -1562,7 +1562,7 @@ int mx_msg_padding_size(struct Mailbox *m)
  */
 struct Account *mx_ac_find(struct Mailbox *m)
 {
-  if (!m || !m->mx_ops || !m->realpath)
+  if (!m || !m->mx_ops || !m->path->canon)
     return NULL;
 
   struct Account *np = NULL;
@@ -1571,7 +1571,7 @@ struct Account *mx_ac_find(struct Mailbox *m)
     if (np->type != m->type)
       continue;
 
-    if (m->mx_ops->ac_owns_path(np, m->realpath))
+    if (m->mx_ops->ac_owns_path(np, m->path->canon))
       return np;
   }
 
@@ -1605,13 +1605,13 @@ struct Mailbox *mx_mbox_find(struct Account *a, const char *path)
   {
     if (!use_url)
     {
-      if (mutt_str_equal(np->mailbox->realpath, path))
+      if (mutt_str_equal(np->mailbox->path->canon, path))
         return np->mailbox;
       continue;
     }
 
     url_free(&url_a);
-    url_a = url_parse(np->mailbox->realpath);
+    url_a = url_parse(np->mailbox->path->canon);
     if (!url_a)
       continue;
 
@@ -1682,9 +1682,9 @@ struct Mailbox *mx_path_resolve(const char *path)
   if (m)
     return m;
 
-  m = mailbox_new();
+  m = mailbox_new(NULL);
   m->flags = MB_HIDDEN;
-  mutt_buffer_strcpy(&m->pathbuf, path);
+  mutt_str_replace(&m->path->orig, path);
   mx_path_canon2(m, C_Folder);
 
   return m;
@@ -1705,7 +1705,7 @@ static struct Mailbox *mx_mbox_find_by_name_ac(struct Account *a, const char *na
 
   STAILQ_FOREACH(np, &a->mailboxes, entries)
   {
-    if (mutt_str_equal(np->mailbox->name, name))
+    if (mutt_str_equal(np->mailbox->path->desc, name))
       return np->mailbox;
   }
 
