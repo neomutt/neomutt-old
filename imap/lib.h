@@ -43,6 +43,7 @@
  * | imap/imap.c       | @subpage imap_imap       |
  * | imap/message.c    | @subpage imap_message    |
  * | imap/msn.c        | @subpage imap_msn        |
+ * | imap/path.c       | @subpage imap_path       |
  * | imap/search.c     | @subpage imap_search     |
  * | imap/utf7.c       | @subpage imap_utf7       |
  * | imap/util.c       | @subpage imap_util       |
@@ -57,6 +58,7 @@
 #include <sys/types.h>
 #include "core/lib.h"
 #include "mx.h"
+#include "path.h"
 #include "commands.h"
 
 struct BrowserState;
@@ -64,6 +66,7 @@ struct Buffer;
 struct ConfigSet;
 struct ConnAccount;
 struct EmailList;
+struct Path;
 struct PatternList;
 struct stat;
 

@@ -125,6 +125,7 @@ imap/config.c
 imap/imap.c
 imap/message.c
 imap/msn.c
+imap/path.c
 imap/search.c
 imap/utf7.c
 imap/util.c
