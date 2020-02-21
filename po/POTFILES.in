@@ -146,6 +146,7 @@ maillist.c
 main.c
 mbox/config.c
 mbox/mbox.c
+mbox/path.c
 menu.c
 monitor.c
 mutt/base64.c

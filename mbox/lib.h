@@ -30,6 +30,7 @@
  * | :------------ | :------------------- |
  * | mbox/config.c | @subpage mbox_config |
  * | mbox/mbox.c   | @subpage mbox_mbox   |
+ * | mbox/path.c | @subpage mbox_path |
  */
 
 #ifndef MUTT_MBOX_LIB_H
@@ -40,6 +41,7 @@
 #include <time.h>
 #include "core/lib.h"
 #include "mx.h"
+#include "path.h"
 
 struct ConfigSet;
 struct stat;
