@@ -507,7 +507,7 @@ $(PWD)/pattern:
 ###############################################################################
 # libpop
 LIBPOP=		libpop.a
-LIBPOPOBJS=	pop/auth.o pop/config.o pop/lib.o pop/pop.o
+LIBPOPOBJS=	pop/auth.o pop/config.o pop/lib.o pop/pop.o pop/path.o
 CLEANFILES+=	$(LIBPOP) $(LIBPOPOBJS)
 ALLOBJS+=	$(LIBPOPOBJS)
 
@@ -701,6 +701,7 @@ coverage: all test
 	  --directory mbox \
 	  --directory nntp \
 	  --directory notmuch \
+	  --directory pop
 
 	-genhtml --output-directory lcov --frames lcov.info
 	lcov --list lcov.info

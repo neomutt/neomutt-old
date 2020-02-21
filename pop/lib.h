@@ -30,6 +30,7 @@
  * | pop/auth.c    | @subpage pop_auth   |
  * | pop/config.c  | @subpage pop_config |
  * | pop/lib.c     | @subpage pop_lib    |
+ * | pop/path.c     | @subpage pop_path |
  * | pop/pop.c     | @subpage pop_pop    |
  */
 
@@ -39,6 +40,7 @@
 #include <stdbool.h>
 #include "core/lib.h"
 #include "mx.h"
+#include "path.h"
 
 struct ConfigSet;
 struct stat;

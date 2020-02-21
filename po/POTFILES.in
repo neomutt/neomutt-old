@@ -233,6 +233,7 @@ pgpewrap.c
 pop/auth.c
 pop/config.c
 pop/lib.c
+pop/path.c
 pop/pop.c
 postpone.c
 progress.c
