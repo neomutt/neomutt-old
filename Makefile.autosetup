@@ -152,7 +152,7 @@ $(PWD)/bcache:
 ###############################################################################
 # libcompmbox
 LIBCOMPMBOX=	libcompmbox.a
-LIBCOMPMBOXOBJS=compmbox/compress.o
+LIBCOMPMBOXOBJS=compmbox/compress.o compmbox/path.o
 CLEANFILES+=	$(LIBCOMPMBOX) $(LIBCOMPMBOXOBJS)
 ALLOBJS+=	$(LIBCOMPMBOXOBJS)
 
@@ -694,7 +694,9 @@ coverage: all test
 	  --directory core \
 	  --directory email \
 	  --directory mutt \
-	  --directory store
+	  --directory store \
+	  --directory compmbox \
+
 	-genhtml --output-directory lcov --frames lcov.info
 	lcov --list lcov.info
 @endif
