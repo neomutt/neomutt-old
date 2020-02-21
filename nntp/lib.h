@@ -34,6 +34,7 @@
  * | nntp/config.c   | @subpage nntp_config   |
  * | nntp/newsrc.c   | @subpage nntp_newsrc   |
  * | nntp/nntp.c     | @subpage nntp_nntp     |
+ * | nntp/path.c     | @subpage nntp_path     |
  */
 
 #ifndef MUTT_NNTP_LIB_H
@@ -47,6 +48,7 @@
 #include "core/lib.h"
 #include "format_flags.h"
 #include "mx.h"
+#include "path.h"
 
 struct ConfigSet;
 struct ConnAccount;

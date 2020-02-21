@@ -215,6 +215,7 @@ nntp/complete.c
 nntp/config.c
 nntp/newsrc.c
 nntp/nntp.c
+nntp/path.c
 notmuch/config.c
 notmuch/db.c
 notmuch/notmuch.c
