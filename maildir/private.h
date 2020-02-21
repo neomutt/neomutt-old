@@ -27,6 +27,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include "sequence.h"
+#include "core/lib.h"
 
 struct Account;
 struct Buffer;
@@ -35,6 +36,7 @@ struct MdEmailArray;
 struct Mailbox;
 struct MdEmail;
 struct Message;
+struct Path;
 struct Progress;
 
 extern bool  C_CheckNew;

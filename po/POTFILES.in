@@ -139,6 +139,7 @@ maildir/maildir.c
 maildir/mdata.c
 maildir/mdemail.c
 maildir/mh.c
+maildir/path.c
 maildir/sequence.c
 maildir/shared.c
 maillist.c

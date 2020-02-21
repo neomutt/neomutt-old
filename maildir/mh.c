@@ -55,6 +55,7 @@
 #include "monitor.h"
 #include "mutt_globals.h"
 #include "mx.h"
+#include "path.h"
 #include "progress.h"
 #include "sequence.h"
 #include "sort.h"
@@ -1247,5 +1248,11 @@ struct MxOps MxMhOps = {
   .path_pretty      = mh_path_pretty,
   .path_parent      = mh_path_parent,
   .path_is_empty    = mh_check_empty,
+  .path2_canon      = maildir_path2_canon,
+  .path2_compare    = maildir_path2_compare,
+  .path2_parent     = maildir_path2_parent,
+  .path2_pretty     = maildir_path2_pretty,
+  .path2_probe      = mh_path2_probe,
+  .path2_tidy       = maildir_path2_tidy,
 };
 // clang-format on

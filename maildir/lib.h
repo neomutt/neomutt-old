@@ -33,6 +33,7 @@
  * | maildir/mdata.c   | @subpage maildir_mdata   |
  * | maildir/mdemail.c | @subpage maildir_mdemail |
  * | maildir/mh.c      | @subpage maildir_mh      |
+ * | maildir/path.c    | @subpage maildir_path    |
  * | maildir/shared.c  | @subpage maildir_shared  |
  */
 
@@ -44,6 +45,7 @@
 #include "core/lib.h"
 #include "edata.h"
 #include "mx.h"
+#include "path.h"
 
 struct ConfigSet;
 struct Email;

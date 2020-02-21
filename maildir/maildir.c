@@ -54,6 +54,7 @@
 #include "monitor.h"
 #include "mutt_globals.h"
 #include "mx.h"
+#include "path.h"
 #include "progress.h"
 #ifdef USE_HCACHE
 #include "hcache/lib.h"
@@ -1638,5 +1639,11 @@ struct MxOps MxMaildirOps = {
   .path_pretty      = maildir_path_pretty,
   .path_parent      = maildir_path_parent,
   .path_is_empty    = maildir_check_empty,
+  .path2_canon      = maildir_path2_canon,
+  .path2_compare    = maildir_path2_compare,
+  .path2_parent     = maildir_path2_parent,
+  .path2_pretty     = maildir_path2_pretty,
+  .path2_probe      = maildir_path2_probe,
+  .path2_tidy       = maildir_path2_tidy,
 };
 // clang-format on

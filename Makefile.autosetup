@@ -394,7 +394,7 @@ $(PWD)/imap:
 LIBMAILDIR=	libmaildir.a
 LIBMAILDIROBJS=	maildir/config.o maildir/edata.o maildir/maildir.o \
 		maildir/mdata.o maildir/mdemail.o maildir/mh.o \
-		maildir/sequence.o maildir/shared.o
+		maildir/sequence.o maildir/shared.o maildir/path.o
 CLEANFILES+=	$(LIBMAILDIR) $(LIBMAILDIROBJS)
 ALLOBJS+=	$(LIBMAILDIROBJS)
 
@@ -697,6 +697,7 @@ coverage: all test
 	  --directory store \
 	  --directory compmbox \
 	  --directory imap \
+	  --directory maildir \
 
 	-genhtml --output-directory lcov --frames lcov.info
 	lcov --list lcov.info
