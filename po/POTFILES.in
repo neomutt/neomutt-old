@@ -219,6 +219,7 @@ nntp/path.c
 notmuch/config.c
 notmuch/db.c
 notmuch/notmuch.c
+notmuch/path.c
 opcodes.c
 opcodes.h
 pager.c

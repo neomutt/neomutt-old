@@ -67,10 +67,9 @@
 #include "mutt_globals.h"
 #include "mutt_thread.h"
 #include "mx.h"
+#include "path.h"
 #include "progress.h"
 #include "protos.h"
-
-struct stat;
 
 static const struct Command nm_commands[] = {
   // clang-format off
@@ -78,9 +77,6 @@ static const struct Command nm_commands[] = {
   { "virtual-mailboxes",   parse_mailboxes,   MUTT_NAMED },
   // clang-format on
 };
-
-const char NmUrlProtocol[] = "notmuch://";
-const int NmUrlProtocolLen = sizeof(NmUrlProtocol) - 1;
 
 /**
  * nm_init - Setup feature commands
@@ -2675,5 +2671,11 @@ struct MxOps MxNotmuchOps = {
   .path_pretty      = nm_path_pretty,
   .path_parent      = nm_path_parent,
   .path_is_empty    = NULL,
+  .path2_canon      = nm_path2_canon,
+  .path2_compare    = nm_path2_compare,
+  .path2_parent     = nm_path2_parent,
+  .path2_pretty     = nm_path2_pretty,
+  .path2_probe      = nm_path2_probe,
+  .path2_tidy       = nm_path2_tidy,
 };
 // clang-format on

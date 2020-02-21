@@ -30,6 +30,7 @@
  * | notmuch/config.c   | @subpage nm_config  |
  * | notmuch/db.c       | @subpage nm_db      |
  * | notmuch/notmuch.c  | @subpage nm_notmuch |
+ * | notmuch/path.c     | @subpage nm_path    |
  */
 
 #ifndef MUTT_NOTMUCH_LIB_H
@@ -39,6 +40,7 @@
 #include <stdbool.h>
 #include "core/lib.h"
 #include "mx.h"
+#include "path.h"
 
 struct ConfigSet;
 struct Email;
