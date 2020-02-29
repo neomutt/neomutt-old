@@ -176,41 +176,6 @@ bool mutt_path_tidy(char *buf, bool is_dir)
 }
 
 /**
- * mutt_path_pretty - Tidy a filesystem path
- * @param buf     Path to modify
- * @param buflen  Length of the buffer
- * @param homedir Home directory for '~' substitution
- * @param is_dir  Is the path a directory?
- * @retval true Success
- *
- * Tidy a path and replace a home directory with '~'
- */
-bool mutt_path_pretty(char *buf, size_t buflen, const char *homedir, bool is_dir)
-{
-  if (!buf)
-    return false;
-
-  mutt_path_tidy(buf, is_dir);
-
-  size_t len = mutt_str_startswith(buf, homedir);
-  if (len == 0)
-    return false;
-
-  if ((buf[len] != '/') && (buf[len] != '\0'))
-    return false;
-
-  buf[0] = '~';
-  if (buf[len] == '\0')
-  {
-    buf[1] = '\0';
-    return true;
-  }
-
-  mutt_str_copy(buf + 1, buf + len, buflen - len);
-  return true;
-}
-
-/**
  * mutt_path2_pretty - Tidy a filesystem path
  * @param[in]  path    Path to make pretty
  * @param[in]  homedir Folder to use for abbrevi
