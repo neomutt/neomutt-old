@@ -259,7 +259,7 @@ void mutt_buffer_expand_path_regex(struct Buffer *buf, bool regex)
       {
         if (s[1] == '!')
         {
-          mutt_buffer_strcpy(p, LastFolder);
+          mutt_buffer_strcpy(p, LastFolder->orig);
           tail = s + 2;
         }
         else
@@ -272,14 +272,14 @@ void mutt_buffer_expand_path_regex(struct Buffer *buf, bool regex)
 
       case '-':
       {
-        mutt_buffer_strcpy(p, LastFolder);
+        mutt_buffer_strcpy(p, LastFolder->orig);
         tail = s + 1;
         break;
       }
 
       case '^':
       {
-        mutt_buffer_strcpy(p, CurrentFolder);
+        mutt_buffer_strcpy(p, CurrentFolder->orig);
         tail = s + 1;
         break;
       }

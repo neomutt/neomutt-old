@@ -698,16 +698,10 @@ static void change_folder_mailbox(struct Menu *menu, struct Mailbox *m, int *old
 
   if (m_ctx)
   {
-    char *new_last_folder = NULL;
 #ifdef USE_INOTIFY
     int monitor_remove_rc = mutt_monitor_remove(NULL);
 #endif
-#ifdef USE_COMP_MBOX
-    if (m_ctx->compress_info && (m_ctx->path->canon[0] != '\0'))
-      new_last_folder = mutt_str_dup(m_ctx->path->canon);
-    else
-#endif
-      new_last_folder = mutt_str_dup(mailbox_path(m_ctx));
+    struct Path *new_last_folder = mutt_path_dup(Context->mailbox->path);
     *oldcount = m_ctx->msg_count;
 
     const enum MxStatus check = mx_mbox_close(&Context);
@@ -720,15 +714,15 @@ static void change_folder_mailbox(struct Menu *menu, struct Mailbox *m, int *old
       if ((check == MX_STATUS_NEW_MAIL) || (check == MX_STATUS_REOPENED))
         update_index(menu, Context, check, *oldcount, cur);
 
-      FREE(&new_last_folder);
+      mutt_path_free(&new_last_folder);
       OptSearchInvalid = true;
       menu->redraw |= REDRAW_INDEX | REDRAW_STATUS;
       return;
     }
-    FREE(&LastFolder);
+    mutt_path_free(&LastFolder);
     LastFolder = new_last_folder;
   }
-  mutt_str_replace(&CurrentFolder, mailbox_path(m));
+  mutt_str_replace(&CurrentFolder->orig, mailbox_path(m));
 
   /* If the `folder-hook` were to call `unmailboxes`, then the Mailbox (`m`)
    * could be deleted, leaving `m` dangling. */
