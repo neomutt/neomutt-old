@@ -860,6 +860,7 @@ static int examine_mailboxes(struct Menu *menu, struct BrowserState *state)
       }
 
       mutt_buffer_strcpy(mailbox, mailbox_path(np->mailbox));
+      //JKJ this could be a file/dir or a mailbox!
       if (C_BrowserAbbreviateMailboxes)
         mutt_buffer_pretty_mailbox(mailbox);
 
@@ -1027,6 +1028,7 @@ static void init_menu(struct BrowserState *state, struct Menu *menu,
     {
       struct Buffer *path = mutt_buffer_pool_get();
       menu->is_mailbox_list = false;
+      //HBH path -> pretty (desc=no)
       mutt_buffer_copy(path, &LastDir);
       mutt_buffer_pretty_mailbox(path);
 #ifdef USE_IMAP
@@ -1049,12 +1051,15 @@ static void init_menu(struct BrowserState *state, struct Menu *menu,
    * The goal is to highlight the good directory if LastDir is the parent dir
    * of LastDirBackup (this occurs mostly when one hit "../"). It should also work
    * properly when the user is in examine_mailboxes-mode.  */
+  //HBH compare path->orig
   if (mutt_str_startswith(mutt_buffer_string(&LastDirBackup), mutt_buffer_string(&LastDir)))
   {
     char target_dir[PATH_MAX] = { 0 };
 
 #ifdef USE_IMAP
     /* Check what kind of dir LastDirBackup is. */
+    //HBH already have type
+    //HBH ask backend for parent of LastDirBackup, then swap into place
     if (imap_path_probe(mutt_buffer_string(&LastDirBackup), NULL) == MUTT_IMAP)
     {
       mutt_str_copy(target_dir, mutt_buffer_string(&LastDirBackup), sizeof(target_dir));
@@ -1095,6 +1100,7 @@ static int file_tag(struct Menu *menu, int sel, int act)
 {
   struct BrowserStateEntry *entry = menu->mdata;
   struct FolderFile *ff = ARRAY_GET(entry, sel);
+  //HBH need to check MxOps::is_local?
   if (S_ISDIR(ff->mode) ||
       (S_ISLNK(ff->mode) && link_is_dir(mutt_buffer_string(&LastDir), ff->name)))
   {
@@ -1122,10 +1128,12 @@ void mutt_browser_select_dir(const char *f)
 {
   init_lastdir();
 
+  //HBH set by string CurrentFolder, C_Spoolfile, <change-folder>, etc
   mutt_buffer_strcpy(&LastDirBackup, f);
 
   /* Method that will fetch the parent path depending on the type of the path. */
   char buf[PATH_MAX];
+  //HBH backend get parent
   mutt_get_parent_path(mutt_buffer_string(&LastDirBackup), buf, sizeof(buf));
   mutt_buffer_strcpy(&LastDir, buf);
 }
@@ -1154,6 +1162,7 @@ void mutt_buffer_select_file(struct Buffer *file, SelectFileFlags flags,
 
   mailbox = mailbox && folder;
 
+  //HBH backup of
   struct Buffer *OldLastDir = mutt_buffer_pool_get();
   struct Buffer *tmp = mutt_buffer_pool_get();
   struct Buffer *buf = mutt_buffer_pool_get();
@@ -1197,6 +1206,7 @@ void mutt_buffer_select_file(struct Buffer *file, SelectFileFlags flags,
       state.imap_browse = true;
       if (imap_browse(mutt_buffer_string(file), &state) == 0)
       {
+        //HBH copy imap-only string (Mailbox)
         mutt_buffer_strcpy(&LastDir, state.folder);
         browser_sort(&state);
       }
@@ -1213,10 +1223,12 @@ void mutt_buffer_select_file(struct Buffer *file, SelectFileFlags flags,
 
       if (i > 0)
       {
+        //HBH strings, local file/dirs
         if ((mutt_buffer_string(file))[0] == '/')
           mutt_buffer_strcpy_n(&LastDir, mutt_buffer_string(file), i);
         else
         {
+          //HBH strings, local file/dirs
           mutt_path_getcwd(&LastDir);
           mutt_buffer_addch(&LastDir, '/');
           mutt_buffer_addstr_n(&LastDir, mutt_buffer_string(file), i);
@@ -1224,6 +1236,7 @@ void mutt_buffer_select_file(struct Buffer *file, SelectFileFlags flags,
       }
       else
       {
+        //HBH strings, local file/dirs
         if ((mutt_buffer_string(file))[0] == '/')
           mutt_buffer_strcpy(&LastDir, "/");
         else
@@ -1242,6 +1255,7 @@ void mutt_buffer_select_file(struct Buffer *file, SelectFileFlags flags,
   else
   {
     if (!folder)
+      //HBH strings, local file/dirs
       mutt_path_getcwd(&LastDir);
     else
     {
@@ -1279,6 +1293,7 @@ void mutt_buffer_select_file(struct Buffer *file, SelectFileFlags flags,
         {
           /* If browsing in "local"-mode, than we chose to define LastDir to
            * MailDir */
+          //HBH already known
           switch (CurrentFolder->type)
           {
             case MUTT_IMAP:
@@ -1308,6 +1323,7 @@ void mutt_buffer_select_file(struct Buffer *file, SelectFileFlags flags,
     }
 
 #ifdef USE_IMAP
+    //HBH type already known
     if (!mailbox && (imap_path_probe(mutt_buffer_string(&LastDir), NULL) == MUTT_IMAP))
     {
       init_state(&state, NULL);
