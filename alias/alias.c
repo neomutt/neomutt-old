@@ -485,6 +485,12 @@ retry_name:
   const char *alias_file = cs_subset_path(sub, "alias_file");
   mutt_str_copy(buf, NONULL(alias_file), sizeof(buf));
 
+  char *pretty = NULL;
+  if (mutt_path2_pretty(buf, HomeDir, &pretty))
+  {
+    mutt_str_copy(buf, pretty, sizeof(buf));
+    FREE(&pretty);
+  }
   if (mutt_get_field(_("Save to file: "), buf, sizeof(buf), MUTT_FILE | MUTT_CLEAR) != 0)
     return;
   mutt_expand_path(buf, sizeof(buf));
