@@ -5,6 +5,13 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2020-30-20
+
+These NeoMutt branches have been archived since NeoMutt 2020-03-20
+
+- [bodystruct](https://github.com/neomutt/neomutt-old/tree/bodystruct)
+  imap: retrieve bodystructure when mailbox is opened (see [2149](https://github.com/neomutt/neomutt/pull/2149))
+
 ## NeoMutt 2019-11-02
 
 These NeoMutt branches have been archived since NeoMutt 2019-11-02
