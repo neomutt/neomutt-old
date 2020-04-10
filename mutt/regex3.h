@@ -25,7 +25,15 @@
 
 #include <stddef.h>
 #include "config.h"
+#if defined(HAVE_PCRE2) && defined(NEOMUTT_USE_PCRE2_FOR_EVERYTHING)
+#include <pcre2posix.h>
+#define regcomp pcre2_regcomp
+#define regexec pcre2_regexec
+#define regfree pcre2_regfree
+#define regerror pcre2_regerror
+#else
 #include <regex.h>
+#endif
 #include <stdbool.h>
 #include "queue.h"
 
