@@ -5,9 +5,12 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
-## NeoMutt 2020-30-20
+## NeoMutt 2020-03-20
 
 These NeoMutt branches have been archived since NeoMutt 2020-03-20
+
+- [pcre2](https://github.com/neomutt/neomutt-old/tree/pcre2)
+  Use Perl-Compatible Regular Expressions (PCRE) (see [2258](https://github.com/neomutt/neomutt/pull/2258))
 
 - [bodystruct](https://github.com/neomutt/neomutt-old/tree/bodystruct)
   imap: retrieve bodystructure when mailbox is opened (see [2149](https://github.com/neomutt/neomutt/pull/2149))
