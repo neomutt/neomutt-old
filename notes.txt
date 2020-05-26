@@ -1,0 +1,18 @@
+widescreen view
+
+use pager_index_lines as a width?
+	0 implies use all width for pager
+
+--devel-widescreen
+USE_DEVEL_WIDESCREEN
+bool index_widescreen = no
+
+what about other screens?
+	compose?  left: envelope, right: attachments?
+
+index jumps up and down when too small for the window
+
+need divider between index and pager
+	separate window for divider
+
+have 'wide' and 'narrow' index_formats?
