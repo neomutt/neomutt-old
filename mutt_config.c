@@ -749,6 +749,12 @@ struct ConfigDef MainVars[] = {
     "Update the progress bar after this many records written (0 to disable)"
   },
 
+#ifdef USE_DEVEL_WIDESCREEN
+  { "devel_index_widescreen", DT_BOOL, &C_DevelIndexWidescreen, false, 0, NULL,
+    ""
+  },
+#endif
+
   { "escape", DT_DEPRECATED|DT_STRING, &C_Escape, IP "~" },
   { "ignore_linear_white_space", DT_DEPRECATED|DT_BOOL, &C_IgnoreLinearWhiteSpace, false },
 

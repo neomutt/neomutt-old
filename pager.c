@@ -44,6 +44,7 @@
 #include "alias/lib.h"
 #include "gui/lib.h"
 #include "mutt.h"
+#include "debug/lib.h"
 #include "pager.h"
 #include "ncrypt/lib.h"
 #include "send/lib.h"
@@ -2288,9 +2289,16 @@ int mutt_pager(const char *banner, const char *fname, PagerFlags flags, struct P
 
   if (rd.extra->win_index)
   {
-    rd.extra->win_index->size = MUTT_WIN_SIZE_FIXED;
-    rd.extra->win_index->req_rows = index_space;
-    rd.extra->win_index->parent->size = MUTT_WIN_SIZE_MINIMISE;
+    if (C_DevelIndexWidescreen)
+    {
+      rd.extra->win_index->size = MUTT_WIN_SIZE_MAXIMISE;
+    }
+    else
+    {
+      rd.extra->win_index->size = MUTT_WIN_SIZE_FIXED;
+      rd.extra->win_index->req_rows = index_space;
+      rd.extra->win_index->parent->size = MUTT_WIN_SIZE_MINIMISE;
+    }
     window_set_visible(rd.extra->win_index->parent, (index_space > 0));
   }
   window_set_visible(rd.extra->win_pager->parent, true);

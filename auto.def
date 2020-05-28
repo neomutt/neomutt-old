@@ -127,6 +127,8 @@ options {
   debug-notify=0            => "DEBUG: Enable Notifications dump"
   debug-parse-test=0        => "DEBUG: Enable 'neomutt -T' for config testing"
   debug-window=0            => "DEBUG: Enable windows dump"
+# Devel options
+  devel-widescreen=0        => "DEVEL: Enable widescreen mode"
 }
 ###############################################################################
 
@@ -1204,6 +1206,14 @@ if {[get-define want-debug-parse-test]} {
 # Windows dump
 if {[get-define want-debug-window]} {
   define USE_DEBUG_WINDOW 1
+}
+
+###############################################################################
+# DEVEL options
+
+# Widescreen mode
+if {[get-define want-devel-widescreen]} {
+  define USE_DEVEL_WIDESCREEN 1
 }
 
 ###############################################################################

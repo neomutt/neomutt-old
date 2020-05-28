@@ -39,6 +39,7 @@ extern bool  C_CollapseAll;
 extern char *C_MarkMacroPrefix;
 extern bool  C_UncollapseJump;
 extern bool  C_UncollapseNew;
+extern bool  C_DevelIndexWidescreen;
 
 int  index_color(int line);
 void index_make_entry(char *buf, size_t buflen, struct Menu *menu, int line);
