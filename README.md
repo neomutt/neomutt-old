@@ -5,6 +5,16 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2020-05-01
+
+These NeoMutt branches have been archived since NeoMutt 2020-05-01
+
+- [content-id](https://github.com/neomutt/neomutt-old/tree/content-id)
+  Add commands for manipulating content-id of attachments (see [2049](https://github.com/neomutt/neomutt/pull/2049))
+
+- [context-list](https://github.com/neomutt/neomutt-old/tree/context-list)
+  Use global ContextList to store Contexts (see [2121](https://github.com/neomutt/neomutt/pull/2121))
+
 ## NeoMutt 2020-03-20
 
 These NeoMutt branches have been archived since NeoMutt 2020-03-20
