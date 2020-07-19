@@ -29,6 +29,7 @@
 #include "config/lib.h"
 #include "core/lib.h"
 
+struct EventMouse;
 struct IndexSharedData;
 struct MuttWindow;
 
@@ -105,6 +106,7 @@ void sb_add_mailbox        (struct SidebarWindowData *wdata, struct Mailbox *m);
 void sb_remove_mailbox     (struct SidebarWindowData *wdata, const struct Mailbox *m);
 void sb_set_current_mailbox(struct SidebarWindowData *wdata, struct Mailbox *m);
 struct Mailbox *sb_get_highlight(struct MuttWindow *win);
+bool sidebar_mouse(struct MuttWindow *win, struct EventMouse *em);
 
 // commands.c
 enum CommandResult sb_parse_sidebar_unpin(struct Buffer *buf, struct Buffer *s, intptr_t data, struct Buffer *err);

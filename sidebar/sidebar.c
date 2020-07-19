@@ -196,6 +196,28 @@ void sb_set_current_mailbox(struct SidebarWindowData *wdata, struct Mailbox *m)
 }
 
 /**
+ * sidebar_mouse - XXX
+ */
+bool sidebar_mouse(struct MuttWindow *win, struct EventMouse *em)
+{
+  struct SidebarWindowData *wdata = sb_wdata_get(win);
+
+  int index = em->row + wdata->top_index;
+
+  if (index >= ARRAY_SIZE(&wdata->entries))
+    return true;
+
+  struct Mailbox *m = (*ARRAY_GET(&wdata->entries, index))->mailbox;
+
+  struct MuttWindow *dlg = dialog_find(win);
+  if (!dlg)
+    return true;
+
+  index_change_folder(dlg, m);
+  return true;
+}
+
+/**
  * sb_init - Set up the Sidebar
  */
 void sb_init(void)
