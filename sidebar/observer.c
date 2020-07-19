@@ -118,6 +118,7 @@ static struct MuttWindow *sb_win_init(struct MuttWindow *dlg)
   struct IndexSharedData *shared = dlg->wdata;
   win_sidebar->wdata = sb_wdata_new(win_sidebar, shared);
   win_sidebar->wdata_free = sb_wdata_free;
+  win_sidebar->mouse = sidebar_mouse;
 
   calc_divider(win_sidebar->wdata);
 
