@@ -30,6 +30,7 @@
  * | gui/curs_lib.c      | @subpage gui_curs_lib      |
  * | gui/dialog.c        | @subpage gui_dialog        |
  * | gui/global.c        | @subpage gui_global        |
+ * | gui/mouse.c         | @subpage gui_mouse         |
  * | gui/msgcont.c       | @subpage gui_msgcont       |
  * | gui/msgwin.c        | @subpage gui_msgwin        |
  * | gui/mutt_curses.c   | @subpage gui_curses        |
@@ -44,10 +45,15 @@
 #ifndef MUTT_GUI_LIB_H
 #define MUTT_GUI_LIB_H
 
+#include "config.h"
+
 // IWYU pragma: begin_exports
 #include "curs_lib.h"
 #include "dialog.h"
 #include "global.h"
+#ifdef USE_DEVEL_MOUSE
+#include "mouse.h"
+#endif
 #include "msgcont.h"
 #include "msgwin.h"
 #include "mutt_curses.h"

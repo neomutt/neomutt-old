@@ -351,6 +351,10 @@ static int start_curses(void)
   typeahead(-1); /* simulate smooth scrolling */
   meta(stdscr, true);
   init_extended_keys();
+#ifdef USE_DEVEL_MOUSE
+  mmask_t old;
+  mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, &old);
+#endif
   /* Now that curses is set up, we drop back to normal screen mode.
    * This simplifies displaying error messages to the user.
    * The first call to refresh() will swap us back to curses screen mode. */
