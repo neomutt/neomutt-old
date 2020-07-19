@@ -310,6 +310,9 @@ $(PWD)/email:
 LIBGUI=		libgui.a
 LIBGUIOBJS=	gui/color.o gui/curs_lib.o gui/mutt_curses.o gui/dialog.o \
 		gui/mutt_window.o gui/reflow.o gui/terminal.o
+@if USE_DEVEL_MOUSE
+LIBGUIOBJS+=	gui/mouse.o
+@endif
 CLEANFILES+=	$(LIBGUI) $(LIBGUIOBJS)
 ALLOBJS+=	$(LIBGUIOBJS)
 

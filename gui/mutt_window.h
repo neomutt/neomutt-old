@@ -26,6 +26,7 @@
 #include "config.h"
 #include <stdbool.h>
 #include "mutt/lib.h"
+#include "mouse.h"
 
 /**
  * enum MuttWindowOrientation - Which way does the Window expand?
@@ -159,6 +160,14 @@ struct MuttWindow
    * @retval -1 Error
    */
   int (*repaint)(struct MuttWindow *win);
+
+  /**
+   * mouse - Mouse Event occurred
+   * @param win Window
+   * @param em  Mouse Event details
+   * @retval true If handled
+   */
+  bool (*mouse)(struct MuttWindow *win, struct EventMouse *em);
 };
 
 typedef uint8_t WindowNotifyFlags; ///< Changes to a MuttWindow
