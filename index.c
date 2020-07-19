@@ -4183,3 +4183,16 @@ reflow:
   mutt_window_reflow(dlg);
   return 0;
 }
+
+/**
+ * index_open_mailbox - XXX
+ */
+void index_open_mailbox(struct MuttWindow *win, struct Mailbox *m)
+{
+  if (!win || !m)
+    return;
+
+  int oldcount = 0;
+  struct Menu *menu = get_current_menu();
+  change_folder_mailbox(menu, m, &oldcount, NULL, false);
+}

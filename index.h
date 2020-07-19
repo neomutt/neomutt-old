@@ -49,5 +49,6 @@ void mutt_update_index(struct Menu *menu, struct Context *ctx, int check, int ol
 struct MuttWindow *index_pager_init(void);
 void index_pager_shutdown(struct MuttWindow *dlg);
 int mutt_dlgindex_observer(struct NotifyCallback *nc);
+void index_open_mailbox(struct MuttWindow *win, struct Mailbox *m);
 
 #endif /* MUTT_INDEX_H */

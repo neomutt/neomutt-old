@@ -121,6 +121,7 @@ static struct MuttWindow *sb_win_init(struct MuttWindow *dlg)
   win_sidebar->state.visible = C_SidebarVisible && (C_SidebarWidth > 0);
   win_sidebar->wdata = sb_wdata_new();
   win_sidebar->wdata_free = sb_wdata_free;
+  win_sidebar->mouse = sidebar_mouse;
 
   calc_divider(win_sidebar->wdata);
 

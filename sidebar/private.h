@@ -92,6 +92,7 @@ extern short C_SidebarWidth;
 void sb_add_mailbox        (struct SidebarWindowData *wdata, struct Mailbox *m);
 void sb_remove_mailbox     (struct SidebarWindowData *wdata, struct Mailbox *m);
 void sb_set_current_mailbox(struct SidebarWindowData *wdata, struct Mailbox *m);
+bool sidebar_mouse(struct MuttWindow *win, struct EventMouse *em);
 
 // functions.c
 bool select_next(struct SidebarWindowData *wdata);

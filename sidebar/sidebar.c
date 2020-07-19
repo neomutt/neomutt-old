@@ -37,6 +37,7 @@
 #include "gui/lib.h"
 #include "lib.h"
 #include "context.h"
+#include "index.h"
 #include "mutt_globals.h"
 
 struct ListHead SidebarWhitelist = STAILQ_HEAD_INITIALIZER(SidebarWhitelist); ///< List of mailboxes to always display in the sidebar
@@ -192,6 +193,29 @@ void sb_init(void)
 
   // Listen for dialog creation events
   notify_observer_add(AllDialogsWindow->notify, NT_WINDOW, sb_insertion_observer, NULL);
+}
+
+/**
+ * sidebar_mouse - XXX
+ */
+bool sidebar_mouse(struct MuttWindow *win, struct EventMouse *em)
+{
+  struct SidebarWindowData *wdata = sb_wdata_get(win);
+
+  int index = em->row + wdata->top_index;
+
+  if (index >= ARRAY_SIZE(&wdata->entries))
+    return true;
+
+  struct Mailbox *m = (*ARRAY_GET(&wdata->entries, index))->mailbox;
+
+  struct MuttWindow *dlg = dialog_find(win);
+  struct MuttWindow *win_index = mutt_window_find(dlg, WT_INDEX);
+  if (!win_index)
+    return true;
+
+  index_open_mailbox(win, m);
+  return true;
 }
 
 /**

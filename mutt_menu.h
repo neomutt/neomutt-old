@@ -160,4 +160,6 @@ void         mutt_menu_set_redraw(enum MenuType menu, MuttRedrawFlags redraw);
 int mutt_menu_color_observer (struct NotifyCallback *nc);
 int mutt_menu_config_observer(struct NotifyCallback *nc);
 
+struct Menu *get_current_menu(void);
+
 #endif /* MUTT_MENU_H */
