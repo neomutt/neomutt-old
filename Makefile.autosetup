@@ -453,6 +453,9 @@ LIBGUIOBJS=	gui/curs_lib.o gui/dialog.o gui/functions.o gui/global.o \
 		gui/mutt_curses.o gui/mutt_window.o gui/opcodes.o gui/reflow.o \
 		gui/resize.o gui/rootwin.o gui/sbar.o gui/simple.o \
 		gui/terminal.o
+@if USE_DEVEL_MOUSE
+LIBGUIOBJS+=	gui/mouse.o
+@endif
 CLEANFILES+=	$(LIBGUI) $(LIBGUIOBJS)
 ALLOBJS+=	$(LIBGUIOBJS)
 

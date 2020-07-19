@@ -29,6 +29,7 @@
 #include "mutt/lib.h"
 
 struct ConfigSubset;
+struct EventMouse;
 
 /**
  * enum MuttWindowOrientation - Which way does the Window expand?
@@ -203,6 +204,14 @@ struct MuttWindow
    * be hidden.
    */
   bool (*recursor)(struct MuttWindow *win);
+
+  /**
+   * mouse - Mouse Event occurred
+   * @param win Window
+   * @param em  Mouse Event details
+   * @retval true If handled
+   */
+  bool (*mouse)(struct MuttWindow *win, struct EventMouse *em);
 };
 
 typedef uint8_t WindowNotifyFlags; ///< Flags for Changes to a MuttWindow, e.g. #WN_TALLER

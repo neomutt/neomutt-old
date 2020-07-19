@@ -130,6 +130,8 @@ set valid_options {
   debug-notify=0            => "DEBUG: Enable Notifications dump"
   debug-queue=0             => "DEBUG: Enable TAILQ debugging"
   debug-window=0            => "DEBUG: Enable Windows dump"
+# Devel options
+  devel-mouse=0             => "DEVEL: Enable the mouse (ncurses only)"
 }
 
 set deprecated_options  {
@@ -175,7 +177,7 @@ if {1} {
   foreach opt {
     asan autocrypt bdb compile-commands coverage debug-backtrace debug-color
     debug-email debug-graphviz debug-keymap debug-logging debug-names
-    debug-notify debug-queue debug-window doc everything fmemopen full-doc
+    debug-notify debug-queue debug-window devel-mouse doc everything fmemopen full-doc
     fuzzing gdbm gnutls gpgme gsasl gss homespool idn2 inotify kyotocabinet
     lmdb locales-fix lua lz4 mixmaster nls notmuch paths-in-cflags pcre2 pgp
     qdbm rocksdb sasl smime sqlite ssl tdb
@@ -1084,6 +1086,20 @@ if {[get-define want-debug-queue]} {
 if {[get-define want-debug-window]} {
   define USE_DEBUG_WINDOW 1
   define debug_build 1
+}
+
+###############################################################################
+# DEVEL options
+
+# Mouse
+if {[get-define want-devel-mouse]} {
+	msg-checking "Checking for mouse..."
+  if {[opt-val with-ui ncurses] == "ncurses"} {
+    define USE_DEVEL_MOUSE 1
+    msg-result "ok"
+  } else {
+    msg-result "no"
+  }
 }
 
 ###############################################################################

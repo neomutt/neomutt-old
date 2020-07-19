@@ -31,6 +31,7 @@
  * | gui/dialog.c        | @subpage gui_dialog        |
  * | gui/functions.c     | @subpage gui_functions     |
  * | gui/global.c        | @subpage gui_global        |
+ * | gui/mouse.c         | @subpage gui_mouse         |
  * | gui/msgcont.c       | @subpage gui_msgcont       |
  * | gui/msgwin.c        | @subpage gui_msgwin        |
  * | gui/msgwin_wdata.c  | @subpage gui_msgwin_wdata  |
@@ -48,6 +49,7 @@
 #ifndef MUTT_GUI_LIB_H
 #define MUTT_GUI_LIB_H
 
+#include "config.h"
 // IWYU pragma: begin_keep
 #include "curs_lib.h"
 #include "dialog.h"
@@ -63,6 +65,9 @@
 #include "sbar.h"
 #include "simple.h"
 #include "terminal.h"
+#ifdef USE_DEVEL_MOUSE
+#include "mouse.h"
+#endif
 // IWYU pragma: end_keep
 
 #endif /* MUTT_GUI_LIB_H */

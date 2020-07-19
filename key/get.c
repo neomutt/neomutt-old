@@ -238,6 +238,11 @@ struct KeyEvent mutt_getch(GetChFlags flags)
 #endif
   mutt_sig_allow_interrupt(false);
 
+#ifdef USE_DEVEL_MOUSE
+  if (mouse_handle_event(ch))
+    return event_timeout;
+#endif
+
   if (SigInt)
   {
     mutt_query_exit();
