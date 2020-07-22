@@ -62,6 +62,9 @@
 #ifdef USE_INOTIFY
 #include "monitor.h"
 #endif
+#ifdef USE_DEVEL_MOUSE
+#include "mouse.h"
+#endif
 
 /* not possible to unget more than one char under some curses libs, so roll our
  * own input buffering routines.  */
