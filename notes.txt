@@ -1,0 +1,15 @@
+In the index, the scroll wheel moves the cursor.
+At what level is the translation from mouse to cursor happening?
+If I don't process the mouse event, will the menu code process it later?
+(Or does `mousemask` preclude any freebies -- if we use it, we need to implement all behaviour)
+
+mousemask seems to stop all other mouse processing
+
+trap mouse 4/5 (scroll-wheel) and turn into standard Menu cursor up/down
+does this need to be configurable?
+
+mouse wheel flick events will accelerate before dropping off
+	should move *view*, but not the cursor/highlight
+
+change notification to Window->event()?
+	what other common events should supported?
