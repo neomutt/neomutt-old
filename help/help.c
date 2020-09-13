@@ -56,6 +56,12 @@ struct stat;
 /// whether to link all help chapter upwards to root box
 #define HELP_LINK_CHAPTERS 0
 
+#define HELP_DOC_SUCCESS          0  ///< success, valid header lines read from file
+#define HELP_DOC_NOT_HELPDOC     -1  ///< file isn't a helpdoc: extension doesn't match ".md"
+#define HELP_DOC_NOT_READ        -2  ///< file header not read: file cannot be open for read
+#define HELP_DOC_NO_HEADER_START -3  ///< found invalid header: no triple-dashed start mark
+#define HELP_DOC_NO_HEADER_END   -4  ///< found invalid header: no triple-dashed end mark
+
 static bool __Backup_HTS; ///< used to restore $hide_thread_subject on help_mbox_close()
 
 /**
@@ -189,22 +195,22 @@ static HelpDocFlags help_file_type(const char *file)
  * @param ha list where to store the final header information
  * @param file path to the (potential help document) file to parse
  * @param max  how many header lines to read (N < 0 means all)
- * @retval  0     success, valid header lines read from file
+ * @retval  0+    Position of file where body begins
  * @retval -1     file isn't a helpdoc: extension doesn't match ".md"
  * @retval -2     file header not read: file cannot be open for read
  * @retval -3     found invalid header: no triple-dashed start mark
  * @retval -4     found invalid header: no triple-dashed end mark
  */
-static int help_file_header(struct HeaderArray *ha, const char *file, int max)
+static long help_file_header(struct HeaderArray *ha, const char *file, int max)
 {
   const char *bfn = mutt_path_basename(NONULL(file));
   const char *ext = strrchr(bfn, '.');
   if (!bfn || (ext == bfn) || !mutt_istrn_equal(ext, ".md", 3))
-    return -1;
+    return HELP_DOC_NOT_HELPDOC;
 
   FILE *fp = mutt_file_fopen(file, "r");
   if (!fp)
-    return -2;
+    return HELP_DOC_NOT_READ;
 
   int lineno = 0;
   size_t linelen;
@@ -214,7 +220,7 @@ static int help_file_header(struct HeaderArray *ha, const char *file, int max)
   if (!mutt_str_equal(p, mark))
   {
     mutt_file_fclose(&fp);
-    return -3;
+    return HELP_DOC_NO_HEADER_START;
   }
 
   char *q = NULL;
@@ -237,13 +243,29 @@ static int help_file_header(struct HeaderArray *ha, const char *file, int max)
 
     limit--;
   }
+
+  // Move pointer to next line which is not an empty one (i.e. terminated by \n)
+  // so display will start nice with the first line
+  long last_pos = ftell(fp);
+  while (mutt_file_read_line(p, &linelen, fp, &lineno, MUTT_RL_CONT))
+  {
+    if (strlen(p) > 0)
+    {
+      // Body has begun, exit
+      break;
+    }
+
+    // it was an empty line, do it again
+    last_pos = ftell(fp);
+  }
+
   mutt_file_fclose(&fp);
   FREE(&p);
 
   if (!endmark)
-    return -4;
+    return HELP_DOC_NO_HEADER_END;
 
-  return 0;
+  return last_pos;
 }
 
 /**
@@ -434,7 +456,7 @@ static struct Email *help_doc_from(const char *file)
     return NULL; /* file is not a valid help doc */
 
   struct HeaderArray *ha = mutt_mem_calloc(1, sizeof(*ha));
-  int len = help_file_header(ha, file, HELP_FHDR_MAXLINES);
+  long len = help_file_header(ha, file, HELP_FHDR_MAXLINES);
   if (ARRAY_EMPTY(ha) || (len < 0))
   {
     header_array_free(&ha);
@@ -446,21 +468,23 @@ static struct Email *help_doc_from(const char *file)
   char *dir = mutt_path_dirname(file);
   const char *pdn = mutt_path_basename(dir);
   const char *rfp = (file + mutt_str_len(C_HelpDocDir) + 1);
+
   /* default timestamp, based on PACKAGE_VERSION */
   struct tm tm = { 0 };
   strptime(PACKAGE_VERSION, "%Y%m%d", &tm);
   time_t epoch = mutt_date_make_time(&tm, 0);
+
   /* default subject, final may come from file header, e.g. "[title]: description" */
   char sbj[256];
   snprintf(sbj, sizeof(sbj), "[%s]: %s", pdn, bfn);
   pdn = NULL;
   FREE(&dir);
+
   /* bundle metadata */
   struct HelpEmailData *edata = help_edata_new();
   edata->name = mutt_str_dup(bfn);
   edata->type = type;
   edata->ha = ha;
-  ha = NULL;
 
   struct Email *hdoc = email_new();
   /* struct Email */
@@ -470,9 +494,11 @@ static struct Email *help_doc_from(const char *file)
   hdoc->path = mutt_str_dup(rfp);
   hdoc->read = true;
   hdoc->received = epoch;
+
   /* struct Email::data (custom metadata) */
   hdoc->edata = edata;
   hdoc->edata_free = help_edata_free;
+  
   /* struct Body */
   hdoc->body = mutt_body_new();
   hdoc->body->disposition = DISP_INLINE;
@@ -480,6 +506,9 @@ static struct Email *help_doc_from(const char *file)
   hdoc->body->length = -1;
   hdoc->body->subtype = mutt_str_dup("plain");
   hdoc->body->type = TYPE_TEXT;
+  hdoc->body->offset = len; // offset from call to help_file_header()
+
+  
   /* struct Envelope */
   hdoc->env = mutt_env_new();
   mutt_addrlist_parse(&hdoc->env->from, "Richard Russon <rich@flatcap.org>");
@@ -532,7 +561,12 @@ static int help_doclist_init(struct EmailArray *emails)
   const char **elem = NULL;
   ARRAY_FOREACH(elem, all_docs)
   {
-    ARRAY_ADD(emails, help_doc_from(*elem));
+      // help_doc_from returns NULL if header is malformed, so check first
+      struct Email *email = help_doc_from(*elem);
+      if (email)
+        ARRAY_ADD(emails, email);
+      else
+        mutt_debug(LL_DEBUG1, "Invalid help doc found: %s, skipping\n", *elem);
   }
   string_array_free(&all_docs);
 
