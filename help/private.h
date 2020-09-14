@@ -26,6 +26,7 @@
 #define MUTT_HELP_PRIVATE_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "mutt/lib.h"
 
 extern char *C_HelpDocDir;
@@ -62,5 +63,7 @@ struct HelpEmailData
 };
 
 void scan_dir(const char *path, struct StringArray *files);
+struct HelpFileHeader *help_file_hdr_find(const char *key, const struct HeaderArray *ha);
+bool help_parse_liquid(const struct Buffer *sbuf, struct Buffer *dbuf, const struct HeaderArray *ha);
 
 #endif /* MUTT_HELP_PRIVATE_H */

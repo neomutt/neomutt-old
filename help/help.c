@@ -275,7 +275,7 @@ static long help_file_header(struct HeaderArray *ha, const char *file, int max)
  * @retval ptr  Success, struct containing the found key
  * @retval NULL Failure, or when key could not be found
  */
-static struct HelpFileHeader *help_file_hdr_find(const char *key, const struct HeaderArray *ha)
+struct HelpFileHeader *help_file_hdr_find(const char *key, const struct HeaderArray *ha)
 {
   if (!ha || !key || !*key)
     return NULL;
@@ -774,9 +774,64 @@ static bool help_msg_open(struct Mailbox *m, struct Message *msg, int msgno)
   char path[PATH_MAX];
   snprintf(path, sizeof(path), "%s/%s", m->realpath, m->emails[msgno]->path);
 
+  FILE *f = fopen(path, "r");
+  if (!f)
+  {
+    mutt_warning("Cannot open help doc at: %s", path);
+    return -1;
+  }
+
+  fseek(f, 0, SEEK_END);
+  long fsize = ftell(f);
+  fseek(f, 0, SEEK_SET);
+
+  char *content = malloc(fsize + 1);
+  size_t r = fread(content, 1, fsize, f);
+  fclose(f);
+  if (!r)
+    return -1; 
+
+  content[fsize] = 0;
+
+  struct Buffer sbuf = mutt_buffer_make(fsize);
+  struct Buffer dbuf = mutt_buffer_make(fsize);;
+
+  mutt_buffer_strcpy(&sbuf, content);
+
+  struct HelpEmailData *edata = (struct HelpEmailData *)m->emails[msgno]->edata;
+  if (!edata || !edata->ha)
+    return -1;
+
+  bool parsed = help_parse_liquid(&sbuf, &dbuf, edata->ha);
+  if (!parsed)
+  {
+    mutt_warning("Failed to parse help doc (liquid tags)");
+    return -1;
+  }
+
+  f = mutt_file_mkstemp();
+  if (!f)
+  {
+    char errmsg[256];
+    perror(errmsg);
+    mutt_warning("Unable to create temp file: %s\n", errmsg);
+  }
+  int res = fputs(dbuf.data, f);
+  if (res == EOF)
+  {
+    char errmsg[256];
+    perror(errmsg);
+    mutt_warning("Unable to write temp file: %s\n", errmsg);
+  }
+
+  fseek(f, 0, SEEK_SET);
+  mutt_buffer_dealloc(&sbuf);
+  mutt_buffer_dealloc(&dbuf);
+
   m->emails[msgno]->read = true; /* reset a probably previously set unread status */
 
-  msg->fp = fopen(path, "r");
+  msg->fp = f;
+
   if (!msg->fp)
   {
     mutt_perror(path);
@@ -812,6 +867,9 @@ static int help_msg_close(struct Mailbox *m, struct Message *msg)
 {
   mutt_debug(1, "entering help_msg_close\n");
   mutt_file_fclose(&msg->fp);
+
+  // TODO Unlink tmp file
+
   return 0;
 }
 

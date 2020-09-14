@@ -343,7 +343,7 @@ $(PWD)/hcache:
 # libhelp
 @if USE_DEVEL_HELP
 LIBHELP=	libhelp.a
-LIBHELPOBJS=	help/config.o help/help.o help/scan.o
+LIBHELPOBJS=	help/config.o help/help.o help/scan.o help/parse.o
 CLEANFILES+=	$(LIBHELP) $(LIBHELPOBJS)
 ALLOBJS+=	$(LIBHELPOBJS)
 
