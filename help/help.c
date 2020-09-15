@@ -39,6 +39,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include "private.h"
 #include "mutt/lib.h"
 #include "address/lib.h"
@@ -56,11 +57,13 @@ struct stat;
 /// whether to link all help chapter upwards to root box
 #define HELP_LINK_CHAPTERS 0
 
+// clang-format off
 #define HELP_DOC_SUCCESS          0  ///< success, valid header lines read from file
 #define HELP_DOC_NOT_HELPDOC     -1  ///< file isn't a helpdoc: extension doesn't match ".md"
 #define HELP_DOC_NOT_READ        -2  ///< file header not read: file cannot be open for read
 #define HELP_DOC_NO_HEADER_START -3  ///< found invalid header: no triple-dashed start mark
 #define HELP_DOC_NO_HEADER_END   -4  ///< found invalid header: no triple-dashed end mark
+// clang-format on
 
 static bool __Backup_HTS; ///< used to restore $hide_thread_subject on help_mbox_close()
 
@@ -498,17 +501,16 @@ static struct Email *help_doc_from(const char *file)
   /* struct Email::data (custom metadata) */
   hdoc->edata = edata;
   hdoc->edata_free = help_edata_free;
-  
+
   /* struct Body */
   hdoc->body = mutt_body_new();
   hdoc->body->disposition = DISP_INLINE;
   hdoc->body->encoding = ENC_8BIT;
-  hdoc->body->length = -1;
+  hdoc->body->length = mutt_file_get_size(file);
   hdoc->body->subtype = mutt_str_dup("plain");
   hdoc->body->type = TYPE_TEXT;
   hdoc->body->offset = len; // offset from call to help_file_header()
 
-  
   /* struct Envelope */
   hdoc->env = mutt_env_new();
   mutt_addrlist_parse(&hdoc->env->from, "Richard Russon <rich@flatcap.org>");
@@ -561,12 +563,12 @@ static int help_doclist_init(struct EmailArray *emails)
   const char **elem = NULL;
   ARRAY_FOREACH(elem, all_docs)
   {
-      // help_doc_from returns NULL if header is malformed, so check first
-      struct Email *email = help_doc_from(*elem);
-      if (email)
-        ARRAY_ADD(emails, email);
-      else
-        mutt_debug(LL_DEBUG1, "Invalid help doc found: %s, skipping\n", *elem);
+    // help_doc_from returns NULL if header is malformed, so check first
+    struct Email *email = help_doc_from(*elem);
+    if (email)
+      ARRAY_ADD(emails, email);
+    else
+      mutt_debug(LL_DEBUG1, "Invalid help doc found: %s, skipping\n", *elem);
   }
   string_array_free(&all_docs);
 
@@ -771,74 +773,80 @@ static bool help_msg_open(struct Mailbox *m, struct Message *msg, int msgno)
 {
   mutt_debug(1, "entering help_msg_open: %d, %s\n", msgno, m->emails[msgno]->env->subject);
 
+  struct HelpEmailData *edata = (struct HelpEmailData *) m->emails[msgno]->edata;
+  if (!edata || !edata->ha)
+  {
+    mutt_debug(LL_DEBUG1, "Help doc has no metadata associated, skipping.\n");
+    return -1;
+  }
+
   char path[PATH_MAX];
   snprintf(path, sizeof(path), "%s/%s", m->realpath, m->emails[msgno]->path);
 
-  FILE *f = fopen(path, "r");
-  if (!f)
+  long fsize = mutt_file_get_size(path);
+  if (!fsize)
   {
-    mutt_warning("Cannot open help doc at: %s", path);
+    mutt_warning("Cannot stat help doc: %s\n", path);
     return -1;
   }
 
-  fseek(f, 0, SEEK_END);
-  long fsize = ftell(f);
-  fseek(f, 0, SEEK_SET);
+  FILE *f = mutt_file_fopen(path, "r");
+  if (!f)
+  {
+    mutt_perror("Cannot open help doc at: %s\n", path);
+    return -1;
+  }
 
-  char *content = malloc(fsize + 1);
+  char content[fsize + 1];
   size_t r = fread(content, 1, fsize, f);
   fclose(f);
   if (!r)
-    return -1; 
+  {
+    mutt_warning("Help doc is empty or unreadable: %s\n", path);
+    return -1;
+  }
 
   content[fsize] = 0;
 
-  struct Buffer sbuf = mutt_buffer_make(fsize);
-  struct Buffer dbuf = mutt_buffer_make(fsize);;
+  struct Buffer *sbuf = mutt_buffer_pool_get();
+  struct Buffer *dbuf = mutt_buffer_pool_get();
+  mutt_buffer_strcpy(sbuf, content);
 
-  mutt_buffer_strcpy(&sbuf, content);
+  int parsed = false;
+  FILE *tmp = mutt_file_mkstemp();
+  if (!tmp)
+  {
+    mutt_perror("Unable to create temp file\n");
+    goto cleanup;
+  }
 
-  struct HelpEmailData *edata = (struct HelpEmailData *)m->emails[msgno]->edata;
-  if (!edata || !edata->ha)
-    return -1;
+  struct Buffer *use_buf = dbuf;
 
-  bool parsed = help_parse_liquid(&sbuf, &dbuf, edata->ha);
+  parsed = help_parse_liquid(sbuf, dbuf, edata->ha);
   if (!parsed)
   {
-    mutt_warning("Failed to parse help doc (liquid tags)");
-    return -1;
+    mutt_warning("Failed to parse help doc (liquid tags), use raw doc\n");
+    use_buf = sbuf;
+    goto cleanup;
   }
 
-  f = mutt_file_mkstemp();
-  if (!f)
+  if (fputs(use_buf->data, tmp) == EOF)
   {
-    char errmsg[256];
-    perror(errmsg);
-    mutt_warning("Unable to create temp file: %s\n", errmsg);
-  }
-  int res = fputs(dbuf.data, f);
-  if (res == EOF)
-  {
-    char errmsg[256];
-    perror(errmsg);
-    mutt_warning("Unable to write temp file: %s\n", errmsg);
+    mutt_perror("Unable to write temp file\n");
+    goto cleanup;
   }
 
-  fseek(f, 0, SEEK_SET);
-  mutt_buffer_dealloc(&sbuf);
-  mutt_buffer_dealloc(&dbuf);
+  rewind(tmp);
+
+cleanup:
+  mutt_buffer_pool_release(&sbuf);
+  mutt_buffer_pool_release(&dbuf);
+
+  if (!tmp)
+    return false;
 
   m->emails[msgno]->read = true; /* reset a probably previously set unread status */
-
-  msg->fp = f;
-
-  if (!msg->fp)
-  {
-    mutt_perror(path);
-    mutt_debug(1, "fopen: %s: %s (errno %d).\n", path, strerror(errno), errno);
-    return false;
-  }
-
+  msg->fp = tmp;
   return true;
 }
 
@@ -867,8 +875,6 @@ static int help_msg_close(struct Mailbox *m, struct Message *msg)
 {
   mutt_debug(1, "entering help_msg_close\n");
   mutt_file_fclose(&msg->fp);
-
-  // TODO Unlink tmp file
 
   return 0;
 }

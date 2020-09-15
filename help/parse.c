@@ -22,9 +22,8 @@
 
 #include <stdbool.h>
 #include "private.h"
-#include "mutt/buffer.h"
 #include "mutt/array.h"
-
+#include "mutt/buffer.h"
 
 /**
  * @page help_parse_liquid 
@@ -37,10 +36,10 @@
  * @retval False if parsing didn't succeed
  */
 
-
-bool help_parse_liquid(const struct Buffer *sbuf, struct Buffer *dbuf, const struct HeaderArray *ha)
+bool help_parse_liquid(const struct Buffer *sbuf, struct Buffer *dbuf,
+                       const struct HeaderArray *ha)
 {
-  if (!sbuf || !sbuf->data || !sbuf->dsize || !dbuf || !ha) 
+  if (!sbuf || !sbuf->data || !sbuf->dsize || !dbuf || !ha)
     return false;
 
   // Compile Regex
@@ -59,8 +58,8 @@ bool help_parse_liquid(const struct Buffer *sbuf, struct Buffer *dbuf, const str
   // Find & replaces tags
 
   regmatch_t rg_result[2];
-  char * cursor = sbuf->data;
-  for(;;) 
+  char *cursor = sbuf->data;
+  for (;;)
   {
     int rg_res = regexec(&rg, cursor, 2, rg_result, 0);
     if (rg_res)
@@ -69,47 +68,50 @@ bool help_parse_liquid(const struct Buffer *sbuf, struct Buffer *dbuf, const str
       mutt_debug(LL_DEBUG1, "REGEX error message: %s\n", errmsg);
       break;
     }
-    else 
+    else
     {
-        char keyword[64] = "";
-        char fullword[128] = "";
+      char keyword[64] = "";
+      char fullword[128] = "";
 
-        size_t fullword_s = rg_result[0].rm_eo - rg_result[0].rm_so;
-        strncpy(fullword, (char *)(cursor + rg_result[0].rm_so), fullword_s);
+      size_t fullword_s = rg_result[0].rm_eo - rg_result[0].rm_so;
+      strncpy(fullword, (char *) (cursor + rg_result[0].rm_so), fullword_s);
 
-        size_t keyword_s = rg_result[1].rm_eo - rg_result[1].rm_so;
-        strncpy(keyword, (char *)(cursor + rg_result[1].rm_so), keyword_s);
+      size_t keyword_s = rg_result[1].rm_eo - rg_result[1].rm_so;
+      strncpy(keyword, (char *) (cursor + rg_result[1].rm_so), keyword_s);
 
-        // use mutt_strn_dup()?
-        // use mutt_strn_cpy()?
+      // use mutt_strn_dup()?
+      // use mutt_strn_cpy()?
 
-        // Lookup keyword and replace fullword with value if found
-        
-        mutt_debug(LL_DEBUG1, "REGEX match: %s (%d - %d)\n", fullword, rg_result[0].rm_so, rg_result[0].rm_eo);
-        mutt_debug(LL_DEBUG1, "REGEX sub1: %s (%d - %d)\n", keyword, rg_result[1].rm_so, rg_result[1].rm_eo);
+      // Lookup keyword and replace fullword with value if found
 
-        // Copy everything before fullword
-        mutt_buffer_addstr_n(dbuf, cursor, rg_result[0].rm_so);
+      mutt_debug(LL_DEBUG1, "REGEX match: %s (%d - %d)\n", fullword,
+                 rg_result[0].rm_so, rg_result[0].rm_eo);
+      mutt_debug(LL_DEBUG1, "REGEX sub1: %s (%d - %d)\n", keyword,
+                 rg_result[1].rm_so, rg_result[1].rm_eo);
 
-        mutt_debug(LL_DEBUG1, "Prefix copied");
+      // Copy everything before fullword
+      mutt_buffer_addstr_n(dbuf, cursor, rg_result[0].rm_so);
 
-        struct HelpFileHeader *header = help_file_hdr_find(keyword, ha);
-        if (header)
-        {
-          mutt_debug(LL_DEBUG1, "Found header in HA, value: %s\n", header->val);
-          mutt_buffer_addstr(dbuf, header->val);
-        }
-        else 
-        {
-          mutt_debug(LL_DEBUG1, "Header not found, will copy the original fullword\n");
-          mutt_buffer_addstr(dbuf, fullword);          
-        }
+      mutt_debug(LL_DEBUG1, "Prefix copied\n");
 
-        cursor += (rg_result[0].rm_eo);
+      struct HelpFileHeader *header = help_file_hdr_find(keyword, ha);
+      if (header)
+      {
+        mutt_debug(LL_DEBUG1, "Found header in HA, value: %s\n", header->val);
+        mutt_buffer_addstr(dbuf, header->val);
+      }
+      else
+      {
+        mutt_debug(LL_DEBUG1,
+                   "Header not found, will copy the original fullword\n");
+        mutt_buffer_addstr(dbuf, fullword);
+      }
+
+      cursor += (rg_result[0].rm_eo);
     }
   }
 
-  // Copy rest of buffer 
+  // Copy rest of buffer
   mutt_buffer_addstr(dbuf, cursor);
 
   regfree(&rg);
@@ -118,5 +120,3 @@ bool help_parse_liquid(const struct Buffer *sbuf, struct Buffer *dbuf, const str
 fail:
   return false;
 }
-
-
