@@ -5,6 +5,16 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2020-09-25
+
+These NeoMutt branches have been archived since NeoMutt 2020-09-25
+
+- [mouse](https://github.com/neomutt/neomutt-old/tree/mouse)
+  Proof-of-concept of Mouse support
+
+- [widescreen](https://github.com/neomutt/neomutt-old/tree/widescreen)
+  Proof-of-concept of Widescreen view
+
 ## NeoMutt 2020-05-01
 
 These NeoMutt branches have been archived since NeoMutt 2020-05-01
