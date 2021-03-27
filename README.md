@@ -5,6 +5,13 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2021-02-05
+
+These NeoMutt branches have been archived since NeoMutt 2021-02-05
+
+- [preview](https://github.com/neomutt/neomutt-old/tree/preview)
+  Preview window for emails
+
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
