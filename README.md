@@ -27,6 +27,9 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 - [summary](https://github.com/neomutt/neomutt-old/tree/summary)
   Sample summary commands
 
+- [help-backend](https://github.com/neomutt/neomutt-old/tree/help-backend)
+  Help backend
+
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
