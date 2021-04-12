@@ -30,6 +30,9 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 - [help-backend](https://github.com/neomutt/neomutt-old/tree/help-backend)
   Help backend
 
+- [path](https://github.com/neomutt/neomutt-old/tree/path) / [path2](https://github.com/neomutt/neomutt-old/tree/path2)
+  Potential replacement for path handling (and a rebase of same)
+
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
