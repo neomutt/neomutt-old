@@ -12,6 +12,12 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 - [preview](https://github.com/neomutt/neomutt-old/tree/preview)
   Preview window for emails
 
+- [widescreen2](https://github.com/neomutt/neomutt-old/tree/widescreen2)
+  @hanzyd's Proof-of-concept of Widescreen view
+
+- [parse-prompt](https://github.com/neomutt/neomutt-old/tree/parse-prompt)
+  @motorto's add 'prompt_user' command
+
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
