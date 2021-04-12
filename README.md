@@ -24,6 +24,9 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 - [charset-slist](https://github.com/neomutt/neomutt-old/tree/charset-slist)
   @andir's refactor charset variables to use SList
 
+- [summary](https://github.com/neomutt/neomutt-old/tree/summary)
+  Sample summary commands
+
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
