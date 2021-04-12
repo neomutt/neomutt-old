@@ -21,6 +21,9 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 - [sort-thread](https://github.com/neomutt/neomutt-old/tree/sort-thread)
   @fengidri sort-thread config option
 
+- [charset-slist](https://github.com/neomutt/neomutt-old/tree/charset-slist)
+  @andir's refactor charset variables to use SList
+
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
