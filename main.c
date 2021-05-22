@@ -423,7 +423,21 @@ static int start_curses(void)
       {
         printf("\033[%dm", attrs[a % mutt_array_size(attrs)]);
       }
-      printw("ABCDEFGHIJKLMNOPQR");
+      switch (a%4)
+      {
+        case 0:
+        printw("ABCDEFGHIJKLMNOPQR");
+        break;
+        case 1:
+        printw("Українська   עברית");
+        break;
+        case 2:
+        printw("义勇军义勇军义勇军");
+        break;
+        default:
+        printw("🍖🖐️ 🎃😜🦁👶⛔♨️ 🍰");
+        break;
+      }
       refresh();
       printf("\033[0m");
     }
