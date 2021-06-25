@@ -35,7 +35,7 @@
 
 typedef int (*qsort_compar_t)(const void *a, const void *b);
 
-#if !defined(HAVE_QSORT_S) && (!defined(HAVE_QSORT_R) || defined(__FreeBSD__))
+#ifndef HAVE_QSORT_S
 /// Original comparator in fallback implementation
 static qsort_r_compar_t global_compar = NULL;
 /// Original opaque data in fallback implementation
@@ -53,7 +53,26 @@ static int relay_compar(const void *a, const void *b)
 {
   return global_compar(a, b, global_data);
 }
-#endif
+
+/// Which implementation to use: 0 undecided, 1 qsort_r, -1 fallback
+#ifdef HAVE_QSORT_R
+static int witness = 0;
+
+/**
+ * probe - Test whether qsort_r uses POSIX parameter order
+ * @param a POSIX: first item, BSD: opaque
+ * @param b POSIX: second item, BSD: first item
+ * @param c POSIX: opaque, BSD: second item
+ * @return 0 invoked for its side effect on witness
+ */
+static int probe(const void *a, const void *b, const void *c)
+{
+  if (witness == 0)
+    witness = (a == probe) ? -1 : 1;
+  return 0;
+}
+#endif /* HAVE_QSORT_R */
+#endif /* !HAVE_QSORT_S */
 
 /**
  * mutt_qsort_r - Sort an array, where the comparator has access to opaque data rather than requiring global variables
@@ -71,17 +90,28 @@ void mutt_qsort_r(void *base, size_t nmemb, size_t size, qsort_r_compar_t compar
 #ifdef HAVE_QSORT_S
   /* FreeBSD 13, where qsort_r had incompatible signature but qsort_s works */
   qsort_s(base, nmemb, size, compar, arg);
-#elif defined(HAVE_QSORT_R) && !defined(__FreeBSD__)
-  /* glibc, POSIX (https://www.austingroupbugs.net/view.php?id=900) */
-  /* Avoid FreeBSD 12, where qsort_r has wrong signature but lacks qsort_s */
-  qsort_r(base, nmemb, size, compar, arg);
 #else
-  /* This fallback is not re-entrant. */
-  assert((global_compar == NULL) && (global_data == NULL));
-  global_compar = compar;
-  global_data = arg;
-  qsort(base, nmemb, size, relay_compar);
-  global_compar = NULL;
-  global_data = NULL;
-#endif
+#if defined(HAVE_QSORT_R)
+  if (witness == 0)
+  {
+    char array[2] = { 0 };
+    qsort_r(array, 2, 1, (void*) probe, (void*) probe);
+  }
+  if (witness > 0)
+  {
+    /* glibc, POSIX (https://www.austingroupbugs.net/view.php?id=900) */
+    qsort_r(base, nmemb, size, compar, arg);
+  }
+  else
+#endif /* HAVE_QSORT_R */
+  {
+    /* This fallback is not re-entrant. */
+    assert((global_compar == NULL) && (global_data == NULL));
+    global_compar = compar;
+    global_data = arg;
+    qsort(base, nmemb, size, relay_compar);
+    global_compar = NULL;
+    global_data = NULL;
+  }
+#endif /* !HAVE_QSORT_S */
 }
