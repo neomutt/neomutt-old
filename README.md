@@ -13,16 +13,16 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
   Preview window for emails
 
 - [widescreen2](https://github.com/neomutt/neomutt-old/tree/widescreen2)
-  @hanzyd's Proof-of-concept of Widescreen view
+  [@hanzyd](https://github.com/hanzyd)'s Proof-of-concept of Widescreen view
 
 - [parse-prompt](https://github.com/neomutt/neomutt-old/tree/parse-prompt)
-  @motorto's add 'prompt_user' command
+  [@motorto](https://github.com/motorto)'s add 'prompt_user' command
 
 - [sort-thread](https://github.com/neomutt/neomutt-old/tree/sort-thread)
-  @fengidri sort-thread config option
+  [@fengidri](https://github.com/fengidri) sort-thread config option
 
 - [charset-slist](https://github.com/neomutt/neomutt-old/tree/charset-slist)
-  @andir's refactor charset variables to use SList
+  [@andir](https://github.com/andir)'s refactor charset variables to use SList
 
 - [summary](https://github.com/neomutt/neomutt-old/tree/summary)
   Sample summary commands
@@ -32,6 +32,9 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 
 - [path](https://github.com/neomutt/neomutt-old/tree/path) / [path2](https://github.com/neomutt/neomutt-old/tree/path2)
   Potential replacement for path handling (and a rebase of same)
+
+- [qsort-test](https://github.com/neomutt/neomutt-old/tree/qsort-test)
+  [@ebblake](https://github.com/ebblake)'s inventive run-time test for determining the `qsort_r(3)`s prototype
 
 ## NeoMutt 2020-09-25
 
@@ -83,7 +86,7 @@ These NeoMutt branches have been archived since NeoMutt 2019-11-02
   Refactor using Vector
 
 - [distro/debian](https://github.com/neomutt/neomutt-old/tree/distro/debian)
-  @riesebie's Debian package
+  [@riesebie](https://github.com/riesebie)'s Debian package
 
 ## NeoMutt 2019-05-06
 
