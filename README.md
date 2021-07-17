@@ -36,6 +36,9 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 - [qsort-test](https://github.com/neomutt/neomutt-old/tree/qsort-test)
   [@ebblake](https://github.com/ebblake)'s inventive run-time test for determining the `qsort_r(3)`s prototype
 
+- [config-init-complete](https://github.com/neomutt/neomutt-old/tree/config-init-complete)
+  Disable config validators until all the variables have been registered
+
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
