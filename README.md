@@ -39,6 +39,12 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 - [config-init-complete](https://github.com/neomutt/neomutt-old/tree/config-init-complete)
   Disable config validators until all the variables have been registered
 
+- [hooks-cmd](https://github.com/neomutt/neomutt-old/tree/hooks-cmd)
+  [@jindraj](https://github.com/jindraj)'s implement hooks command
+
+- [refactor-mutt_parse_hook](https://github.com/neomutt/neomutt-old/tree/refactor-mutt_parse_hook)
+  [@jindraj](https://github.com/jindraj)'s Refactor mutt_parse_hook()
+
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
