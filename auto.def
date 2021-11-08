@@ -35,6 +35,7 @@ options {
   with-lock:=fcntl          => "Select fcntl() or flock() to lock files"
   fmemopen=0                => "Use fmemopen() for temporary in-memory files"
   inotify=1                 => "Disable file monitoring support (Linux only)"
+  ipc=1                     => "Disable Inter Process Communication"
   locales-fix=0             => "Enable locales fix"
   pgp=1                     => "Disable PGP support"
   smime=1                   => "Disable SMIME support"
@@ -155,7 +156,7 @@ if {1} {
     asan autocrypt bdb coverage debug-backtrace debug-color debug-email
     debug-graphviz debug-notify debug-parse-test debug-queue debug-window doc
     everything fmemopen full-doc fuzzing gdbm gnutls gpgme gss homespool idn
-    idn2 include-path-in-cflags inotify kyotocabinet lmdb locales-fix lua lz4
+    idn2 include-path-in-cflags inotify ipc kyotocabinet lmdb locales-fix lua lz4
     mixmaster nls notmuch pcre2 pgp pkgconf qdbm rocksdb sasl smime sqlite ssl
     testing tdb tokyocabinet zlib zstd
   } {
@@ -571,6 +572,15 @@ if {[get-define want-inotify]} {
     cc-check-functions inotify_init1
     cc-check-includes sys/inotify.h
   }
+}
+
+###############################################################################
+# IPC
+if {[get-define want-ipc]} {
+  #if {[cc-check-functions inotify_add_watch inotify_init inotify_rm_watch]} {
+    define USE_IPC
+  #  cc-check-includes ipc.h
+  #}
 }
 
 ###############################################################################

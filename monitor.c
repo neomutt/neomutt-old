@@ -46,6 +46,9 @@
 #ifndef HAVE_INOTIFY_INIT1
 #include <fcntl.h>
 #endif
+#ifdef USE_IPC
+#include "ipc.h"
+#endif
 
 bool MonitorFilesChanged = false;
 bool MonitorContextChanged = false;
@@ -156,6 +159,13 @@ static int mutt_poll_fd_remove(int fd)
  */
 static int monitor_init(void)
 {
+#ifdef USE_IPC
+  int sc = socket_create();
+  if (sc == ERR)
+    return ERR;
+  else if (sc == 0)
+    mutt_poll_fd_add(Socket.fd, POLLIN);
+#endif
   if (INotifyFd != -1)
     return 0;
 
@@ -403,7 +413,11 @@ int mutt_monitor_poll(void)
 
   MonitorFilesChanged = false;
 
+#ifdef USE_IPC
+  if (INotifyFd != -1 || Socket.fd != -1)
+#else
   if (INotifyFd != -1)
+#endif
   {
     int fds = poll(PollFds, PollFdsCount, MuttGetchTimeout);
 
@@ -460,6 +474,74 @@ int mutt_monitor_poll(void)
               }
             }
           }
+#ifdef USE_IPC
+          else if (PollFds[i].fd == Socket.fd)
+          {
+            Socket.msg.ready = false;
+            mutt_debug(LL_DEBUG3, "ipc socket data detected\n");
+            struct sockaddr_un remote;
+            unsigned int t = sizeof(remote);
+            Socket.conn = -1;
+            Socket.conn = accept(Socket.fd, (struct sockaddr *) &remote, &t);
+            if (Socket.conn == -1)
+            {
+              return -1;
+            }
+            char buf[1024];
+            int n = -1;
+            if ((n = recv(Socket.conn, buf, 1024, 0)) <= 0)
+            {
+              close(Socket.conn);
+              return -1;
+            }
+            if (n < 10)
+            {
+              char *resp = "ERROR MISSING NEOMUTT IPC IDENTIFIER";
+              send(Socket.conn, resp, strlen(resp), 0);
+              close(Socket.conn);
+              return -1;
+            }
+            if (strncmp(buf, "NEOMUTTIPC", 10))
+            {
+              char *resp = "ERROR INCORRECT NEOMUTT IPC IDENTIFIER";
+              send(Socket.conn, resp, strlen(resp), 0);
+              close(Socket.conn);
+              return -1;
+            }
+            else if (n < 12)
+            {
+              char *resp = "ERROR MISSING NEOMUTT IPC MSG TYPE";
+              send(Socket.conn, resp, strlen(resp), 0);
+              close(Socket.conn);
+              return -1;
+            }
+            else if (!strncmp(buf + 10, "01", 2))
+            {
+              Socket.msg.type = IPC_COMMAND;
+              Socket.msg.ready = true;
+            }
+            else if (!strncmp(buf + 10, "02", 2))
+            {
+              Socket.msg.type = IPC_MAILBOX;
+              Socket.msg.ready = true;
+            }
+            else if (!strncmp(buf + 10, "03", 2))
+            {
+              Socket.msg.type = IPC_CONFIG;
+              Socket.msg.ready = true;
+            }
+            else
+            {
+              char *resp = "ERROR UNKNOWN NEOMUTT IPC MSG TYPE";
+              send(Socket.conn, resp, strlen(resp), 0);
+              close(Socket.conn);
+              return -1;
+            }
+
+            memcpy(Socket.msg.data, buf + 12, n - 12);
+            Socket.msg.data[n - 12] = '\0';
+          }
+#endif
         }
       }
       if (!input_ready)
