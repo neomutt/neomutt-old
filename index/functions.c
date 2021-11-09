@@ -901,9 +901,9 @@ folderbuf_ready:
     else
       strcat(resp, "ERROR");
     send(Socket.conn, resp, strlen(resp), 0);
+    Socket.msg.ready = false;
+    close(Socket.conn);
   }
-  Socket.msg.ready = false;
-  close(Socket.conn);
 #endif
 
 changefoldercleanup:
