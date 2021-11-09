@@ -85,6 +85,9 @@
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #endif
+#ifdef USE_IPC
+#include "ipc.h"
+#endif
 
 static const char *Not_available_in_this_menu = N_("Not available in this menu");
 
@@ -827,6 +830,7 @@ static int op_main_change_folder(struct IndexSharedData *shared,
                                  struct IndexPrivateData *priv, int op)
 {
   struct Buffer *folderbuf = mutt_buffer_pool_get();
+  int rc;
   mutt_buffer_alloc(folderbuf, PATH_MAX);
 
   char *cp = NULL;
@@ -853,12 +857,20 @@ static int op_main_change_folder(struct IndexSharedData *shared,
   /* By default, fill buf with the next mailbox that contains unread mail */
   mutt_mailbox_next(shared->ctx ? shared->mailbox : NULL, folderbuf);
 
+#ifdef USE_IPC
+  if (Socket.msg.ready)
+  {
+    strcpy(folderbuf->data, Socket.msg.data);
+    goto folderbuf_ready;
+  }
+#endif
   if (mutt_buffer_enter_fname(cp, folderbuf, true, shared->mailbox, false, NULL,
                               NULL, MUTT_SEL_NO_FLAGS) == -1)
   {
     goto changefoldercleanup;
   }
 
+folderbuf_ready:
   /* Selected directory is okay, let's save it. */
   mutt_browser_select_dir(mutt_buffer_string(folderbuf));
 
@@ -875,9 +887,24 @@ static int op_main_change_folder(struct IndexSharedData *shared,
   }
   else
   {
-    change_folder_string(priv->menu, folderbuf->data, folderbuf->dsize,
+    int change_folder_string(priv->menu, folderbuf->data, folderbuf->dsize,
                          &priv->oldcount, shared, read_only);
   }
+
+#ifdef USE_IPC
+  /* Last place where we need to know that data was available */
+  if (Socket.msg.ready)
+  {
+    char resp[1024] = { 0 };
+    if (rc == 0)
+      strcat(resp, "SUCCESS");
+    else
+      strcat(resp, "ERROR");
+    send(Socket.conn, resp, strlen(resp), 0);
+  }
+  Socket.msg.ready = false;
+  close(Socket.conn);
+#endif
 
 changefoldercleanup:
   mutt_buffer_pool_release(&folderbuf);
@@ -2901,7 +2928,7 @@ struct IndexFunction IndexFunctions[] = {
   { OP_GROUP_CHAT_REPLY,                    op_group_reply,                       CHECK_ATTACH | CHECK_IN_MAILBOX | CHECK_MSGCOUNT | CHECK_VISIBLE },
   { OP_GROUP_REPLY,                         op_group_reply,                       CHECK_ATTACH | CHECK_IN_MAILBOX | CHECK_MSGCOUNT | CHECK_VISIBLE },
   { OP_IPC_COMMAND,                         op_enter_command,                     CHECK_NO_FLAGS },
-  { OP_IPC_CONFIG,                          op_main_change_folder,                CHECK_NO_FLAGS },
+  { OP_IPC_CONFIG,                          op_enter_command,                     CHECK_NO_FLAGS },
   { OP_IPC_MAILBOX,                         op_main_change_folder,                CHECK_NO_FLAGS },
   { OP_JUMP,                                op_jump,                              CHECK_IN_MAILBOX },
   { OP_JUMP_1,                              op_jump,                              CHECK_IN_MAILBOX },
