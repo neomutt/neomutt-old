@@ -54,3 +54,5 @@ compile_commands.*
 
 # gcc -fdump-rtl-expand
 *.expand
+
+neomutt-msg
