@@ -1,8 +1,10 @@
+#include "config.h"
+#include "mutt/lib.h"
 #include "ipc.h"
 
 struct socket Socket;
 
-int socket_create()
+int socket_create(void)
 {
   Socket.fd = -1;
   Socket.msg.ready = false;
@@ -102,9 +104,11 @@ void ipc_populate_data(char *buf)
           Socket.msg.data.subject = mutt_str_dup(unit);
           break;
         case '\x10':
+        {
           char *tmp = mutt_str_dup(unit);
           mutt_list_insert_tail(&Socket.msg.data.to, tmp);
           break;
+        }
       }
     }
   }
@@ -118,7 +122,7 @@ void close_conn(int ret, char *msg)
   close(Socket.conn);
 }
 
-void ipc_clear_data()
+void ipc_clear_data(void)
 {
   mutt_list_free(&Socket.msg.data.attach);
   mutt_list_free(&Socket.msg.data.bcc);

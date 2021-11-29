@@ -38,9 +38,9 @@ struct socket{
 extern struct socket Socket;
 
 int streq(const char *c1, const char *c2);
-int socket_create();
+int socket_create(void);
 void ipc_populate_data(char *buf);
 void close_conn(int ret, char *msg);
-void ipc_clear_data();
+void ipc_clear_data(void);
 
 #endif

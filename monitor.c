@@ -487,14 +487,14 @@ int mutt_monitor_poll(void)
             {
               return -1;
             }
-            char buf[1025];
+            char buf2[1025];
             int n = -1;
-            if ((n = recv(Socket.conn, buf, 1024, 0)) <= 0)
+            if ((n = recv(Socket.conn, buf2, 1024, 0)) <= 0)
             {
               close(Socket.conn);
               return -1;
             }
-            buf[n] = '\0';
+            buf2[n] = '\0';
             if (n < 1)
             {
               char *resp = "1\x1FMessage size is zero";
@@ -502,14 +502,14 @@ int mutt_monitor_poll(void)
               close(Socket.conn);
               return -1;
             }
-            if (strncmp(buf, "\x2", 1))
+            if (strncmp(buf2, "\x2", 1))
             {
               char *resp = "1\x1FMissing start character (\\x2)";
               send(Socket.conn, resp, strlen(resp), 0);
               close(Socket.conn);
               return -1;
             }
-            if (strncmp(buf + n - 1, "\x3", 1))
+            if (strncmp(buf2 + n - 1, "\x3", 1))
             {
               char *resp = "1\x1FMissing end character (\\x3)";
               send(Socket.conn, resp, strlen(resp), 0);
@@ -518,7 +518,7 @@ int mutt_monitor_poll(void)
             }
             else
             {
-              ipc_populate_data(buf);
+              ipc_populate_data(buf2);
             }
           }
 #endif

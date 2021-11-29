@@ -885,7 +885,7 @@ static int op_main_change_folder(struct IndexSharedData *shared,
     goto changefoldercleanup;
   }
 
-folderbuf_ready:
+  // folderbuf_ready:
   /* Selected directory is okay, let's save it. */
   mutt_browser_select_dir(mutt_buffer_string(folderbuf));
 
