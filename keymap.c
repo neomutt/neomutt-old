@@ -704,22 +704,7 @@ int km_dokey(enum MenuType mtype)
 
 #ifdef USE_IPC
     if (Socket.msg.ready)
-    {
-      switch (Socket.msg.type)
-      {
-        case IPC_COMMAND:
-          return OP_IPC_COMMAND;
-          break;
-        case IPC_MAILBOX:
-          return OP_IPC_MAILBOX;
-          break;
-        case IPC_CONFIG:
-          return OP_IPC_CONFIG;
-          break;
-        default:
-          break;
-      }
-    }
+      return OP_IPC;
 #endif
 
     /* hide timeouts, but not window resizes, from the line editor. */

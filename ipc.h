@@ -7,17 +7,26 @@
 #include "monitor.h"
 #include "errno.h"
 #include "mutt/logging.h"
+#include "string.h"
+#include "mutt/list.h"
+#include "stdlib.h"
 
-enum ipc_type {
-  IPC_COMMAND,
-  IPC_MAILBOX,
-  IPC_CONFIG
+struct ipc_data {
+  struct ListHead attach;
+  struct ListHead bcc;
+  struct ListHead cc;
+  struct ListHead config;
+  struct ListHead command;
+  struct ListHead folder;
+  bool postponed;
+  struct ListHead query;
+  char *subject;
+  struct ListHead to;
 };
 
 struct socket_msg {
   bool ready;
-  enum ipc_type type;
-  char data[1024];
+  struct ipc_data data;
 };
 
 struct socket{
@@ -28,6 +37,10 @@ struct socket{
 
 extern struct socket Socket;
 
+int streq(const char *c1, const char *c2);
 int socket_create();
+void ipc_populate_data(char *buf);
+void close_conn(int ret, char *msg);
+void ipc_clear_data();
 
 #endif

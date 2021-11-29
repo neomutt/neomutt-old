@@ -487,59 +487,39 @@ int mutt_monitor_poll(void)
             {
               return -1;
             }
-            char buf[1024];
+            char buf[1025];
             int n = -1;
             if ((n = recv(Socket.conn, buf, 1024, 0)) <= 0)
             {
               close(Socket.conn);
               return -1;
             }
-            if (n < 10)
+            buf[n] = '\0';
+            if (n < 1)
             {
-              char *resp = "ERROR MISSING NEOMUTT IPC IDENTIFIER";
+              char *resp = "1\x1FMessage size is zero";
               send(Socket.conn, resp, strlen(resp), 0);
               close(Socket.conn);
               return -1;
             }
-            if (strncmp(buf, "NEOMUTTIPC", 10))
+            if (strncmp(buf, "\x2", 1))
             {
-              char *resp = "ERROR INCORRECT NEOMUTT IPC IDENTIFIER";
+              char *resp = "1\x1FMissing start character (\\x2)";
               send(Socket.conn, resp, strlen(resp), 0);
               close(Socket.conn);
               return -1;
             }
-            else if (n < 12)
+            if (strncmp(buf + n - 1, "\x3", 1))
             {
-              char *resp = "ERROR MISSING NEOMUTT IPC MSG TYPE";
+              char *resp = "1\x1FMissing end character (\\x3)";
               send(Socket.conn, resp, strlen(resp), 0);
               close(Socket.conn);
               return -1;
-            }
-            else if (!strncmp(buf + 10, "01", 2))
-            {
-              Socket.msg.type = IPC_COMMAND;
-              Socket.msg.ready = true;
-            }
-            else if (!strncmp(buf + 10, "02", 2))
-            {
-              Socket.msg.type = IPC_MAILBOX;
-              Socket.msg.ready = true;
-            }
-            else if (!strncmp(buf + 10, "03", 2))
-            {
-              Socket.msg.type = IPC_CONFIG;
-              Socket.msg.ready = true;
             }
             else
             {
-              char *resp = "ERROR UNKNOWN NEOMUTT IPC MSG TYPE";
-              send(Socket.conn, resp, strlen(resp), 0);
-              close(Socket.conn);
-              return -1;
+              ipc_populate_data(buf);
             }
-
-            memcpy(Socket.msg.data, buf + 12, n - 12);
-            Socket.msg.data[n - 12] = '\0';
           }
 #endif
         }

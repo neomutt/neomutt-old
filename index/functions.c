@@ -655,6 +655,19 @@ static int op_group_reply(struct IndexSharedData *shared,
 }
 
 /**
+ * op_ipc - 
+ */
+static int op_ipc(struct IndexSharedData *shared, struct IndexPrivateData *priv, int op)
+{
+  ipc_clear_data();
+  if (STAILQ_FIRST(&Socket.msg.data.command))
+    close_conn(0, "");
+  else
+    close_conn(2, "");
+  return FR_SUCCESS;
+}
+
+/**
  * op_jump - Jump to an index number - Implements ::index_function_t - @ingroup index_function_api
  */
 static int op_jump(struct IndexSharedData *shared, struct IndexPrivateData *priv, int op)
@@ -857,6 +870,7 @@ static int op_main_change_folder(struct IndexSharedData *shared,
   /* By default, fill buf with the next mailbox that contains unread mail */
   mutt_mailbox_next(shared->ctx ? shared->mailbox : NULL, folderbuf);
 
+  /*
 #ifdef USE_IPC
   if (Socket.msg.ready)
   {
@@ -864,6 +878,7 @@ static int op_main_change_folder(struct IndexSharedData *shared,
     goto folderbuf_ready;
   }
 #endif
+*/
   if (mutt_buffer_enter_fname(cp, folderbuf, true, shared->mailbox, false, NULL,
                               NULL, MUTT_SEL_NO_FLAGS) == -1)
   {
@@ -2927,9 +2942,12 @@ struct IndexFunction IndexFunctions[] = {
   { OP_FORWARD_MESSAGE,                     op_forward_message,                   CHECK_ATTACH | CHECK_IN_MAILBOX | CHECK_MSGCOUNT | CHECK_VISIBLE },
   { OP_GROUP_CHAT_REPLY,                    op_group_reply,                       CHECK_ATTACH | CHECK_IN_MAILBOX | CHECK_MSGCOUNT | CHECK_VISIBLE },
   { OP_GROUP_REPLY,                         op_group_reply,                       CHECK_ATTACH | CHECK_IN_MAILBOX | CHECK_MSGCOUNT | CHECK_VISIBLE },
+  /*
   { OP_IPC_COMMAND,                         op_enter_command,                     CHECK_NO_FLAGS },
   { OP_IPC_CONFIG,                          op_enter_command,                     CHECK_NO_FLAGS },
   { OP_IPC_MAILBOX,                         op_main_change_folder,                CHECK_NO_FLAGS },
+  */
+  { OP_IPC,                                 op_ipc,                               CHECK_NO_FLAGS },
   { OP_JUMP,                                op_jump,                              CHECK_IN_MAILBOX },
   { OP_JUMP_1,                              op_jump,                              CHECK_IN_MAILBOX },
   { OP_JUMP_2,                              op_jump,                              CHECK_IN_MAILBOX },
