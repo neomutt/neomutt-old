@@ -655,19 +655,6 @@ static int op_group_reply(struct IndexSharedData *shared,
 }
 
 /**
- * op_ipc - 
- */
-static int op_ipc(struct IndexSharedData *shared, struct IndexPrivateData *priv, int op)
-{
-  ipc_clear_data();
-  if (STAILQ_FIRST(&Socket.msg.data.command))
-    close_conn(0, "");
-  else
-    close_conn(2, "");
-  return FR_SUCCESS;
-}
-
-/**
  * op_jump - Jump to an index number - Implements ::index_function_t - @ingroup index_function_api
  */
 static int op_jump(struct IndexSharedData *shared, struct IndexPrivateData *priv, int op)
@@ -870,22 +857,22 @@ static int op_main_change_folder(struct IndexSharedData *shared,
   /* By default, fill buf with the next mailbox that contains unread mail */
   mutt_mailbox_next(shared->ctx ? shared->mailbox : NULL, folderbuf);
 
-  /*
 #ifdef USE_IPC
-  if (Socket.msg.ready)
+  if (op == OP_IPC && Socket.fcall.data)
   {
-    strcpy(folderbuf->data, Socket.msg.data);
+    strcpy(folderbuf->data, Socket.fcall.data);
     goto folderbuf_ready;
   }
 #endif
-*/
   if (mutt_buffer_enter_fname(cp, folderbuf, true, shared->mailbox, false, NULL,
                               NULL, MUTT_SEL_NO_FLAGS) == -1)
   {
     goto changefoldercleanup;
   }
 
-  // folderbuf_ready:
+#ifdef USE_IPC
+folderbuf_ready:
+#endif
   /* Selected directory is okay, let's save it. */
   mutt_browser_select_dir(mutt_buffer_string(folderbuf));
 
@@ -905,21 +892,6 @@ static int op_main_change_folder(struct IndexSharedData *shared,
     int change_folder_string(priv->menu, folderbuf->data, folderbuf->dsize,
                          &priv->oldcount, shared, read_only);
   }
-
-#ifdef USE_IPC
-  /* Last place where we need to know that data was available */
-  if (Socket.msg.ready)
-  {
-    char resp[1024] = { 0 };
-    if (rc == 0)
-      strcat(resp, "SUCCESS");
-    else
-      strcat(resp, "ERROR");
-    send(Socket.conn, resp, strlen(resp), 0);
-    Socket.msg.ready = false;
-    close(Socket.conn);
-  }
-#endif
 
 changefoldercleanup:
   mutt_buffer_pool_release(&folderbuf);
@@ -2907,6 +2879,107 @@ int index_function_dispatcher(struct MuttWindow *win, int op)
   mutt_debug(LL_DEBUG1, "Handled %s (%d) -> %s\n", opcodes_get_name(op), op, NONULL(result));
 
   return rc;
+}
+
+/**
+ * op_ipc - 
+ */
+static int op_ipc(struct IndexSharedData *shared, struct IndexPrivateData *priv, int op)
+{
+  struct ListNode *np = NULL;
+  enum CommandResult rc;
+  if (STAILQ_FIRST(&Socket.msg.data.command))
+  {
+    STAILQ_FOREACH(np, &(Socket.msg.data.command), entries)
+    {
+      Socket.fcall.data = np->data;
+      mutt_enter_command();
+    }
+    mutt_check_rescore(shared->mailbox);
+    menu_queue_redraw(priv->menu, MENU_REDRAW_FULL);
+  }
+  if (STAILQ_FIRST(&Socket.msg.data.config))
+  {
+    STAILQ_FOREACH(np, &(Socket.msg.data.config), entries)
+    {
+      char cmd[1024] = { 0 };
+      strcat(cmd, "source ");
+      strncat(cmd, np->data, 1023 - strlen(cmd));
+      Socket.fcall.data = cmd;
+      mutt_enter_command();
+    }
+    mutt_check_rescore(shared->mailbox);
+    menu_queue_redraw(priv->menu, MENU_REDRAW_FULL);
+  }
+  if (STAILQ_FIRST(&Socket.msg.data.folder))
+  {
+    STAILQ_FOREACH(np, &(Socket.msg.data.folder), entries)
+    {
+      Socket.fcall.data = np->data;
+      op_main_change_folder(shared, priv, OP_IPC);
+    }
+  }
+  if (STAILQ_FIRST(&Socket.msg.data.query))
+  {
+    struct Buffer value = mutt_buffer_make(256);
+    struct Buffer tmp = mutt_buffer_make(256);
+    STAILQ_FOREACH(np, &(Socket.msg.data.query), entries)
+    {
+      Socket.fcall.data = np->data;
+      struct HashElem *he = cs_subset_lookup(NeoMutt->sub, np->data);
+      if (!he)
+      {
+        // mutt_warning(_("No such variable: %s"), np->data);
+        continue;
+      }
+
+      if (he->type & DT_DEPRECATED)
+      {
+        //mutt_warning(_("Config variable '%s' is deprecated"), np->data);
+        continue;
+      }
+
+      int rv = cs_subset_he_string_get(NeoMutt->sub, he, &value);
+      if (CSR_RESULT(rv) != CSR_SUCCESS)
+      {
+        //rc = 1;
+        continue;
+      }
+
+      int type = DTYPE(he->type);
+      if (type == DT_PATH)
+        mutt_pretty_mailbox(value.data, value.dsize);
+
+      if ((type != DT_BOOL) && (type != DT_NUMBER) && (type != DT_LONG) && (type != DT_QUAD))
+      {
+        mutt_buffer_reset(&tmp);
+        pretty_var(value.data, &tmp);
+        mutt_buffer_strcpy(&value, tmp.data);
+      }
+
+      FILE *fp = fopen("/tmp/querries.txt", "w");
+      dump_config_neo(NeoMutt->sub->cs, he, &value, NULL,
+                      /*show_docs*/ false ? CS_DUMP_SHOW_DOCS : CS_DUMP_NO_FLAGS, fp);
+      fclose(fp);
+    }
+
+    mutt_buffer_dealloc(&value);
+    mutt_buffer_dealloc(&tmp);
+  }
+  if (Socket.msg.data.postponed)
+  {
+    op_recall_message(shared, priv, OP_IPC);
+    goto clean_up;
+  }
+
+clean_up:
+  ipc_clear_data();
+  switch (rc)
+  {
+    default:
+      close_conn(0, "");
+  }
+  return FR_SUCCESS;
 }
 
 /**

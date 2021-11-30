@@ -1,5 +1,3 @@
-#include "config.h"
-#include "mutt/lib.h"
 #include "ipc.h"
 
 struct socket Socket;
@@ -8,6 +6,7 @@ int socket_create(void)
 {
   Socket.fd = -1;
   Socket.msg.ready = false;
+  Socket.fcall.data = NULL;
 
   struct sockaddr_un localSockaddr;
   if ((Socket.fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
@@ -130,9 +129,10 @@ void ipc_clear_data(void)
   mutt_list_free(&Socket.msg.data.command);
   mutt_list_free(&Socket.msg.data.config);
   mutt_list_free(&Socket.msg.data.folder);
-  Socket.msg.data.postponed = true;
+  Socket.msg.data.postponed = false;
   mutt_list_free(&Socket.msg.data.query);
   free(Socket.msg.data.subject);
   mutt_list_free(&Socket.msg.data.to);
   Socket.msg.ready = false;
+  Socket.fcall.data = NULL;
 }

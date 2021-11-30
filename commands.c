@@ -645,17 +645,19 @@ void mutt_enter_command(void)
   struct Buffer *buf = mutt_buffer_pool_get();
   struct Buffer *err = mutt_buffer_pool_get();
 
-  /*
+  window_redraw(NULL);
 #ifdef USE_IPC
-  if (Socket.msg.ready)
+  if (Socket.fcall.data)
   {
-    strcpy(buf, Socket.msg.data);
-    if (buf[0] == '\0') goto close_conn; // like return of original
+    strncpy(buf, Socket.fcall.data, 1023);
+    if (buf[0] == '\0')
+    {
+      Socket.fcall.rc = 0;
+      return;
+    }
     goto buf_ready;
   }
 #endif
-*/
-  window_redraw(NULL);
   /* if enter is pressed after : with no command, just return */
   if ((mutt_buffer_get_field(":", buf, MUTT_COMP_COMMAND, false, NULL, NULL, NULL) != 0) ||
       mutt_buffer_is_empty(buf))
@@ -663,7 +665,9 @@ void mutt_enter_command(void)
     goto done;
   }
 
-  // buf_ready:
+#ifdef USE_IPC
+buf_ready:;
+#endif
   /* check if buf is a valid icommand, else fall back quietly to parse_rc_lines */
   enum CommandResult rc = mutt_parse_icommand(mutt_buffer_string(buf), err);
   if (!mutt_buffer_is_empty(err))
@@ -697,28 +701,8 @@ void mutt_enter_command(void)
     notify_send(NeoMutt->notify, NT_GLOBAL, NT_GLOBAL_COMMAND, NULL);
   }
 
-#ifdef USE_IPC
-  /* Last place where we need to know that data was available */
-  if (Socket.msg.ready)
-  {
-    char resp[1024] = { 0 };
-    switch (rc)
-    {
-      case MUTT_CMD_SUCCESS:
-        strcat(resp, "SUCCESS");
-        break;
-      case MUTT_CMD_WARNING:
-        strcat(resp, "WARNING");
-        break;
-      default:
-        strcat(resp, "ERROR");
-        break;
-    }
-    send(Socket.conn, resp, strlen(resp), 0);
-    // close_conn:
-    Socket.msg.ready = false;
-    close(Socket.conn);
-  }
+#ifdef IPC
+  Socket.fcall.rc = rc;
 #endif
 
 done:

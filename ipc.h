@@ -10,6 +10,9 @@
 #include "string.h"
 #include "mutt/list.h"
 #include "stdlib.h"
+#include "config.h"
+#include "mutt/lib.h"
+#include "core/neomutt.h"
 
 struct ipc_data {
   struct ListHead attach;
@@ -29,10 +32,16 @@ struct socket_msg {
   struct ipc_data data;
 };
 
+struct function_call {
+  char *data;
+  int rc;
+};
+
 struct socket{
   int fd;
   int conn; /* send data back to client and close connection */
   struct socket_msg msg;
+  struct function_call fcall;
 };
 
 extern struct socket Socket;
