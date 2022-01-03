@@ -55,6 +55,9 @@ void show_backtrace(void);
 
 // Compose
 void compose_automate(struct AttachCtx *actx, int *action_num);
+char body_name(const struct Body *b);
+void dump_body_next(struct Buffer *buf, const struct Body *b);
+void dump_body_one_line(const struct Body *b);
 
 // Email
 void        add_flag               (struct Buffer *buf, bool is_set, const char *name);

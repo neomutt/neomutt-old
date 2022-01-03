@@ -69,7 +69,7 @@
 // #define GV_HIDE_CONFIG
 // #define GV_HIDE_ADATA
 // #define GV_HIDE_MDATA
-// #define GV_HIDE_BODY_CONTENT
+#define GV_HIDE_BODY_CONTENT
 
 static void dot_email(FILE *fp, struct Email *e, struct ListHead *links);
 static void dot_envelope(FILE *fp, struct Envelope *env, struct ListHead *links);
@@ -1134,12 +1134,12 @@ static void dot_body(FILE *fp, struct Body *b, struct ListHead *links, bool link
   dot_type_string(fp, "encoding", get_content_encoding(b->encoding), true);
   dot_type_string(fp, "disposition", get_content_disposition(b->disposition), true);
 
-  if (b->stamp != 0)
-  {
-    char arr[64];
-    dot_type_date(arr, sizeof(arr), b->stamp);
-    dot_type_string(fp, "stamp", arr, true);
-  }
+  // if (b->stamp != 0)
+  // {
+  //   char arr[64];
+  //   dot_type_date(arr, sizeof(arr), b->stamp);
+  //   dot_type_string(fp, "stamp", arr, true);
+  // }
 
 #define ADD_BOOL(F) add_flag(&buf, b->F, #F)
   ADD_BOOL(attach_qualifies);
@@ -1160,12 +1160,12 @@ static void dot_body(FILE *fp, struct Body *b, struct ListHead *links, bool link
   dot_type_string(fp, "bools",
                   mutt_buffer_is_empty(&buf) ? "[NONE]" : mutt_buffer_string(&buf), true);
 
-  dot_type_number(fp, "attach_count", b->attach_count);
-  dot_type_number(fp, "hdr_offset", b->hdr_offset);
-  dot_type_number(fp, "length", b->length);
-  dot_type_number(fp, "offset", b->offset);
+  // dot_type_number(fp, "attach_count", b->attach_count);
+  // dot_type_number(fp, "hdr_offset", b->hdr_offset);
+  // dot_type_number(fp, "length", b->length);
+  // dot_type_number(fp, "offset", b->offset);
 
-  dot_ptr(fp, "aptr", b->aptr, "#3bcbc4");
+  // dot_ptr(fp, "aptr", b->aptr, "#3bcbc4");
 
 #ifdef GV_HIDE_BODY_CONTENT
   if (!TAILQ_EMPTY(&b->parameter))
@@ -1469,7 +1469,7 @@ void dump_graphviz_body(struct Body *b)
   struct ListHead links = STAILQ_HEAD_INITIALIZER(links);
 
   time_t now = time(NULL);
-  mutt_date_localtime_format(name, sizeof(name), "%R-email.gv", now);
+  mutt_date_localtime_format(name, sizeof(name), "%T-email.gv", now);
 
   umask(022);
   FILE *fp = fopen(name, "w");
