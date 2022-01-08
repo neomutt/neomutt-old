@@ -39,6 +39,13 @@
 #define OPS_AUTOCRYPT(_)
 #endif
 
+#ifdef USE_DEBUG_COMPOSE
+#define OPS_DEBUG(_fmt) \
+  _fmt(OP_COMPOSE_AUTOMATE,               "automate the compose dialog")
+#else
+#define OPS_DEBUG(_)
+#endif
+
 #define OPS_CORE(_fmt) \
   _fmt(OP_ATTACH_COLLAPSE,                N_("toggle display of subparts")) \
   _fmt(OP_ATTACH_VIEW_MAILCAP,            N_("force viewing of attachment using mailcap")) \
@@ -328,6 +335,7 @@
   _fmt(OP_NULL,                           N_("null operation")) \
   OPS_AUTOCRYPT(_fmt) \
   OPS_CORE(_fmt) \
+  OPS_DEBUG(_fmt) \
   OPS_SIDEBAR(_fmt) \
   OPS_MIX(_fmt) \
   OPS_NOTMUCH(_fmt) \

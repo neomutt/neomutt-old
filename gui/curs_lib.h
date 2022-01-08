@@ -73,5 +73,6 @@ int          mutt_strnwidth(const char *s, size_t len);
 void         mutt_unget_event(int ch, int op);
 void         mutt_unget_string(const char *s);
 size_t       mutt_wstr_trunc(const char *src, size_t maxlen, size_t maxwid, size_t *width);
+bool         keyboard_buffer_is_empty(void);
 
 #endif /* MUTT_CURS_LIB_H */

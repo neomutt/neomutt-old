@@ -672,7 +672,7 @@ int km_dokey(enum MenuType mtype)
     }
 #endif
 
-    mutt_getch_timeout(i * 1000);
+    mutt_getch_timeout(i * 10);
     tmp = mutt_getch();
     mutt_getch_timeout(-1);
 

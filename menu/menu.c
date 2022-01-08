@@ -380,6 +380,8 @@ int menu_loop(struct Menu *menu)
     {
       if (menu->tagprefix)
         msgwin_clear_text();
+      if (op == -2) // Timeout
+        return op;
       continue;
     }
 

@@ -44,6 +44,7 @@
 #include "core/lib.h"
 
 struct AddressList;
+struct AttachCtx;
 struct Buffer;
 struct Context;
 struct ListHead;
@@ -51,6 +52,9 @@ struct NotifyCallback;
 
 // Backtrace
 void show_backtrace(void);
+
+// Compose
+void compose_automate(struct AttachCtx *actx, int *action_num);
 
 // Email
 void        add_flag               (struct Buffer *buf, bool is_set, const char *name);

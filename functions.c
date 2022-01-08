@@ -470,6 +470,9 @@ const struct Binding OpCompose[] = { /* map: compose */
 #ifdef USE_AUTOCRYPT
   { "autocrypt-menu",        OP_COMPOSE_AUTOCRYPT_MENU,      "o" },
 #endif
+#ifdef USE_DEBUG_COMPOSE
+  { "automate",              OP_COMPOSE_AUTOMATE,            "g" },
+#endif
   { "copy-file",             OP_SAVE,                        "C" },
   { "detach-file",           OP_DELETE,                      "D" },
   { "display-toggle-weed",   OP_DISPLAY_HEADERS,             "h" },

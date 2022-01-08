@@ -35,7 +35,12 @@
 #endif
 
 static struct ConfigDef ComposeVars[] = {
-  // clang-format off
+// clang-format off
+#ifdef USE_DEBUG_COMPOSE
+  { "compose_autorun", DT_NUMBER, 1, 0, NULL,
+    "Number of automatic runs to perform, 0 means forever"
+  },
+#endif
   { "compose_format", DT_STRING|R_MENU, IP "-- NeoMutt: Compose  [Approx. msg size: %l   Atts: %a]%>-", 0, NULL,
     "printf-like format string for the Compose panel's status bar"
   },

@@ -87,6 +87,9 @@
 #include "opcodes.h"
 #include "options.h"
 #include "shared_data.h"
+#ifdef USE_DEBUG_COMPOSE
+#include "debug/lib.h"
+#endif
 
 int HeaderPadding[HDR_ATTACH_TITLE] = { 0 };
 int MaxHeaderWidth = 0;
@@ -393,6 +396,10 @@ static struct MuttWindow *compose_dlg_init(struct ConfigSubset *sub,
 int mutt_compose_menu(struct Email *e, struct Buffer *fcc, uint8_t flags,
                       struct ConfigSubset *sub)
 {
+#ifdef USE_DEBUG_COMPOSE
+  static bool automate = false;
+  int action_num = 0;
+#endif
   init_header_padding();
 
   bool loop = true;
@@ -436,9 +443,18 @@ int mutt_compose_menu(struct Email *e, struct Buffer *fcc, uint8_t flags,
     OptNews = false; /* for any case */
 #endif
     window_redraw(NULL);
+#ifdef USE_DEBUG_COMPOSE
+    if (automate)
+      compose_automate(shared->adata->actx, &action_num);
+#endif
     const int op = menu_loop(shared->adata->menu);
     if (op >= 0)
       mutt_debug(LL_DEBUG1, "Got op %s (%d)\n", OpStrings[op][0], op);
+
+#ifdef USE_DEBUG_COMPOSE
+    if (op == OP_COMPOSE_AUTOMATE)
+      automate = true;
+#endif
 
     int rc = compose_function_dispatcher(dlg, op);
     if (rc == IR_DONE)
