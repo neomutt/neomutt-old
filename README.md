@@ -45,9 +45,6 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 - [refactor-mutt_parse_hook](https://github.com/neomutt/neomutt-old/tree/refactor-mutt_parse_hook)
   [@jindraj](https://github.com/jindraj)'s Refactor mutt_parse_hook()
 
-- [compose-multipart](https://github.com/neomutt/neomutt-old/tree/compose-multipart)
-  [@dcpurton](https://github.com/dcpurton)'s Improve composition of multipart messages
-
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
