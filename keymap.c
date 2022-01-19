@@ -1026,14 +1026,6 @@ void km_init(void)
   create_bindings(OpSmime, MENU_KEY_SELECT_SMIME);
 #endif
 
-#ifdef MIXMASTER
-  create_bindings(OpMix, MENU_MIX);
-
-  km_bindkey("<space>", MENU_MIX, OP_GENERIC_SELECT_ENTRY);
-  km_bindkey("h", MENU_MIX, OP_MIX_CHAIN_PREV);
-  km_bindkey("l", MENU_MIX, OP_MIX_CHAIN_NEXT);
-#endif
-
 #ifdef USE_AUTOCRYPT
   create_bindings(OpAutocryptAcct, MENU_AUTOCRYPT_ACCT);
 #endif
@@ -1326,10 +1318,6 @@ const struct Binding *km_get_table(enum MenuType mtype)
 #endif
     case MENU_MAIN:
       return OpMain;
-#ifdef MIXMASTER
-    case MENU_MIX:
-      return OpMix;
-#endif
     case MENU_PAGER:
       return OpPager;
     case MENU_PGP:

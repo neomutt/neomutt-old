@@ -210,9 +210,6 @@ static int calc_envelope(struct MuttWindow *win, struct ComposeSharedData *share
                          struct ComposeEnvelopeData *edata)
 {
   int rows = 4; // 'From:', 'Subject:', 'Reply-To:', 'Fcc:'
-#ifdef MIXMASTER
-  rows++;
-#endif
 
   struct Email *e = shared->email;
   struct Envelope *env = e->env;
@@ -403,46 +400,6 @@ static int draw_crypt_lines(struct MuttWindow *win, struct ComposeSharedData *sh
 #endif
   return used;
 }
-
-#ifdef MIXMASTER
-/**
- * draw_mix_line - Redraw the Mixmaster chain
- * @param chain List of chain links
- * @param win   Window to draw on
- * @param row   Window row to start drawing
- */
-static void draw_mix_line(struct ListHead *chain, struct MuttWindow *win, int row)
-{
-  char *t = NULL;
-
-  draw_header(win, row, HDR_MIX);
-
-  if (STAILQ_EMPTY(chain))
-  {
-    mutt_window_addstr(win, _("<no chain defined>"));
-    mutt_window_clrtoeol(win);
-    return;
-  }
-
-  int c = 12;
-  struct ListNode *np = NULL;
-  STAILQ_FOREACH(np, chain, entries)
-  {
-    t = np->data;
-    if (t && (t[0] == '0') && (t[1] == '\0'))
-      t = "<random>";
-
-    if (c + mutt_str_len(t) + 2 >= win->state.cols)
-      break;
-
-    mutt_window_addstr(win, NONULL(t));
-    if (STAILQ_NEXT(np, entries))
-      mutt_window_addstr(win, ", ");
-
-    c += mutt_str_len(t) + 2;
-  }
-}
-#endif
 
 /**
  * draw_envelope_addr - Write addresses to the compose window
@@ -649,9 +606,6 @@ static void draw_envelope(struct MuttWindow *win, struct ComposeSharedData *shar
   if (WithCrypto)
     row += draw_crypt_lines(win, shared, edata, row);
 
-#ifdef MIXMASTER
-  draw_mix_line(&e->chain, win, row++);
-#endif
   const bool c_compose_show_user_headers =
       cs_subset_bool(shared->sub, "compose_show_user_headers");
   if (c_compose_show_user_headers)

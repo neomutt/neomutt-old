@@ -780,19 +780,6 @@ int mutt_get_postponed(struct Mailbox *m_cur, struct Email *hdr,
       hdr->security = mutt_parse_crypt_hdr(strchr(np->data, ':') + 1, true, APPLICATION_SMIME);
       hdr->security |= APPLICATION_SMIME;
     }
-#ifdef MIXMASTER
-    else if (mutt_str_startswith(np->data, "X-Mutt-Mix:"))
-    {
-      mutt_list_free(&hdr->chain);
-
-      char *t = strtok(np->data + 11, " \t\n");
-      while (t)
-      {
-        mutt_list_insert_tail(&hdr->chain, mutt_str_dup(t));
-        t = strtok(NULL, " \t\n");
-      }
-    }
-#endif
     else
     {
       // skip header removal

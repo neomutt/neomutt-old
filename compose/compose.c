@@ -106,10 +106,6 @@ const char *const Prompts[] = {
   N_("Reply-To: "),
   /* L10N: Compose menu field.  May not want to translate. */
   N_("Fcc: "),
-#ifdef MIXMASTER
-  /* L10N: "Mix" refers to the MixMaster chain for anonymous email */
-  N_("Mix: "),
-#endif
   /* L10N: Compose menu field.  Holds "Encrypt", "Sign" related information */
   N_("Security: "),
   /* L10N: This string is used by the compose menu.

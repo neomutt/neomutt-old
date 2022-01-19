@@ -542,7 +542,7 @@ msgstr "Skapa %s?"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Radera"
 
@@ -1346,11 +1346,6 @@ msgstr "Svara"
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr ""
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1396,7 +1391,7 @@ msgstr ""
 msgid "Send"
 msgstr "Skicka"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Avbryt"
 
@@ -6469,40 +6464,6 @@ msgstr "extrahera stödda publika nycklar"
 msgid "wipe passphrases from memory"
 msgstr "rensa lösenfras(er) från minnet"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "skicka meddelandet genom en \"mixmaster remailer\" kedja"
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "Lägg till en \"remailer\" till kedjan"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "Välj nästa element i kedjan"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "Välj föregående element i kedjan"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "Radera en \"remailer\" från kedjan"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "Infoga en \"remailer\" i kedjan"
-
-#: opcodes.h:285
-#, fuzzy
-msgid "accept the chain constructed"
-msgstr "Godkänn den konstruerade kedjan"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7362,70 +7323,6 @@ msgstr "Kan inte avkoda alla märkta bilagor. MIME-inkapsla de övriga?"
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Du kan bara återsända \"message/rfc822\"-delar"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Lägg till"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Infoga"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Kan inte hämta mixmasters type2.list"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Välj en återpostarkedja"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Fel: %s kan inte användas som den sista återpostaren i en kedja"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster-kedjor är begränsade till %d element"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Återpostarkedjan är redan tom"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Du har redan valt det första kedjeelementet"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Du har redan valt det sista kedjeelementet"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster accepterar inte Cc eller Bcc-huvuden"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Var vänlig och sätt \"hostname\"-variabeln till ett passande värde vid användande av mixmaster"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Fel vid sändning av meddelande, barn returnerade %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Fel vid sändning av meddelande"
 
 #: score.c:149
 msgid "Error: score: invalid number"

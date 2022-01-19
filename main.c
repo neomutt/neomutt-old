@@ -106,7 +106,6 @@
  * | options.h       | @subpage neo_options       |
  * | postpone.c      | @subpage neo_postpone      |
  * | recvcmd.c       | @subpage neo_recvcmd       |
- * | remailer.c      | @subpage neo_remailer      |
  * | resize.c        | @subpage neo_resize        |
  * | rfc3676.c       | @subpage neo_rfc3676       |
  * | score.c         | @subpage neo_score         |

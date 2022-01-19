@@ -545,7 +545,7 @@ msgstr "Luodaanko %s?"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Poista"
 
@@ -1318,11 +1318,6 @@ msgstr "Reply-To: "
 msgid "Fcc: "
 msgstr "Fcc: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1366,7 +1361,7 @@ msgstr ""
 msgid "Send"
 msgstr "Lähetä"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Peru"
 
@@ -6288,34 +6283,6 @@ msgstr "hae tuetut julkiset avaimet"
 msgid "wipe passphrases from memory"
 msgstr "pyyhi salasanat pois muistista"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "lähetä viestit mixmastern uudelleenpostitusketjun lävitse"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "lisää uudelleenpostitus ketjun perään"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "valitse seuraava elementti ketjusta"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "valtise edellinen elementti ketjusta"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "poista uudelleenpostitus ketjusta"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "lisää uudelleenpostitus ketjuun"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "hyväksy rakennettu ketju"
-
 #: opcodes.h:292
 msgid "open a different virtual folder"
 msgstr "avaa toinen virtuaalikansio"
@@ -7162,70 +7129,6 @@ msgstr "Ei voitu purkaa kaikkia liitteitä, MIME-koodataanko muut?"
 #: recvcmd.c:1127
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Vain message/rfc822-osia kirjoittaa lähettäjälle"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Jatka perään"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Sisällytä"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr "<satunnainen>"
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Ei voitu hakea mixmasterin type2.listaa"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Valitse uudelleenpostitusketju"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Virhe: %s ei voi olla uudelleenpostitusketjun viimeinen osa"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster-ketjuissa voi olla enintään %d elementtiä."
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Uudelleenpostitusketju on jo tyhjä."
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Ketjun ensimmäinen elementti on jo valittu"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Ketjun viimeinen elementti on jo valittu"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster ei tue CC- tai BCC-otsakkeita"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Verkkonimimuuttujan pitää olla toimiva mixmasteria varten"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Virhe viestin lähetyksessä, lapsiprosessi palautti arvon %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Virhe viestin lähetyksessä"
 
 #: score.c:149
 msgid "Error: score: invalid number"

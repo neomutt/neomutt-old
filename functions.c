@@ -504,9 +504,6 @@ const struct Binding OpCompose[] = { /* map: compose */
   { "group-multilingual",    OP_COMPOSE_GROUP_LINGUAL,       "^" },
   { "ungroup-attachment",    OP_COMPOSE_UNGROUP_ATTACHMENT,  "#" },
   { "ispell",                OP_COMPOSE_ISPELL,              "i" },
-#ifdef MIXMASTER
-  { "mix",                   OP_COMPOSE_MIX,                 "M" },
-#endif
   { "move-down",             OP_COMPOSE_MOVE_DOWN,           "+" },
   { "move-up",               OP_COMPOSE_MOVE_UP,             "-" },
   { "new-mime",              OP_COMPOSE_NEW_MIME,            "n" },
@@ -667,22 +664,6 @@ const struct Binding OpSmime[] = { /* map: smime */
 #endif
   { NULL, 0, NULL },
 };
-
-#ifdef MIXMASTER
-/**
- * OpMix - Key bindings for the mixmaster menu
- */
-const struct Binding OpMix[] = { /* map: mixmaster */
-  { "accept",                OP_MIX_USE,                     "\n" },            // <Enter>
-  { "accept",                OP_MIX_USE,                     "\r" },            // <Return>
-  { "append",                OP_MIX_APPEND,                  "a" },
-  { "chain-next",            OP_MIX_CHAIN_NEXT,              "<right>" },
-  { "chain-prev",            OP_MIX_CHAIN_PREV,              "<left>" },
-  { "delete",                OP_MIX_DELETE,                  "d" },
-  { "insert",                OP_MIX_INSERT,                  "i" },
-  { NULL, 0, NULL },
-};
-#endif /* MIXMASTER */
 
 #ifdef USE_AUTOCRYPT
 /**

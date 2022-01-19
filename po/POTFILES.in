@@ -292,7 +292,6 @@ postpone.c
 progress/progress.c
 question/question.c
 recvcmd.c
-remailer.c
 resize.c
 rfc3676.c
 score.c

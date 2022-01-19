@@ -672,25 +672,6 @@ static struct ConfigDef MainVars[] = {
   // clang-format on
 };
 
-#if defined(MIXMASTER)
-#ifdef MIXMASTER
-#define MIXMASTER_DEFAULT MIXMASTER
-#else
-#define MIXMASTER_DEFAULT ""
-#endif
-static struct ConfigDef MainVarsMixmaster[] = {
-  // clang-format off
-  { "mix_entry_format", DT_STRING|DT_NOT_EMPTY, IP "%4n %c %-16s %a", 0, NULL,
-    "(mixmaster) printf-like format string for the mixmaster chain"
-  },
-  { "mixmaster", DT_STRING|DT_COMMAND, IP MIXMASTER_DEFAULT, 0, NULL,
-    "(mixmaster) External command to route a mixmaster message"
-  },
-  { NULL },
-  // clang-format on
-};
-#endif
-
 #if defined(HAVE_LIBIDN)
 static struct ConfigDef MainVarsIdn[] = {
   // clang-format off
@@ -711,10 +692,6 @@ static struct ConfigDef MainVarsIdn[] = {
 static bool config_init_main(struct ConfigSet *cs)
 {
   bool rc = cs_register_variables(cs, MainVars, 0);
-
-#if defined(MIXMASTER)
-  rc |= cs_register_variables(cs, MainVarsMixmaster, 0);
-#endif
 
 #if defined(HAVE_LIBIDN)
   rc |= cs_register_variables(cs, MainVarsIdn, 0);

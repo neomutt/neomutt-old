@@ -5,7 +5,7 @@
 #
 # Velko Hristov <hristov@informatik.hu-berlin.de>, 2003
 #
-# todo: remailer, debugging, pipe, mailing list, clear & continue, subparts, captitalize,
+# todo: debugging, pipe, mailing list, clear & continue, subparts, captitalize,
 # todo: overflow, certfile
 # todo: matching - "съвпадащи" или "отговарящи на"?
 #
@@ -551,7 +551,7 @@ msgstr "Желаете ли да създадете %s?"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Изтриване"
 
@@ -1359,11 +1359,6 @@ msgstr "Отговор"
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr ""
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1409,7 +1404,7 @@ msgstr ""
 msgid "Send"
 msgstr "Изпращане"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Отказ"
 
@@ -6497,40 +6492,6 @@ msgstr "извлича поддържаните публични ключове"
 msgid "wipe passphrases from memory"
 msgstr "отстранява паролите от паметта"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "изпраща писмото през mixmaster remailer верига"
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "добавя remailer към веригата"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "избира следващия елемент от веригата"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "избира предишния елемент от веригата"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "изтрива remailer от веригата"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "вмъква remailer във веригата"
-
-#: opcodes.h:285
-#, fuzzy
-msgid "accept the chain constructed"
-msgstr "одобрява конструираната верига"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7396,70 +7357,6 @@ msgstr "Декодирането на всички маркирани прило
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Може да изпращате отново само message/rfc822 части"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Добавяне"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Вмъкване"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "ОК"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Невъзможно получаването на mixmaster \"type2.list\""
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Избор на remailer верига"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Грешка: %s не може да се използва като последен remailer във веригата"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "mixmaster веригите са ограничени до %d елемента"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "remailer веригата вече е празна"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Първият елемент от веригата е вече избран"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Последният елемент от веригата е вече избран"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "mixmaster не приема Cc или Bcc заглавни полета"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Моля, поставете валидна стойност в променливата \"hostname\" когато използвате mixmaster"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Грешка (%d) при изпращане на писмото.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Грешка при изпращане на писмото"
 
 #: score.c:149
 msgid "Error: score: invalid number"

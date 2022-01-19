@@ -546,7 +546,7 @@ msgstr "%s를 만들까요?"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "삭제"
 
@@ -1348,11 +1348,6 @@ msgstr "답장"
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr ""
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1398,7 +1393,7 @@ msgstr ""
 msgid "Send"
 msgstr "보냄"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "취소"
 
@@ -6477,40 +6472,6 @@ msgstr "공개 열쇠 추출"
 msgid "wipe passphrases from memory"
 msgstr "메모리에서 암호 문구 지움"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "mixmaster 리메일러 체인을 통한 메일 보내기"
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "체인에 리메일러 첨가"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "체인의 다음 항목 선택"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "체인의 이전 항목 선택"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "체인에서 리메일러 삭제"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "체인에 리메일러 삽입"
-
-#: opcodes.h:285
-#, fuzzy
-msgid "accept the chain constructed"
-msgstr "체인 구조를 허가함"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7372,70 +7333,6 @@ msgstr "표시된 첨부물을 모두 디코딩하지 못함. 나머지는 MIME 
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "message/rfc822 부분만 전달할 수 있습니다"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "첨가"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "삽입"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "확인"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "mixmaster의 type2.list를 찾지 못함"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "리메일러 체인 선택"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "오류: %s는 체인의 마지막 리메일러로 사용할수 없음"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster 체인은 %d개의 제한이 있음"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "리메일러 체인이 이미 비어 있음"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "이미 첫번째 체인을 선택했음"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "이미 마지막 체인을 선택했음"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster는 Cc 또는 Bcc 헤더를 허용하지 않음"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "mixmaster를 사용하기 위한 적당한 호스트 변수를 사용하세요"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "메일 보내는 중 오류 %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "메일 보내는 중 오류"
 
 #: score.c:149
 msgid "Error: score: invalid number"

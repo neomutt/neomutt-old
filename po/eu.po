@@ -542,7 +542,7 @@ msgstr "Sortu %s?"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Ezabatu"
 
@@ -1346,11 +1346,6 @@ msgstr "Erantzun"
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr ""
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1396,7 +1391,7 @@ msgstr ""
 msgid "Send"
 msgstr "Bidali"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Ezeztatu"
 
@@ -6466,40 +6461,6 @@ msgstr "onartutako gako publikoak atera"
 msgid "wipe passphrases from memory"
 msgstr "pasahitza(k) memoriatik ezabatu"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "mixmaster berbidalketa katearen bidez bidali mezua"
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "Kateari berbidaltze bat gehitu"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "Katearen hurrengo elementua aukeratu"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "Katearen aurreko elementua aukeratu"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "Kateari berbidaltze bat ezabatu"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "Kateari berbidaltze bat gehitu"
-
-#: opcodes.h:285
-#, fuzzy
-msgid "accept the chain constructed"
-msgstr "Eratutako katea onartu"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7359,70 +7320,6 @@ msgstr "Ezin dira markaturiko mezu guztiak deskodifikatu.  MIME enkapsulatu best
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Bakarrik message/rfc822 motako zatiak errebota ditzakezu"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Gehitu"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Txertatu"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "Ados"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Mixmaster-en type2.zerrenda ezin da eskuratu"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Berbidaltze katea aukeratu"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Errorea: %s ezin da katearen azken berbidaltze bezala erabili"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster kateak %d elementuetara mugaturik daude"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Berbidaltzaile katea dagoeneko betea dago"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Zuk dagoeneko kateko lehenengo elementua aukeraturik duzu"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Zuk dagoeneko kateko azkenengo elementua aukeraturik duzu"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Miixmasterrek ez du Cc eta Bcc burukorik onartzen"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Mesedez ezarri mixmaster erabiltzen denerako ostalari izen egokia"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Errorea mezua bidaltzerakoan, azpiprozesua uzten %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Errorea mezua bidaltzerakoan"
 
 #: score.c:149
 msgid "Error: score: invalid number"

@@ -541,7 +541,7 @@ msgstr "%s aanmaken?"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Verwijderen"
 
@@ -1343,11 +1343,6 @@ msgstr "Antw."
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1392,7 +1387,7 @@ msgstr ""
 msgid "Send"
 msgstr "Versturen"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Afbreken"
 
@@ -6415,34 +6410,6 @@ msgstr "extraheer ondersteunde publieke sleutels"
 msgid "wipe passphrases from memory"
 msgstr "verwijder wachtwoord(en) uit geheugen"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "verstuur het bericht via een \"mixmaster remailer\" lijst"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "voeg een remailer toe aan het einde van de lijst"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "kies het volgende item uit de lijst"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "kies het vorige item uit de lijst"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "verwijder een remailer van de lijst"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "voeg een remailer toe in de lijst"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "accepteer de gemaakte lijst"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7297,70 +7264,6 @@ msgstr "Kan niet alle bijlagen decoderen. De rest inpakken met MIME?"
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "U kunt alleen message/rfc822-gedeelten doorsturen!"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Toevoegen"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Invoegen"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Kan type2.list niet lezen van mixmaster."
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Selecteer een remailer lijster"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Fout: %s kan niet gebruikt worden als laaste remailer van een lijst"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster lijsten zijn beperkt tot %d items"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "De remailer lijst is al leeg"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Het eerste lijst-item is al geselecteerd"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Het laaste lijst-item is al geselecteerd"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster laat geen CC of BCC-kopregels toe"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "De hostname variable moet ingesteld zijn voor mixmaster gebruik"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Externe fout %d opgetreden tijdens versturen van bericht.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Er is een fout opgetreden tijdens het versturen van het bericht"
 
 #: score.c:149
 msgid "Error: score: invalid number"

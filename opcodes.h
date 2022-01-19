@@ -274,19 +274,6 @@
   _fmt(OP_EXTRACT_KEYS,                   N_("extract supported public keys")) \
   _fmt(OP_FORGET_PASSPHRASE,              N_("wipe passphrases from memory")) \
 
-#ifdef MIXMASTER
-#define OPS_MIX(_fmt) \
-  _fmt(OP_COMPOSE_MIX,                    N_("send the message through a mixmaster remailer chain")) \
-  _fmt(OP_MIX_APPEND,                     N_("append a remailer to the chain")) \
-  _fmt(OP_MIX_CHAIN_NEXT,                 N_("select the next element of the chain")) \
-  _fmt(OP_MIX_CHAIN_PREV,                 N_("select the previous element of the chain")) \
-  _fmt(OP_MIX_DELETE,                     N_("delete a remailer from the chain")) \
-  _fmt(OP_MIX_INSERT,                     N_("insert a remailer into the chain")) \
-  _fmt(OP_MIX_USE,                        N_("accept the chain constructed"))
-#else
-#define OPS_MIX(_)
-#endif
-
 #ifdef USE_NOTMUCH
 #define OPS_NOTMUCH(_fmt) \
   _fmt(OP_MAIN_CHANGE_VFOLDER,            N_("open a different virtual folder")) \
@@ -329,7 +316,6 @@
   OPS_AUTOCRYPT(_fmt) \
   OPS_CORE(_fmt) \
   OPS_SIDEBAR(_fmt) \
-  OPS_MIX(_fmt) \
   OPS_NOTMUCH(_fmt) \
   OPS_PGP(_fmt) \
   OPS_SMIME(_fmt) \

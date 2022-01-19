@@ -552,7 +552,7 @@ msgstr "¿Crear %s?"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Borrar"
 
@@ -1361,11 +1361,6 @@ msgstr "Responder"
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr ""
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1411,7 +1406,7 @@ msgstr ""
 msgid "Send"
 msgstr "Enviar"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Cancelar"
 
@@ -6550,40 +6545,6 @@ msgstr "extraer chaves públicas PGP"
 msgid "wipe passphrases from memory"
 msgstr "borra-lo contrasinal PGP de memoria"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "envia-la mensaxe a través dunha cadea de remailers mixmaster"
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "Engadir un remailer á cadea"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "Selecciona-lo vindeiro elemento da cadea"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "Selecciona-lo anterior elemento da cadea"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "Borrar un remailer da cadea"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "Insertar un remailer na cadea"
-
-#: opcodes.h:285
-#, fuzzy
-msgid "accept the chain constructed"
-msgstr "Acepta-la cadea construida"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7457,70 +7418,6 @@ msgstr ""
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Somentes podes rebotar partes \"message/rfc822\""
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Engadir"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Insertar"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "Ok"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Non foi posible recolle-lo 'type2.list' do mixmaster."
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Seleccionar unha cadea de remailers"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Erro: %s non pode ser usado como remailer final dunha cadea"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "As cadeas mixmaster están limitadas a %d elementos"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "A cadea de remailers xa está valeira"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "O primeiro elemento da cadea xa está seleccionado"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "O derradeiro elemento da cadea xa está seleccionado"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "O mixmaster non acepta cabeceiras Cc ou Bcc"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Por favor, use un valor correcto da variable 'hostname' cando use o mixmaster."
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Erro enviando mensaxe, o proceso fillo saíu con %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Erro enviando a mensaxe"
 
 #: score.c:149
 msgid "Error: score: invalid number"

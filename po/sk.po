@@ -541,7 +541,7 @@ msgstr "Vytvoriť"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Zmazať"
 
@@ -1322,11 +1322,6 @@ msgstr "Odpovedz: "
 msgid "Fcc: "
 msgstr "Kopia do súboru: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1373,7 +1368,7 @@ msgstr "Hlavičky: "
 msgid "Send"
 msgstr "Poslať"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Prerušiť"
 
@@ -6383,40 +6378,6 @@ msgstr "extrahuj podporované verejné kľúče PGP"
 msgid "wipe passphrases from memory"
 msgstr "vymaž frázu hesla z pamäte"
 
-#: opcodes.h:279
-#, fuzzy
-msgid "send the message through a mixmaster remailer chain"
-msgstr "pošli správu cez mixmaster remailer reťaz"
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "pripojiť remailer k reťazi"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "vybrať další článok reťaze"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "vyberte predchádzajúci článok reťaza"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "vymazať remailer z reťaza"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "zložte remailer do reťaze"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "prijať zozstaven remailer reťaz"
-
 #: opcodes.h:292
 msgid "open a different virtual folder"
 msgstr "otvoriť odlišnú virtuálnu zložku"
@@ -7255,74 +7216,6 @@ msgstr "Nemožno dekódovať všetky označené prílohy.  Preposlať zvyšné v
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Môžete sestaviť správu odosielateľovi iba za použitia časti message/rfc822"
-
-#: remailer.c:99
-#, fuzzy
-msgid "Append"
-msgstr "Pripojiť"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Vložiť"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr "<náhodný>"
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Nelze získať type2.list pre mixmaster"
-
-#: remailer.c:707
-#, fuzzy
-msgid "Select a remailer chain"
-msgstr "Vybrať reťaz remailer"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Chyba: %s nemôže byť použitý ako posledný článok reťaze remaileru"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster reťaze sú limitované na %d článkov"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Remailer reťaz je už prázdny"
-
-#: remailer.c:835
-#, fuzzy
-msgid "You already have the first chain element selected"
-msgstr "Máte už vybraný prvý článok reťaze"
-
-#: remailer.c:845
-#, fuzzy
-msgid "You already have the last chain element selected"
-msgstr "Máte už vybraný posledný článok reťaze"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster neprijíma hlavičky Kópia ani Slepá kópia"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Ak používate MixMaster, je potrebné správne nastaviť premennú „hostname“"
-
-#: remailer.c:957
-#, fuzzy, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Chyba pri posielaní správy, dcérsky proces vrátil %d\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Chyba pri posielaní správy"
 
 #: score.c:149
 msgid "Error: score: invalid number"

@@ -117,9 +117,6 @@ static void *dump(struct HeaderCache *hc, const struct Email *e, int *off, uint3
   e_dump.sequence = 0;
   e_dump.notify = NULL;
   STAILQ_INIT(&e_dump.tags);
-#ifdef MIXMASTER
-  STAILQ_INIT(&e_dump.chain);
-#endif
   e_dump.edata = NULL;
 
   memcpy(d + *off, &e_dump, sizeof(struct Email));
@@ -160,9 +157,6 @@ static struct Email *restore(const unsigned char *d)
   e->notify = notify;
 
   STAILQ_INIT(&e->tags);
-#ifdef MIXMASTER
-  STAILQ_INIT(&e->chain);
-#endif
 
   e->env = mutt_env_new();
   serial_restore_envelope(e->env, d, &off, convert);

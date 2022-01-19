@@ -539,7 +539,7 @@ msgstr "Opret"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Slet"
 
@@ -1338,11 +1338,6 @@ msgstr "Svar til: "
 msgid "Fcc: "
 msgstr "Fcc: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1389,7 +1384,7 @@ msgstr ""
 msgid "Send"
 msgstr "Send"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Afbryd"
 
@@ -6367,34 +6362,6 @@ msgstr "udtræk understøttede offentlige nøgler"
 msgid "wipe passphrases from memory"
 msgstr "fjern løsen(er) fra hukommelse"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "send brevet gennem en mixmaster-genposterkæde"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "føj en genposter til kæden"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "vælg kædens næste led"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "vælg kædens forrige led"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "slet en genposter fra kæden"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "indsæt en genposter i kæden"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "acceptér den opbyggede kæde"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7249,70 +7216,6 @@ msgstr "Kan ikke afkode alle udvalgte brevdele. MIME-indkapsl de øvrige?"
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Du kan kun gensende message/rfc822-brevdele"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Tilføj"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Indsæt"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Kan ikke hente mixmasters type2.liste"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Vælg en genposterkæde"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Fejl: %s kan ikke være sidste led i kæden"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Kæden må højst have %d led"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Genposterkæden er allerede tom"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Du har allerede valgt kædens første led"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Du har allerede valgt kædens sidste led"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Breve sendt med Mixmaster må ikke have Cc- eller Bcc-felter"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Sæt hostname-variablen til en passende værdi ved brug af mixmaster"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Fejl ved afsendelse af brev, afslutningskode fra barneproces: %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Fejl ved afsendelse af brev"
 
 #: score.c:149
 msgid "Error: score: invalid number"

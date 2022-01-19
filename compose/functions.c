@@ -73,9 +73,6 @@
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #endif
-#ifdef MIXMASTER
-#include "remailer.h"
-#endif
 #ifdef USE_NNTP
 #include "nntp/lib.h"
 #include "nntp/adata.h" // IWYU pragma: keep
@@ -1887,11 +1884,6 @@ static int op_compose_send_message(struct ComposeSharedData *shared, int op)
     return IR_NO_ACTION;
   }
 
-#ifdef MIXMASTER
-  if (!STAILQ_EMPTY(&shared->email->chain) && (mix_check_message(shared->email) != 0))
-    return IR_NO_ACTION;
-#endif
-
   if (!shared->fcc_set && !mutt_buffer_is_empty(shared->fcc))
   {
     const enum QuadOption c_copy = cs_subset_quad(shared->sub, "copy");
@@ -2364,19 +2356,6 @@ static int op_compose_edit_x_comment_to(struct ComposeSharedData *shared, int op
 }
 #endif
 
-#ifdef MIXMASTER
-/**
- * op_compose_mix - Send the message through a mixmaster remailer chain - Implements ::compose_function_t - @ingroup compose_function_api
- */
-static int op_compose_mix(struct ComposeSharedData *shared, int op)
-{
-  dlg_select_mixmaster_chain(&shared->email->chain);
-  mutt_message_hook(NULL, shared->email, MUTT_SEND2_HOOK);
-  notify_send(shared->notify, NT_COMPOSE, NT_COMPOSE_ENVELOPE, NULL);
-  return IR_SUCCESS;
-}
-#endif
-
 // -----------------------------------------------------------------------------
 
 /**
@@ -2419,9 +2398,6 @@ struct ComposeFunction ComposeFunctions[] = {
   { OP_COMPOSE_GROUP_LINGUAL,       op_compose_group_lingual },
   { OP_COMPOSE_UNGROUP_ATTACHMENT,  op_compose_ungroup_attachment },
   { OP_COMPOSE_ISPELL,              op_compose_ispell },
-#ifdef MIXMASTER
-  { OP_COMPOSE_MIX,                 op_compose_mix },
-#endif
   { OP_COMPOSE_MOVE_DOWN,           op_compose_move_down },
   { OP_COMPOSE_MOVE_UP,             op_compose_move_up },
   { OP_COMPOSE_NEW_MIME,            op_compose_new_mime },

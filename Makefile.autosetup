@@ -76,9 +76,6 @@ NEOMUTTOBJS=	alternates.o commands.o command_parse.o complete.o \
 @if !HAVE_WCSCASECMP
 NEOMUTTOBJS+=	wcscasecmp.o
 @endif
-@if MIXMASTER
-NEOMUTTOBJS+=	remailer.o
-@endif
 @if USE_LUA
 NEOMUTTOBJS+=	mutt_lua.o
 @endif

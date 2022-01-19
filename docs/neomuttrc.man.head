@@ -199,7 +199,7 @@ This command allows you to change the default or define additional key bindings
 be specified by separating them with commas (no additional whitespace is
 allowed). The currently defined \fImap\fPs are:
 .BR alias ", " attach ", " browser ", " compose ", " editor ", " generic ", "
-.BR index ", " mix ", " pager ", " pgp ", " postpone ", " query " and " smime "."
+.BR index ", " pager ", " pgp ", " postpone ", " query " and " smime "."
 .IP
 \fIkey\fP is the key (or key sequence) you wish to bind, e.g.
 \(lq\fB\(rsCa\fP\(rq for control-A. In addition, \fIkey\fP may be specified as

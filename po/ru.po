@@ -540,7 +540,7 @@ msgstr "Создать"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Удалить"
 
@@ -1329,11 +1329,6 @@ msgstr "Reply-To: "
 msgid "Fcc: "
 msgstr "Fcc: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1377,7 +1372,7 @@ msgstr ""
 msgid "Send"
 msgstr "Отправить"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Прервать"
 
@@ -6358,34 +6353,6 @@ msgstr "извлечь поддерживаемые открытые ключи"
 msgid "wipe passphrases from memory"
 msgstr "удалить фразы-пароли из памяти"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "послать сообщение через цепочку remailer"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "добавить remailer в цепочку"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "выбрать следующий элемент в цепочке"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "выбрать предыдущий элемент в цепочке"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "удалить remailer из цепочки"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "вставить remailer в цепочку"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "использовать созданную цепочку"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7218,70 +7185,6 @@ msgstr "Удалось раскодировать не все вложения. 
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Вы можете перенаправлять только части типа message/rfc822"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Добавить"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Вставить"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Не удалось получить type2.list mixmaster"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Выбрать цепочку remailer"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Ошибка: %s не может быть использован как последний remailer"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Цепочки mixmaster имеют ограниченное количество элементов: %d"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Цепочка remailer уже пустая"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Вы уже пометили первый элемент цепочки"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Вы уже пометили последний элемент цепочки"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster не позволяет использовать заголовки Cc и Bcc"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Установите значение переменной hostname для использования mixmaster"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Сообщение отправить не удалось, процесс-потомок вернул %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Ошибка отправки сообщения"
 
 #: score.c:149
 msgid "Error: score: invalid number"

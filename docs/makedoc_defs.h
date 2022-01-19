@@ -30,9 +30,6 @@
 #ifndef USE_IMAP
 #define USE_IMAP
 #endif
-#ifndef MIXMASTER
-#define MIXMASTER "mixmaster"
-#endif
 #ifndef USE_POP
 #define USE_POP
 #endif

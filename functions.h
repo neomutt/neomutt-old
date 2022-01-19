@@ -36,9 +36,6 @@ extern struct Binding OpCompose[];
 extern struct Binding OpEditor[];
 extern struct Binding OpGeneric[];
 extern struct Binding OpMain[];
-#ifdef MIXMASTER
-extern struct Binding OpMix[];
-#endif
 extern struct Binding OpPager[];
 extern struct Binding OpPgp[];
 extern struct Binding OpPost[];

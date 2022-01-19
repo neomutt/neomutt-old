@@ -545,7 +545,7 @@ msgstr "Vytvořit"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Smazat"
 
@@ -1320,11 +1320,6 @@ msgstr "Odpověď na: "
 msgid "Fcc: "
 msgstr "Kopie do souboru: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix(Master): "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1368,7 +1363,7 @@ msgstr "Hlavičky: "
 msgid "Send"
 msgstr "Odeslat"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Zrušit"
 
@@ -6291,34 +6286,6 @@ msgstr "extrahovat všechny podporované veřejné klíče"
 msgid "wipe passphrases from memory"
 msgstr "odstranit všechna hesla z paměti"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "odeslat zprávu pomocí řetězu remailerů typu mixmaster"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "připojit remailer k řetězu"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "vybrat další článek řetězu"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "vybrat předchozí článek řetězu"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "odstranit remailer z řetězu"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "vložit remailer do řetězu"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "přijmout sestavený řetěz"
-
 #: opcodes.h:292
 msgid "open a different virtual folder"
 msgstr "otevřít jinou virtuální složku"
@@ -7142,70 +7109,6 @@ msgstr "Všechny označené přílohy nelze dekódovat. Zapouzdřit je do MIME f
 #: recvcmd.c:1127
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Přeposílat v nezměněné podobě lze pouze části typu „message/rfc822“"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Připojit"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Vložit"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr "<náhodný>"
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "„type2.list“ pro mixmaster nelze získat."
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Vyberte řetěz remailerů"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Chyba: %s nelze použít jako poslední článek řetězu remailerů"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Maximální počet článků řetězu remailerů typu mixmaster je %d"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Řetěz remailerů je již prázdný"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "První článek řetězu jste již vybral"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Poslední článek řetězu jste již vybral"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster nepovoluje Cc a Bcc hlavičky"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Pokud používáte mixmaster, je třeba správně nastavit proměnnou „hostname“."
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Chyba při zasílání zprávy, potomek ukončen %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Chyba při zasílání zprávy"
 
 #: score.c:149
 msgid "Error: score: invalid number"

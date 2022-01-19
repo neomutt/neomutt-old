@@ -538,7 +538,7 @@ msgstr "Oluştur"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Sil"
 
@@ -1325,11 +1325,6 @@ msgstr "Yanıtla: "
 msgid "Fcc: "
 msgstr "Kopya: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1373,7 +1368,7 @@ msgstr ""
 msgid "Send"
 msgstr "Gönder"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "İptal"
 
@@ -6352,34 +6347,6 @@ msgstr "desteklenen genel anahtarları çıkar"
 msgid "wipe passphrases from memory"
 msgstr "bellekteki parolaları sil"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "iletiyi bir \"mixmaster\" postacı zinciri üzerinden gönder"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "zincire bir yeniden postalayıcı iliştir"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "zincirin bir sonraki ögesini seç"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "zincirin bir önceki ögesini seç"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "zincirden bir yeniden postalayıcı sil"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "zincire bir yeniden postalayıcı ekle"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "zinciri oluşturulmuş biçimde kabul et"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7226,70 +7193,6 @@ msgstr "İmli eklerin tümü çözülemiyor. Kalanlar MIME ile sarmalanmış ola
 #: recvcmd.c:1127
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Yalnızca message/rfc822 bölümleriyle göndericiye yazabilirsiniz"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "İliştir"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Ekle"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "TAMAM"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "\"mixmaster\" type2.list alınamıyor"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Bir postacı (remailer) zinciri seçin"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Hata: %s, zincirdeki son postacı olarak kullanılamaz"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster zincirleri %d sayıda elemanla sınırlandırılmıştır"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Postacı zinciri zaten boş"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Zincirin zaten ilk elemanını seçmiş durumdasınız"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Zincirin zaten son elemanını seçmiş durumdasınız"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster Cc veya Bcc başlıklarını kabul etmez"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Lütfen mixmaster kullanırken yerel makina adını uygun şekilde ayarlayın"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "İleti gönderilirken hata oluştu, alt süreç %d ile sonlandı.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "İleti gönderilirken hata oluştu"
 
 #: score.c:149
 msgid "Error: score: invalid number"

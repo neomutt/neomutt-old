@@ -530,7 +530,7 @@ msgstr "Krei"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Forviŝi"
 
@@ -1316,11 +1316,6 @@ msgstr "Respondo-Al: "
 msgid "Fcc: "
 msgstr "Fcc: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1366,7 +1361,7 @@ msgstr ""
 msgid "Send"
 msgstr "Sendi"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Interrompi"
 
@@ -6340,34 +6335,6 @@ msgstr "eltiri publikajn ŝlosilojn"
 msgid "wipe passphrases from memory"
 msgstr "forviŝi pasfrazo(j)n el memoro"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "sendi la mesaĝon tra mixmaster-plusendiloĉeno"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "aldoni plusendilon al la ĉeno"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "elekti la sekvan elementon de la ĉeno"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "elekti la antaŭan elementon de la ĉeno"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "forviŝi plusendilon el la ĉeno"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "enŝovi plusendilon en la ĉenon"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "akcepti la konstruitan ĉenon"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7197,70 +7164,6 @@ msgstr "Ne eblas malkodi ĉiujn markitajn partojn.  Ĉu MIME-paki la aliajn?"
 #: recvcmd.c:1127
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Eblas verki al sendinto nur ĉe message/rfc822-partoj"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Aldoni"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Enŝovi"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "Bone"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Ne eblas preni type2.list de mixmaster"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Elekti plusendiloĉenon"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Eraro: %s ne estas uzebla kiel la fina plusendilo de ĉeno"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster-ĉenoj estas limigitaj al %d elementoj"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "La plusendiloĉeno estas jam malplena"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Vi jam elektis la unuan elementon de la ĉeno"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Vi jam elektis la lastan elementon de la ĉeno"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster ne akceptas la kampon Cc aŭ Bcc en la ĉapo"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Bonvolu doni ĝustan valoron al \"hostname\" kiam vi uzas mixmaster"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Eraro dum sendado de mesaĝo; ido finis per %d\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Eraro dum sendado de mesaĝo"
 
 #: score.c:149
 msgid "Error: score: invalid number"

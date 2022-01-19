@@ -546,7 +546,7 @@ msgstr "Loon %s?"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Kustuta"
 
@@ -1354,11 +1354,6 @@ msgstr "Vasta"
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr ""
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1404,7 +1399,7 @@ msgstr ""
 msgid "Send"
 msgstr "Saada"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Katkesta"
 
@@ -6496,40 +6491,6 @@ msgstr "eralda toetatud avalikud võtmed"
 msgid "wipe passphrases from memory"
 msgstr "eemalda parool(id) mälust"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "saada teade läbi mixmaster vahendajate ahela"
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "Lisa edasisaatja ahela lõppu"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "Vali ahela järgmine element"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "Vali ahela eelmine element"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "Eemalda edasisaatja ahelast"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "Lisa edasisaatja ahelasse"
-
-#: opcodes.h:285
-#, fuzzy
-msgid "accept the chain constructed"
-msgstr "Aktsepteeri koostatud ahelaga"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7395,70 +7356,6 @@ msgstr "Kõiki märgitud lisasid ei saa dekodeerida. Kapseldan ülejäänud MIME
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Peegeldada saab ainult message/rfc822 osi"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Lõppu"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Lisa"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Mixmaster type2.list laadimine ei õnnestu"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Valige vahendajate ahel"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Viga: %s ei saa ahela viimase vahendajana kasutada"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster ahelad on piiratud %d lüliga"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Vahendajate ahel on juba tühi"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Te olete ahela esimese lüli juba valinud"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Te olete ahela viimase lüli juba valinud"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster ei toeta Cc või Bcc päiseid"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Mixmaster kasutamisel omistage palun hostname muutujale korrektne väärtus"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Viga teate saatmisel, alamprotsess lõpetas koodiga %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Viga teate saatmisel"
 
 #: score.c:149
 msgid "Error: score: invalid number"

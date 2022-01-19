@@ -548,7 +548,7 @@ msgstr "建立 %s？"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "刪除"
 
@@ -1350,11 +1350,6 @@ msgstr "回覆"
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr ""
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1400,7 +1395,7 @@ msgstr ""
 msgid "Send"
 msgstr "寄出"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "中斷"
 
@@ -6520,40 +6515,6 @@ msgstr "擷取 PGP 公共鑰匙"
 msgid "wipe passphrases from memory"
 msgstr "清除記憶體中的 PGP 通行密碼"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "利用 mixmaster 郵件轉接器把郵件寄出"
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "在鏈結的後面加上郵件轉接器"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "選擇鏈結裏跟著的一個部份"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "選擇鏈結裏對上一個部份"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "從鏈結中刪除郵件轉接器"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "在鏈結中加入郵件轉接器"
-
-#: opcodes.h:285
-#, fuzzy
-msgid "accept the chain constructed"
-msgstr "同意已建好的鏈結"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7420,70 +7381,6 @@ msgstr "未能把所有已標簽的附件解碼。要用 MIME 包封其它的嗎
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "您只能直接傳送 message/rfc822 的部分"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "加上"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "加入"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "拿不到 mixmaster 的 type2.list"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "選擇一個郵件轉接器的鏈結"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "錯誤：%s 不能用作鏈結的最後一個郵件轉接器"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster 鏈結最多為 %d 個元件"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "郵件轉接器的鏈結已沒有東西了"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "你已經選擇了鏈結的第一個元件"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "你已經選擇了鏈結的最後一個元件"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster 不接受 Cc 和 Bcc 的標頭"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "使用 mixmaster 時請先設定好 hostname 變數"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "寄送訊息時出現錯誤，子程序結束 %d。\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "寄信途中發生錯誤"
 
 #: score.c:149
 msgid "Error: score: invalid number"

@@ -237,11 +237,6 @@ static struct CompileOptions comp_opts[] = {
 #else
   { "lua", 0 },
 #endif
-#ifdef MIXMASTER
-  { "mixmaster", 1 },
-#else
-  { "mixmaster", 0 },
-#endif
 #ifdef ENABLE_NLS
   { "nls", 1 },
 #else
@@ -509,9 +504,6 @@ bool print_version(FILE *fp)
   fprintf(fp, "ISPELL=\"%s\"\n", ISPELL);
 #endif
   fprintf(fp, "MAILPATH=\"%s\"\n", MAILPATH);
-#ifdef MIXMASTER
-  fprintf(fp, "MIXMASTER=\"%s\"\n", MIXMASTER);
-#endif
   fprintf(fp, "PKGDATADIR=\"%s\"\n", PKGDATADIR);
   fprintf(fp, "SENDMAIL=\"%s\"\n", SENDMAIL);
   fprintf(fp, "SYSCONFDIR=\"%s\"\n", SYSCONFDIR);

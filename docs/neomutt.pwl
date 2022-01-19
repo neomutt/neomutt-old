@@ -358,7 +358,6 @@ whitespace
 juser
 replysign
 subdirectory
-mixmaster
 xpaint
 prev
 urlview
@@ -435,8 +434,6 @@ nF
 zsh
 libexec
 fIno
-remailers
-remailer's
 ph
 mx
 needsterminal
@@ -481,7 +478,6 @@ nametemplate
 localhost
 multipart
 cachedir
-remailer
 YY
 filesystems
 pnmscale

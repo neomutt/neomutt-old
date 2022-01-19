@@ -71,9 +71,6 @@
 #include "mx.h"
 #include "nntp/mdata.h"
 #endif
-#ifdef MIXMASTER
-#include "remailer.h"
-#endif
 #ifdef USE_NOTMUCH
 #include "notmuch/lib.h"
 #endif
@@ -1516,15 +1513,8 @@ static int invoke_mta(struct Mailbox *m, struct Email *e, struct ConfigSubset *s
   if (c_smtp_url)
     cs_subset_str_native_set(sub, "write_bcc", false, NULL);
 #endif
-#ifdef MIXMASTER
-  mutt_rfc822_write_header(fp_tmp, e->env, e->body, MUTT_WRITE_HEADER_NORMAL,
-                           !STAILQ_EMPTY(&e->chain),
-                           mutt_should_hide_protected_subject(e), sub);
-#endif
-#ifndef MIXMASTER
   mutt_rfc822_write_header(fp_tmp, e->env, e->body, MUTT_WRITE_HEADER_NORMAL,
                            false, mutt_should_hide_protected_subject(e), sub);
-#endif
 #ifdef USE_SMTP
   cs_subset_str_native_set(sub, "write_bcc", c_write_bcc, NULL);
 #endif
@@ -1540,14 +1530,6 @@ static int invoke_mta(struct Mailbox *m, struct Email *e, struct ConfigSubset *s
     unlink(mutt_buffer_string(tempfile));
     goto cleanup;
   }
-
-#ifdef MIXMASTER
-  if (!STAILQ_EMPTY(&e->chain))
-  {
-    rc = mix_send_message(&e->chain, mutt_buffer_string(tempfile));
-    goto cleanup;
-  }
-#endif
 
 #ifdef USE_NNTP
   if (OptNewsSend)

@@ -542,7 +542,7 @@ msgstr "Δημιουργία"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Διαγραφή"
 
@@ -1312,11 +1312,6 @@ msgstr "Απάντηση σε: "
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr ""
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1360,7 +1355,7 @@ msgstr "Κεφαλίδες: "
 msgid "Send"
 msgstr "Αποστολή"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Ακύρωση"
 
@@ -6408,40 +6403,6 @@ msgstr "εξαγωγή των δημόσιων κλειδιών που υποσ�
 msgid "wipe passphrases from memory"
 msgstr "εξαφάνιση της φράσης(-εων) κλειδί από τη μνήμη"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "αποστολή του μηνύματος μέσω μιας αλυσίδας επαναποστολέων Mixmaster"
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "Προσάρτηση ενός επαναποστολέα στην αλυσίδα"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "Επιλογή του επόμενου στοιχείου της αλυσίδας"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "Επιλογή του προηγούμενου στοιχείου της αλυσίδας"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "Διαγραφή ενός επαναποστολέα από την αλυσίδα"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "Προσθήκη ενός επαναποστολέα στην αλυσίδα"
-
-#: opcodes.h:285
-#, fuzzy
-msgid "accept the chain constructed"
-msgstr "Αποδοχή της κατασκευασμένης αλυσίδας"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7306,70 +7267,6 @@ msgstr "Αδυναμία αποκωδικοποίησης όλων των σημ
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Μπορείτε να διαβιβάσετε μόνο μήνυμα/μέρη rfc822"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Πρόσθεση"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Είσοδος"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Αδυναμία λήψης της type2.list του mixmaster"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Επιλογή μιας αλυσίδας επαναποστολέων"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Σφάλμα: το %s δεν μπορεί να είναι ο τελικός επαναποστολέας της αλυσίδας"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Οι αλυσίδες Mixmaster είναι περιορισμένες σε %d στοιχεία"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Η αλυσίδα επαναποστολέων είναι ήδη άδεια"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Έχετε ήδη επιλέξει το πρώτο στοιχείο της αλυσίδας"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Έχετε ήδη επιλέξει το τελευταίο στοιχείο της αλυσίδας"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Ο Mixmaster δεν δέχεται Cc ή Bcc επικεφαλίδες"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Παρακαλώ ορίστε σωστά την μεταβλητή του ονόματος του συστήματος όταν χρησιμοποιείτε το mixmaster"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Σφάλμα στην αποστολή μηνύματος, τερματισμός θυγατρικής με %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Σφάλμα κατά την αποστολή του μηνύματος"
 
 #: score.c:149
 msgid "Error: score: invalid number"

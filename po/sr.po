@@ -533,7 +533,7 @@ msgstr "Креирај"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Обриши"
 
@@ -1304,11 +1304,6 @@ msgstr "Одговорити-на: "
 msgid "Fcc: "
 msgstr "Fcc: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1352,7 +1347,7 @@ msgstr "Заглавља: "
 msgid "Send"
 msgstr "Слање"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Прекид"
 
@@ -6279,34 +6274,6 @@ msgstr "извлачење подржаних јавних кључева"
 msgid "wipe passphrases from memory"
 msgstr "брисање приступних фраза из меморије"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "слање поруке кроз ланац mixmaster прослеђивача"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "додавање прослеђивача ланцу"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "избор наредног елемента ланца"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "избор претходног елемента ланца"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "брисање прослеђивача из ланца"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "убацивање прослеђивача у ланац"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "прихватање конструисаног ланца"
-
 #: opcodes.h:292
 msgid "open a different virtual folder"
 msgstr "отварање другог виртуелног фолдера"
@@ -7128,70 +7095,6 @@ msgstr "Не могу се декодирати сви означени прил
 #: recvcmd.c:1127
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Само можете састављати пошиљаоцу са message/rfc822 деловима"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Допиши"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Убаци"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "У реду"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr "<произвољно>"
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Не може се допремити mixmaster-ова type2.list"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Изаберите ланац прослеђивача"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Грешка: %s се не може користити као коначни прослеђивач у ланцу"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster ланци су ограничени на %d елемената"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Ланац прослеђивача је већ празан"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Већ сте одабрали први елемент ланца"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Већ сте одабрали последњи елемент ланца"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster не прихвата заглавље Cc нити Bcc"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Поставите променљиву hostname на исправну вредност кад користите mixmaster"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Грешка приликом слања поруке, подређени процес је изашао %d\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Грешка приликом слања поруке"
 
 #: score.c:149
 msgid "Error: score: invalid number"

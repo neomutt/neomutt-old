@@ -534,7 +534,7 @@ msgstr "Sukurti"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Trinti"
 
@@ -1305,11 +1305,6 @@ msgstr "Atsakyti: "
 msgid "Fcc: "
 msgstr "Kopija į bylą: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "MixMaster grandis: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1353,7 +1348,7 @@ msgstr "Antraštės: "
 msgid "Send"
 msgstr "Siųsti"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Nutraukti"
 
@@ -6274,34 +6269,6 @@ msgstr "ištraukti palaikomus viešus raktus"
 msgid "wipe passphrases from memory"
 msgstr "užmiršti slaptas frazes"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "pasiųsti pranešimą per mixmaster persiuntėjų grandinę"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "pridėti persiuntėją prie grandinės"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "pasirinkti tolesnį elementą grandinėje"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "pasirinkti ankstesnį elementą grandinėje"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "pašalinti persiuntėją iš grandinės"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "įterpti persiuntėją į grandinę"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "priimti sukonstruotą grandinę"
-
 #: opcodes.h:292
 msgid "open a different virtual folder"
 msgstr "atidaryti kitą virtualų aplanką"
@@ -7123,70 +7090,6 @@ msgstr "Negaliu dekoduoti visų pažymėtų priedų.  Enkapsuliuoti kitus MIME f
 #: recvcmd.c:1127
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Tu gali sukurti naują laišką tik message/rfc822 priedo siuntėjui"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Pridurti"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Įterpti"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "Gerai"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr "<atsitiktinis>"
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Negaliu gauti mixmaster'io type2.list"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Pasirink persiuntėjų grandinę"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Klaida: %s negali būti naudojamas kaip galutinis persiuntėjas grandinėje"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster'io grandinės turi būti ne ilgesnės nei %d elementų"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Persiuntėjų grandinė jau tuščia"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Tu jau pasirinkai pirmą grandinės elementą"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Tu jau pasirinkai paskutinį grandinės elementą"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster'is nepriima Cc bei Bcc antraščių"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Teisingai nustatyk hostname kintamąjį, kai naudoji mixmaster'į"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Klaida siunčiant laišką, klaidos kodas %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Klaida siunčiant laišką"
 
 #: score.c:149
 msgid "Error: score: invalid number"

@@ -38,8 +38,6 @@ options {
   locales-fix=0             => "Enable locales fix"
   pgp=1                     => "Disable PGP support"
   smime=1                   => "Disable SMIME support"
-  mixmaster=0               => "Enable Mixmaster support"
-  with-mixmaster:=mixmaster => "Location of the mixmaster executable"
   homespool=0               => "Enable new mail spooling in the user's HOME"
   with-homespool:mailbox    => "File in the user's HOME where new mail is spooled"
   with-mailpath:/var/mail   => "Directory where spool mailboxes are located"
@@ -155,7 +153,7 @@ if {1} {
     debug-notify debug-parse-test debug-queue debug-window doc everything
     fmemopen full-doc fuzzing gdbm gnutls gpgme gss homespool idn idn2
     include-path-in-cflags inotify kyotocabinet lmdb locales-fix lua lz4
-    mixmaster nls notmuch pcre2 pgp pkgconf qdbm rocksdb sasl smime sqlite ssl
+    nls notmuch pcre2 pgp pkgconf qdbm rocksdb sasl smime sqlite ssl
     testing tdb tokyocabinet zlib zstd
   } {
     define want-$opt [opt-bool $opt]
@@ -166,7 +164,7 @@ if {1} {
   # a shortcut for "--opt --with-opt=/usr".
   foreach opt {
     bdb gdbm gnutls gpgme gss homespool idn idn2 kyotocabinet lmdb lua lz4 
-    mixmaster nls notmuch pcre2 qdbm rocksdb sasl sqlite ssl tdb tokyocabinet 
+    nls notmuch pcre2 qdbm rocksdb sasl sqlite ssl tdb tokyocabinet 
     zlib zstd
   } {
     if {[opt-val with-$opt] ne {}} {
@@ -787,12 +785,6 @@ if {[get-define want-homespool]} {
 }
 
 ###############################################################################
-# Mixmaster
-if {[get-define want-mixmaster]} {
-  define MIXMASTER [opt-val with-mixmaster mixmaster]
-}
-
-###############################################################################
 # Domain
 if {[opt-val with-domain] ne {}} {
   define DOMAIN [opt-val with-domain]
@@ -1294,7 +1286,6 @@ set auto_rep {
   LOCALES_HACK
   MAILPATH
   MAKEDOC_FULL
-  MIXMASTER
   MUTTLOCALEDIR
   NOTMUCH_API_3
   PACKAGE

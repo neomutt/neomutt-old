@@ -535,7 +535,7 @@ msgstr "创建"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "删除"
 
@@ -1294,11 +1294,6 @@ msgstr "回复给: "
 msgid "Fcc: "
 msgstr "Fcc: "
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "混合模式："
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1342,7 +1337,7 @@ msgstr "信件头："
 msgid "Send"
 msgstr "寄出"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "中止"
 
@@ -6225,34 +6220,6 @@ msgstr "取出支持的公钥"
 msgid "wipe passphrases from memory"
 msgstr "从内存中清除通行密钥"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "通过 mixmaster 转发者链发送信件"
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "附加转发者到链"
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "选择链中的下一个元素"
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "选择链中的前一个元素"
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "从链中删除转发者"
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "插入转发者到链"
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "接受构建的链"
-
 #: opcodes.h:292
 msgid "open a different virtual folder"
 msgstr "打开另一个虚拟文件夹"
@@ -7068,70 +7035,6 @@ msgstr "无法解码所有已标记的附件。通过 MIME 封装其它的吗？
 #: recvcmd.c:1127
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "您只能撰写 message/rfc822 部分给发件人"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "附加到末尾"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "插入"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr "<随机>"
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "无法获得 mixmaster 的 type2.list"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "选择一个转发者链"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "错误：%s 不能用作链的最终转发者"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Mixmaster 链有 %d 个元素的限制"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "转发者链已经为空"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "您已经选择了第一个链元素"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "您已经选择了最后的链元素"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Mixmaster 不接受转发(Cc)或密件转发(Bcc)信件头"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "使用 mixmaster 时请给 hostname(主机名) 变量设置合适的值"
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "发送信件出错，子进程已退出 %d。\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "发送信件出错"
 
 #: score.c:149
 msgid "Error: score: invalid number"

@@ -548,7 +548,7 @@ msgstr "Cruthaigh %s?"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Scrios"
 
@@ -1370,11 +1370,6 @@ msgstr "Freagair"
 msgid "Fcc: "
 msgstr ""
 
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr ""
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1420,7 +1415,7 @@ msgstr ""
 msgid "Send"
 msgstr "Seol"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Tobscoir"
 
@@ -6538,40 +6533,6 @@ msgstr "bain na heochracha poiblí le tacaíocht amach"
 msgid "wipe passphrases from memory"
 msgstr "bánaigh frása(í) faire as cuimhne"
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "seol an teachtaireacht trí shlabhra athphostóirí \"mixmaster\""
-
-#: opcodes.h:280
-#, fuzzy
-msgid "append a remailer to the chain"
-msgstr "Iarcheangail athphostóir leis an slabhra"
-
-#: opcodes.h:281
-#, fuzzy
-msgid "select the next element of the chain"
-msgstr "Roghnaigh an chéad bhall eile ón slabhra"
-
-#: opcodes.h:282
-#, fuzzy
-msgid "select the previous element of the chain"
-msgstr "Roghnaigh an ball roimhe seo ón slabhra"
-
-#: opcodes.h:283
-#, fuzzy
-msgid "delete a remailer from the chain"
-msgstr "Scrios athphostóir as an slabhra"
-
-#: opcodes.h:284
-#, fuzzy
-msgid "insert a remailer into the chain"
-msgstr "Ionsáigh athphostóir isteach sa slabhra"
-
-#: opcodes.h:285
-#, fuzzy
-msgid "accept the chain constructed"
-msgstr "Glac leis an slabhra cruthaithe"
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7446,70 +7407,6 @@ msgstr "Ní féidir gach iatán clibeáilte a dhíchódú.  Cuach na cinn eile m
 #, fuzzy
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Ní cheadaítear ach páirteanna message/rfc822 a scinneadh"
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Iarcheangail"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Ionsáigh"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "OK"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "Ní féidir type2.list ag mixmaster a fháil"
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Roghnaigh slabhra athphostóirí"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Earráid: ní féidir %s a úsáid mar an t-athphostóir deiridh i slabhra"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Ní cheadaítear ach %d ball i slabhra \"mixmaster\""
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "Tá an slabhra athphostóirí folamh cheana féin"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Tá an chéad bhall slabhra roghnaithe agat cheana"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Tá ball deiridh an slabhra roghnaithe agat cheana"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "Ní ghlacann \"mixmaster\" le ceanntásca Cc nó Bcc"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Socraigh an athróg óstainm go cuí le do thoil le linn úsáid \"mixmaster\""
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Earráid agus teachtaireacht á seoladh, scoir an macphróiseas le stádas %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Earráid agus teachtaireacht á seoladh"
 
 #: score.c:149
 msgid "Error: score: invalid number"

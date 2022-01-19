@@ -601,7 +601,7 @@ msgstr "Crea"
 
 #. L10N: Autocrypt Account Menu Help line:
 #. delete account
-#: autocrypt/dlgautocrypt.c:103 remailer.c:101
+#: autocrypt/dlgautocrypt.c:103
 msgid "Delete"
 msgstr "Esborra"
 
@@ -1418,12 +1418,6 @@ msgstr "Respostes a: "
 msgid "Fcc: "
 msgstr "Còpia a bústia: "
 
-# Ho deixe tal qual perquè és curt i a les altres cadenes traduïdes apareix «Mixmaster».  ivb
-#. L10N: "Mix" refers to the MixMaster chain for anonymous email
-#: compose/compose.c:111
-msgid "Mix: "
-msgstr "Mix: "
-
 #. L10N: Compose menu field.  Holds "Encrypt", "Sign" related information
 #: compose/compose.c:114
 msgid "Security: "
@@ -1474,7 +1468,7 @@ msgstr ""
 msgid "Send"
 msgstr "Envia"
 
-#: compose/compose.c:140 compose/compose.c:159 remailer.c:102
+#: compose/compose.c:140 compose/compose.c:159
 msgid "Abort"
 msgstr "Avorta"
 
@@ -6642,34 +6636,6 @@ msgstr "Extreu totes les claus públiques possibles."
 msgid "wipe passphrases from memory"
 msgstr "Esborra de la memòria les frases clau."
 
-#: opcodes.h:279
-msgid "send the message through a mixmaster remailer chain"
-msgstr "Envia el missatge per una cadena de redistribuïdors Mixmaster."
-
-#: opcodes.h:280
-msgid "append a remailer to the chain"
-msgstr "Afegeix un redistribuïdor a la cadena."
-
-#: opcodes.h:281
-msgid "select the next element of the chain"
-msgstr "Selecciona l’element següent de la cadena."
-
-#: opcodes.h:282
-msgid "select the previous element of the chain"
-msgstr "Selecciona l’element anterior de la cadena."
-
-#: opcodes.h:283
-msgid "delete a remailer from the chain"
-msgstr "Esborra un redistribuïdor de la cadena."
-
-#: opcodes.h:284
-msgid "insert a remailer into the chain"
-msgstr "Insereix un redistribuïdor a la cadena."
-
-#: opcodes.h:285
-msgid "accept the chain constructed"
-msgstr "Accepta la cadena construïda."
-
 #: opcodes.h:292
 #, fuzzy
 msgid "open a different virtual folder"
@@ -7553,72 +7519,6 @@ msgstr "Encapsular amb MIME les adjuncions marcades no descodificables?"
 #: recvcmd.c:1127
 msgid "You may only compose to sender with message/rfc822 parts"
 msgstr "Només es pot redactar al remitent d’una part de tipus «message/rfc822»."
-
-#: remailer.c:99
-msgid "Append"
-msgstr "Afegeix"
-
-#: remailer.c:100
-msgid "Insert"
-msgstr "Insereix"
-
-#: remailer.c:103
-msgid "OK"
-msgstr "Accepta"
-
-#: remailer.c:238
-msgid "<random>"
-msgstr ""
-
-# ivb (2001/12/07)
-# ivb  En aquest cas «mixmaster» és un programa.
-#: remailer.c:656
-msgid "Can't get mixmaster's type2.list"
-msgstr "No s’ha pogut obtenir «type2.list» de «mixmaster»."
-
-#: remailer.c:707
-msgid "Select a remailer chain"
-msgstr "Seleccioneu una cadena de redistribuïdors"
-
-#: remailer.c:770
-#, c-format
-msgid "Error: %s can't be used as the final remailer of a chain"
-msgstr "Error: No es pot emprar «%s» com a redistribuïdor final d’una cadena"
-
-#. L10N The '%d' here hard-coded to 19
-#: remailer.c:802
-#, c-format
-msgid "Mixmaster chains are limited to %d elements"
-msgstr "Les cadenes de Mixmaster estan limitades a %d elements"
-
-#: remailer.c:825
-msgid "The remailer chain is already empty"
-msgstr "La cadena de redistribuïdors ja és buida"
-
-#: remailer.c:835
-msgid "You already have the first chain element selected"
-msgstr "Vos trobeu al primer element de la cadena"
-
-#: remailer.c:845
-msgid "You already have the last chain element selected"
-msgstr "Vos trobeu al darrer element de la cadena"
-
-#: remailer.c:888
-msgid "Mixmaster doesn't accept Cc or Bcc headers"
-msgstr "No es poden emprar les capçaleres «Cc» i «Bcc» amb Mixmaster"
-
-#: remailer.c:913
-msgid "Please set the hostname variable to a proper value when using mixmaster"
-msgstr "Per favor, establiu un valor adequat per a «hostname» quan empreu Mixmaster."
-
-#: remailer.c:957
-#, c-format
-msgid "Error sending message, child exited %d\n"
-msgstr "Error en enviar el missatge, el procés fill ha eixit amb codi %d.\n"
-
-#: remailer.c:961
-msgid "Error sending message"
-msgstr "Error en enviar el missatge"
 
 # És un error com els anteriors.  ivb
 #: score.c:149
