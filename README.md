@@ -48,6 +48,9 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 - [debug/compose](https://github.com/neomutt/neomutt-old/tree/debug/compose)
   Debugging code for the Compose dialog (logging and automation)
 
+- [mixmaster](https://github.com/neomutt/neomutt-old/tree/mixmaster)
+  Drop MixMaster support (not yet)
+
 ## NeoMutt 2020-09-25
 
 These NeoMutt branches have been archived since NeoMutt 2020-09-25
