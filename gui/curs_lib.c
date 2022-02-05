@@ -61,7 +61,7 @@
 #ifdef HAVE_ISWBLANK
 #include <wctype.h>
 #endif
-#ifdef USE_INOTIFY
+#if defined(USE_INOTIFY) || defined(USE_IPC)
 #include "monitor.h"
 #endif
 
@@ -159,7 +159,7 @@ void mutt_getch_timeout(int delay)
   timeout(delay);
 }
 
-#ifdef USE_INOTIFY
+#if defined(USE_INOTIFY) || defined(USE_IPC)
 /**
  * mutt_monitor_getch - Get a character and poll the filesystem monitor
  * @retval num Character pressed

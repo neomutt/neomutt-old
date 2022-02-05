@@ -86,7 +86,7 @@ NEOMUTTOBJS+=	remailer.o
 @if USE_LUA
 NEOMUTTOBJS+=	mutt_lua.o
 @endif
-@if USE_INOTIFY
+@if USE_INOTIFY || USE_IPC
 NEOMUTTOBJS+=	monitor.o
 @endif
 @if USE_IPC

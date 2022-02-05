@@ -830,7 +830,6 @@ static int op_main_change_folder(struct IndexSharedData *shared,
                                  struct IndexPrivateData *priv, int op)
 {
   struct Buffer *folderbuf = mutt_buffer_pool_get();
-  int rc;
   mutt_buffer_alloc(folderbuf, PATH_MAX);
 
   char *cp = NULL;
@@ -889,7 +888,7 @@ folderbuf_ready:
   }
   else
   {
-    int change_folder_string(priv->menu, folderbuf->data, folderbuf->dsize,
+    change_folder_string(priv->menu, folderbuf->data, folderbuf->dsize,
                          &priv->oldcount, shared, read_only);
   }
 

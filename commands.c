@@ -649,8 +649,8 @@ void mutt_enter_command(void)
 #ifdef USE_IPC
   if (Socket.fcall.data)
   {
-    strncpy(buf, Socket.fcall.data, 1023);
-    if (buf[0] == '\0')
+    strncpy(buf->data, Socket.fcall.data, buf->dsize);
+    if (buf->data[0] == '\0')
     {
       Socket.fcall.rc = 0;
       return;
