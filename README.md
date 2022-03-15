@@ -5,6 +5,26 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2022-01-01
+
+- [debug/compose](https://github.com/neomutt/neomutt-old/tree/debug/compose)
+  Debugging code for the Compose dialog (logging and automation)
+
+- [mixmaster](https://github.com/neomutt/neomutt-old/tree/mixmaster)
+  Drop MixMaster support (not yet)
+
+- [humanize-dates](https://github.com/neomutt/neomutt-old/tree/humanize-dates)
+  date: humanize timestamps in index
+
+- [lens](https://github.com/neomutt/neomutt-old/tree/lens)
+  lens: introduce a new Mailbox type
+
+- [nntp-pass](https://github.com/neomutt/neomutt-old/tree/nntp-pass)
+  newsrc: bugfix; nntp_user and nntp_pass ignored
+
+- [osxkeychain](https://github.com/neomutt/neomutt-old/tree/osxkeychain)
+  macos_keychain: introduce a way to store credentials in Keychain
+
 ## NeoMutt 2021-02-05
 
 These NeoMutt branches have been archived since NeoMutt 2021-02-05
@@ -44,12 +64,6 @@ These NeoMutt branches have been archived since NeoMutt 2021-02-05
 
 - [refactor-mutt_parse_hook](https://github.com/neomutt/neomutt-old/tree/refactor-mutt_parse_hook)
   [@jindraj](https://github.com/jindraj)'s Refactor mutt_parse_hook()
-
-- [debug/compose](https://github.com/neomutt/neomutt-old/tree/debug/compose)
-  Debugging code for the Compose dialog (logging and automation)
-
-- [mixmaster](https://github.com/neomutt/neomutt-old/tree/mixmaster)
-  Drop MixMaster support (not yet)
 
 ## NeoMutt 2020-09-25
 
