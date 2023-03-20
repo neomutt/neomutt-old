@@ -10,6 +10,15 @@ They have simply been moved to keep the main repository tidier.
 - [ipc](https://github.com/neomutt/neomutt-old/tree/ipc)  
   [@ckardaris](https://github.com/ckardaris)'s IPC Support
 
+- [devel/dump-screen](https://github.com/neomutt/neomutt-old/tree/devel/dump-screen)  
+  [@gahr](https://github.com/gahr)'s code to dump the curses screen to a file
+
+- [devel/use-c++](https://github.com/neomutt/neomutt-old/tree/devel/use-c%2B%2B)  
+  [@gahr](https://github.com/gahr)'s example of C++ integration
+
+- [devel/xdg-config-vars](https://github.com/neomutt/neomutt-old/tree/devel/xdg-config-vars)  
+  [@darrel-glud](https://github.com/darrel-glud)'s code to use more standard XDG config variables
+
 ## NeoMutt 2022-01-01
 
 - [debug/compose](https://github.com/neomutt/neomutt-old/tree/debug/compose)  
