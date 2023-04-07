@@ -77,6 +77,8 @@ set valid_options {
 # PCRE2
   pcre2=0                   => "Enable PCRE2 regular expressions"
   with-pcre2:path           => "Location of PCRE2"
+# DOCUMENT
+  io-uring=0                => "TODO document"
 # Header cache
   bdb=0                     => "Use BerkeleyDB for the header cache"
   with-bdb:path             => "Location of BerkeleyDB"
@@ -139,6 +141,7 @@ set deprecated_options  {
   with-gpgme:
   with-lz4:
   with-zstd:
+  with-io-uring:
 }
 
 foreach dep $deprecated_options {
@@ -172,9 +175,9 @@ if {1} {
     asan autocrypt bdb compile-commands coverage debug-backtrace debug-color
     debug-email debug-graphviz debug-keymap debug-names debug-notify debug-queue
     debug-window doc everything fmemopen full-doc fuzzing gdbm gnutls gpgme
-    gsasl gss homespool idn2 include-path-in-cflags inotify kyotocabinet lmdb
-    locales-fix lua lz4 mixmaster nls notmuch pcre2 pgp qdbm rocksdb sasl
-    smime sqlite ssl tdb tokyocabinet ubsan zlib zstd
+    gsasl gss homespool idn2 include-path-in-cflags inotify io-uring
+    kyotocabinet lmdb locales-fix lua lz4 mixmaster nls notmuch pcre2 pgp qdbm
+    rocksdb sasl smime sqlite ssl tdb tokyocabinet ubsan zlib zstd
   } {
     define want-$opt [opt-bool $opt]
   }
@@ -183,9 +186,9 @@ if {1} {
   # relative --enable-opt to true. This allows "--with-opt=/usr" to be used as
   # a shortcut for "--opt --with-opt=/usr".
   foreach opt {
-    bdb gdbm gnutls gpgme gsasl gss homespool idn2 kyotocabinet lmdb lua lz4
-    mixmaster nls notmuch pcre2 qdbm rocksdb sasl sqlite ssl tdb tokyocabinet
-    zlib zstd
+    bdb gdbm gnutls gpgme gsasl gss homespool idn2 io-uring kyotocabinet lmdb
+    lua lz4 mixmaster nls notmuch pcre2 qdbm rocksdb sasl sqlite ssl tdb
+    tokyocabinet zlib zstd
   } {
     if {[opt-val with-$opt] ne {}} {
       define want-$opt 1
@@ -450,7 +453,7 @@ set prefix [opt-val with-sysroot][get-define prefix]
 ###############################################################################
 # Everything
 if {[get-define want-everything]} {
-  foreach opt {bdb gdbm gpgme kyotocabinet lmdb lua lz4 notmuch pgp rocksdb
+  foreach opt {bdb gdbm gpgme kyotocabinet io-uring lmdb lua lz4 notmuch pgp rocksdb
                qdbm sasl smime ssl tokyocabinet tdb zlib zstd} {
     define want-$opt
     append conf_options "--$opt "
@@ -942,6 +945,14 @@ if {[get-define want-lz4]} {
   define USE_HCACHE_COMPRESSION
   define-append COMPRESS_BACKENDS "lz4"
 }
+
+# TODO DOCUMENT
+if {[get-define want-io-uring]} {
+  pkgconf true liburing
+  define USE_IO_URING
+  define-feature uring
+}
+
 
 ###############################################################################
 # Header Cache Compression with zlib
