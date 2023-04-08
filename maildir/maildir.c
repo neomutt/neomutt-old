@@ -627,7 +627,7 @@ struct AsyncFileRead
 };
 
 static void wait_for_completed_io(struct Mailbox *m, struct Progress *progress,
-                                  struct AsyncFileRead *asyncs,
+                                  struct AsyncFileRead *asyncs, int mbfd,
                                   int *first_free_async, struct io_uring *ring,
                                   int *pending_requests, int *num_finished)
 {
@@ -650,28 +650,47 @@ static void wait_for_completed_io(struct Mailbox *m, struct Progress *progress,
       case ASYNC_WAITING_FOR_OPEN:
       {
         // The file is open, so get its size.
-        async->fd = cqe->res; // TODO check for error
+        if (cqe->res < 0)
+        {
+          fprintf(stderr, "openat() failed: %s\n", strerror(-cqe->res));
+          exit(1);
+        }
+        async->fd = async_idx;
         struct io_uring_sqe *sqe = io_uring_get_sqe(ring);
-        io_uring_prep_statx(sqe, async->fd, "", AT_EMPTY_PATH, STATX_SIZE,
+        //io_uring_prep_statx(sqe, async->fd, "", AT_EMPTY_PATH, STATX_SIZE, &async->statbuf);
+        //io_uring_sqe_set_data(sqe, (void *) async_idx);
+        //io_uring_sqe_set_flags(sqe, IOSQE_FIXED_FILE);
+        //sqe->flags |= IOSQE_FIXED_FILE;
+        io_uring_prep_statx(sqe, mbfd, async->md->email->path, 0, STATX_SIZE,
                             &async->statbuf);
         io_uring_sqe_set_data(sqe, (void *) async_idx);
+        //io_uring_sqe_set_flags(sqe, IOSQE_FIXED_FILE);
         async->state = ASYNC_WAITING_FOR_STAT;
         break;
       }
       case ASYNC_WAITING_FOR_STAT:
       {
         // We have its size, read the first 4 kB (or whatever we can get).
-        // TODO check for error
+        if (cqe->res < 0)
+        {
+          fprintf(stderr, "statx() failed: %s\n", strerror(-cqe->res));
+          exit(1);
+        }
         struct io_uring_sqe *sqe = io_uring_get_sqe(ring);
-        io_uring_prep_read(sqe, async->fd, async->buf, sizeof(async->buf), 0);
+        io_uring_prep_read_fixed(sqe, async->fd, async->buf, sizeof(async->buf), 0, async_idx);
         io_uring_sqe_set_data(sqe, (void *) async_idx);
+        io_uring_sqe_set_flags(sqe, IOSQE_FIXED_FILE);
         async->state = ASYNC_WAITING_FOR_READ;
         break;
       }
       case ASYNC_WAITING_FOR_READ:
       {
         // We got data back, so we can parse!
-        // TODO check for error
+        if (cqe->res < 0)
+        {
+          fprintf(stderr, "read() failed: %s\n", strerror(-cqe->res));
+          exit(1);
+        }
         async->data_in_buf = cqe->res;
         async->fp = fmemopen(async->buf, async->data_in_buf, "r");
         //fprintf(stderr, "fmemopen %p %zu  %s (cqe->res=%d err=%p fd=%d)\n", async->fp, async->data_in_buf, strerror(errno), cqe->res, strerror(-cqe->res), async->fd);
@@ -694,7 +713,7 @@ static void wait_for_completed_io(struct Mailbox *m, struct Progress *progress,
         fclose(async->fp);
 
         struct io_uring_sqe *sqe = io_uring_get_sqe(ring);
-        io_uring_prep_close(sqe, async->fd);
+        io_uring_prep_close_direct(sqe, async->fd);
         io_uring_sqe_set_data(sqe, (void *) async_idx);
         async->state = ASYNC_WAITING_FOR_CLOSE;
         break;
@@ -731,11 +750,11 @@ static void maildir_delayed_parsing(struct Mailbox *m, struct MdEmailArray *mda,
 
   // ---io_uring---
   struct io_uring ring;
-  // int ret =
   io_uring_queue_init(QUEUE_DEPTH, &ring, 0);
-  //fprintf(stderr, "io_uring %d %s\n", ret, strerror(errno));
+  io_uring_register_files_sparse(&ring, QUEUE_DEPTH);
   int pending_requests = 0, num_finished = 0;
   struct AsyncFileRead *asyncs = mutt_mem_calloc(QUEUE_DEPTH, sizeof(struct AsyncFileRead));
+  struct iovec *iovecs = mutt_mem_calloc(QUEUE_DEPTH, sizeof(struct iovec));
   // TODO check
   int first_free_async = 0;
   for (int i = 0; i < QUEUE_DEPTH - 1; ++i)
@@ -743,6 +762,12 @@ static void maildir_delayed_parsing(struct Mailbox *m, struct MdEmailArray *mda,
     asyncs[i].next_free = i + 1;
   }
   asyncs[QUEUE_DEPTH - 1].next_free = -1;
+  for (int i = 0; i < QUEUE_DEPTH; ++i)
+  {
+    iovecs[i].iov_base = asyncs[i].buf;
+    iovecs[i].iov_len = sizeof(asyncs[i].buf);
+  }
+  io_uring_register_buffers(&ring, iovecs, QUEUE_DEPTH);
 
   int mbfd = open(mailbox_path(m), O_DIRECTORY);
 
@@ -793,8 +818,8 @@ static void maildir_delayed_parsing(struct Mailbox *m, struct MdEmailArray *mda,
       {
         // we have to submit and reap...
         //fprintf(stderr, "have to reap\n");
-        wait_for_completed_io(m, progress, asyncs, &first_free_async, &ring,
-                              &pending_requests, &num_finished);
+        wait_for_completed_io(m, progress, asyncs, mbfd, &first_free_async,
+                              &ring, &pending_requests, &num_finished);
       }
       //fprintf(stderr, "pr2=%d ring=%p\n", pending_requests, &ring);
 
@@ -805,7 +830,7 @@ static void maildir_delayed_parsing(struct Mailbox *m, struct MdEmailArray *mda,
       async->md = md;
       first_free_async = async->next_free;
       struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
-      io_uring_prep_openat(sqe, mbfd, md->email->path, O_RDONLY, 0);
+      io_uring_prep_openat_direct(sqe, mbfd, md->email->path, O_RDONLY, 0, async_idx);
       io_uring_sqe_set_data(sqe, (void *) async_idx);
       ++pending_requests;
     }
@@ -814,10 +839,11 @@ static void maildir_delayed_parsing(struct Mailbox *m, struct MdEmailArray *mda,
   // take whatever is left
   while (pending_requests > 0)
   {
-    wait_for_completed_io(m, progress, asyncs, &first_free_async, &ring,
+    wait_for_completed_io(m, progress, asyncs, mbfd, &first_free_async, &ring,
                           &pending_requests, &num_finished);
   }
   FREE(&asyncs);
+  FREE(&iovecs);
 #ifdef USE_HCACHE
   hcache_close(&hc);
 #endif
