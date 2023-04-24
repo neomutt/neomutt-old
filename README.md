@@ -13,6 +13,9 @@ They have simply been moved to keep the main repository tidier.
 - [add-creat-maildir-function](https://github.com/neomutt/neomutt-old/tree/add-creat-maildir-function)  
   [@matthewhughes934](https://github.com/matthewhughes934)'s Create mailbox for maildir
 
+- [attach-insert](https://github.com/neomutt/neomutt-old/tree/attach-insert)  
+  [@dcpurton](https://github.com/dcpurton)'s Support for inserting attachments
+
 ## NeoMutt 2022-04-15
 
 - [ipc](https://github.com/neomutt/neomutt-old/tree/ipc)  
