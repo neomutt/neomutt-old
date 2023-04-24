@@ -10,6 +10,9 @@ They have simply been moved to keep the main repository tidier.
 - [io-uring](https://github.com/neomutt/neomutt-old/tree/io-uring)  
   [@sesse](https://github.com/sesse)'s io-uring proof-of-concept
 
+- [add-creat-maildir-function](https://github.com/neomutt/neomutt-old/tree/add-creat-maildir-function)  
+  [@matthewhughes934](https://github.com/matthewhughes934)'s Create mailbox for maildir
+
 ## NeoMutt 2022-04-15
 
 - [ipc](https://github.com/neomutt/neomutt-old/tree/ipc)  
