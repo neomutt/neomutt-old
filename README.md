@@ -19,6 +19,9 @@ They have simply been moved to keep the main repository tidier.
 - [notify](https://github.com/neomutt/neomutt-old/tree/notify)  
   [@michal](https://github.com/michal)'s New mail notifications from backend
 
+- [prompt_user](https://github.com/neomutt/neomutt-old/tree/prompt_user)  
+  [@danielg0](https://github.com/danielg0)'s Implement 'prompt_user' command
+
 ## NeoMutt 2022-04-15
 
 - [ipc](https://github.com/neomutt/neomutt-old/tree/ipc)  
