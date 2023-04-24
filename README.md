@@ -16,6 +16,9 @@ They have simply been moved to keep the main repository tidier.
 - [attach-insert](https://github.com/neomutt/neomutt-old/tree/attach-insert)  
   [@dcpurton](https://github.com/dcpurton)'s Support for inserting attachments
 
+- [notify](https://github.com/neomutt/neomutt-old/tree/notify)  
+  [@michal](https://github.com/michal)'s New mail notifications from backend
+
 ## NeoMutt 2022-04-15
 
 - [ipc](https://github.com/neomutt/neomutt-old/tree/ipc)  
