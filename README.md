@@ -22,6 +22,9 @@ They have simply been moved to keep the main repository tidier.
 - [prompt_user](https://github.com/neomutt/neomutt-old/tree/prompt_user)  
   [@danielg0](https://github.com/danielg0)'s Implement 'prompt_user' command
 
+- [question-utf-8](https://github.com/neomutt/neomutt-old/tree/question-utf-8)  
+  [@Strahinja](https://github.com/yyy)'s WIP to accept utf-8 in questions
+
 ## NeoMutt 2022-04-15
 
 - [ipc](https://github.com/neomutt/neomutt-old/tree/ipc)  
