@@ -58,6 +58,8 @@
 #include "mutt_sasl.h"
 #endif
 
+struct NntpServer *CurrentNewsSrv;
+
 static int nntp_connect_error(struct NntpServer *nserv)
 {
   nserv->status = NNTP_NONE;
