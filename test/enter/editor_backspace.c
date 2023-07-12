@@ -68,7 +68,9 @@ void test_editor_backspace(void)
 
   {
     struct EnterState *es = enter_state_new();
-    editor_buffer_set(es, "义勇军");
+    const char *src = "义勇军";
+    editor_buffer_set(es, src);
+    printf("src = %s\n", src);
     TEST_CHECK(editor_buffer_get_lastchar(es) == 3);
     TEST_CHECK(editor_buffer_get_cursor(es) == 3);
     TEST_CHECK(editor_backspace(es) == FR_SUCCESS);
@@ -80,7 +82,9 @@ void test_editor_backspace(void)
 #if 0
   {
     struct EnterState *es = enter_state_new();
-    editor_buffer_set(es, "I ❤️");
+    const char *src = "I ❤️";
+    editor_buffer_set(es, src);
+    printf("src = %s\n", src);
     TEST_CHECK(editor_buffer_get_lastchar(es) == 4);
     TEST_CHECK(editor_buffer_get_cursor(es) == 4);
     TEST_CHECK(editor_backspace(es) == FR_SUCCESS);

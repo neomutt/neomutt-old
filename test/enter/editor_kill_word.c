@@ -79,7 +79,9 @@ void test_editor_kill_word(void)
 #if 0
   {
     struct EnterState *es = enter_state_new();
-    editor_buffer_set(es, "apple 义勇军 banana");
+    const char *src = "apple 义勇军 banana";
+    editor_buffer_set(es, src);
+    printf("src = %s\n", src);
     TEST_CHECK(editor_buffer_get_lastchar(es) == 16);
     TEST_CHECK(editor_buffer_get_cursor(es) == 16);
     editor_buffer_set_cursor(es, 10);

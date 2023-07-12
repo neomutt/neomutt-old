@@ -36,7 +36,7 @@
 #include "state.h" // IWYU pragma: keep
 
 /// combining mark / non-spacing character
-#define COMB_CHAR(wc) (IsWPrint(wc) && (wcwidth(wc) == 0))
+#define COMB_CHAR(wc) (IsWPrint(wc) && ((wc == 0xfe0f) || (wcwidth(wc) == 0)))
 
 /**
  * editor_backspace - Delete the char in front of the cursor
@@ -50,6 +50,14 @@ int editor_backspace(struct EnterState *es)
     return FR_ERROR;
 
   size_t i = es->curpos;
+
+  wchar_t wc;
+  for (size_t j = 0; j < es->lastchar; j++)
+  {
+    wc = es->wbuf[j];
+    printf("j = %zu, wc = 0x%04x, IsWPrint(wc) = %d, wcwidth(wc) = %d\n", j, wc, IsWPrint(wc), wcwidth(wc));
+  }
+
   while ((i > 0) && COMB_CHAR(es->wbuf[i - 1]))
     i--;
   if (i > 0)
@@ -254,6 +262,14 @@ int editor_kill_eow(struct EnterState *es)
   if (!es)
     return FR_ERROR;
 
+  printf("BEFORE\n");
+  wchar_t wc;
+  for (size_t j = 0; j < es->lastchar; j++)
+  {
+    wc = es->wbuf[j];
+    printf("j = %zu, wc = 0x%04x, iswspace(wc) = %d, iswalnum(wc) = %d\n", j, wc, iswspace(wc), iswalnum(wc));
+  }
+
   /* first skip over whitespace */
   size_t i;
   for (i = es->curpos; (i < es->lastchar) && iswspace(es->wbuf[i]); i++)
@@ -265,10 +281,10 @@ int editor_kill_eow(struct EnterState *es)
   if (i < es->lastchar)
   {
     /* if the current character is alphanumeric.. */
-    if (iswalnum(es->wbuf[i]))
+    if ((es->wbuf[i] > 255) || iswalnum(es->wbuf[i]))
     {
       /* skip over the rest of the word consistent of only alphanumerics */
-      for (; (i < es->lastchar) && iswalnum(es->wbuf[i]); i++)
+      for (; (i < es->lastchar) && ((es->wbuf[i] > 255) || iswalnum(es->wbuf[i])); i++)
         ; // do nothing
     }
     else
@@ -279,6 +295,14 @@ int editor_kill_eow(struct EnterState *es)
 
   memmove(es->wbuf + es->curpos, es->wbuf + i, (es->lastchar - i) * sizeof(wchar_t));
   es->lastchar += es->curpos - i;
+
+  printf("AFTER\n");
+  for (size_t j = 0; j < es->lastchar; j++)
+  {
+    wc = es->wbuf[j];
+    printf("j = %zu, wc = 0x%04x, iswspace(wc) = %d, iswalnum(wc) = %d\n", j, wc, iswspace(wc), iswalnum(wc));
+  }
+
   return FR_SUCCESS;
 }
 
@@ -331,14 +355,22 @@ int editor_kill_word(struct EnterState *es)
   if (!es || (es->curpos == 0))
     return FR_ERROR;
 
+  printf("BEFORE\n");
+  wchar_t wc;
+  for (size_t j = 0; j < es->lastchar; j++)
+  {
+    wc = es->wbuf[j];
+    printf("j = %zu, wc = 0x%04x, iswspace(wc) = %d, iswalnum(wc) = %d\n", j, wc, iswspace(wc), iswalnum(wc));
+  }
+
   size_t i = es->curpos;
-  while (i && iswspace(es->wbuf[i - 1]))
+  while ((i > 0) && iswspace(es->wbuf[i - 1]))
     i--;
   if (i > 0)
   {
-    if (iswalnum(es->wbuf[i - 1]))
+    if ((es->wbuf[i - 1] > 255) || iswalnum(es->wbuf[i - 1]))
     {
-      for (--i; (i > 0) && iswalnum(es->wbuf[i - 1]); i--)
+      for (--i; (i > 0) && ((es->wbuf[i - 1] > 255) || iswalnum(es->wbuf[i - 1])); i--)
         ; // do nothing
     }
     else
@@ -350,6 +382,13 @@ int editor_kill_word(struct EnterState *es)
           (es->lastchar - es->curpos) * sizeof(wchar_t));
   es->lastchar += i - es->curpos;
   es->curpos = i;
+
+  printf("AFTER\n");
+  for (size_t j = 0; j < es->lastchar; j++)
+  {
+    wc = es->wbuf[j];
+    printf("j = %zu, wc = 0x%04x, iswspace(wc) = %d, iswalnum(wc) = %d\n", j, wc, iswspace(wc), iswalnum(wc));
+  }
 
   return FR_SUCCESS;
 }
@@ -451,8 +490,12 @@ int editor_buffer_set(struct EnterState *es, const char *str)
   if (!es)
     return 0;
 
+  printf(">>%s<<\n", str);
+  const unsigned char *ustr = (const unsigned char *) str;
+  printf("0x%2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x\n", ustr[0], ustr[1], ustr[2], ustr[3], ustr[4], ustr[5], ustr[6], ustr[7], ustr[8], ustr[9]);
   es->wbuflen = 0;
   es->lastchar = mutt_mb_mbstowcs(&es->wbuf, &es->wbuflen, 0, str);
+  printf("0x%04x %04x %04x %04x %04x %04x %04x %04x %04x %04x\n", es->wbuf[0], es->wbuf[1], es->wbuf[2], es->wbuf[3], es->wbuf[4], es->wbuf[5], es->wbuf[6], es->wbuf[7], es->wbuf[8], es->wbuf[9]);
   es->curpos = es->lastchar;
   return es->lastchar;
 }
