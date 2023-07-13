@@ -269,6 +269,9 @@ static struct ConfigDef MainVars[] = {
   { "header", DT_BOOL, false, 0, NULL,
     "Include the message headers in the reply email (Weed applies)"
   },
+  { "help_alternate", DT_BOOL, false, 0, NULL,
+    "Alternating colors in the help menu"
+  },
   { "hidden_tags", DT_SLIST|SLIST_SEP_COMMA, IP "unread,draft,flagged,passed,replied,attachment,signed,encrypted", 0, NULL,
     "List of tags that shouldn't be displayed on screen (comma-separated)"
   },

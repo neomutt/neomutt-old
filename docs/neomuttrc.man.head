@@ -309,6 +309,11 @@ If the sidebar is enabled the following \fIobject\fPs are also valid:
 .BR sidebar_\:ordinary ", "
 .BR sidebar_\:spool_file "."
 .IP
+If the alternating lines in help are enabled (see \fI$help_alternate\fP) the following \fIobject\fPs are also valid:
+.BR pager_even ", "
+.BR pager_odd "."
+.IP
+
 The \fBbody\fP and \fBheader\fP objects allow you to restrict the colorization
 to a regular expression. The \fBindex-object\fP permits you to select colored
 messages by pattern.

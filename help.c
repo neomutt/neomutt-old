@@ -481,6 +481,12 @@ void mutt_help(enum MenuType menu)
   pview.mode = PAGER_MODE_HELP;
   pview.flags = MUTT_PAGER_RETWINCH | MUTT_PAGER_MARKER | MUTT_PAGER_NSKIP | MUTT_PAGER_NOWRAP;
 
+  const bool c_alternating_colors = cs_subset_bool(NeoMutt->sub, "help_alternate");
+  if (c_alternating_colors)
+  {
+    pview.flags |= MUTT_PAGER_ALTER;
+  }
+
   do
   {
     fp = mutt_file_fopen(buf_string(&t), "w");

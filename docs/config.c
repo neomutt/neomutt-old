@@ -1633,6 +1633,14 @@
 ** of these should present a major problem.
 */
 
+{ "help_alternate", DT_BOOL, false },
+/*
+** .pp
+** When \fIset\fP, the alternating lines feature is enabled in the help screen.
+** .pp
+** The alternation uses the colors \fIpager_even\fP and \fIpager_odd\fP.
+*/
+
 { "hidden_host", DT_BOOL, false },
 /*
 ** .pp

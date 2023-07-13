@@ -75,6 +75,8 @@ const struct Mapping ColorFields[] = {
   { "message",           MT_COLOR_MESSAGE },
   { "normal",            MT_COLOR_NORMAL },
   { "options",           MT_COLOR_OPTIONS },
+  { "pager_even",        MT_COLOR_PAGER_EVEN},
+  { "pager_odd",         MT_COLOR_PAGER_ODD},
   { "progress",          MT_COLOR_PROGRESS },
   { "prompt",            MT_COLOR_PROMPT },
   { "quoted",            MT_COLOR_QUOTED },

@@ -56,6 +56,8 @@ enum ColorId
   MT_COLOR_MESSAGE_LOG,              ///< Menu showing log messages
   MT_COLOR_NORMAL,                   ///< Plain text
   MT_COLOR_OPTIONS,                  ///< Options in prompt
+  MT_COLOR_PAGER_EVEN,               ///< Pager: even lines for alternating colors
+  MT_COLOR_PAGER_ODD,                ///< Pager: odd lines for alternating colors
   MT_COLOR_PROGRESS,                 ///< Progress bar
   MT_COLOR_PROMPT,                   ///< Question/user input
   MT_COLOR_QUOTED,                   ///< Pager: quoted text

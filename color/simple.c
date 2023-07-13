@@ -45,6 +45,7 @@ void simple_colors_init(void)
   color_debug(LL_DEBUG5, "init indicator, markers, etc\n");
   SimpleColors[MT_COLOR_INDICATOR].attrs = A_REVERSE;
   SimpleColors[MT_COLOR_MARKERS].attrs = A_REVERSE;
+  SimpleColors[MT_COLOR_PAGER_EVEN].attrs = A_REVERSE;
   SimpleColors[MT_COLOR_SEARCH].attrs = A_REVERSE;
 #ifdef USE_SIDEBAR
   SimpleColors[MT_COLOR_SIDEBAR_HIGHLIGHT].attrs = A_UNDERLINE;
