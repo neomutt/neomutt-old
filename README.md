@@ -5,6 +5,11 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2023-05-17
+
+- [libenter-tests](https://github.com/neomutt/neomutt-old/tree/libenter-tests)  
+  Test for handling emojis and unicode combine characters
+
 ## NeoMutt 2023-04-07
 
 - [io-uring](https://github.com/neomutt/neomutt-old/tree/io-uring)  
