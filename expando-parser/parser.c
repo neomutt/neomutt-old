@@ -715,23 +715,33 @@ void free_tree(struct Node **root)
 struct ExpandoCallback
 {
   const char *expando;
-  void (*callback)(void);
+  int (*callback)(void);
 };
 
 struct TreeApplication
 {
   struct Node **root;
-  struct ExpandoCallback callbacks[3];
+  // NOTE: not the best solution....
+  struct ExpandoCallback callbacks[4];
 };
 
-static void expando_a(void)
+static int expando_a(void)
 {
   printf("This is the `a` expando.\n");
+  return 1;
 }
 
-static void expando_b(void)
+static int expando_b(void)
 {
   printf("This is the `b` expando.\n");
+  return 1;
+}
+
+static int expando_c(void)
+{
+  int value = 0;
+  printf("This is the `c` expando with the value of %d.\n", value);
+  return value;
 }
 
 static bool is_equal(const char *start, const char *end, const char *str)
@@ -740,32 +750,69 @@ static bool is_equal(const char *start, const char *end, const char *str)
   return strncmp(start, str, n) == 0;
 }
 
+static int apply_fmt(const struct TreeApplication *app, const struct Node *n)
+{
+  if (app == NULL || n == NULL)
+  {
+    return 0;
+  }
+
+  switch (n->type)
+  {
+    case NT_EXPANDO:
+    {
+      struct ExpandoNode *e = (struct ExpandoNode *) n;
+      for (size_t i = 0; app->callbacks[i].expando != NULL; ++i)
+      {
+        const char *s1 = e->start;
+        const char *s2 = e->end;
+        if (is_equal(s1, s2, app->callbacks[i].expando))
+        {
+          return app->callbacks[i].callback();
+        }
+      }
+
+      int elen = e->end - e->start;
+      fprintf(stderr, "No callback for expando: `%.*s`\n", elen, e->start);
+      return 0;
+    }
+    break;
+
+    case NT_CONDITION:
+    {
+      struct ConditionNode *c = (struct ConditionNode *) n;
+
+      int ret = apply_fmt(app, c->condition);
+      if (ret != 0)
+      {
+        return apply_fmt(app, c->if_true);
+      }
+      else
+      {
+        if (c->if_false)
+        {
+          return apply_fmt(app, c->if_false);
+        }
+        else
+        {
+          return 1;
+        }
+      }
+    }
+
+    default:
+      printf("Not implemented:\n");
+      print_node(n, 4);
+      return 1;
+  }
+}
+
 static void apply_tree(const struct TreeApplication *app)
 {
   const struct Node *n = *app->root;
   while (n)
   {
-    if (n->type == NT_EXPANDO)
-    {
-      bool found = false;
-      struct ExpandoNode *e = (struct ExpandoNode *) n;
-      for (size_t i = 0; app->callbacks[i].expando; ++i)
-      {
-        if (is_equal(e->start, e->end, app->callbacks[i].expando))
-        {
-          app->callbacks[i].callback();
-          found = true;
-          break;
-        }
-      }
-
-      if (!found)
-      {
-        int elen = e->end - e->start;
-        fprintf(stderr, "No callback for expando: `%.*s`\n", elen, e->start);
-      }
-    }
-
+    apply_fmt(app, n);
     n = n->next;
   }
 }
@@ -783,18 +830,22 @@ int main(void)
   //const char *text = "if: %?l?%4l?  if-else: %?l?%4l&%4c?";
   //const char *text = "if: %<l?%4l>  if-else: %<l?%4l&%4c>";
   //const char *text = "%@hook1@ %a %@hook2@";
-  const char *text = "%a %b %b %c";
+  //const char *text = "%4C %Z %[%b %d %H:%M] %-15.15L (%<l?%4l&%4c>) %s";
+  const char *text = "%a %b %<c?%a&%b> %d ";
   printf("%s\n", text);
 
   struct Node *root = NULL;
-  struct TreeApplication app = {
-    .root = &root, .callbacks = { { "a", expando_a }, { "b", expando_b }, { NULL, NULL } }
-  };
-
   parse_tree(&root, text);
   print_tree(&root);
 
   printf("------------------\n");
+  struct TreeApplication app = { .root = &root,
+                                 .callbacks = {
+                                     { "a", expando_a },
+                                     { "b", expando_b },
+                                     { "c", expando_c },
+                                     { NULL, NULL },
+                                 } };
   apply_tree(&app);
 
   free_tree(&root);
