@@ -819,37 +819,29 @@ static void apply_tree(const struct TreeApplication *app)
 
 /***************************************************************************/
 
-int main(void)
+int main(int argc, char *argv[])
 {
-  //const char *text = "test text";
-  //const char *text = "test text%% %a %4b";
-  //const char *text = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
-  //const char *text = "test text%% %aa %4ab %bb";
-  //const char *text = " %[%b %d]  %{!%b %d} %(%b %d)";
-  //const char *text = "%|A %>B %*C";
-  //const char *text = "if: %?l?%4l?  if-else: %?l?%4l&%4c?";
-  //const char *text = "if: %<l?%4l>  if-else: %<l?%4l&%4c>";
-  //const char *text = "nested: %<c?%<a?%c&%d>&%<b?%e&%f>>";
-  //const char *text = "%@hook1@ %a %@hook2@";
-  //const char *text = "%4C %Z %[%b %d %H:%M] %-15.15L (%<l?%4l&%4c>) %s";
-  const char *text = "%<c?%a&%b> %d";
-  printf("%s\n", text);
+  for (int i = 1; i < argc; i++)
+  {
+    const char *text = argv[i];
+    printf("%s\n", text);
 
-  struct Node *root = NULL;
-  parse_tree(&root, text);
-  print_tree(&root);
+    struct Node *root = NULL;
+    parse_tree(&root, text);
+    print_tree(&root);
 
-  printf("------------------\n");
-  struct TreeApplication app = { .root = &root,
-                                 .callbacks = {
-                                     { "a", expando_a },
-                                     { "b", expando_b },
-                                     { "c", expando_c },
-                                     { NULL, NULL },
-                                 } };
-  apply_tree(&app);
+    printf("------------------\n");
+    struct TreeApplication app = { .root = &root,
+                                   .callbacks = {
+                                       { "a", expando_a },
+                                       { "b", expando_b },
+                                       { "c", expando_c },
+                                       { NULL, NULL },
+                                   } };
+    apply_tree(&app);
 
-  free_tree(&root);
+    free_tree(&root);
+  }
 
   return 0;
 }
