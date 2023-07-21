@@ -829,9 +829,10 @@ int main(void)
   //const char *text = "%|A %>B %*C";
   //const char *text = "if: %?l?%4l?  if-else: %?l?%4l&%4c?";
   //const char *text = "if: %<l?%4l>  if-else: %<l?%4l&%4c>";
+  //const char *text = "nested: %<c?%<a?%c&%d>&%<b?%e&%f>>";
   //const char *text = "%@hook1@ %a %@hook2@";
   //const char *text = "%4C %Z %[%b %d %H:%M] %-15.15L (%<l?%4l&%4c>) %s";
-  const char *text = "%a %b %<c?%a&%b> %d ";
+  const char *text = "%<c?%a&%b> %d";
   printf("%s\n", text);
 
   struct Node *root = NULL;
