@@ -30,6 +30,7 @@ enum NodeType
 {
   NT_TEXT,
   NT_EXPANDO,
+  NT_DATE,
   NT_CONDITION,
 };
 
@@ -50,8 +51,8 @@ struct TextNode
 
 enum Justification
 {
-  RIGHT = 0,
-  LEFT
+  FMT_J_RIGHT = 0,
+  FMT_J_LEFT
 };
 
 struct Format
@@ -75,6 +76,25 @@ struct ExpandoNode
   const char *end;
 
   const struct Format *format;
+};
+
+enum DateType
+{
+  DT_SENDER_SEND_TIME,
+  DT_LOCAL_SEND_TIME,
+  DT_LOCAL_RECIEVE_TIME,
+};
+
+struct DateNode
+{
+  enum NodeType type;
+  struct Node *next;
+
+  const char *start;
+  const char *end;
+
+  enum DateType date_type;
+  bool ingnore_locale;
 };
 
 static struct Node *new_text_node(const char *start, const char *end)
@@ -105,6 +125,24 @@ static struct Node *new_expando_node(const char *start, const char *end,
   node->start = start;
   node->end = end;
   node->format = format;
+
+  return (struct Node *) node;
+}
+
+static struct Node *new_date_node(const char *start, const char *end,
+                                  enum DateType date_type, bool ingnore_locale)
+{
+  struct DateNode *node = malloc(sizeof(struct DateNode));
+
+  VERIFY(node != NULL);
+
+  memset(node, 0, sizeof(struct DateNode));
+
+  node->type = NT_DATE;
+  node->start = start;
+  node->end = end;
+  node->date_type = date_type;
+  node->ingnore_locale = ingnore_locale;
 
   return (struct Node *) node;
 }
@@ -191,24 +229,28 @@ static const struct Format *parse_format(const char *start, const char *end)
     switch (*start)
     {
       case '-':
-        format->justification = LEFT;
+        format->justification = FMT_J_LEFT;
         ++start;
         break;
+
       case '0':
         format->leader = '0';
         ++start;
         break;
+
       case '.':
         is_min = false;
         ++start;
         break;
+
       // number
       default:
-      {
         char *end_ptr;
         int number = strtol(start, &end_ptr, 10);
 
+        // NOTE: start is NOT null-terminated
         VERIFY(end_ptr <= end);
+
         if (is_min)
         {
           format->min = number;
@@ -219,7 +261,6 @@ static const struct Format *parse_format(const char *start, const char *end)
         }
 
         start = end_ptr;
-      }
     }
   }
 
@@ -239,6 +280,39 @@ static void parse(struct Node **root, const char *s)
         TODO();
         s = skip_until(s, ">");
       }
+      // dates
+      else if (*s == '{' || *s == '[' || *s == '(')
+      {
+        bool ignore_locale = *(s + 1) == '!';
+        enum DateType dt = DT_SENDER_SEND_TIME;
+        const char *end = NULL;
+
+        if (*s == '{')
+        {
+          ++s;
+          dt = DT_SENDER_SEND_TIME;
+          end = skip_until(s, "}");
+          VERIFY(*end == '}');
+        }
+        else if (*s == '[')
+        {
+          ++s;
+          dt = DT_LOCAL_SEND_TIME;
+          end = skip_until(s, "]");
+          VERIFY(*end == ']');
+        }
+        // '('
+        else
+        {
+          ++s;
+          dt = DT_LOCAL_RECIEVE_TIME;
+          end = skip_until(s, ")");
+          VERIFY(*end == ')');
+        }
+
+        append_node(root, new_date_node(s, end, dt, ignore_locale));
+        s = end + 1;
+      }
       // "%"
       else if (*s == '%')
       {
@@ -250,9 +324,7 @@ static void parse(struct Node **root, const char *s)
       {
         const char *format_end = skip_until_classic_expando(s);
         const char *expando_end = skip_classic_expando(format_end);
-
         const struct Format *format = parse_format(s, format_end);
-
         append_node(root, new_expando_node(format_end, expando_end, format));
         s = expando_end;
       }
@@ -274,11 +346,15 @@ static void print(struct Node **root)
     switch (n->type)
     {
       case NT_TEXT:
+      {
         const struct TextNode *t = (const struct TextNode *) n;
         int len = t->end - t->start;
         printf("TEXT: `%.*s`\n", len, t->start);
-        break;
+      }
+      break;
+
       case NT_EXPANDO:
+      {
         const struct ExpandoNode *e = (const struct ExpandoNode *) n;
         if (e->format)
         {
@@ -286,16 +362,48 @@ static void print(struct Node **root)
           const struct Format *f = e->format;
           int flen = f->end - f->start;
           printf("EXPANDO: `%.*s`", elen, e->start);
-          printf(" (`%.*s`: min=%d, max=%d, just=%s, leader=`%c`)\n", flen, f->start,
-                 f->min, f->max, f->justification == RIGHT ? "RIGHT" : "LEFT", f->leader);
+
+          const char *just = f->justification == FMT_J_RIGHT ? "RIGHT" : "LEFT";
+          printf(" (`%.*s`: min=%d, max=%d, just=%s, leader=`%c`)\n", flen,
+                 f->start, f->min, f->max, just, f->leader);
         }
         else
         {
           int elen = e->end - e->start;
           printf("EXPANDO: `%.*s`\n", elen, e->start);
         }
+      }
+      break;
 
-        break;
+      case NT_DATE:
+      {
+        const struct DateNode *d = (const struct DateNode *) n;
+        int len = d->end - d->start;
+
+        const char *dt = NULL;
+        switch (d->date_type)
+        {
+          case DT_SENDER_SEND_TIME:
+            dt = "SENDER_SEND_TIME";
+            break;
+
+          case DT_LOCAL_SEND_TIME:
+            dt = "DT_LOCAL_SEND_TIME";
+            break;
+
+          case DT_LOCAL_RECIEVE_TIME:
+            dt = "DT_LOCAL_RECIEVE_TIME";
+            break;
+
+          default:
+            ERROR("Unknown date type: %d\n", d->date_type);
+        }
+
+        printf("DATE: `%.*s` (type=%s, ignore_locale=%d)\n", len, d->start, dt,
+               d->ingnore_locale);
+      }
+      break;
+
       case NT_CONDITION:
         TODO();
         break;
@@ -309,16 +417,20 @@ static void free_node(struct Node *n)
   switch (n->type)
   {
     case NT_TEXT:
+    case NT_DATE:
       free(n);
       break;
     case NT_EXPANDO:
+    {
       struct ExpandoNode *e = (struct ExpandoNode *) n;
       if (e->format)
       {
         free((struct Format *) e->format);
       }
       free(e);
-      break;
+    }
+    break;
+
     case NT_CONDITION:
       TODO();
       break;
@@ -332,7 +444,6 @@ void free_tree(struct Node **root)
   {
     struct Node *f = n;
     n = n->next;
-
     free_node(f);
   }
 }
@@ -342,7 +453,8 @@ int main(void)
   //const char *text = "test text";
   //const char *text = "test text%% %a %4b";
   //const char *text = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
-  const char *text = "test text%% %aa %4ab %bb";
+  //const char *text = "test text%% %aa %4ab %bb";
+  const char *text = " %[%b %d]  %{!%b %d} %(%b %d)";
   // const char* text = "%4C %[%b %d %H:%M] %-15.15L (%<l?%4l>) %s";
 
   printf("%s\n", text);
