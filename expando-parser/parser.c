@@ -114,6 +114,22 @@ struct PadNode
   char pad_char;
 };
 
+enum ConditionStart
+{
+  CON_NO_CONDITION,
+  CON_START
+};
+
+struct ConditionNode
+{
+  enum NodeType type;
+  struct Node *next;
+
+  struct Node *condition;
+  struct Node *if_true;
+  struct Node *if_false;
+};
+
 static struct Node *new_text_node(const char *start, const char *end)
 {
   struct TextNode *node = malloc(sizeof(struct TextNode));
@@ -175,6 +191,26 @@ static struct Node *new_pad_node(enum PadType pad_type, char pad_char)
   node->type = NT_PAD;
   node->pad_type = pad_type;
   node->pad_char = pad_char;
+
+  return (struct Node *) node;
+}
+
+static struct Node *new_condition_node(struct Node *condition,
+                                       struct Node *if_true, struct Node *if_false)
+{
+  VERIFY(condition != NULL);
+  VERIFY(if_true != NULL);
+
+  struct ConditionNode *node = malloc(sizeof(struct ConditionNode));
+
+  VERIFY(node != NULL);
+
+  memset(node, 0, sizeof(struct ConditionNode));
+
+  node->type = NT_CONDITION;
+  node->condition = condition;
+  node->if_true = if_true;
+  node->if_false = if_false;
 
   return (struct Node *) node;
 }
@@ -299,12 +335,12 @@ static const struct Format *parse_format(const char *start, const char *end)
   return format;
 }
 
-static void parse(struct Node **root, const char *s)
+static struct Node *parse_node(const char *s, enum ConditionStart condition_start,
+                               const char **parsed_until)
 {
   while (*s)
   {
-    // expando
-    if (*s == '%')
+    if (*s == '%' || (condition_start == CON_START && *s == '?'))
     {
       s++;
       // conditional
@@ -344,8 +380,8 @@ static void parse(struct Node **root, const char *s)
           VERIFY(*end == ')');
         }
 
-        append_node(root, new_date_node(s, end, dt, ignore_locale));
-        s = end + 1;
+        *parsed_until = end + 1;
+        return new_date_node(s, end, dt, ignore_locale);
       }
       // padding
       else if (*s == '|' || *s == '>' || *s == '*')
@@ -367,14 +403,42 @@ static void parse(struct Node **root, const char *s)
         char pad_char = *(s + 1);
         VERIFY(pad_char != '\0');
 
-        append_node(root, new_pad_node(pt, pad_char));
-        s += 2;
+        *parsed_until = s + 2;
+        return new_pad_node(pt, pad_char);
       }
       // "%"
       else if (*s == '%')
       {
-        append_node(root, new_text_node(s, s + 1));
-        s++;
+        *parsed_until = s + 1;
+        return new_text_node(s, s + 1);
+      }
+      // classic conditional
+      else if (*s == '?')
+      {
+        const char *next = NULL;
+        struct Node *condition = parse_node(s, CON_START, &next);
+
+        VERIFY(*next == '?');
+        s = next + 1;
+
+        struct Node *if_true = parse_node(s, CON_NO_CONDITION, &next);
+        if (*next == '?')
+        {
+          *parsed_until = next + 1;
+          return new_condition_node(condition, if_true, NULL);
+        }
+        else if (*next == '&')
+        {
+          s = next + 1;
+          struct Node *if_false = parse_node(s, CON_NO_CONDITION, &next);
+          VERIFY(*next == '?');
+          *parsed_until = next + 1;
+          return new_condition_node(condition, if_true, if_false);
+        }
+        else
+        {
+          ERROR("Wrong conditional");
+        }
       }
       // classic expandos: %X
       else
@@ -382,126 +446,166 @@ static void parse(struct Node **root, const char *s)
         const char *format_end = skip_until_classic_expando(s);
         const char *expando_end = skip_classic_expando(format_end);
         const struct Format *format = parse_format(s, format_end);
-        append_node(root, new_expando_node(format_end, expando_end, format));
-        s = expando_end;
+
+        *parsed_until = expando_end;
+        return new_expando_node(format_end, expando_end, format);
       }
     }
     // text
     else
     {
       const char *end = skip_until(s, "%");
-      append_node(root, new_text_node(s, end));
-      s = end;
+      *parsed_until = end;
+      return new_text_node(s, end);
     }
+  }
+
+  ERROR("Internal parsing error.");
+  return NULL;
+}
+
+static void parse_tree(struct Node **root, const char *s)
+{
+  const char *end = NULL;
+  while (*s)
+  {
+    struct Node *n = parse_node(s, CON_NO_CONDITION, &end);
+    append_node(root, n);
+    s = end;
   }
 }
 
-static void print(struct Node **root)
+static void print_node(const struct Node *n, int indent)
+{
+  VERIFY(n != NULL);
+
+  switch (n->type)
+  {
+    case NT_TEXT:
+    {
+      const struct TextNode *t = (const struct TextNode *) n;
+      int len = t->end - t->start;
+      printf("%*sTEXT: `%.*s`\n", indent, "", len, t->start);
+    }
+    break;
+
+    case NT_EXPANDO:
+    {
+      const struct ExpandoNode *e = (const struct ExpandoNode *) n;
+      if (e->format)
+      {
+        int elen = e->end - e->start;
+        const struct Format *f = e->format;
+        int flen = f->end - f->start;
+        printf("%*sEXPANDO: `%.*s`", indent, "", elen, e->start);
+
+        const char *just = f->justification == FMT_J_RIGHT ? "RIGHT" : "LEFT";
+        printf(" (`%.*s`: min=%d, max=%d, just=%s, leader=`%c`)\n", flen,
+               f->start, f->min, f->max, just, f->leader);
+      }
+      else
+      {
+        int elen = e->end - e->start;
+        printf("%*sEXPANDO: `%.*s`\n", indent, "", elen, e->start);
+      }
+    }
+    break;
+
+    case NT_DATE:
+    {
+      const struct DateNode *d = (const struct DateNode *) n;
+      int len = d->end - d->start;
+
+      const char *dt = NULL;
+      switch (d->date_type)
+      {
+        case DT_SENDER_SEND_TIME:
+          dt = "SENDER_SEND_TIME";
+          break;
+
+        case DT_LOCAL_SEND_TIME:
+          dt = "DT_LOCAL_SEND_TIME";
+          break;
+
+        case DT_LOCAL_RECIEVE_TIME:
+          dt = "DT_LOCAL_RECIEVE_TIME";
+          break;
+
+        default:
+          ERROR("Unknown date type: %d\n", d->date_type);
+      }
+
+      printf("%*sDATE: `%.*s` (type=%s, ignore_locale=%d)\n", indent, "", len,
+             d->start, dt, d->ingnore_locale);
+    }
+    break;
+
+    case NT_PAD:
+    {
+      const struct PadNode *p = (const struct PadNode *) n;
+
+      const char *pt = NULL;
+      switch (p->pad_type)
+      {
+        case PT_FILL:
+          pt = "FILL";
+          break;
+
+        case PT_HARD_FILL:
+          pt = "HARD_FILL";
+          break;
+
+        case PT_SOFT_FILL:
+          pt = "SOFT_FILL";
+          break;
+
+        default:
+          ERROR("Unknown pad type: %d\n", p->pad_type);
+      }
+
+      printf("%*sPAD: `%c` (type=%s)\n", indent, "", p->pad_char, pt);
+    }
+    break;
+
+    case NT_CONDITION:
+    {
+      const struct ConditionNode *c = (const struct ConditionNode *) n;
+      printf("%*sCONDITION: ", indent, "");
+      print_node(c->condition, indent);
+      printf("%*sIF TRUE : ", indent + 4, "");
+      print_node(c->if_true, indent + 4);
+
+      if (c->if_false)
+      {
+        printf("%*sIF FALSE: ", indent + 4, "");
+        print_node(c->if_false, indent + 4);
+      }
+    }
+
+    break;
+
+    default:
+      ERROR("%*sUnknown node: %d\n", indent, "", n->type);
+  };
+}
+
+static void print_tree(struct Node **root)
 {
   struct Node *n = *root;
   while (n)
   {
-    switch (n->type)
-    {
-      case NT_TEXT:
-      {
-        const struct TextNode *t = (const struct TextNode *) n;
-        int len = t->end - t->start;
-        printf("TEXT: `%.*s`\n", len, t->start);
-      }
-      break;
-
-      case NT_EXPANDO:
-      {
-        const struct ExpandoNode *e = (const struct ExpandoNode *) n;
-        if (e->format)
-        {
-          int elen = e->end - e->start;
-          const struct Format *f = e->format;
-          int flen = f->end - f->start;
-          printf("EXPANDO: `%.*s`", elen, e->start);
-
-          const char *just = f->justification == FMT_J_RIGHT ? "RIGHT" : "LEFT";
-          printf(" (`%.*s`: min=%d, max=%d, just=%s, leader=`%c`)\n", flen,
-                 f->start, f->min, f->max, just, f->leader);
-        }
-        else
-        {
-          int elen = e->end - e->start;
-          printf("EXPANDO: `%.*s`\n", elen, e->start);
-        }
-      }
-      break;
-
-      case NT_DATE:
-      {
-        const struct DateNode *d = (const struct DateNode *) n;
-        int len = d->end - d->start;
-
-        const char *dt = NULL;
-        switch (d->date_type)
-        {
-          case DT_SENDER_SEND_TIME:
-            dt = "SENDER_SEND_TIME";
-            break;
-
-          case DT_LOCAL_SEND_TIME:
-            dt = "DT_LOCAL_SEND_TIME";
-            break;
-
-          case DT_LOCAL_RECIEVE_TIME:
-            dt = "DT_LOCAL_RECIEVE_TIME";
-            break;
-
-          default:
-            ERROR("Unknown date type: %d\n", d->date_type);
-        }
-
-        printf("DATE: `%.*s` (type=%s, ignore_locale=%d)\n", len, d->start, dt,
-               d->ingnore_locale);
-      }
-      break;
-
-      case NT_PAD:
-      {
-        const struct PadNode *p = (const struct PadNode *) n;
-
-        const char *pt = NULL;
-        switch (p->pad_type)
-        {
-          case PT_FILL:
-            pt = "FILL";
-            break;
-
-          case PT_HARD_FILL:
-            pt = "HARD_FILL";
-            break;
-
-          case PT_SOFT_FILL:
-            pt = "SOFT_FILL";
-            break;
-
-          default:
-            ERROR("Unknown pad type: %d\n", p->pad_type);
-        }
-
-        printf("PAD: `%c` (type=%s)\n", p->pad_char, pt);
-      }
-      break;
-
-      case NT_CONDITION:
-        TODO();
-        break;
-
-      default:
-        ERROR("Unknown node: %d\n", n->type);
-    };
+    print_node(n, 0);
     n = n->next;
   }
 }
 
 static void free_node(struct Node *n)
 {
+  if (n == NULL)
+  {
+    return;
+  }
+
   switch (n->type)
   {
     case NT_TEXT:
@@ -522,7 +626,24 @@ static void free_node(struct Node *n)
     break;
 
     case NT_CONDITION:
-      TODO();
+      struct ConditionNode *c = (struct ConditionNode *) n;
+
+      if (c->condition)
+      {
+        free_node(c->condition);
+      }
+
+      if (c->if_true)
+      {
+        free_node(c->if_true);
+      }
+
+      if (c->if_false)
+      {
+        free_node(c->if_false);
+      }
+
+      free(c);
       break;
 
     default:
@@ -548,17 +669,14 @@ int main(void)
   //const char *text = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
   //const char *text = "test text%% %aa %4ab %bb";
   //const char *text = " %[%b %d]  %{!%b %d} %(%b %d)";
-  const char *text = "%|A %>B %*C";
-  // const char* text = "%4C %[%b %d %H:%M] %-15.15L (%<l?%4l>) %s";
-
+  // const char *text = "%|A %>B %*C";
+  const char *text = "if: %?l?%4l?   if-else:%?l?%4l&%4c?";
   printf("%s\n", text);
 
   static struct Node *root = NULL;
 
-  parse(&root, text);
-
-  print(&root);
-
+  parse_tree(&root, text);
+  print_tree(&root);
   free_tree(&root);
 
   return 0;
