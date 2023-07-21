@@ -33,6 +33,7 @@ enum NodeType
   NT_DATE,
   NT_PAD,
   NT_CONDITION,
+  NT_INDEX_FORMAT_HOOK
 };
 
 struct Node
@@ -130,6 +131,15 @@ struct ConditionNode
   struct Node *if_false;
 };
 
+struct IndexFormatHookNode
+{
+  enum NodeType type;
+  struct Node *next;
+
+  const char *start;
+  const char *end;
+};
+
 static struct Node *new_text_node(const char *start, const char *end)
 {
   struct TextNode *node = malloc(sizeof(struct TextNode));
@@ -211,6 +221,21 @@ static struct Node *new_condition_node(struct Node *condition,
   node->condition = condition;
   node->if_true = if_true;
   node->if_false = if_false;
+
+  return (struct Node *) node;
+}
+
+static struct Node *new_index_format_hook_node(const char *start, const char *end)
+{
+  struct IndexFormatHookNode *node = malloc(sizeof(struct IndexFormatHookNode));
+
+  VERIFY(node != NULL);
+
+  memset(node, 0, sizeof(struct IndexFormatHookNode));
+
+  node->type = NT_INDEX_FORMAT_HOOK;
+  node->start = start;
+  node->end = end;
 
   return (struct Node *) node;
 }
@@ -445,6 +470,16 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
           ERROR("Wrong conditional");
         }
       }
+      // index format hook
+      else if (*s == '@')
+      {
+        ++s;
+        const char *end = skip_until(s, "@");
+        VERIFY(*end == '@');
+
+        *parsed_until = end + 1;
+        return new_index_format_hook_node(s, end);
+      }
       // classic expandos: %X
       else
       {
@@ -586,7 +621,14 @@ static void print_node(const struct Node *n, int indent)
         print_node(c->if_false, indent + 4);
       }
     }
+    break;
 
+    case NT_INDEX_FORMAT_HOOK:
+    {
+      const struct IndexFormatHookNode *i = (const struct IndexFormatHookNode *) n;
+      int len = i->end - i->start;
+      printf("%*sINDEX FORMAT HOOK: `%.*s`\n", indent, "", len, i->start);
+    }
     break;
 
     default:
@@ -616,6 +658,7 @@ static void free_node(struct Node *n)
     case NT_TEXT:
     case NT_DATE:
     case NT_PAD:
+    case NT_INDEX_FORMAT_HOOK:
       free(n);
       break;
 
@@ -674,9 +717,10 @@ int main(void)
   //const char *text = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
   //const char *text = "test text%% %aa %4ab %bb";
   //const char *text = " %[%b %d]  %{!%b %d} %(%b %d)";
-  // const char *text = "%|A %>B %*C";
+  //const char *text = "%|A %>B %*C";
   //const char *text = "if: %?l?%4l?   if-else:%?l?%4l&%4c?";
-  const char *text = "if: %<l?%4l>  if-else: %<l?%4l&%4c>";
+  //const char *text = "if: %<l?%4l>  if-else: %<l?%4l&%4c>";
+  const char *text = "%@hook1@ %a %@hook2@";
   printf("%s\n", text);
 
   static struct Node *root = NULL;
