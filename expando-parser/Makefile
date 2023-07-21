@@ -1,6 +1,8 @@
 CC := gcc
 CFLAGS := -std=c99 -Wall -Wextra -O0 -ggdb
 
+# CFLAGS	+= -fsanitize=address -fno-omit-frame-pointer -fno-common
+
 .PHONY: all run clean
 
 all: parser
