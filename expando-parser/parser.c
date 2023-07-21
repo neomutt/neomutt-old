@@ -142,11 +142,9 @@ struct IndexFormatHookNode
 
 static struct Node *new_text_node(const char *start, const char *end)
 {
-  struct TextNode *node = malloc(sizeof(struct TextNode));
+  struct TextNode *node = calloc(1, sizeof(struct TextNode));
 
   VERIFY(node != NULL);
-
-  memset(node, 0, sizeof(struct TextNode));
 
   node->type = NT_TEXT;
   node->start = start;
@@ -158,11 +156,9 @@ static struct Node *new_text_node(const char *start, const char *end)
 static struct Node *new_expando_node(const char *start, const char *end,
                                      const struct Format *format)
 {
-  struct ExpandoNode *node = malloc(sizeof(struct ExpandoNode));
+  struct ExpandoNode *node = calloc(1, sizeof(struct ExpandoNode));
 
   VERIFY(node != NULL);
-
-  memset(node, 0, sizeof(struct ExpandoNode));
 
   node->type = NT_EXPANDO;
   node->start = start;
@@ -175,11 +171,9 @@ static struct Node *new_expando_node(const char *start, const char *end,
 static struct Node *new_date_node(const char *start, const char *end,
                                   enum DateType date_type, bool ingnore_locale)
 {
-  struct DateNode *node = malloc(sizeof(struct DateNode));
+  struct DateNode *node = calloc(1, sizeof(struct DateNode));
 
   VERIFY(node != NULL);
-
-  memset(node, 0, sizeof(struct DateNode));
 
   node->type = NT_DATE;
   node->start = start;
@@ -192,11 +186,9 @@ static struct Node *new_date_node(const char *start, const char *end,
 
 static struct Node *new_pad_node(enum PadType pad_type, char pad_char)
 {
-  struct PadNode *node = malloc(sizeof(struct PadNode));
+  struct PadNode *node = calloc(1, sizeof(struct PadNode));
 
   VERIFY(node != NULL);
-
-  memset(node, 0, sizeof(struct PadNode));
 
   node->type = NT_PAD;
   node->pad_type = pad_type;
@@ -211,11 +203,9 @@ static struct Node *new_condition_node(struct Node *condition,
   VERIFY(condition != NULL);
   VERIFY(if_true != NULL);
 
-  struct ConditionNode *node = malloc(sizeof(struct ConditionNode));
+  struct ConditionNode *node = calloc(1, sizeof(struct ConditionNode));
 
   VERIFY(node != NULL);
-
-  memset(node, 0, sizeof(struct ConditionNode));
 
   node->type = NT_CONDITION;
   node->condition = condition;
@@ -227,11 +217,9 @@ static struct Node *new_condition_node(struct Node *condition,
 
 static struct Node *new_index_format_hook_node(const char *start, const char *end)
 {
-  struct IndexFormatHookNode *node = malloc(sizeof(struct IndexFormatHookNode));
+  struct IndexFormatHookNode *node = calloc(1, sizeof(struct IndexFormatHookNode));
 
   VERIFY(node != NULL);
-
-  memset(node, 0, sizeof(struct IndexFormatHookNode));
 
   node->type = NT_INDEX_FORMAT_HOOK;
   node->start = start;
@@ -306,11 +294,10 @@ static const struct Format *parse_format(const char *start, const char *end)
     return NULL;
   }
 
-  struct Format *format = malloc(sizeof(struct Format));
+  struct Format *format = calloc(1, sizeof(struct Format));
 
   VERIFY(format != NULL);
 
-  memset(format, 0, sizeof(struct Format));
   format->leader = ' ';
   format->start = start;
   format->end = end;
