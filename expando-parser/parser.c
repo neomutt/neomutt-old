@@ -710,6 +710,68 @@ void free_tree(struct Node **root)
   }
 }
 
+/***************************************************************************/
+
+struct ExpandoCallback
+{
+  const char *expando;
+  void (*callback)(void);
+};
+
+struct TreeApplication
+{
+  struct Node **root;
+  struct ExpandoCallback callbacks[3];
+};
+
+static void expando_a(void)
+{
+  printf("This is the `a` expando.\n");
+}
+
+static void expando_b(void)
+{
+  printf("This is the `b` expando.\n");
+}
+
+static bool is_equal(const char *start, const char *end, const char *str)
+{
+  int n = end - start;
+  return strncmp(start, str, n) == 0;
+}
+
+static void apply_tree(const struct TreeApplication *app)
+{
+  const struct Node *n = *app->root;
+  while (n)
+  {
+    if (n->type == NT_EXPANDO)
+    {
+      bool found = false;
+      struct ExpandoNode *e = (struct ExpandoNode *) n;
+      for (size_t i = 0; app->callbacks[i].expando; ++i)
+      {
+        if (is_equal(e->start, e->end, app->callbacks[i].expando))
+        {
+          app->callbacks[i].callback();
+          found = true;
+          break;
+        }
+      }
+
+      if (!found)
+      {
+        int elen = e->end - e->start;
+        fprintf(stderr, "No callback for expando: `%.*s`\n", elen, e->start);
+      }
+    }
+
+    n = n->next;
+  }
+}
+
+/***************************************************************************/
+
 int main(void)
 {
   //const char *text = "test text";
@@ -718,15 +780,23 @@ int main(void)
   //const char *text = "test text%% %aa %4ab %bb";
   //const char *text = " %[%b %d]  %{!%b %d} %(%b %d)";
   //const char *text = "%|A %>B %*C";
-  //const char *text = "if: %?l?%4l?   if-else:%?l?%4l&%4c?";
+  //const char *text = "if: %?l?%4l?  if-else: %?l?%4l&%4c?";
   //const char *text = "if: %<l?%4l>  if-else: %<l?%4l&%4c>";
-  const char *text = "%@hook1@ %a %@hook2@";
+  //const char *text = "%@hook1@ %a %@hook2@";
+  const char *text = "%a %b %b %c";
   printf("%s\n", text);
 
-  static struct Node *root = NULL;
+  struct Node *root = NULL;
+  struct TreeApplication app = {
+    .root = &root, .callbacks = { { "a", expando_a }, { "b", expando_b }, { NULL, NULL } }
+  };
 
   parse_tree(&root, text);
   print_tree(&root);
+
+  printf("------------------\n");
+  apply_tree(&app);
+
   free_tree(&root);
 
   return 0;
