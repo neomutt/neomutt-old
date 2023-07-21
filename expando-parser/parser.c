@@ -18,7 +18,7 @@
   exit(1)
 
 #define VERIFY(b)                                                                 \
-  if (!b)                                                                         \
+  if (!(b))                                                                       \
   {                                                                               \
     fprintf(stderr, "%s: %d: VERIFICATION FAILED: %s\n", __FILE__, __LINE__, #b); \
     exit(1);                                                                      \
@@ -46,22 +46,41 @@ struct TextNode
   const char *end;
 };
 
+enum Justification
+{
+  RIGHT = 0,
+  LEFT
+};
+
+struct Format
+{
+  int min;
+  int max;
+  enum Justification justification;
+  char leader;
+
+  const char *start;
+  const char *end;
+};
+
 struct ExpandoNode
 {
   enum NodeType type;
   struct Node *next;
 
   // can be used either fo %n or {name}
-  const char *expando_start;
-  const char *expando_end;
-  // TODO: proper struct for these
-  const char *fmt_start;
-  const char *fmt_end;
+  const char *start;
+  const char *end;
+
+  const struct Format *format;
 };
 
 static struct Node *new_text_node(const char *start, const char *end)
 {
   struct TextNode *node = malloc(sizeof(struct TextNode));
+
+  VERIFY(node != NULL);
+
   memset(node, 0, sizeof(struct TextNode));
 
   node->type = NT_TEXT;
@@ -71,18 +90,19 @@ static struct Node *new_text_node(const char *start, const char *end)
   return (struct Node *) node;
 }
 
-static struct Node *new_expando_node(const char *expando_start, const char *expando_end,
-                                     const char *fmt_start, const char *fmt_end)
+static struct Node *new_expando_node(const char *start, const char *end,
+                                     const struct Format *format)
 {
   struct ExpandoNode *node = malloc(sizeof(struct ExpandoNode));
+
+  VERIFY(node != NULL);
+
   memset(node, 0, sizeof(struct ExpandoNode));
 
   node->type = NT_EXPANDO;
-  node->expando_start = expando_start;
-  node->expando_end = expando_end;
-  // TODO: proper struct for these
-  node->fmt_start = fmt_start;
-  node->fmt_end = fmt_end;
+  node->start = start;
+  node->end = end;
+  node->format = format;
 
   return (struct Node *) node;
 }
@@ -138,6 +158,64 @@ static const char *skip_until(const char *start, const char *terminator)
   return start;
 }
 
+static const struct Format *parse_format(const char *start, const char *end)
+{
+  if (start == end)
+  {
+    return NULL;
+  }
+
+  struct Format *format = malloc(sizeof(struct Format));
+
+  VERIFY(format != NULL);
+
+  memset(format, 0, sizeof(struct Format));
+  format->leader = ' ';
+  format->start = start;
+  format->end = end;
+
+  bool is_min = true;
+
+  while (start < end)
+  {
+    switch (*start)
+    {
+      case '-':
+        format->justification = LEFT;
+        ++start;
+        break;
+      case '0':
+        format->leader = '0';
+        ++start;
+        break;
+      case '.':
+        is_min = false;
+        ++start;
+        break;
+      // number
+      default:
+      {
+        char *end_ptr;
+        int number = strtol(start, &end_ptr, 10);
+
+        VERIFY(end_ptr <= end);
+        if (is_min)
+        {
+          format->min = number;
+        }
+        else
+        {
+          format->max = number;
+        }
+
+        start = end_ptr;
+      }
+    }
+  }
+
+  return format;
+}
+
 static void parse(struct Node **root, const char *s)
 {
   while (*s)
@@ -145,18 +223,27 @@ static void parse(struct Node **root, const char *s)
     if (*s == '%')
     {
       s++;
+      // conditional
       if (*s == '<')
       {
         TODO();
         s = skip_until(s, ">");
       }
+      // "%"
+      else if (*s == '%')
+      {
+        append_node(root, new_text_node(s, s + 1));
+        s++;
+      }
+      // classic expandos: %X
       else
       {
-        // classic expandos: %X
         const char *format_end = skip_until_classic_expando(s);
         const char *expando_end = skip_classic_expando(format_end);
 
-        append_node(root, new_expando_node(format_end, expando_end, s, format_end));
+        const struct Format *format = parse_format(s, format_end);
+
+        append_node(root, new_expando_node(format_end, expando_end, format));
         s = expando_end;
       }
     }
@@ -183,16 +270,19 @@ static void print(struct Node **root)
         break;
       case NT_EXPANDO:
         const struct ExpandoNode *e = (const struct ExpandoNode *) n;
-        if (e->fmt_end > e->fmt_start)
+        if (e->format)
         {
-          int elen = e->expando_end - e->expando_start;
-          int flen = e->fmt_end - e->fmt_start;
-          printf("EXPANDO:`%.*s`, `%.*s`\n", elen, e->expando_start, flen, e->fmt_start);
+          int elen = e->end - e->start;
+          const struct Format *f = e->format;
+          int flen = f->end - f->start;
+          printf("EXPANDO: `%.*s`", elen, e->start);
+          printf(" (`%.*s`: min=%d, max=%d, just=%s, leader=`%c`)\n", flen, f->start,
+                 f->min, f->max, f->justification == RIGHT ? "RIGHT" : "LEFT", f->leader);
         }
         else
         {
-          int elen = e->expando_end - e->expando_start;
-          printf("EXPANDO: `%.*s`\n", elen, e->expando_start);
+          int elen = e->end - e->start;
+          printf("EXPANDO: `%.*s`\n", elen, e->start);
         }
 
         break;
@@ -204,6 +294,27 @@ static void print(struct Node **root)
   }
 }
 
+static void free_node(struct Node *n)
+{
+  switch (n->type)
+  {
+    case NT_TEXT:
+      free(n);
+      break;
+    case NT_EXPANDO:
+      struct ExpandoNode *e = (struct ExpandoNode *) n;
+      if (e->format)
+      {
+        free((struct Format *) e->format);
+      }
+      free(e);
+      break;
+    case NT_CONDITION:
+      TODO();
+      break;
+  }
+}
+
 void free_tree(struct Node **root)
 {
   struct Node *n = *root;
@@ -212,15 +323,15 @@ void free_tree(struct Node **root)
     struct Node *f = n;
     n = n->next;
 
-    // TODO: node specific free
-    free(f);
+    free_node(f);
   }
-};
+}
 
 int main(void)
 {
   //const char *text = "test text";
-  const char *text = "test text %a %b";
+  //const char *text = "test text%% %a %4b";
+  const char *text = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
   // const char* text = "%4C %[%b %d %H:%M] %-15.15L (%<l?%4l>) %s";
 
   printf("%s\n", text);
