@@ -24,6 +24,8 @@
     exit(1);                                                                      \
   }
 
+static const char *valid_2char_expandos[] = { "aa", "ab", NULL };
+
 enum NodeType
 {
   NT_TEXT,
@@ -142,9 +144,17 @@ static const char *skip_until_classic_expando(const char *start)
 static const char *skip_classic_expando(const char *s)
 {
   VERIFY(is_valid_classic_expando(*s));
-  s++;
 
-  // TODO: handle 2 char expandos here
+  for (size_t i = 0; valid_2char_expandos[i] != NULL; ++i)
+  {
+    if (valid_2char_expandos[i][0] == *s && valid_2char_expandos[i][1] == *(s + 1))
+    {
+      s++;
+      break;
+    }
+  }
+
+  s++;
   return s;
 }
 
@@ -331,7 +341,8 @@ int main(void)
 {
   //const char *text = "test text";
   //const char *text = "test text%% %a %4b";
-  const char *text = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
+  //const char *text = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
+  const char *text = "test text%% %aa %4ab %bb";
   // const char* text = "%4C %[%b %d %H:%M] %-15.15L (%<l?%4l>) %s";
 
   printf("%s\n", text);
