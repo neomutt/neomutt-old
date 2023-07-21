@@ -340,17 +340,11 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
 {
   while (*s)
   {
-    if (*s == '%' || (condition_start == CON_START && *s == '?'))
+    if (*s == '%' || (condition_start == CON_START && (*s == '?' || *s == '<')))
     {
       s++;
-      // conditional
-      if (*s == '<')
-      {
-        TODO();
-        s = skip_until(s, ">");
-      }
       // dates
-      else if (*s == '{' || *s == '[' || *s == '(')
+      if (*s == '{' || *s == '[' || *s == '(')
       {
         // TODO: handle {name} expandos!
         bool ignore_locale = *(s + 1) == '!';
@@ -412,9 +406,11 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         *parsed_until = s + 1;
         return new_text_node(s, s + 1);
       }
-      // classic conditional
-      else if (*s == '?')
+      // conditional
+      else if (*s == '?' || *s == '<')
       {
+        bool old_style = *s == '?';
+
         const char *next = NULL;
         struct Node *condition = parse_node(s, CON_START, &next);
 
@@ -422,7 +418,7 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         s = next + 1;
 
         struct Node *if_true = parse_node(s, CON_NO_CONDITION, &next);
-        if (*next == '?')
+        if ((old_style && *next == '?') || (!old_style && *next == '>'))
         {
           *parsed_until = next + 1;
           return new_condition_node(condition, if_true, NULL);
@@ -431,7 +427,16 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         {
           s = next + 1;
           struct Node *if_false = parse_node(s, CON_NO_CONDITION, &next);
-          VERIFY(*next == '?');
+
+          if (old_style)
+          {
+            VERIFY(*next == '?');
+          }
+          else
+          {
+            VERIFY(*next == '>');
+          }
+
           *parsed_until = next + 1;
           return new_condition_node(condition, if_true, if_false);
         }
@@ -670,7 +675,8 @@ int main(void)
   //const char *text = "test text%% %aa %4ab %bb";
   //const char *text = " %[%b %d]  %{!%b %d} %(%b %d)";
   // const char *text = "%|A %>B %*C";
-  const char *text = "if: %?l?%4l?   if-else:%?l?%4l&%4c?";
+  //const char *text = "if: %?l?%4l?   if-else:%?l?%4l&%4c?";
+  const char *text = "if: %<l?%4l>  if-else: %<l?%4l&%4c>";
   printf("%s\n", text);
 
   static struct Node *root = NULL;
