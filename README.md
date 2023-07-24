@@ -7,6 +7,9 @@ They have simply been moved to keep the main repository tidier.
 
 ## NeoMutt 2023-05-17
 
+- [help_stripes](https://github.com/neomutt/neomutt-old/tree/help_stripes)  
+  [@g0mb4](https://github.com/g0mb4)'s original striped help page
+
 - [libenter-tests](https://github.com/neomutt/neomutt-old/tree/libenter-tests)  
   Test for handling emojis and unicode combine characters
 
