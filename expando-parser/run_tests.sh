@@ -6,8 +6,8 @@ SUCC=0
 rm -rf tests/*.out
 
 for i in tests/*.in; do
-    OUT=$(echo "$i" | sed s/.in/.out/)
-    CKECKED=$(echo "$i" | sed s/.in/.checked/)
+    OUT=$(echo "$i" | sed s/[.]in/.out/)
+    CKECKED=$(echo "$i" | sed s/[.]in/.checked/)
     ./parser "$(head -n 1 $i)" > "$OUT"
     DIFF="$(diff $CKECKED $OUT | wc -l)"
     if [ -f $CKECKED ] && [ "$DIFF" = "0" ] 
