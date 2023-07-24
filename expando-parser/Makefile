@@ -3,12 +3,18 @@ CFLAGS := -std=c99 -Wall -Wextra -O0 -ggdb
 
 # CFLAGS	+= -fsanitize=address -fno-omit-frame-pointer -fno-common
 
-.PHONY: all run clean
+.PHONY: all run clean test update-test
 
 all: parser
 
-parser: parser.c main.c
-	$(CC) $(CFLAGS) -o parser main.c parser.c
+parser.o: parser.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+test_parser.o: test_parser.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+parser: test_parser.o parser.o
+	$(CC) $(CFLAGS) -o parser $^
 
 run: parser
 	./parser "%<c?%a&%b> %d";
@@ -18,18 +24,7 @@ dbg: parser
 
 clean:
 	rm -rf parser
+	rm -rf *.o
 
 test: parser
-	./parser "test text";
-	./parser "test text%% %a %4b";
-	./parser "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
-	./parser "test text%% %aa %4ab %bb";
-	./parser " %[%b %d]  %{!%b %d} %(%b %d)";
-	./parser "%|A %>B %*C";
-	./parser "if: %?l?%4l?  if-else: %?l?%4l&%4c?";
-	./parser "if: %<l?%4l>  if-else: %<l?%4l&%4c>";
-	./parser "nested: %<c?%<a?%c&%d>&%<b?%e&%f>>";
-	./parser "%@hook1@ %a %@hook2@";
-	./parser "%4C %Z %[%b %d %H:%M] %-15.15L (%<l?%4l&%4c>) %s";
-	./parser "%<c?%a&%b> %d";
-
+	./run_tests.sh

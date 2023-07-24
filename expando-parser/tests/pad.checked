@@ -1,0 +1,6 @@
+%|A %>B %*C
+PAD: `A` (type=FILL)
+TEXT: ` `
+PAD: `B` (type=HARD_FILL)
+TEXT: ` `
+PAD: `C` (type=SOFT_FILL)
