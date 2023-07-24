@@ -1,4 +1,4 @@
-%X %8X %-8X %08X %.8X %8.8X %-8.8X
+`%X %8X %-8X %08X %.8X %8.8X %-8.8X`
 EXPANDO: `X`
 TEXT: ` `
 EXPANDO: `X` (`8`: min=8, max=0, just=RIGHT, leader=` `)

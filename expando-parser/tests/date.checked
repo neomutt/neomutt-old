@@ -1,4 +1,4 @@
-%[%b %d]  %{!%b %d} %(%b %d)
+`%[%b %d]  %{!%b %d} %(%b %d)`
 DATE: `%b %d` (type=DT_LOCAL_SEND_TIME, ignore_locale=0)
 TEXT: `  `
 DATE: `!%b %d` (type=SENDER_SEND_TIME, ignore_locale=1)

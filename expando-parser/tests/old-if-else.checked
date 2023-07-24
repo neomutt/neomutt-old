@@ -1,4 +1,4 @@
-if: %?l?%4l?  if-else: %?l?%4l&%4c?
+`if: %?l?%4l?  if-else: %?l?%4l&%4c?`
 TEXT: `if: `
 CONDITION: EXPANDO: `l`
     IF TRUE :     EXPANDO: `l` (`4`: min=4, max=0, just=RIGHT, leader=` `)

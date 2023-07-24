@@ -1,4 +1,4 @@
-%4C %Z %[%b %d %H:%M] %-15.15L (%<l?%4l&%4c>) %s
+`%4C %Z %[%b %d %H:%M] %-15.15L (%<l?%4l&%4c>) %s`
 EXPANDO: `C` (`4`: min=4, max=0, just=RIGHT, leader=` `)
 TEXT: ` `
 EXPANDO: `Z`

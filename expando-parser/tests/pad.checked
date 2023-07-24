@@ -1,4 +1,4 @@
-%|A %>B %*C
+`%|A %>B %*C`
 PAD: `A` (type=FILL)
 TEXT: ` `
 PAD: `B` (type=HARD_FILL)
