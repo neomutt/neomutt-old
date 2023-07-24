@@ -6,6 +6,7 @@
 
 #include "parser.h"
 
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -184,14 +185,9 @@ static void append_node(struct Node **root, struct Node *new_node)
   n->next = new_node;
 }
 
-static inline bool is_valid_classic_expando(char c)
-{
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
 static const char *skip_until_classic_expando(const char *start)
 {
-  while (*start && !is_valid_classic_expando(*start))
+  while (*start && !isalpha(*start))
   {
     ++start;
   }
@@ -201,8 +197,6 @@ static const char *skip_until_classic_expando(const char *start)
 
 static const char *skip_classic_expando(const char *s)
 {
-  VERIFY(is_valid_classic_expando(*s));
-
   static const char *valid_2char_expandos[] = { "aa", "ab", NULL };
 
   for (size_t i = 0; valid_2char_expandos[i] != NULL; ++i)
@@ -228,7 +222,13 @@ static const char *skip_until(const char *start, const char *terminator)
   return start;
 }
 
-static const struct Format *parse_format(const char *start, const char *end)
+static inline bool is_valid_number(char c)
+{
+  return (c >= '0' && c <= '9');
+}
+
+static const struct Format *parse_format(const char *start, const char *end,
+                                         struct ParseError *error)
 {
   if (start == end)
   {
@@ -260,17 +260,40 @@ static const struct Format *parse_format(const char *start, const char *end)
         break;
 
       case '.':
+      {
+        if (!isdigit(*(start + 1)))
+        {
+          error->position = start;
+          snprintf(error->message, sizeof(error->message), "Wrong number.");
+          return NULL;
+        }
         is_min = false;
         ++start;
-        break;
+      }
+
+      break;
 
       // number
       default:
-        // TODO: handle invalid chars
+      {
+        if (!isdigit(*start))
+        {
+          error->position = start;
+          snprintf(error->message, sizeof(error->message), "Wrong number.");
+          return NULL;
+        }
+
         char *end_ptr;
         int number = strtol(start, &end_ptr, 10);
 
         // NOTE: start is NOT null-terminated
+        if (end_ptr > end)
+        {
+          error->position = start;
+          snprintf(error->message, sizeof(error->message), "Wrong number.");
+          return NULL;
+        }
+
         VERIFY(end_ptr <= end);
 
         if (is_min)
@@ -283,6 +306,7 @@ static const struct Format *parse_format(const char *start, const char *end)
         }
 
         start = end_ptr;
+      }
     }
   }
 
@@ -290,7 +314,7 @@ static const struct Format *parse_format(const char *start, const char *end)
 }
 
 static struct Node *parse_node(const char *s, enum ConditionStart condition_start,
-                               const char **parsed_until)
+                               const char **parsed_until, struct ParseError *error)
 {
   while (*s)
   {
@@ -302,7 +326,8 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
       {
         // TODO: handle {name} expandos!
         bool ignore_locale = *(s + 1) == '!';
-        enum DateType dt = DT_SENDER_SEND_TIME;
+
+        enum DateType dt = 0;
         const char *end = NULL;
 
         if (*s == '{')
@@ -310,14 +335,24 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
           ++s;
           dt = DT_SENDER_SEND_TIME;
           end = skip_until(s, "}");
-          VERIFY(*end == '}');
+          if (*end != '}')
+          {
+            error->position = end;
+            snprintf(error->message, sizeof(error->message), "Missing '}'.");
+            return NULL;
+          }
         }
         else if (*s == '[')
         {
           ++s;
           dt = DT_LOCAL_SEND_TIME;
           end = skip_until(s, "]");
-          VERIFY(*end == ']');
+          if (*end != ']')
+          {
+            error->position = end;
+            snprintf(error->message, sizeof(error->message), "Missing ']'.");
+            return NULL;
+          }
         }
         // '('
         else
@@ -325,7 +360,12 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
           ++s;
           dt = DT_LOCAL_RECIEVE_TIME;
           end = skip_until(s, ")");
-          VERIFY(*end == ')');
+          if (*end != ')')
+          {
+            error->position = end;
+            snprintf(error->message, sizeof(error->message), "Missing ')'.");
+            return NULL;
+          }
         }
 
         *parsed_until = end + 1;
@@ -334,7 +374,7 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
       // padding
       else if (*s == '|' || *s == '>' || *s == '*')
       {
-        enum PadType pt = PT_FILL;
+        enum PadType pt = 0;
         if (*s == '|')
         {
           pt = PT_FILL;
@@ -343,13 +383,21 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         {
           pt = PT_HARD_FILL;
         }
+        // '*'
         else
         {
           pt = PT_SOFT_FILL;
         }
 
         char pad_char = *(s + 1);
-        VERIFY(pad_char != '\0');
+
+        // NOTE: all characters are valid?
+        if (pad_char == '\0')
+        {
+          error->position = *(s + 1);
+          snprintf(error->message, sizeof(error->message), "Invalid padding character.");
+          return NULL;
+        }
 
         *parsed_until = s + 2;
         return new_pad_node(pt, pad_char);
@@ -366,12 +414,26 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         bool old_style = *s == '?';
 
         const char *next = NULL;
-        struct Node *condition = parse_node(s, CON_START, &next);
+        struct Node *condition = parse_node(s, CON_START, &next, error);
+        if (condition == NULL)
+        {
+          return NULL;
+        }
 
-        VERIFY(*next == '?');
+        if (*next != '?')
+        {
+          error->position = next;
+          snprintf(error->message, sizeof(error->message), "Missing '?'.");
+          return NULL;
+        }
+
         s = next + 1;
 
-        struct Node *if_true = parse_node(s, CON_NO_CONDITION, &next);
+        struct Node *if_true = parse_node(s, CON_NO_CONDITION, &next, error);
+        if (if_true == NULL)
+        {
+          return NULL;
+        }
         if ((old_style && *next == '?') || (!old_style && *next == '>'))
         {
           *parsed_until = next + 1;
@@ -380,15 +442,29 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         else if (*next == '&')
         {
           s = next + 1;
-          struct Node *if_false = parse_node(s, CON_NO_CONDITION, &next);
+          struct Node *if_false = parse_node(s, CON_NO_CONDITION, &next, error);
+          if (if_true == NULL)
+          {
+            return NULL;
+          }
 
           if (old_style)
           {
-            VERIFY(*next == '?');
+            if (*next != '?')
+            {
+              error->position = *next;
+              snprintf(error->message, sizeof(error->message), "Missing '?'.");
+              return NULL;
+            }
           }
           else
           {
-            VERIFY(*next == '>');
+            if (*next != '>')
+            {
+              error->position = *next;
+              snprintf(error->message, sizeof(error->message), "Missing '>'.");
+              return NULL;
+            }
           }
 
           *parsed_until = next + 1;
@@ -396,7 +472,9 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         }
         else
         {
-          ERROR("Wrong conditional");
+          error->position = *next;
+          snprintf(error->message, sizeof(error->message), "Invalid conditional.");
+          return NULL;
         }
       }
       // index format hook
@@ -404,7 +482,13 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
       {
         ++s;
         const char *end = skip_until(s, "@");
-        VERIFY(*end == '@');
+
+        if (*end != '@')
+        {
+          error->position = *end;
+          snprintf(error->message, sizeof(error->message), "Missing '@'.");
+          return NULL;
+        }
 
         *parsed_until = end + 1;
         return new_index_format_hook_node(s, end);
@@ -414,7 +498,11 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
       {
         const char *format_end = skip_until_classic_expando(s);
         const char *expando_end = skip_classic_expando(format_end);
-        const struct Format *format = parse_format(s, format_end);
+        const struct Format *format = parse_format(s, format_end, error);
+        if (error->position != NULL)
+        {
+          return NULL;
+        }
 
         *parsed_until = expando_end;
         return new_expando_node(format_end, expando_end, format);
@@ -429,7 +517,8 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
     }
   }
 
-  ERROR("Internal parsing error.");
+  error->position = *s;
+  snprintf(error->message, sizeof(error->message), "Internal parsing error.");
   return NULL;
 }
 
@@ -449,8 +538,7 @@ static void print_expando_node(FILE *fp, const struct ExpandoNode *n, int indent
     fprintf(fp, "%*sEXPANDO: `%.*s`", indent, "", elen, n->start);
 
     const char *just = f->justification == FMT_J_RIGHT ? "RIGHT" : "LEFT";
-    fprintf(fp, " (`%.*s`: min=%d, max=%d, just=%s, leader=`%c`)\n", flen,
-            f->start, f->min, f->max, just, f->leader);
+    fprintf(fp, " (min=%d, max=%d, just=%s, leader=`%c`)\n", f->min, f->max, just, f->leader);
   }
   else
   {
@@ -643,12 +731,18 @@ static void free_node(struct Node *n)
   }
 }
 
-void parse_tree(struct Node **root, const char *s)
+void parse_tree(struct Node **root, const char *s, struct ParseError *error)
 {
   const char *end = NULL;
   while (*s)
   {
-    struct Node *n = parse_node(s, CON_NO_CONDITION, &end);
+    struct Node *n = parse_node(s, CON_NO_CONDITION, &end, error);
+
+    if (n == NULL)
+    {
+      break;
+    }
+
     append_node(root, n);
     s = end;
   }

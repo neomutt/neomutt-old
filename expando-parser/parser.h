@@ -118,7 +118,13 @@ struct IndexFormatHookNode
   const char *end;
 };
 
-void parse_tree(struct Node **root, const char *s);
+struct ParseError
+{
+  char message[128]; // _() returns char*
+  const char *position;
+};
+
+void parse_tree(struct Node **root, const char *s, struct ParseError *error);
 void free_tree(struct Node **root);
 void print_tree(FILE *fp, struct Node **root);
 
