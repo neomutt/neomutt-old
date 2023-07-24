@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      int location = error.position - argv[i] + 1;
+      int location = error.position - argv[i];
       printf("%*s^\n", location, "");
       printf("Parsing error: %s\n", error.message);
     }
