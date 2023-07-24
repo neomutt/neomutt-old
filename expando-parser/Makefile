@@ -7,8 +7,8 @@ CFLAGS := -std=c99 -Wall -Wextra -O0 -ggdb
 
 all: parser
 
-parser: parser.c
-	$(CC) $(CFLAGS) -o $@ $<
+parser: parser.c main.c
+	$(CC) $(CFLAGS) -o parser main.c parser.c
 
 run: parser
 	./parser "%<c?%a&%b> %d";

@@ -4,6 +4,8 @@
  * Tóth János
  */
 
+#include "parser.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,121 +26,8 @@
     exit(1);                                                                      \
   }
 
-static const char *valid_2char_expandos[] = { "aa", "ab", NULL };
-
-enum NodeType
-{
-  NT_TEXT,
-  NT_EXPANDO,
-  NT_DATE,
-  NT_PAD,
-  NT_CONDITION,
-  NT_INDEX_FORMAT_HOOK
-};
-
-struct Node
-{
-  enum NodeType type;
-  struct Node *next;
-};
-
-struct TextNode
-{
-  enum NodeType type;
-  struct Node *next;
-
-  const char *start;
-  const char *end;
-};
-
-enum Justification
-{
-  FMT_J_RIGHT = 0,
-  FMT_J_LEFT
-};
-
-struct Format
-{
-  int min;
-  int max;
-  enum Justification justification;
-  char leader;
-
-  const char *start;
-  const char *end;
-};
-
-struct ExpandoNode
-{
-  enum NodeType type;
-  struct Node *next;
-
-  // can be used either fo %n or {name}
-  const char *start;
-  const char *end;
-
-  const struct Format *format;
-};
-
-enum DateType
-{
-  DT_SENDER_SEND_TIME,
-  DT_LOCAL_SEND_TIME,
-  DT_LOCAL_RECIEVE_TIME,
-};
-
-struct DateNode
-{
-  enum NodeType type;
-  struct Node *next;
-
-  const char *start;
-  const char *end;
-
-  enum DateType date_type;
-  bool ingnore_locale;
-};
-
-enum PadType
-{
-  PT_FILL,
-  PT_HARD_FILL,
-  PT_SOFT_FILL
-};
-
-struct PadNode
-{
-  enum NodeType type;
-  struct Node *next;
-
-  enum PadType pad_type;
-  char pad_char;
-};
-
-enum ConditionStart
-{
-  CON_NO_CONDITION,
-  CON_START
-};
-
-struct ConditionNode
-{
-  enum NodeType type;
-  struct Node *next;
-
-  struct Node *condition;
-  struct Node *if_true;
-  struct Node *if_false;
-};
-
-struct IndexFormatHookNode
-{
-  enum NodeType type;
-  struct Node *next;
-
-  const char *start;
-  const char *end;
-};
+static void free_node(struct Node *n);
+static void print_node(FILE *fp, const struct Node *n, int indent);
 
 static struct Node *new_text_node(const char *start, const char *end)
 {
@@ -228,6 +117,56 @@ static struct Node *new_index_format_hook_node(const char *start, const char *en
   return (struct Node *) node;
 }
 
+static void free_text_node(struct TextNode *n)
+{
+  free(n);
+}
+
+static void free_date_node(struct DateNode *n)
+{
+  free(n);
+}
+
+static void free_expando_node(struct ExpandoNode *n)
+{
+  if (n->format)
+  {
+    free((struct Format *) n->format);
+  }
+
+  free(n);
+}
+
+static void free_pad_node(struct PadNode *n)
+{
+  free(n);
+}
+
+static void free_condition_node(struct ConditionNode *n)
+{
+  if (n->condition)
+  {
+    free_node(n->condition);
+  }
+
+  if (n->if_true)
+  {
+    free_node(n->if_true);
+  }
+
+  if (n->if_false)
+  {
+    free_node(n->if_false);
+  }
+
+  free(n);
+}
+
+static void free_index_format_hook_node(struct IndexFormatHookNode *n)
+{
+  free(n);
+}
+
 static void append_node(struct Node **root, struct Node *new_node)
 {
   if (!*root)
@@ -263,6 +202,8 @@ static const char *skip_until_classic_expando(const char *start)
 static const char *skip_classic_expando(const char *s)
 {
   VERIFY(is_valid_classic_expando(*s));
+
+  static const char *valid_2char_expandos[] = { "aa", "ab", NULL };
 
   for (size_t i = 0; valid_2char_expandos[i] != NULL; ++i)
   {
@@ -325,6 +266,7 @@ static const struct Format *parse_format(const char *start, const char *end)
 
       // number
       default:
+        // TODO: handle invalid chars
         char *end_ptr;
         int number = strtol(start, &end_ptr, 10);
 
@@ -491,145 +433,157 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
   return NULL;
 }
 
-static void parse_tree(struct Node **root, const char *s)
+static void print_text_node(FILE *fp, const struct TextNode *n, int indent)
 {
-  const char *end = NULL;
-  while (*s)
+  int len = n->end - n->start;
+  fprintf(fp, "%*sTEXT: `%.*s`\n", indent, "", len, n->start);
+}
+
+static void print_expando_node(FILE *fp, const struct ExpandoNode *n, int indent)
+{
+  if (n->format)
   {
-    struct Node *n = parse_node(s, CON_NO_CONDITION, &end);
-    append_node(root, n);
-    s = end;
+    int elen = n->end - n->start;
+    const struct Format *f = n->format;
+    int flen = n->end - n->start;
+    fprintf(fp, "%*sEXPANDO: `%.*s`", indent, "", elen, n->start);
+
+    const char *just = f->justification == FMT_J_RIGHT ? "RIGHT" : "LEFT";
+    fprintf(fp, " (`%.*s`: min=%d, max=%d, just=%s, leader=`%c`)\n", flen,
+            f->start, f->min, f->max, just, f->leader);
+  }
+  else
+  {
+    int len = n->end - n->start;
+    fprintf(fp, "%*sEXPANDO: `%.*s`\n", indent, "", len, n->start);
   }
 }
 
-static void print_node(const struct Node *n, int indent)
+static void print_date_node(FILE *fp, const struct DateNode *n, int indent)
 {
-  VERIFY(n != NULL);
+  int len = n->end - n->start;
+  const char *dt = NULL;
+
+  switch (n->date_type)
+  {
+    case DT_SENDER_SEND_TIME:
+      dt = "SENDER_SEND_TIME";
+      break;
+
+    case DT_LOCAL_SEND_TIME:
+      dt = "DT_LOCAL_SEND_TIME";
+      break;
+
+    case DT_LOCAL_RECIEVE_TIME:
+      dt = "DT_LOCAL_RECIEVE_TIME";
+      break;
+
+    default:
+      ERROR("Unknown date type: %d\n", n->date_type);
+  }
+
+  fprintf(fp, "%*sDATE: `%.*s` (type=%s, ignore_locale=%d)\n", indent, "", len,
+          n->start, dt, n->ingnore_locale);
+}
+
+static void print_pad_node(FILE *fp, const struct PadNode *n, int indent)
+{
+  const char *pt = NULL;
+  switch (n->pad_type)
+  {
+    case PT_FILL:
+      pt = "FILL";
+      break;
+
+    case PT_HARD_FILL:
+      pt = "HARD_FILL";
+      break;
+
+    case PT_SOFT_FILL:
+      pt = "SOFT_FILL";
+      break;
+
+    default:
+      ERROR("Unknown pad type: %d\n", n->pad_type);
+  }
+
+  fprintf(fp, "%*sPAD: `%c` (type=%s)\n", indent, "", n->pad_char, pt);
+}
+
+static void print_condition_node(FILE *fp, const struct ConditionNode *n, int indent)
+{
+  fprintf(fp, "%*sCONDITION: ", indent, "");
+  print_node(fp, n->condition, indent);
+  fprintf(fp, "%*sIF TRUE : ", indent + 4, "");
+  print_node(fp, n->if_true, indent + 4);
+
+  if (n->if_false)
+  {
+    fprintf(fp, "%*sIF FALSE: ", indent + 4, "");
+    print_node(fp, n->if_false, indent + 4);
+  }
+}
+
+static void print_index_format_hook_node(FILE *fp, const struct IndexFormatHookNode *n, int indent)
+{
+  int len = n->end - n->start;
+  fprintf(fp, "%*sINDEX FORMAT HOOK: `%.*s`\n", indent, "", len, n->start);
+}
+
+static void print_node(FILE *fp, const struct Node *n, int indent)
+{
+  if (n == NULL)
+  {
+    fprintf(fp, "<null>\n");
+    return;
+  }
 
   switch (n->type)
   {
     case NT_TEXT:
     {
-      const struct TextNode *t = (const struct TextNode *) n;
-      int len = t->end - t->start;
-      printf("%*sTEXT: `%.*s`\n", indent, "", len, t->start);
+      const struct TextNode *nn = (const struct TextNode *) n;
+      print_text_node(fp, nn, indent);
     }
     break;
 
     case NT_EXPANDO:
     {
-      const struct ExpandoNode *e = (const struct ExpandoNode *) n;
-      if (e->format)
-      {
-        int elen = e->end - e->start;
-        const struct Format *f = e->format;
-        int flen = f->end - f->start;
-        printf("%*sEXPANDO: `%.*s`", indent, "", elen, e->start);
-
-        const char *just = f->justification == FMT_J_RIGHT ? "RIGHT" : "LEFT";
-        printf(" (`%.*s`: min=%d, max=%d, just=%s, leader=`%c`)\n", flen,
-               f->start, f->min, f->max, just, f->leader);
-      }
-      else
-      {
-        int elen = e->end - e->start;
-        printf("%*sEXPANDO: `%.*s`\n", indent, "", elen, e->start);
-      }
+      const struct ExpandoNode *nn = (const struct ExpandoNode *) n;
+      print_expando_node(fp, nn, indent);
     }
     break;
 
     case NT_DATE:
     {
-      const struct DateNode *d = (const struct DateNode *) n;
-      int len = d->end - d->start;
-
-      const char *dt = NULL;
-      switch (d->date_type)
-      {
-        case DT_SENDER_SEND_TIME:
-          dt = "SENDER_SEND_TIME";
-          break;
-
-        case DT_LOCAL_SEND_TIME:
-          dt = "DT_LOCAL_SEND_TIME";
-          break;
-
-        case DT_LOCAL_RECIEVE_TIME:
-          dt = "DT_LOCAL_RECIEVE_TIME";
-          break;
-
-        default:
-          ERROR("Unknown date type: %d\n", d->date_type);
-      }
-
-      printf("%*sDATE: `%.*s` (type=%s, ignore_locale=%d)\n", indent, "", len,
-             d->start, dt, d->ingnore_locale);
+      const struct DateNode *nn = (const struct DateNode *) n;
+      print_date_node(fp, nn, indent);
     }
     break;
 
     case NT_PAD:
     {
-      const struct PadNode *p = (const struct PadNode *) n;
-
-      const char *pt = NULL;
-      switch (p->pad_type)
-      {
-        case PT_FILL:
-          pt = "FILL";
-          break;
-
-        case PT_HARD_FILL:
-          pt = "HARD_FILL";
-          break;
-
-        case PT_SOFT_FILL:
-          pt = "SOFT_FILL";
-          break;
-
-        default:
-          ERROR("Unknown pad type: %d\n", p->pad_type);
-      }
-
-      printf("%*sPAD: `%c` (type=%s)\n", indent, "", p->pad_char, pt);
-    }
-    break;
-
-    case NT_CONDITION:
-    {
-      const struct ConditionNode *c = (const struct ConditionNode *) n;
-      printf("%*sCONDITION: ", indent, "");
-      print_node(c->condition, indent);
-      printf("%*sIF TRUE : ", indent + 4, "");
-      print_node(c->if_true, indent + 4);
-
-      if (c->if_false)
-      {
-        printf("%*sIF FALSE: ", indent + 4, "");
-        print_node(c->if_false, indent + 4);
-      }
+      const struct PadNode *nn = (const struct PadNode *) n;
+      print_pad_node(fp, nn, indent);
     }
     break;
 
     case NT_INDEX_FORMAT_HOOK:
     {
-      const struct IndexFormatHookNode *i = (const struct IndexFormatHookNode *) n;
-      int len = i->end - i->start;
-      printf("%*sINDEX FORMAT HOOK: `%.*s`\n", indent, "", len, i->start);
+      const struct IndexFormatHookNode *nn = (const struct IndexFormatHookNode *) n;
+      print_index_format_hook_node(fp, nn, indent);
+    }
+    break;
+
+    case NT_CONDITION:
+    {
+      const struct ConditionNode *nn = (const struct ConditionNode *) n;
+      print_condition_node(fp, nn, indent);
     }
     break;
 
     default:
-      ERROR("%*sUnknown node: %d\n", indent, "", n->type);
-  };
-}
-
-static void print_tree(struct Node **root)
-{
-  struct Node *n = *root;
-  while (n)
-  {
-    print_node(n, 0);
-    n = n->next;
+      ERROR("Unknown node: %d\n", n->type);
   }
 }
 
@@ -643,46 +597,60 @@ static void free_node(struct Node *n)
   switch (n->type)
   {
     case NT_TEXT:
-    case NT_DATE:
-    case NT_PAD:
-    case NT_INDEX_FORMAT_HOOK:
-      free(n);
-      break;
+    {
+      struct TextNode *nn = (struct TextNode *) n;
+      free_text_node(nn);
+    }
+    break;
 
     case NT_EXPANDO:
     {
-      struct ExpandoNode *e = (struct ExpandoNode *) n;
-      if (e->format)
-      {
-        free((struct Format *) e->format);
-      }
-      free(e);
+      struct ExpandoNode *nn = (struct ExpandoNode *) n;
+      free_expando_node(nn);
+    }
+    break;
+
+    case NT_DATE:
+    {
+      struct DateNode *nn = (struct DateNode *) n;
+      free_date_node(nn);
+    }
+    break;
+
+    case NT_PAD:
+    {
+      struct PadNode *nn = (struct PadNode *) n;
+      free_pad_node(nn);
+    }
+    break;
+
+    case NT_INDEX_FORMAT_HOOK:
+    {
+      struct IndexFormatHookNode *nn = (struct IndexFormatHookNode *) n;
+      free_index_format_hook_node(nn);
     }
     break;
 
     case NT_CONDITION:
-      struct ConditionNode *c = (struct ConditionNode *) n;
-
-      if (c->condition)
-      {
-        free_node(c->condition);
-      }
-
-      if (c->if_true)
-      {
-        free_node(c->if_true);
-      }
-
-      if (c->if_false)
-      {
-        free_node(c->if_false);
-      }
-
-      free(c);
-      break;
+    {
+      struct ConditionNode *nn = (struct ConditionNode *) n;
+      free_condition_node(nn);
+    }
+    break;
 
     default:
       ERROR("Unknown node: %d\n", n->type);
+  }
+}
+
+void parse_tree(struct Node **root, const char *s)
+{
+  const char *end = NULL;
+  while (*s)
+  {
+    struct Node *n = parse_node(s, CON_NO_CONDITION, &end);
+    append_node(root, n);
+    s = end;
   }
 }
 
@@ -697,138 +665,12 @@ void free_tree(struct Node **root)
   }
 }
 
-/***************************************************************************/
-
-struct ExpandoCallback
+void print_tree(FILE *fp, struct Node **root)
 {
-  const char *expando;
-  int (*callback)(void);
-};
-
-struct TreeApplication
-{
-  struct Node **root;
-  // NOTE: not the best solution....
-  struct ExpandoCallback callbacks[4];
-};
-
-static int expando_a(void)
-{
-  printf("This is the `a` expando.\n");
-  return 1;
-}
-
-static int expando_b(void)
-{
-  printf("This is the `b` expando.\n");
-  return 1;
-}
-
-static int expando_c(void)
-{
-  int value = 0;
-  printf("This is the `c` expando with the value of %d.\n", value);
-  return value;
-}
-
-static bool is_equal(const char *start, const char *end, const char *str)
-{
-  int n = end - start;
-  return strncmp(start, str, n) == 0;
-}
-
-static int apply_fmt(const struct TreeApplication *app, const struct Node *n)
-{
-  if (app == NULL || n == NULL)
-  {
-    return 0;
-  }
-
-  switch (n->type)
-  {
-    case NT_EXPANDO:
-    {
-      struct ExpandoNode *e = (struct ExpandoNode *) n;
-      for (size_t i = 0; app->callbacks[i].expando != NULL; ++i)
-      {
-        const char *s1 = e->start;
-        const char *s2 = e->end;
-        if (is_equal(s1, s2, app->callbacks[i].expando))
-        {
-          return app->callbacks[i].callback();
-        }
-      }
-
-      int elen = e->end - e->start;
-      fprintf(stderr, "No callback for expando: `%.*s`\n", elen, e->start);
-      return 0;
-    }
-    break;
-
-    case NT_CONDITION:
-    {
-      struct ConditionNode *c = (struct ConditionNode *) n;
-
-      int ret = apply_fmt(app, c->condition);
-      if (ret != 0)
-      {
-        return apply_fmt(app, c->if_true);
-      }
-      else
-      {
-        if (c->if_false)
-        {
-          return apply_fmt(app, c->if_false);
-        }
-        else
-        {
-          return 1;
-        }
-      }
-    }
-
-    default:
-      printf("Not implemented:\n");
-      print_node(n, 4);
-      return 1;
-  }
-}
-
-static void apply_tree(const struct TreeApplication *app)
-{
-  const struct Node *n = *app->root;
+  const struct Node *n = *root;
   while (n)
   {
-    apply_fmt(app, n);
+    print_node(fp, n, 0);
     n = n->next;
   }
-}
-
-/***************************************************************************/
-
-int main(int argc, char *argv[])
-{
-  for (int i = 1; i < argc; i++)
-  {
-    const char *text = argv[i];
-    printf("%s\n", text);
-
-    struct Node *root = NULL;
-    parse_tree(&root, text);
-    print_tree(&root);
-
-    printf("------------------\n");
-    struct TreeApplication app = { .root = &root,
-                                   .callbacks = {
-                                       { "a", expando_a },
-                                       { "b", expando_b },
-                                       { "c", expando_c },
-                                       { NULL, NULL },
-                                   } };
-    apply_tree(&app);
-
-    free_tree(&root);
-  }
-
-  return 0;
 }
