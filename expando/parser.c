@@ -87,9 +87,9 @@ static struct ExpandoNode *new_pad_node(enum ExpandoPadType pad_type, char pad_c
   return (struct ExpandoNode *) node;
 }
 
-static struct ExpandoNode *new_condition_node(struct ExpandoExpandoNode *condition,
-                                              struct ExpandoExpandoNode *if_true,
-                                              struct ExpandoExpandoNode *if_false)
+static struct ExpandoNode *new_condition_node(struct ExpandoNode *condition,
+                                              struct ExpandoNode *if_true,
+                                              struct ExpandoNode *if_false)
 {
   VERIFY(condition != NULL);
   VERIFY(if_true != NULL);
@@ -415,7 +415,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         bool old_style = *s == '?';
 
         const char *next = NULL;
-        struct ExpandoExpandoNode *condition = parse_node(s, CON_START, &next, error);
+        struct ExpandoNode *condition = parse_node(s, CON_START, &next, error);
         if (condition == NULL)
         {
           return NULL;
@@ -430,7 +430,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
 
         s = next + 1;
 
-        struct ExpandoExpandoNode *if_true = parse_node(s, CON_NO_CONDITION, &next, error);
+        struct ExpandoNode *if_true = parse_node(s, CON_NO_CONDITION, &next, error);
         if (if_true == NULL)
         {
           return NULL;
@@ -443,7 +443,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         else if (*next == '&')
         {
           s = next + 1;
-          struct ExpandoExpandoNode *if_false = parse_node(s, CON_NO_CONDITION, &next, error);
+          struct ExpandoNode *if_false = parse_node(s, CON_NO_CONDITION, &next, error);
           if (if_true == NULL)
           {
             return NULL;

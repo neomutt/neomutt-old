@@ -418,6 +418,19 @@ $(PWD)/envelope:
 	$(MKDIR_P) $(PWD)/envelope
 
 ###############################################################################
+# libexpando
+LIBEXPANDO=	libexpando.a
+LIBEXPANDOOBJS=	expando/parser.o
+CLEANFILES+=	$(LIBEXPANDO) $(LIBEXPANDOOBJS)
+ALLOBJS+=	$(LIBEXPANDOOBJS)
+
+$(LIBEXPANDO): $(PWD)/expando $(LIBEXPANDOOBJS)
+	$(AR) cr $@ $(LIBEXPANDOOBJS)
+	$(RANLIB) $@
+$(PWD)/expando:
+	$(MKDIR_P) $(PWD)/expando
+
+###############################################################################
 # libgui
 LIBGUI=		libgui.a
 LIBGUIOBJS=	gui/curs_lib.o gui/dialog.o gui/global.o gui/msgcont.o \
@@ -853,7 +866,7 @@ MUTTLIBS+=	$(LIBINDEX) $(LIBPAGER) $(LIBINDEX) $(LIBPAGER) $(LIBAUTOCRYPT) $(LIB
 		$(LIBENTER) $(LIBCOMPLETE) $(LIBBROWSER) $(LIBCOMPMBOX) $(LIBSTORE) \
 		$(LIBPROGRESS) $(LIBQUESTION) $(LIBPOSTPONE) $(LIBALIAS) $(LIBSEND) \
 		$(LIBCONVERT) $(LIBCOMPOSE) $(LIBATTACH) $(LIBGUI) $(LIBNNTP) \
-		$(LIBPATTERN) $(LIBMENU) $(LIBCOLOR) $(LIBENVELOPE) $(LIBMIXMASTER) \
+		$(LIBPATTERN) $(LIBMENU) $(LIBCOLOR) $(LIBENVELOPE) $(LIBEXPANDO) $(LIBMIXMASTER) \
 		$(LIBHELPBAR) $(LIBMBOX) $(LIBNOTMUCH) $(LIBMAILDIR) $(LIBENTER) $(LIBCOMPLETE) $(LIBNNTP) \
 		$(LIBNCRYPT) $(LIBIMAP) $(LIBCONN) $(LIBHCACHE) \
 		$(LIBCOMPRESS) $(LIBSIDEBAR) $(LIBBCACHE) $(LIBHISTORY) \

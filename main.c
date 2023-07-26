@@ -162,6 +162,7 @@
 #include "question/lib.h"
 #include "send/lib.h"
 #include "alternates.h"
+#include "expando/parser.h"
 #include "external.h"
 #include "globals.h" // IWYU pragma: keep
 #include "hook.h"
@@ -532,6 +533,7 @@ main
   struct Buffer expanded_infile = buf_make(0);
   struct Buffer tempfile = buf_make(0);
   struct ConfigSet *cs = NULL;
+  char *string_to_parse = NULL;
 
   MuttLogger = log_disp_terminal;
 
@@ -570,7 +572,7 @@ main
     }
 
     /* USE_NNTP 'g:G' */
-    i = getopt(argc, argv, "+A:a:Bb:F:f:c:Dd:l:Ee:g:GH:i:hm:nOpQ:RSs:TvxyzZ");
+    i = getopt(argc, argv, "+A:a:Bb:F:f:c:Dd:l:Ee:g:GH:i:hm:nOP:pQ:RSs:TvxyzZ");
     if (i != EOF)
     {
       switch (i)
@@ -638,6 +640,9 @@ main
         case 'p':
           sendflags |= SEND_POSTPONED;
           break;
+        case 'P':
+          string_to_parse = mutt_str_dup(optarg);
+          break;
         case 'Q':
           mutt_list_insert_tail(&queries, mutt_str_dup(optarg));
           break;
@@ -691,6 +696,31 @@ main
       goto main_ok; // TEST04: neomutt -v
     else
       goto main_curses;
+  }
+
+  if (string_to_parse != NULL)
+  {
+    char *saved_start = string_to_parse;
+    printf("`%s`\n", string_to_parse);
+
+    struct ExpandoParseError error = { 0 };
+    struct ExpandoNode *root = NULL;
+
+    expando_tree_parse(&root, string_to_parse, &error);
+
+    if (error.position == NULL)
+    {
+      expando_tree_print(stdout, &root);
+    }
+    else
+    {
+      int location = error.position - saved_start;
+      printf("%*s^\n", location, "");
+      printf("Parsing error: %s\n", error.message);
+    }
+
+    expando_tree_free(&root);
+    goto main_ok;
   }
 
   mutt_str_replace(&Username, mutt_str_getenv("USER"));
