@@ -715,7 +715,6 @@ main
     }
     else
     {
-      // FIXME: implement mb_strwidth_range
       int location = mb_strwidth_range(saved_start, error.position);
       printf("%*s^\n", location, "");
       printf("Parsing error: %s\n", error.message);

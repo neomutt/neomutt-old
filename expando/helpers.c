@@ -1,5 +1,6 @@
 #include "helpers.h"
 
+#include <stdlib.h>
 #include <wchar.h>
 #include <wctype.h>
 
@@ -21,6 +22,23 @@ int mb_strlen_range(const char *start, const char *end)
 
 int mb_strwidth_range(const char *start, const char *end)
 {
-  // TODO(g0mb4): implement me
-  return mb_strlen_range(start, end);
+  wchar_t wc = 0;
+  int len = 0;
+  int width = 0;
+  const char *s = start;
+  while (s < end)
+  {
+    if (mbtowc(&wc, s, MB_CUR_MAX) >= 0)
+    {
+      len = wcwidth(wc);
+    }
+    else
+    {
+      len = 0;
+    }
+
+    width += len;
+    s++;
+  }
+  return width;
 }
