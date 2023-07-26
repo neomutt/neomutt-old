@@ -1,0 +1,9 @@
+`nested: %<c?%<a?%c&%d>&%<b?%e&%f>>`
+TEXT: `nested: `
+CONDITION: EXPANDO: `c`
+    IF TRUE :     CONDITION:     EXPANDO: `a`
+        IF TRUE :         EXPANDO: `c`
+        IF FALSE:         EXPANDO: `d`
+    IF FALSE:     CONDITION:     EXPANDO: `b`
+        IF TRUE :         EXPANDO: `e`
+        IF FALSE:         EXPANDO: `f`

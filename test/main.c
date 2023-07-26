@@ -257,6 +257,9 @@ void test_fini(void);
   /* eqi */                                                                    \
   NEOMUTT_TEST_ITEM(test_eqi)                                                  \
                                                                                \
+  /* expando */                                                                \
+  NEOMUTT_TEST_ITEM(test_expando_parser)                                       \
+                                                                               \
   /* file */                                                                   \
   NEOMUTT_TEST_ITEM(test_buf_file_expand_fmt_quote)                            \
   NEOMUTT_TEST_ITEM(test_buf_quote_filename)                                   \
