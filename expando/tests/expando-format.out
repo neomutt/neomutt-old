@@ -1,0 +1,14 @@
+`%X %8X %-8X %08X %.8X %8.8X %-8.8X`
+EXPANDO: `X`
+TEXT: ` `
+EXPANDO: `X` (min=8, max=0, just=RIGHT, leader=` `)
+TEXT: ` `
+EXPANDO: `X` (min=8, max=0, just=LEFT, leader=` `)
+TEXT: ` `
+EXPANDO: `X` (min=8, max=0, just=RIGHT, leader=`0`)
+TEXT: ` `
+EXPANDO: `X` (min=0, max=8, just=RIGHT, leader=` `)
+TEXT: ` `
+EXPANDO: `X` (min=8, max=8, just=RIGHT, leader=` `)
+TEXT: ` `
+EXPANDO: `X` (min=8, max=8, just=LEFT, leader=` `)

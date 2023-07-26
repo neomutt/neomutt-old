@@ -27,12 +27,12 @@
     exit(1);                                                                      \
   }
 
-static void free_node(struct Node *n);
-static void print_node(FILE *fp, const struct Node *n, int indent);
+static void free_node(struct ExpandoNode *n);
+static void print_node(FILE *fp, const struct ExpandoNode *n, int indent);
 
-static struct Node *new_text_node(const char *start, const char *end)
+static struct ExpandoNode *new_text_node(const char *start, const char *end)
 {
-  struct TextNode *node = calloc(1, sizeof(struct TextNode));
+  struct ExpandoTextNode *node = calloc(1, sizeof(struct ExpandoTextNode));
 
   VERIFY(node != NULL);
 
@@ -40,13 +40,13 @@ static struct Node *new_text_node(const char *start, const char *end)
   node->start = start;
   node->end = end;
 
-  return (struct Node *) node;
+  return (struct ExpandoNode *) node;
 }
 
-static struct Node *new_expando_node(const char *start, const char *end,
-                                     const struct Format *format)
+static struct ExpandoNode *new_expando_node(const char *start, const char *end,
+                                            const struct ExpandoFormat *format)
 {
-  struct ExpandoNode *node = calloc(1, sizeof(struct ExpandoNode));
+  struct ExpandoExpandoNode *node = calloc(1, sizeof(struct ExpandoExpandoNode));
 
   VERIFY(node != NULL);
 
@@ -55,13 +55,13 @@ static struct Node *new_expando_node(const char *start, const char *end,
   node->end = end;
   node->format = format;
 
-  return (struct Node *) node;
+  return (struct ExpandoNode *) node;
 }
 
-static struct Node *new_date_node(const char *start, const char *end,
-                                  enum DateType date_type, bool ingnore_locale)
+static struct ExpandoNode *new_date_node(const char *start, const char *end,
+                                         enum ExpandoDateType date_type, bool ingnore_locale)
 {
-  struct DateNode *node = calloc(1, sizeof(struct DateNode));
+  struct ExpandoDateNode *node = calloc(1, sizeof(struct ExpandoDateNode));
 
   VERIFY(node != NULL);
 
@@ -71,12 +71,12 @@ static struct Node *new_date_node(const char *start, const char *end,
   node->date_type = date_type;
   node->ingnore_locale = ingnore_locale;
 
-  return (struct Node *) node;
+  return (struct ExpandoNode *) node;
 }
 
-static struct Node *new_pad_node(enum PadType pad_type, char pad_char)
+static struct ExpandoNode *new_pad_node(enum ExpandoPadType pad_type, char pad_char)
 {
-  struct PadNode *node = calloc(1, sizeof(struct PadNode));
+  struct ExpandoPadNode *node = calloc(1, sizeof(struct ExpandoPadNode));
 
   VERIFY(node != NULL);
 
@@ -84,16 +84,17 @@ static struct Node *new_pad_node(enum PadType pad_type, char pad_char)
   node->pad_type = pad_type;
   node->pad_char = pad_char;
 
-  return (struct Node *) node;
+  return (struct ExpandoNode *) node;
 }
 
-static struct Node *new_condition_node(struct Node *condition,
-                                       struct Node *if_true, struct Node *if_false)
+static struct ExpandoNode *new_condition_node(struct ExpandoExpandoNode *condition,
+                                              struct ExpandoExpandoNode *if_true,
+                                              struct ExpandoExpandoNode *if_false)
 {
   VERIFY(condition != NULL);
   VERIFY(if_true != NULL);
 
-  struct ConditionNode *node = calloc(1, sizeof(struct ConditionNode));
+  struct ExpandoConditionNode *node = calloc(1, sizeof(struct ExpandoConditionNode));
 
   VERIFY(node != NULL);
 
@@ -102,12 +103,12 @@ static struct Node *new_condition_node(struct Node *condition,
   node->if_true = if_true;
   node->if_false = if_false;
 
-  return (struct Node *) node;
+  return (struct ExpandoNode *) node;
 }
 
-static struct Node *new_index_format_hook_node(const char *start, const char *end)
+static struct ExpandoNode *new_index_format_hook_node(const char *start, const char *end)
 {
-  struct IndexFormatHookNode *node = calloc(1, sizeof(struct IndexFormatHookNode));
+  struct ExpandoIndexFormatHookNode *node = calloc(1, sizeof(struct ExpandoIndexFormatHookNode));
 
   VERIFY(node != NULL);
 
@@ -115,35 +116,35 @@ static struct Node *new_index_format_hook_node(const char *start, const char *en
   node->start = start;
   node->end = end;
 
-  return (struct Node *) node;
+  return (struct ExpandoNode *) node;
 }
 
-static void free_text_node(struct TextNode *n)
+static void free_text_node(struct ExpandoTextNode *n)
 {
   free(n);
 }
 
-static void free_date_node(struct DateNode *n)
+static void free_date_node(struct ExpandoDateNode *n)
 {
   free(n);
 }
 
-static void free_expando_node(struct ExpandoNode *n)
+static void free_expando_node(struct ExpandoExpandoNode *n)
 {
   if (n->format)
   {
-    free((struct Format *) n->format);
+    free((struct ExpandoFormat *) n->format);
   }
 
   free(n);
 }
 
-static void free_pad_node(struct PadNode *n)
+static void free_pad_node(struct ExpandoPadNode *n)
 {
   free(n);
 }
 
-static void free_condition_node(struct ConditionNode *n)
+static void free_condition_node(struct ExpandoConditionNode *n)
 {
   if (n->condition)
   {
@@ -163,12 +164,12 @@ static void free_condition_node(struct ConditionNode *n)
   free(n);
 }
 
-static void free_index_format_hook_node(struct IndexFormatHookNode *n)
+static void free_index_format_hook_node(struct ExpandoIndexFormatHookNode *n)
 {
   free(n);
 }
 
-static void append_node(struct Node **root, struct Node *new_node)
+static void append_node(struct ExpandoNode **root, struct ExpandoNode *new_node)
 {
   if (!*root)
   {
@@ -176,7 +177,7 @@ static void append_node(struct Node **root, struct Node *new_node)
     return;
   }
 
-  struct Node *n = *root;
+  struct ExpandoNode *n = *root;
   while (n->next != NULL)
   {
     n = n->next;
@@ -197,6 +198,7 @@ static const char *skip_until_classic_expando(const char *start)
 
 static const char *skip_classic_expando(const char *s)
 {
+  // TODO: make this a parameter
   static const char *valid_2char_expandos[] = { "aa", "ab", NULL };
 
   for (size_t i = 0; valid_2char_expandos[i] != NULL; ++i)
@@ -227,15 +229,15 @@ static inline bool is_valid_number(char c)
   return (c >= '0' && c <= '9');
 }
 
-static const struct Format *parse_format(const char *start, const char *end,
-                                         struct ParseError *error)
+static const struct ExpandoFormat *parse_format(const char *start, const char *end,
+                                                struct ExpandoParseError *error)
 {
   if (start == end)
   {
     return NULL;
   }
 
-  struct Format *format = calloc(1, sizeof(struct Format));
+  struct ExpandoFormat *format = calloc(1, sizeof(struct ExpandoFormat));
 
   VERIFY(format != NULL);
 
@@ -311,8 +313,9 @@ static const struct Format *parse_format(const char *start, const char *end,
   return format;
 }
 
-static struct Node *parse_node(const char *s, enum ConditionStart condition_start,
-                               const char **parsed_until, struct ParseError *error)
+static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart condition_start,
+                                      const char **parsed_until,
+                                      struct ExpandoParseError *error)
 {
   while (*s)
   {
@@ -325,7 +328,7 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         // TODO: handle {name} expandos!
         bool ignore_locale = *(s + 1) == '!';
 
-        enum DateType dt = 0;
+        enum ExpandoDateType dt = 0;
         const char *end = NULL;
 
         if (*s == '{')
@@ -372,7 +375,7 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
       // padding
       else if (*s == '|' || *s == '>' || *s == '*')
       {
-        enum PadType pt = 0;
+        enum ExpandoPadType pt = 0;
         if (*s == '|')
         {
           pt = PT_FILL;
@@ -412,7 +415,7 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         bool old_style = *s == '?';
 
         const char *next = NULL;
-        struct Node *condition = parse_node(s, CON_START, &next, error);
+        struct ExpandoExpandoNode *condition = parse_node(s, CON_START, &next, error);
         if (condition == NULL)
         {
           return NULL;
@@ -427,7 +430,7 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
 
         s = next + 1;
 
-        struct Node *if_true = parse_node(s, CON_NO_CONDITION, &next, error);
+        struct ExpandoExpandoNode *if_true = parse_node(s, CON_NO_CONDITION, &next, error);
         if (if_true == NULL)
         {
           return NULL;
@@ -440,7 +443,7 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
         else if (*next == '&')
         {
           s = next + 1;
-          struct Node *if_false = parse_node(s, CON_NO_CONDITION, &next, error);
+          struct ExpandoExpandoNode *if_false = parse_node(s, CON_NO_CONDITION, &next, error);
           if (if_true == NULL)
           {
             return NULL;
@@ -496,7 +499,7 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
       {
         const char *format_end = skip_until_classic_expando(s);
         const char *expando_end = skip_classic_expando(format_end);
-        const struct Format *format = parse_format(s, format_end, error);
+        const struct ExpandoFormat *format = parse_format(s, format_end, error);
         if (error->position != NULL)
         {
           return NULL;
@@ -520,18 +523,18 @@ static struct Node *parse_node(const char *s, enum ConditionStart condition_star
   return NULL;
 }
 
-static void print_text_node(FILE *fp, const struct TextNode *n, int indent)
+static void print_text_node(FILE *fp, const struct ExpandoTextNode *n, int indent)
 {
   int len = n->end - n->start;
   fprintf(fp, "%*sTEXT: `%.*s`\n", indent, "", len, n->start);
 }
 
-static void print_expando_node(FILE *fp, const struct ExpandoNode *n, int indent)
+static void print_expando_node(FILE *fp, const struct ExpandoExpandoNode *n, int indent)
 {
   if (n->format)
   {
     int elen = n->end - n->start;
-    const struct Format *f = n->format;
+    const struct ExpandoFormat *f = n->format;
     fprintf(fp, "%*sEXPANDO: `%.*s`", indent, "", elen, n->start);
 
     const char *just = f->justification == FMT_J_RIGHT ? "RIGHT" : "LEFT";
@@ -544,7 +547,7 @@ static void print_expando_node(FILE *fp, const struct ExpandoNode *n, int indent
   }
 }
 
-static void print_date_node(FILE *fp, const struct DateNode *n, int indent)
+static void print_date_node(FILE *fp, const struct ExpandoDateNode *n, int indent)
 {
   int len = n->end - n->start;
   const char *dt = NULL;
@@ -571,7 +574,7 @@ static void print_date_node(FILE *fp, const struct DateNode *n, int indent)
           n->start, dt, n->ingnore_locale);
 }
 
-static void print_pad_node(FILE *fp, const struct PadNode *n, int indent)
+static void print_pad_node(FILE *fp, const struct ExpandoPadNode *n, int indent)
 {
   const char *pt = NULL;
   switch (n->pad_type)
@@ -595,7 +598,7 @@ static void print_pad_node(FILE *fp, const struct PadNode *n, int indent)
   fprintf(fp, "%*sPAD: `%c` (type=%s)\n", indent, "", n->pad_char, pt);
 }
 
-static void print_condition_node(FILE *fp, const struct ConditionNode *n, int indent)
+static void print_condition_node(FILE *fp, const struct ExpandoConditionNode *n, int indent)
 {
   fprintf(fp, "%*sCONDITION: ", indent, "");
   print_node(fp, n->condition, indent);
@@ -609,13 +612,14 @@ static void print_condition_node(FILE *fp, const struct ConditionNode *n, int in
   }
 }
 
-static void print_index_format_hook_node(FILE *fp, const struct IndexFormatHookNode *n, int indent)
+static void print_index_format_hook_node(FILE *fp,
+                                         const struct ExpandoIndexFormatHookNode *n, int indent)
 {
   int len = n->end - n->start;
   fprintf(fp, "%*sINDEX FORMAT HOOK: `%.*s`\n", indent, "", len, n->start);
 }
 
-static void print_node(FILE *fp, const struct Node *n, int indent)
+static void print_node(FILE *fp, const struct ExpandoNode *n, int indent)
 {
   if (n == NULL)
   {
@@ -627,42 +631,42 @@ static void print_node(FILE *fp, const struct Node *n, int indent)
   {
     case NT_TEXT:
     {
-      const struct TextNode *nn = (const struct TextNode *) n;
+      const struct ExpandoTextNode *nn = (const struct ExpandoTextNode *) n;
       print_text_node(fp, nn, indent);
     }
     break;
 
     case NT_EXPANDO:
     {
-      const struct ExpandoNode *nn = (const struct ExpandoNode *) n;
+      const struct ExpandoExpandoNode *nn = (const struct ExpandoExpandoNode *) n;
       print_expando_node(fp, nn, indent);
     }
     break;
 
     case NT_DATE:
     {
-      const struct DateNode *nn = (const struct DateNode *) n;
+      const struct ExpandoDateNode *nn = (const struct ExpandoDateNode *) n;
       print_date_node(fp, nn, indent);
     }
     break;
 
     case NT_PAD:
     {
-      const struct PadNode *nn = (const struct PadNode *) n;
+      const struct ExpandoPadNode *nn = (const struct ExpandoPadNode *) n;
       print_pad_node(fp, nn, indent);
     }
     break;
 
     case NT_INDEX_FORMAT_HOOK:
     {
-      const struct IndexFormatHookNode *nn = (const struct IndexFormatHookNode *) n;
+      const struct ExpandoIndexFormatHookNode *nn = (const struct ExpandoIndexFormatHookNode *) n;
       print_index_format_hook_node(fp, nn, indent);
     }
     break;
 
     case NT_CONDITION:
     {
-      const struct ConditionNode *nn = (const struct ConditionNode *) n;
+      const struct ExpandoConditionNode *nn = (const struct ExpandoConditionNode *) n;
       print_condition_node(fp, nn, indent);
     }
     break;
@@ -672,7 +676,7 @@ static void print_node(FILE *fp, const struct Node *n, int indent)
   }
 }
 
-static void free_node(struct Node *n)
+static void free_node(struct ExpandoNode *n)
 {
   if (n == NULL)
   {
@@ -683,42 +687,42 @@ static void free_node(struct Node *n)
   {
     case NT_TEXT:
     {
-      struct TextNode *nn = (struct TextNode *) n;
+      struct ExpandoTextNode *nn = (struct ExpandoTextNode *) n;
       free_text_node(nn);
     }
     break;
 
     case NT_EXPANDO:
     {
-      struct ExpandoNode *nn = (struct ExpandoNode *) n;
+      struct ExpandoExpandoNode *nn = (struct ExpandoExpandoNode *) n;
       free_expando_node(nn);
     }
     break;
 
     case NT_DATE:
     {
-      struct DateNode *nn = (struct DateNode *) n;
+      struct ExpandoDateNode *nn = (struct ExpandoDateNode *) n;
       free_date_node(nn);
     }
     break;
 
     case NT_PAD:
     {
-      struct PadNode *nn = (struct PadNode *) n;
+      struct ExpandoPadNode *nn = (struct ExpandoPadNode *) n;
       free_pad_node(nn);
     }
     break;
 
     case NT_INDEX_FORMAT_HOOK:
     {
-      struct IndexFormatHookNode *nn = (struct IndexFormatHookNode *) n;
+      struct ExpandoIndexFormatHookNode *nn = (struct ExpandoIndexFormatHookNode *) n;
       free_index_format_hook_node(nn);
     }
     break;
 
     case NT_CONDITION:
     {
-      struct ConditionNode *nn = (struct ConditionNode *) n;
+      struct ExpandoConditionNode *nn = (struct ExpandoConditionNode *) n;
       free_condition_node(nn);
     }
     break;
@@ -728,12 +732,13 @@ static void free_node(struct Node *n)
   }
 }
 
-void parse_tree(struct Node **root, const char *s, struct ParseError *error)
+void expando_tree_parse(struct ExpandoNode **root, const char *s,
+                        struct ExpandoParseError *error)
 {
   const char *end = NULL;
   while (*s)
   {
-    struct Node *n = parse_node(s, CON_NO_CONDITION, &end, error);
+    struct ExpandoNode *n = parse_node(s, CON_NO_CONDITION, &end, error);
 
     if (n == NULL)
     {
@@ -745,20 +750,20 @@ void parse_tree(struct Node **root, const char *s, struct ParseError *error)
   }
 }
 
-void free_tree(struct Node **root)
+void expando_tree_free(struct ExpandoNode **root)
 {
-  struct Node *n = *root;
+  struct ExpandoNode *n = *root;
   while (n)
   {
-    struct Node *f = n;
+    struct ExpandoNode *f = n;
     n = n->next;
     free_node(f);
   }
 }
 
-void print_tree(FILE *fp, struct Node **root)
+void expando_tree_print(FILE *fp, struct ExpandoNode **root)
 {
-  const struct Node *n = *root;
+  const struct ExpandoNode *n = *root;
   while (n)
   {
     print_node(fp, n, 0);

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "parser.h"
 
+#if 0
+
 int main(int argc, char *argv[])
 {
   for (int i = 1; i < argc; i++)
@@ -8,14 +10,14 @@ int main(int argc, char *argv[])
     const char *text = argv[i];
     printf("`%s`\n", text);
 
-    struct ParseError error = { 0 };
-    struct Node *root = NULL;
+    struct ExpandoParseError error = { 0 };
+    struct ExpandoNode *root = NULL;
 
-    parse_tree(&root, text, &error);
+    expando_tree_parse(&root, text, &error);
 
     if (error.position == NULL)
     {
-      print_tree(stdout, &root);
+      expando_tree_print(stdout, &root);
     }
     else
     {
@@ -24,8 +26,10 @@ int main(int argc, char *argv[])
       printf("Parsing error: %s\n", error.message);
     }
 
-    free_tree(&root);
+    expando_tree_free(&root);
   }
 
   return 0;
 }
+
+#endif

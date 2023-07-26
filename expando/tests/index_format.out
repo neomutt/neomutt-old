@@ -1,0 +1,14 @@
+`%4C %Z %[%b %d %H:%M] %-15.15L (%<l?%4l&%4c>) %s`
+EXPANDO: `C` (min=4, max=0, just=RIGHT, leader=` `)
+TEXT: ` `
+EXPANDO: `Z`
+TEXT: ` `
+DATE: `%b %d %H:%M` (type=DT_LOCAL_SEND_TIME, ignore_locale=0)
+TEXT: ` `
+EXPANDO: `L` (min=15, max=15, just=LEFT, leader=` `)
+TEXT: ` (`
+CONDITION: EXPANDO: `l`
+    IF TRUE :     EXPANDO: `l` (min=4, max=0, just=RIGHT, leader=` `)
+    IF FALSE:     EXPANDO: `c` (min=4, max=0, just=RIGHT, leader=` `)
+TEXT: `) `
+EXPANDO: `s`
