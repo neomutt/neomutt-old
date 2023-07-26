@@ -1,5 +1,5 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef EXPANDO_PARSER_H
+#define EXPANDO_PARSER_H
 
 #include <stdbool.h>
 #include <stdio.h>

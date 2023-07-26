@@ -162,6 +162,7 @@
 #include "question/lib.h"
 #include "send/lib.h"
 #include "alternates.h"
+#include "expando/helpers.h"
 #include "expando/parser.h"
 #include "external.h"
 #include "globals.h" // IWYU pragma: keep
@@ -714,7 +715,8 @@ main
     }
     else
     {
-      int location = error.position - saved_start;
+      // FIXME: implement mb_strwidth_range
+      int location = mb_strwidth_range(saved_start, error.position);
       printf("%*s^\n", location, "");
       printf("Parsing error: %s\n", error.message);
     }
