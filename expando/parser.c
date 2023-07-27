@@ -222,11 +222,6 @@ static const char *skip_until(const char *start, const char *terminator)
   return start;
 }
 
-static inline bool is_valid_number(char c)
-{
-  return (c >= '0' && c <= '9');
-}
-
 static const struct ExpandoFormat *parse_format(const char *start, const char *end,
                                                 struct ExpandoParseError *error)
 {
