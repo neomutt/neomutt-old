@@ -721,6 +721,7 @@ main
     }
 
     expando_tree_free(&root);
+    FREE(&string_to_parse);
     goto main_ok;
   }
 
