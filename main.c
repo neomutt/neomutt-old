@@ -707,7 +707,7 @@ main
     struct ExpandoParseError error = { 0 };
     struct ExpandoNode *root = NULL;
 
-    expando_tree_parse(&root, string_to_parse, &error);
+    expando_tree_parse(&root, string_to_parse, NULL, NULL, NULL, &error);
 
     if (error.position == NULL)
     {

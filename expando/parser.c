@@ -4,6 +4,7 @@
  * Tóth János
  */
 
+#include "helpers.h"
 #include "parser.h"
 
 #include <ctype.h>
@@ -196,14 +197,11 @@ static const char *skip_until_classic_expando(const char *start)
   return start;
 }
 
-static const char *skip_classic_expando(const char *s)
+static const char *skip_classic_expando(const char *s, const char *valid_two_char_expandos[])
 {
-  // TODO: make this a parameter
-  static const char *valid_2char_expandos[] = { "aa", "ab", NULL };
-
-  for (size_t i = 0; valid_2char_expandos[i] != NULL; ++i)
+  for (size_t i = 0; valid_two_char_expandos && valid_two_char_expandos[i] != NULL; ++i)
   {
-    if (valid_2char_expandos[i][0] == *s && valid_2char_expandos[i][1] == *(s + 1))
+    if (valid_two_char_expandos[i][0] == *s && valid_two_char_expandos[i][1] == *(s + 1))
     {
       s++;
       break;
@@ -313,9 +311,53 @@ static const struct ExpandoFormat *parse_format(const char *start, const char *e
   return format;
 }
 
-static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart condition_start,
-                                      const char **parsed_until,
+static void check_if_expando_is_valid(const char *start, const char *end,
+                                      const char *valid_short_expandos[],
+                                      const char *valid_long_expandos[],
                                       struct ExpandoParseError *error)
+{
+  if (valid_short_expandos && mb_strlen_range(start, end) == 1)
+  {
+    for (size_t i = 0; valid_short_expandos[i] != NULL; ++i)
+    {
+      int len = strlen(valid_short_expandos[i]);
+      if (strncmp(start, valid_short_expandos[i], len) == 0)
+      {
+        /* valid */
+        return;
+      }
+    }
+
+    error->position = start;
+    const int len = end - start;
+    snprintf(error->message, sizeof(error->message), "Invalid expando: `%.*s`.", len, start);
+    return;
+  }
+
+  if (valid_long_expandos && mb_strlen_range(start, end) > 1)
+  {
+    for (size_t i = 0; valid_long_expandos[i] != NULL; ++i)
+    {
+      int len = strlen(valid_long_expandos[i]);
+      if (strncmp(start, valid_long_expandos[i], len) == 0)
+      {
+        /* valid */
+        return;
+      }
+    }
+
+    error->position = start;
+    const int len = end - start;
+    snprintf(error->message, sizeof(error->message), "Invalid expando: `%.*s`.", len, start);
+    return;
+  }
+}
+
+static struct ExpandoNode *
+parse_node(const char *s, enum ExpandoConditionStart condition_start,
+           const char **parsed_until, const char *valid_short_expandos[],
+           const char *valid_two_char_expandos[],
+           const char *valid_long_expandos[], struct ExpandoParseError *error)
 {
   while (*s)
   {
@@ -390,9 +432,8 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
           pt = PT_SOFT_FILL;
         }
 
+        // TODO: handle mb chars
         char pad_char = *(s + 1);
-
-        // NOTE: all characters are valid?
         if (pad_char == '\0')
         {
           error->position = s + 1;
@@ -415,7 +456,9 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         bool old_style = *s == '?';
 
         const char *next = NULL;
-        struct ExpandoNode *condition = parse_node(s, CON_START, &next, error);
+        struct ExpandoNode *condition = parse_node(s, CON_START, &next, valid_short_expandos,
+                                                   valid_two_char_expandos,
+                                                   valid_long_expandos, error);
         if (condition == NULL)
         {
           return NULL;
@@ -430,7 +473,9 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
 
         s = next + 1;
 
-        struct ExpandoNode *if_true = parse_node(s, CON_NO_CONDITION, &next, error);
+        struct ExpandoNode *if_true = parse_node(s, CON_NO_CONDITION, &next,
+                                                 valid_short_expandos, valid_two_char_expandos,
+                                                 valid_long_expandos, error);
         if (if_true == NULL)
         {
           return NULL;
@@ -443,7 +488,9 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         else if (*next == '&')
         {
           s = next + 1;
-          struct ExpandoNode *if_false = parse_node(s, CON_NO_CONDITION, &next, error);
+          struct ExpandoNode *if_false = parse_node(s, CON_NO_CONDITION, &next,
+                                                    valid_short_expandos, valid_two_char_expandos,
+                                                    valid_long_expandos, error);
           if (if_true == NULL)
           {
             return NULL;
@@ -498,8 +545,15 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
       else
       {
         const char *format_end = skip_until_classic_expando(s);
-        const char *expando_end = skip_classic_expando(format_end);
+        const char *expando_end = skip_classic_expando(format_end, valid_two_char_expandos);
         const struct ExpandoFormat *format = parse_format(s, format_end, error);
+        if (error->position != NULL)
+        {
+          return NULL;
+        }
+
+        check_if_expando_is_valid(format_end, expando_end, valid_short_expandos,
+                                  valid_long_expandos, error);
         if (error->position != NULL)
         {
           return NULL;
@@ -733,12 +787,16 @@ static void free_node(struct ExpandoNode *n)
 }
 
 void expando_tree_parse(struct ExpandoNode **root, const char *s,
-                        struct ExpandoParseError *error)
+                        const char *valid_short_expandos[],
+                        const char *valid_two_char_expandos[],
+                        const char *valid_long_expandos[], struct ExpandoParseError *error)
 {
   const char *end = NULL;
   while (*s)
   {
-    struct ExpandoNode *n = parse_node(s, CON_NO_CONDITION, &end, error);
+    struct ExpandoNode *n = parse_node(s, CON_NO_CONDITION, &end,
+                                       valid_short_expandos, valid_two_char_expandos,
+                                       valid_long_expandos, error);
 
     if (n == NULL)
     {
