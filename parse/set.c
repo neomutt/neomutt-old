@@ -34,11 +34,13 @@
 #include "config/lib.h"
 #include "core/lib.h"
 #include "mutt.h"
-#include "set.h"
 #include "commands.h"
+#include "expando/helpers.h"
+#include "expando/parser.h"
 #include "extract.h"
 #include "globals.h"
 #include "muttlib.h"
+#include "set.h"
 
 /**
  * command_set_expand_value - Expand special characters
@@ -84,6 +86,39 @@ static void command_set_expand_value(uint32_t type, struct Buffer *value)
   }
 }
 
+static bool check_index_format(struct Buffer *index_format, struct Buffer *err)
+{
+  char *string_to_parse = index_format->data;
+
+  struct ExpandoParseError error = { 0 };
+  // TODO(g0mb4): save parsed tree for future use
+  struct ExpandoNode *root = NULL;
+  bool ok = true;
+
+  static const char *valid_short_expandos[] = {
+    "a", "A", "b", "B", "c", "C", "d", "D", "e", "E", "f", "F", "g", "H",
+    "i", "I", "J", "K", "l", "L", "m", "M", "n", "N", "O", "P", "q", "r",
+    "R", "s", "S", "t", "T", "u", "v", "W", "x", "X", "y", "Y", "Z", NULL,
+  };
+
+  static const char *valid_two_char_expandos[] = {
+    "cr", "Fp", "Gx", "zc", "zs", "zt", NULL,
+  };
+
+  expando_tree_parse(&root, string_to_parse, valid_short_expandos,
+                     valid_two_char_expandos, NULL, &error);
+
+  if (error.position != NULL)
+  {
+    buf_printf(err, _("$index_format: %s\nDefault value will be used."), error.message);
+    ok = false;
+  }
+
+  expando_tree_free(&root);
+
+  return ok;
+}
+
 /**
  * command_set_set - Set a variable to the given value
  * @param[in]  name  Name of the config; must not be NULL
@@ -122,6 +157,16 @@ static enum CommandResult command_set_set(struct Buffer *name,
   }
 
   int rc = CSR_ERR_CODE;
+
+  if (mutt_str_equal(name->data, "index_format"))
+  {
+    // NOTE(g0mb4): if it fails the default is loaded
+    // TODO(g0mb4): reparse and save default if set fails
+    if (!check_index_format(value, err))
+    {
+      return MUTT_CMD_ERROR;
+    }
+  }
 
   if (DTYPE(he->type) == DT_MYVAR)
   {
