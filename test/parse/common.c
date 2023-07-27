@@ -24,9 +24,6 @@
 #include "core/lib.h"
 #include "parse/lib.h"
 
-struct ExpandoNode;
-struct ExpandoParseError;
-
 struct Command mutt_commands[] = {
   // clang-format off
   { "reset",  parse_set, MUTT_SET_RESET },
@@ -50,16 +47,5 @@ void myvar_del(const char *var)
 }
 
 void myvar_set(const char *var, const char *val)
-{
-}
-
-void expando_tree_parse(struct ExpandoNode **root, const char *s,
-                        const char *valid_short_expandos[],
-                        const char *valid_two_char_expandos[],
-                        const char *valid_long_expandos[], struct ExpandoParseError *error)
-{
-}
-
-void expando_tree_free(struct ExpandoNode **root)
 {
 }
