@@ -259,6 +259,7 @@ void test_fini(void);
                                                                                \
   /* expando */                                                                \
   NEOMUTT_TEST_ITEM(test_expando_simple_text)                                  \
+  NEOMUTT_TEST_ITEM(test_expando_emoji_text)                                   \
                                                                                \
   /* file */                                                                   \
   NEOMUTT_TEST_ITEM(test_buf_file_expand_fmt_quote)                            \

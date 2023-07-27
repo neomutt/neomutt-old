@@ -225,7 +225,8 @@ ENVLIST_OBJS	= test/envlist/envlist_free.o \
 
 EQI_OBJS	= test/eqi/eqi.o
 
-EXPANDO_OBJS	= test/expando/simple_text.o
+EXPANDO_OBJS	= test/expando/simple_text.o \
+			test/expando/emoji_text.o
 
 FILE_OBJS	= test/file/common.o \
 		  test/file/buf_file_expand_fmt_quote.o \
