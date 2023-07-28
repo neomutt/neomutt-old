@@ -1,4 +1,3 @@
-#define TEST_NO_MAIN
 #include "common.h"
 
 void test_expando_simple_text(void)

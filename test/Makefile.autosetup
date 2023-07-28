@@ -228,7 +228,11 @@ EQI_OBJS	= test/eqi/eqi.o
 EXPANDO_OBJS	= test/expando/common.o \
 			test/expando/simple_text.o \
 			test/expando/emoji_text.o \
-			test/expando/percent_sign_text.o
+			test/expando/percent_sign_text.o \
+			test/expando/simple_expando.o \
+			test/expando/formatted_expando.o \
+			test/expando/two_char_expando.o \
+			test/expando/padding.o
 
 FILE_OBJS	= test/file/common.o \
 		  test/file/buf_file_expand_fmt_quote.o \

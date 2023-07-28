@@ -9,18 +9,19 @@ struct ExpandoNode *get_nth_node(struct ExpandoNode **root, int n)
 
   while (node)
   {
-    TEST_CHECK(node != NULL);
-
-    if (i == n)
+    if (i++ == n)
     {
       return node;
     }
 
     node = node->next;
-    ++i;
   }
 
-  TEST_CHECK(0);
+  if (!TEST_CHECK(0))
+  {
+    TEST_MSG("Node is not found\n");
+  }
+
   return NULL;
 }
 
@@ -35,4 +36,42 @@ void check_text_node(struct ExpandoNode *node, const char *text)
   const int m = (int) (t->end - t->start);
   TEST_CHECK(n == m);
   TEST_CHECK(strncmp(t->start, text, n) == 0);
+}
+
+void check_expando_node(struct ExpandoNode *node, const char *expando,
+                        const struct ExpandoFormat *format)
+{
+  TEST_CHECK(node != NULL);
+  TEST_CHECK(node->type == NT_EXPANDO);
+
+  struct ExpandoExpandoNode *e = (struct ExpandoExpandoNode *) node;
+  const int n = strlen(expando);
+  const int m = (int) (e->end - e->start);
+
+  TEST_CHECK(n == m);
+  TEST_CHECK(strncmp(e->start, expando, n) == 0);
+
+  if (format == NULL)
+  {
+    TEST_CHECK(e->format == NULL);
+  }
+  else
+  {
+    TEST_CHECK(e->format != NULL);
+    TEST_CHECK(e->format->justification == format->justification);
+    TEST_CHECK(e->format->leader == format->leader);
+    TEST_CHECK(e->format->min == format->min);
+    TEST_CHECK(e->format->max == format->max);
+  }
+}
+
+void check_pad_node(struct ExpandoNode *node, char pad_char, enum ExpandoPadType pad_type)
+{
+  TEST_CHECK(node != NULL);
+  TEST_CHECK(node->type == NT_PAD);
+
+  struct ExpandoPadNode *p = (struct ExpandoPadNode *) node;
+
+  TEST_CHECK(p->pad_char == pad_char);
+  TEST_CHECK(p->pad_type == pad_type);
 }

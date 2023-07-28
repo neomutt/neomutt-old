@@ -261,6 +261,10 @@ void test_fini(void);
   NEOMUTT_TEST_ITEM(test_expando_simple_text)                                  \
   NEOMUTT_TEST_ITEM(test_expando_emoji_text)                                   \
   NEOMUTT_TEST_ITEM(test_expando_percent_sign_text)                            \
+  NEOMUTT_TEST_ITEM(test_expando_simple_expando)                               \
+  NEOMUTT_TEST_ITEM(test_expando_formatted_expando)                            \
+  NEOMUTT_TEST_ITEM(test_expando_two_char_expando)                             \
+  NEOMUTT_TEST_ITEM(test_expando_padding)                                      \
                                                                                \
   /* file */                                                                   \
   NEOMUTT_TEST_ITEM(test_buf_file_expand_fmt_quote)                            \

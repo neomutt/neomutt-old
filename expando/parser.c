@@ -249,6 +249,7 @@ static const struct ExpandoFormat *parse_format(const char *start, const char *e
         ++start;
         break;
 
+      // TODO(gmb): allow multibyte leader
       case '0':
         format->leader = '0';
         ++start;
@@ -362,7 +363,7 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
       // dates
       if (*s == '{' || *s == '[' || *s == '(')
       {
-        // TODO: handle {name} expandos!
+        // TODO(g0mb4): handle {name} expandos!
         bool ignore_locale = *(s + 1) == '!';
 
         enum ExpandoDateType dt = 0;
@@ -427,7 +428,7 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
           pt = PT_SOFT_FILL;
         }
 
-        // TODO: handle mb chars
+        // TODO(gmb): allow multibyte character
         char pad_char = *(s + 1);
         if (pad_char == '\0')
         {
