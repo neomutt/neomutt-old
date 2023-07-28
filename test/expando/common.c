@@ -75,3 +75,20 @@ void check_pad_node(struct ExpandoNode *node, char pad_char, enum ExpandoPadType
   TEST_CHECK(p->pad_char == pad_char);
   TEST_CHECK(p->pad_type == pad_type);
 }
+
+void check_date_node(struct ExpandoNode *node, const char *inner_text,
+                     enum ExpandoDateType date_type, bool ingnore_locale)
+{
+  TEST_CHECK(node != NULL);
+  TEST_CHECK(node->type == NT_DATE);
+
+  struct ExpandoDateNode *d = (struct ExpandoDateNode *) node;
+
+  const int n = strlen(inner_text);
+  const int m = (int) (d->end - d->start);
+  TEST_CHECK(n == m);
+  TEST_CHECK(strncmp(d->start, inner_text, n) == 0);
+
+  TEST_CHECK(d->date_type == date_type);
+  TEST_CHECK(d->ingnore_locale == ingnore_locale);
+}

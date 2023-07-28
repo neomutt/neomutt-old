@@ -265,6 +265,7 @@ void test_fini(void);
   NEOMUTT_TEST_ITEM(test_expando_formatted_expando)                            \
   NEOMUTT_TEST_ITEM(test_expando_two_char_expando)                             \
   NEOMUTT_TEST_ITEM(test_expando_padding)                                      \
+  NEOMUTT_TEST_ITEM(test_expando_date)                                         \
                                                                                \
   /* file */                                                                   \
   NEOMUTT_TEST_ITEM(test_buf_file_expand_fmt_quote)                            \

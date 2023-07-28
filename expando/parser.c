@@ -364,7 +364,13 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
       if (*s == '{' || *s == '[' || *s == '(')
       {
         // TODO(g0mb4): handle {name} expandos!
-        bool ignore_locale = *(s + 1) == '!';
+        bool ignore_locale = false;
+        const char *start = s + 1;
+        if (*(s + 1) == '!')
+        {
+          ignore_locale = true;
+          start++;
+        }
 
         enum ExpandoDateType dt = 0;
         const char *end = NULL;
@@ -408,7 +414,7 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
         }
 
         *parsed_until = end + 1;
-        return new_date_node(s, end, dt, ignore_locale);
+        return new_date_node(start, end, dt, ignore_locale);
       }
       // padding
       else if (*s == '|' || *s == '>' || *s == '*')
