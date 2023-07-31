@@ -266,6 +266,10 @@ void test_fini(void);
   NEOMUTT_TEST_ITEM(test_expando_two_char_expando)                             \
   NEOMUTT_TEST_ITEM(test_expando_padding)                                      \
   NEOMUTT_TEST_ITEM(test_expando_date)                                         \
+  NEOMUTT_TEST_ITEM(test_expando_old_if_else)                                  \
+  NEOMUTT_TEST_ITEM(test_expando_new_if_else)                                  \
+  NEOMUTT_TEST_ITEM(test_expando_index_format_hook)                            \
+  NEOMUTT_TEST_ITEM(test_expando_bad_formatted_expando)                        \
                                                                                \
   /* file */                                                                   \
   NEOMUTT_TEST_ITEM(test_buf_file_expand_fmt_quote)                            \

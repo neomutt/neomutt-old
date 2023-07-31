@@ -92,3 +92,22 @@ void check_date_node(struct ExpandoNode *node, const char *inner_text,
   TEST_CHECK(d->date_type == date_type);
   TEST_CHECK(d->ingnore_locale == ingnore_locale);
 }
+
+void check_condition_node_head(struct ExpandoNode *node)
+{
+  TEST_CHECK(node != NULL);
+  TEST_CHECK(node->type == NT_CONDITION);
+}
+
+void check_index_hook_node(struct ExpandoNode *node, const char *name)
+{
+  TEST_CHECK(node != NULL);
+  TEST_CHECK(node->type == NT_INDEX_FORMAT_HOOK);
+
+  struct ExpandoIndexFormatHookNode *i = (struct ExpandoIndexFormatHookNode *) node;
+
+  const int n = strlen(name);
+  const int m = (int) (i->end - i->start);
+  TEST_CHECK(n == m);
+  TEST_CHECK(strncmp(i->start, name, n) == 0);
+}

@@ -233,7 +233,11 @@ EXPANDO_OBJS	= test/expando/common.o \
 			test/expando/formatted_expando.o \
 			test/expando/two_char_expando.o \
 			test/expando/padding.o \
-			test/expando/date.o
+			test/expando/date.o \
+			test/expando/old_if_else.o \
+			test/expando/new_if_else.o \
+			test/expando/index_format_hook.o \
+			test/expando/bad_formatted_expando.o
 
 FILE_OBJS	= test/file/common.o \
 		  test/file/buf_file_expand_fmt_quote.o \
