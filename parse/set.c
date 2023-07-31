@@ -88,7 +88,7 @@ static void command_set_expand_value(uint32_t type, struct Buffer *value)
 
 static bool check_index_format(struct Buffer *index_format, struct Buffer *err)
 {
-  char *string_to_parse = index_format->data;
+  const char *string_to_parse = index_format->data;
 
   struct ExpandoParseError error = { 0 };
   // TODO(g0mb4): save parsed tree for future use
@@ -105,7 +105,7 @@ static bool check_index_format(struct Buffer *index_format, struct Buffer *err)
     "cr", "Fp", "Gx", "zc", "zs", "zt", NULL,
   };
 
-  expando_tree_parse(&root, string_to_parse, valid_short_expandos,
+  expando_tree_parse(&root, &string_to_parse, valid_short_expandos,
                      valid_two_char_expandos, NULL, &error);
 
   if (error.position != NULL)

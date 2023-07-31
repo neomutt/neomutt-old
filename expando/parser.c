@@ -788,15 +788,16 @@ static void free_node(struct ExpandoNode *n)
   }
 }
 
-void expando_tree_parse(struct ExpandoNode **root, const char *s,
+void expando_tree_parse(struct ExpandoNode **root, const char **string,
                         const char *valid_short_expandos[],
                         const char *valid_two_char_expandos[],
                         const char *valid_long_expandos[], struct ExpandoParseError *error)
 {
   const char *end = NULL;
-  while (*s)
+  const char *start = *string;
+  while (*start)
   {
-    struct ExpandoNode *n = parse_node(s, CON_NO_CONDITION, &end,
+    struct ExpandoNode *n = parse_node(start, CON_NO_CONDITION, &end,
                                        valid_short_expandos, valid_two_char_expandos,
                                        valid_long_expandos, error);
 
@@ -806,7 +807,7 @@ void expando_tree_parse(struct ExpandoNode **root, const char *s,
     }
 
     append_node(root, n);
-    s = end;
+    start = end;
   }
 }
 

@@ -2,12 +2,11 @@
 
 void test_expando_formatted_expando(void)
 {
-  const char *text = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
-  const char *input = text;
+  const char *input = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
   struct ExpandoParseError error = { 0 };
   struct ExpandoNode *root = NULL;
 
-  expando_tree_parse(&root, input, NULL, NULL, NULL, &error);
+  expando_tree_parse(&root, &input, NULL, NULL, NULL, &error);
 
   TEST_CHECK(error.position == NULL);
   check_expando_node(get_nth_node(&root, 0), "X", NULL);

@@ -534,7 +534,7 @@ main
   struct Buffer expanded_infile = buf_make(0);
   struct Buffer tempfile = buf_make(0);
   struct ConfigSet *cs = NULL;
-  char *string_to_parse = NULL;
+  const char *string_to_parse = NULL;
 
   MuttLogger = log_disp_terminal;
 
@@ -701,13 +701,12 @@ main
 
   if (string_to_parse != NULL)
   {
-    char *saved_start = string_to_parse;
     printf("`%s`\n", string_to_parse);
 
     struct ExpandoParseError error = { 0 };
     struct ExpandoNode *root = NULL;
 
-    expando_tree_parse(&root, string_to_parse, NULL, NULL, NULL, &error);
+    expando_tree_parse(&root, &string_to_parse, NULL, NULL, NULL, &error);
 
     if (error.position == NULL)
     {
@@ -715,7 +714,7 @@ main
     }
     else
     {
-      int location = mb_strwidth_range(saved_start, error.position);
+      int location = mb_strwidth_range(string_to_parse, error.position);
       printf("%*s^\n", location, "");
       printf("Parsing error: %s\n", error.message);
     }

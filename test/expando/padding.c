@@ -2,12 +2,11 @@
 
 void test_expando_padding(void)
 {
-  const char *text = "%|A %>B %*C";
-  const char *input = text;
+  const char *input = "%|A %>B %*C";
   struct ExpandoParseError error = { 0 };
   struct ExpandoNode *root = NULL;
 
-  expando_tree_parse(&root, input, NULL, NULL, NULL, &error);
+  expando_tree_parse(&root, &input, NULL, NULL, NULL, &error);
 
   TEST_CHECK(error.position == NULL);
   check_pad_node(get_nth_node(&root, 0), 'A', PT_FILL);
