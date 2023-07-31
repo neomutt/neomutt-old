@@ -30,9 +30,9 @@
 #include <stddef.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
-#include "neomutt.h"
 #include "account.h"
 #include "mailbox.h"
+#include "neomutt.h"
 
 struct NeoMutt *NeoMutt = NULL; ///< Global NeoMutt object
 

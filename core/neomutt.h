@@ -27,6 +27,7 @@
 #include <locale.h>
 #include <stdbool.h>
 #include "account.h"
+#include "expando/global_table.h"
 #include "mailbox.h"
 #ifdef __APPLE__
 #include <xlocale.h>
@@ -39,12 +40,13 @@ struct ConfigSet;
  */
 struct NeoMutt
 {
-  struct Notify *notify;         ///< Notifications handler
-  struct Notify *notify_resize;  ///< Window resize notifications handler
-  struct Notify *notify_timeout; ///< Timeout notifications handler
-  struct ConfigSubset *sub;      ///< Inherited config items
-  struct AccountList accounts;   ///< List of all Accounts
-  locale_t time_c_locale;        ///< Current locale but LC_TIME=C
+  struct Notify *notify;             ///< Notifications handler
+  struct Notify *notify_resize;      ///< Window resize notifications handler
+  struct Notify *notify_timeout;     ///< Timeout notifications handler
+  struct ConfigSubset *sub;          ///< Inherited config items
+  struct AccountList accounts;       ///< List of all Accounts
+  locale_t time_c_locale;            ///< Current locale but LC_TIME=C
+  struct ExpandoTable expando_table; ///< Global table of parsed expandos
 };
 
 extern struct NeoMutt *NeoMutt;
@@ -61,12 +63,13 @@ enum NotifyGlobal
   NT_GLOBAL_COMMAND,     ///< A NeoMutt command
 };
 
-bool            neomutt_account_add   (struct NeoMutt *n, struct Account *a);
-bool            neomutt_account_remove(struct NeoMutt *n, const struct Account *a);
-void            neomutt_free          (struct NeoMutt **ptr);
-struct NeoMutt *neomutt_new           (struct ConfigSet *cs);
+bool neomutt_account_add(struct NeoMutt *n, struct Account *a);
+bool neomutt_account_remove(struct NeoMutt *n, const struct Account *a);
+void neomutt_free(struct NeoMutt **ptr);
+struct NeoMutt *neomutt_new(struct ConfigSet *cs);
 
-void   neomutt_mailboxlist_clear  (struct MailboxList *ml);
-size_t neomutt_mailboxlist_get_all(struct MailboxList *head, struct NeoMutt *n, enum MailboxType type);
+void neomutt_mailboxlist_clear(struct MailboxList *ml);
+size_t neomutt_mailboxlist_get_all(struct MailboxList *head, struct NeoMutt *n,
+                                   enum MailboxType type);
 
 #endif /* MUTT_CORE_NEOMUTT_H */

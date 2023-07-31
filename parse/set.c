@@ -35,6 +35,7 @@
 #include "core/lib.h"
 #include "mutt.h"
 #include "commands.h"
+#include "expando/global_table.h"
 #include "expando/helpers.h"
 #include "expando/parser.h"
 #include "extract.h"
@@ -90,6 +91,8 @@ static bool check_index_format(struct Buffer *index_format, struct Buffer *err)
 {
   const char *string_to_parse = index_format->data;
 
+  NeoMutt->expando_table.index_format.string = mutt_str_dup(string_to_parse);
+
   struct ExpandoParseError error = { 0 };
   // TODO(g0mb4): save parsed tree for future use
   struct ExpandoNode *root = NULL;
@@ -105,16 +108,20 @@ static bool check_index_format(struct Buffer *index_format, struct Buffer *err)
     "cr", "Fp", "Gx", "zc", "zs", "zt", NULL,
   };
 
-  expando_tree_parse(&root, &string_to_parse, valid_short_expandos,
-                     valid_two_char_expandos, NULL, &error);
+  expando_tree_parse(&root, &NeoMutt->expando_table.index_format.string,
+                     valid_short_expandos, valid_two_char_expandos, NULL, &error);
 
   if (error.position != NULL)
   {
     buf_printf(err, _("$index_format: %s\nDefault value will be used."), error.message);
+    expando_tree_free(&root);
+    FREE((void *) NeoMutt->expando_table.index_format.string);
     ok = false;
   }
-
-  expando_tree_free(&root);
+  else
+  {
+    NeoMutt->expando_table.index_format.tree = root;
+  }
 
   return ok;
 }
