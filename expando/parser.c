@@ -187,7 +187,7 @@ static void append_node(struct ExpandoNode **root, struct ExpandoNode *new_node)
   n->next = new_node;
 }
 
-static const bool is_valid_classic_expando(char c)
+static bool is_valid_classic_expando(char c)
 {
   // $sidebar_format
   return isalpha(c) || c == '!';
