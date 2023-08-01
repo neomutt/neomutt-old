@@ -40,7 +40,7 @@ struct ExpandoFormat
   int min;
   int max;
   enum ExpandoFormatJustification justification;
-  // TODO(g0mb4): allow multibyte chars
+  // NOTE(gmb): multibyte leader?
   char leader;
 
   const char *start;

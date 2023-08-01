@@ -7,35 +7,19 @@
 #include "helpers.h"
 #include "parser.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-
-#define TODO()                                                                 \
-  fprintf(stderr, "%s: %d: TODO\n", __FILE__, __LINE__);                       \
-  exit(1)
-
-#define ERROR(...)                                                             \
-  fprintf(stderr, "ERROR: " __VA_ARGS__);                                      \
-  exit(1)
-
-#define VERIFY(b)                                                                 \
-  if (!(b))                                                                       \
-  {                                                                               \
-    fprintf(stderr, "%s: %d: VERIFICATION FAILED: %s\n", __FILE__, __LINE__, #b); \
-    exit(1);                                                                      \
-  }
+#include "mutt/lib.h"
 
 static void free_node(struct ExpandoNode *n);
 static void print_node(FILE *fp, const struct ExpandoNode *n, int indent);
 
 static struct ExpandoNode *new_text_node(const char *start, const char *end)
 {
-  struct ExpandoTextNode *node = calloc(1, sizeof(struct ExpandoTextNode));
-
-  VERIFY(node != NULL);
+  struct ExpandoTextNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoTextNode));
 
   node->type = NT_TEXT;
   node->start = start;
@@ -47,9 +31,7 @@ static struct ExpandoNode *new_text_node(const char *start, const char *end)
 static struct ExpandoNode *new_expando_node(const char *start, const char *end,
                                             const struct ExpandoFormat *format)
 {
-  struct ExpandoExpandoNode *node = calloc(1, sizeof(struct ExpandoExpandoNode));
-
-  VERIFY(node != NULL);
+  struct ExpandoExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoExpandoNode));
 
   node->type = NT_EXPANDO;
   node->start = start;
@@ -62,9 +44,7 @@ static struct ExpandoNode *new_expando_node(const char *start, const char *end,
 static struct ExpandoNode *new_date_node(const char *start, const char *end,
                                          enum ExpandoDateType date_type, bool ingnore_locale)
 {
-  struct ExpandoDateNode *node = calloc(1, sizeof(struct ExpandoDateNode));
-
-  VERIFY(node != NULL);
+  struct ExpandoDateNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoDateNode));
 
   node->type = NT_DATE;
   node->start = start;
@@ -77,9 +57,7 @@ static struct ExpandoNode *new_date_node(const char *start, const char *end,
 
 static struct ExpandoNode *new_pad_node(enum ExpandoPadType pad_type, char pad_char)
 {
-  struct ExpandoPadNode *node = calloc(1, sizeof(struct ExpandoPadNode));
-
-  VERIFY(node != NULL);
+  struct ExpandoPadNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoPadNode));
 
   node->type = NT_PAD;
   node->pad_type = pad_type;
@@ -92,12 +70,10 @@ static struct ExpandoNode *new_condition_node(struct ExpandoNode *condition,
                                               struct ExpandoNode *if_true,
                                               struct ExpandoNode *if_false)
 {
-  VERIFY(condition != NULL);
-  VERIFY(if_true != NULL);
+  assert(condition != NULL);
+  assert(if_true != NULL);
 
-  struct ExpandoConditionNode *node = calloc(1, sizeof(struct ExpandoConditionNode));
-
-  VERIFY(node != NULL);
+  struct ExpandoConditionNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoConditionNode));
 
   node->type = NT_CONDITION;
   node->condition = condition;
@@ -109,9 +85,7 @@ static struct ExpandoNode *new_condition_node(struct ExpandoNode *condition,
 
 static struct ExpandoNode *new_index_format_hook_node(const char *start, const char *end)
 {
-  struct ExpandoIndexFormatHookNode *node = calloc(1, sizeof(struct ExpandoIndexFormatHookNode));
-
-  VERIFY(node != NULL);
+  struct ExpandoIndexFormatHookNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoIndexFormatHookNode));
 
   node->type = NT_INDEX_FORMAT_HOOK;
   node->start = start;
@@ -237,9 +211,7 @@ static const struct ExpandoFormat *parse_format(const char *start, const char *e
     return NULL;
   }
 
-  struct ExpandoFormat *format = calloc(1, sizeof(struct ExpandoFormat));
-
-  VERIFY(format != NULL);
+  struct ExpandoFormat *format = mutt_mem_calloc(1, sizeof(struct ExpandoFormat));
 
   format->leader = ' ';
   format->start = start;
@@ -256,7 +228,7 @@ static const struct ExpandoFormat *parse_format(const char *start, const char *e
         ++start;
         break;
 
-      // TODO(gmb): allow multibyte leader
+      // NOTE(gmb): multibyte leader?
       case '0':
         format->leader = '0';
         ++start;
@@ -323,7 +295,7 @@ static void check_if_expando_is_valid(const char *start, const char *end,
   {
     for (size_t i = 0; valid_short_expandos[i] != NULL; ++i)
     {
-      int len = strlen(valid_short_expandos[i]);
+      const int len = strlen(valid_short_expandos[i]);
       if (strncmp(start, valid_short_expandos[i], len) == 0)
       {
         /* valid */
@@ -341,7 +313,7 @@ static void check_if_expando_is_valid(const char *start, const char *end,
   {
     for (size_t i = 0; valid_long_expandos[i] != NULL; ++i)
     {
-      int len = strlen(valid_long_expandos[i]);
+      const int len = strlen(valid_long_expandos[i]);
       if (strncmp(start, valid_long_expandos[i], len) == 0)
       {
         /* valid */
@@ -588,7 +560,7 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
 
 static void print_text_node(FILE *fp, const struct ExpandoTextNode *n, int indent)
 {
-  int len = n->end - n->start;
+  const int len = n->end - n->start;
   fprintf(fp, "%*sTEXT: `%.*s`\n", indent, "", len, n->start);
 }
 
@@ -596,7 +568,7 @@ static void print_expando_node(FILE *fp, const struct ExpandoExpandoNode *n, int
 {
   if (n->format)
   {
-    int elen = n->end - n->start;
+    const int elen = n->end - n->start;
     const struct ExpandoFormat *f = n->format;
     fprintf(fp, "%*sEXPANDO: `%.*s`", indent, "", elen, n->start);
 
@@ -605,14 +577,14 @@ static void print_expando_node(FILE *fp, const struct ExpandoExpandoNode *n, int
   }
   else
   {
-    int len = n->end - n->start;
+    const int len = n->end - n->start;
     fprintf(fp, "%*sEXPANDO: `%.*s`\n", indent, "", len, n->start);
   }
 }
 
 static void print_date_node(FILE *fp, const struct ExpandoDateNode *n, int indent)
 {
-  int len = n->end - n->start;
+  const int len = n->end - n->start;
   const char *dt = NULL;
 
   switch (n->date_type)
@@ -630,7 +602,7 @@ static void print_date_node(FILE *fp, const struct ExpandoDateNode *n, int inden
       break;
 
     default:
-      ERROR("Unknown date type: %d\n", n->date_type);
+      assert(0 && "Unknown date type.");
   }
 
   fprintf(fp, "%*sDATE: `%.*s` (type=%s, ignore_locale=%d)\n", indent, "", len,
@@ -655,7 +627,7 @@ static void print_pad_node(FILE *fp, const struct ExpandoPadNode *n, int indent)
       break;
 
     default:
-      ERROR("Unknown pad type: %d\n", n->pad_type);
+      assert(0 && "Unknown pad type.");
   }
 
   fprintf(fp, "%*sPAD: `%c` (type=%s)\n", indent, "", n->pad_char, pt);
@@ -678,7 +650,7 @@ static void print_condition_node(FILE *fp, const struct ExpandoConditionNode *n,
 static void print_index_format_hook_node(FILE *fp,
                                          const struct ExpandoIndexFormatHookNode *n, int indent)
 {
-  int len = n->end - n->start;
+  const int len = n->end - n->start;
   fprintf(fp, "%*sINDEX FORMAT HOOK: `%.*s`\n", indent, "", len, n->start);
 }
 
@@ -735,7 +707,7 @@ static void print_node(FILE *fp, const struct ExpandoNode *n, int indent)
     break;
 
     default:
-      ERROR("Unknown node: %d\n", n->type);
+      assert(0 && "Unknown node.");
   }
 }
 
@@ -791,7 +763,7 @@ static void free_node(struct ExpandoNode *n)
     break;
 
     default:
-      ERROR("Unknown node: %d\n", n->type);
+      assert(0 && "Unknown node.");
   }
 }
 
