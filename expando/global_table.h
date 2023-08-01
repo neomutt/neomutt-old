@@ -3,10 +3,17 @@
 
 #include "parser.h"
 
+/**
+ * struct ExpandoRecord - parsed expando trees
+ *
+ * The text data is stored in the tree as a pair of pointers (start, end)
+ * NOT as a null-terminated string, to avoid memory allocations.
+ * This is why the pointer of the PARSED string is required alongside the tree.
+ */
 struct ExpandoRecord
 {
-  const char *string;
-  struct ExpandoNode *tree;
+  const char *string;       ///< Pointer to the parsed string
+  struct ExpandoNode *tree; ///< Parsed tree
 };
 
 enum ExpandoFormatIndex

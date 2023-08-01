@@ -93,6 +93,7 @@ void neomutt_free(struct NeoMutt **ptr)
   notify_free(&n->notify);
   if (n->time_c_locale)
     freelocale(n->time_c_locale);
+  FREE(n->expando_table);
 
   FREE(ptr);
 }
