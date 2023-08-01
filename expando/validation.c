@@ -156,7 +156,7 @@ static const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT] = {
 
 bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct Buffer *err)
 {
-  for (enum ExpandoFormatIndex i = EFMT_ALIAS_FORMAT; i < EFMT_FORMAT_COUNT; ++i)
+  for (int i = 0; i < EFMT_FORMAT_COUNT; ++i)
   {
     if (mutt_str_equal(name->data, expando_validation[i].name))
     {

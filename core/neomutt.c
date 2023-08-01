@@ -93,6 +93,20 @@ void neomutt_free(struct NeoMutt **ptr)
   notify_free(&n->notify);
   if (n->time_c_locale)
     freelocale(n->time_c_locale);
+
+  for (int i = 0; i < EFMT_FORMAT_COUNT; ++i)
+  {
+    if (n->expando_table[i].string)
+    {
+      FREE((char *) n->expando_table[i].string);
+    }
+
+    if (n->expando_table[i].tree)
+    {
+      expando_tree_free(&n->expando_table[i].tree);
+    }
+  }
+
   FREE(n->expando_table);
 
   FREE(ptr);
