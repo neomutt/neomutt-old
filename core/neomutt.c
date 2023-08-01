@@ -100,7 +100,7 @@ void neomutt_free(struct NeoMutt **ptr)
     {
       if (n->expando_table[i].string)
       {
-        FREE((char *) n->expando_table[i].string);
+        FREE(&n->expando_table[i].string);
       }
 
       if (n->expando_table[i].tree)

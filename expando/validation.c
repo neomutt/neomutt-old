@@ -176,8 +176,7 @@ bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct B
         buf_printf(err, _("$%s: %s\nDefault value will be used."), name->data,
                    error.message);
         expando_tree_free(&root);
-        // NOTE(g0mb4): segfaults on free
-        // FREE((char *) input);
+        // FREE(&input);
         return false;
       }
 
