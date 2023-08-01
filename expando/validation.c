@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "core/neomutt.h"
 #include "mutt.h"
 #include "validation.h"
@@ -159,7 +160,10 @@ bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct B
   {
     if (mutt_str_equal(name->data, expando_validation[i].name))
     {
-      const char *input = mutt_str_dup(value->data);
+      const char *input = buf_strdup(value);
+      // FIXME(g0mb4): fails in ASAN, why ???
+      assert(input);
+
       struct ExpandoParseError error = { 0 };
       struct ExpandoNode *root = NULL;
 
@@ -172,7 +176,7 @@ bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct B
                    error.message);
         expando_tree_free(&root);
         // NOTE(g0mb4): segfaults on free
-        //FREE(input);
+        FREE((char *) input);
         return false;
       }
 

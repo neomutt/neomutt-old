@@ -772,6 +772,9 @@ void expando_tree_parse(struct ExpandoNode **root, const char **string,
                         const char *valid_two_char_expandos[],
                         const char *valid_long_expandos[], struct ExpandoParseError *error)
 {
+  assert(string != NULL);
+  assert(*string != NULL);
+
   const char *end = NULL;
   const char *start = *string;
   while (*start)
