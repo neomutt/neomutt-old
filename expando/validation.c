@@ -160,9 +160,10 @@ bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct B
   {
     if (mutt_str_equal(name->data, expando_validation[i].name))
     {
-      const char *input = buf_strdup(value);
-      // FIXME(g0mb4): fails in ASAN, why ???
-      assert(input);
+      // FIXME(g0mb4): why does it fail ???
+      // const char *input = buf_strdup(value);
+      // assert(input);
+      const char *input = value->data;
 
       struct ExpandoParseError error = { 0 };
       struct ExpandoNode *root = NULL;
@@ -176,10 +177,11 @@ bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct B
                    error.message);
         expando_tree_free(&root);
         // NOTE(g0mb4): segfaults on free
-        FREE((char *) input);
+        // FREE((char *) input);
         return false;
       }
 
+      // FIXME(g0mb4): input shoud be strdup()-ed before parse to be saved....
       NeoMutt->expando_table[i].string = input;
       NeoMutt->expando_table[i].tree = root;
       return true;
