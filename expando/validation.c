@@ -51,8 +51,8 @@ bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct B
       }
 
       // NOTE(g0mb4): no nedd to free(), since they are "global"
-      NeoMutt->expando_table.table[i].string = input;
-      NeoMutt->expando_table.table[i].tree = root;
+      NeoMutt->expando_table[i].string = input;
+      NeoMutt->expando_table[i].tree = root;
       return true;
     }
   }

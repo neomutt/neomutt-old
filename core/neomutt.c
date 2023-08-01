@@ -70,6 +70,8 @@ struct NeoMutt *neomutt_new(struct ConfigSet *cs)
   n->notify_resize = notify_new();
   notify_set_parent(n->notify_resize, n->notify);
 
+  n->expando_table = mutt_mem_calloc(EFMT_FORMAT_COUNT, sizeof(struct ExpandoRecord));
+
   return n;
 }
 

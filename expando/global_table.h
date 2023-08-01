@@ -17,11 +17,4 @@ enum ExpandoFormatIndex
   EFMT_FORMAT_COUNT,
 };
 
-// TODO(g0mb4): Rethink this
-// this struct lives in NeoMutt global object
-struct ExpandoTable
-{
-  struct ExpandoRecord table[EFMT_FORMAT_COUNT];
-};
-
 #endif
