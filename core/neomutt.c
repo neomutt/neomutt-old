@@ -107,7 +107,7 @@ void neomutt_free(struct NeoMutt **ptr)
     }
   }
 
-  FREE(n->expando_table);
+  FREE(&n->expando_table);
 
   FREE(ptr);
 }
