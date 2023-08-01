@@ -420,7 +420,7 @@ $(PWD)/envelope:
 ###############################################################################
 # libexpando
 LIBEXPANDO=	libexpando.a
-LIBEXPANDOOBJS=	expando/parser.o expando/helpers.o expando/validation.o
+LIBEXPANDOOBJS=	expando/parser.o expando/helpers.o expando/validation.o expando/global_table.o
 CLEANFILES+=	$(LIBEXPANDO) $(LIBEXPANDOOBJS)
 ALLOBJS+=	$(LIBEXPANDOOBJS)
 

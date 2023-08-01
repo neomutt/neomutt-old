@@ -76,4 +76,7 @@ enum ExpandoFormatIndex
   EFMT_FORMAT_COUNT,
 };
 
+struct ExpandoRecord *expando_global_table_new(void);
+void expando_global_table_free(struct ExpandoRecord **table);
+
 #endif

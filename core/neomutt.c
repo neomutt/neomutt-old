@@ -70,7 +70,7 @@ struct NeoMutt *neomutt_new(struct ConfigSet *cs)
   n->notify_resize = notify_new();
   notify_set_parent(n->notify_resize, n->notify);
 
-  n->expando_table = mutt_mem_calloc(EFMT_FORMAT_COUNT, sizeof(struct ExpandoRecord));
+  n->expando_table = expando_global_table_new();
 
   return n;
 }
@@ -94,23 +94,7 @@ void neomutt_free(struct NeoMutt **ptr)
   if (n->time_c_locale)
     freelocale(n->time_c_locale);
 
-  if (n->expando_table)
-  {
-    for (int i = 0; i < EFMT_FORMAT_COUNT; ++i)
-    {
-      if (n->expando_table[i].string)
-      {
-        FREE((char *) n->expando_table[i].string);
-      }
-
-      if (n->expando_table[i].tree)
-      {
-        expando_tree_free(&n->expando_table[i].tree);
-      }
-    }
-
-    FREE(&n->expando_table);
-  }
+  expando_global_table_free(&n->expando_table);
 
   FREE(ptr);
 }

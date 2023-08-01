@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "mutt/lib.h"
+#include "mutt/memory.h"
 
 static void free_node(struct ExpandoNode *n);
 static void print_node(FILE *fp, const struct ExpandoNode *n, int indent);
@@ -96,27 +97,27 @@ static struct ExpandoNode *new_index_format_hook_node(const char *start, const c
 
 static void free_text_node(struct ExpandoTextNode *n)
 {
-  free(n);
+  FREE(&n);
 }
 
 static void free_date_node(struct ExpandoDateNode *n)
 {
-  free(n);
+  FREE(&n);
 }
 
 static void free_expando_node(struct ExpandoExpandoNode *n)
 {
   if (n->format)
   {
-    free((struct ExpandoFormat *) n->format);
+    FREE(&n->format);
   }
 
-  free(n);
+  FREE(&n);
 }
 
 static void free_pad_node(struct ExpandoPadNode *n)
 {
-  free(n);
+  FREE(&n);
 }
 
 static void free_condition_node(struct ExpandoConditionNode *n)
@@ -136,12 +137,12 @@ static void free_condition_node(struct ExpandoConditionNode *n)
     free_node(n->if_false);
   }
 
-  free(n);
+  FREE(&n);
 }
 
 static void free_index_format_hook_node(struct ExpandoIndexFormatHookNode *n)
 {
-  free(n);
+  FREE(&n);
 }
 
 static void append_node(struct ExpandoNode **root, struct ExpandoNode *new_node)
