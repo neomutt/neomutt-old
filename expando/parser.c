@@ -187,9 +187,15 @@ static void append_node(struct ExpandoNode **root, struct ExpandoNode *new_node)
   n->next = new_node;
 }
 
+static const bool is_valid_classic_expando(char c)
+{
+  // $sidebar_format
+  return isalpha(c) || c == '!';
+}
+
 static const char *skip_until_classic_expando(const char *start)
 {
-  while (*start && !isalpha(*start))
+  while (*start && !is_valid_classic_expando(*start))
   {
     ++start;
   }
@@ -197,6 +203,7 @@ static const char *skip_until_classic_expando(const char *start)
   return start;
 }
 
+// NOTE(g0mb4): no multibyte classic expando is allowed
 static const char *skip_classic_expando(const char *s, const char *valid_two_char_expandos[])
 {
   for (size_t i = 0; valid_two_char_expandos && valid_two_char_expandos[i] != NULL; ++i)
