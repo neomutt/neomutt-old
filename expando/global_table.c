@@ -5,7 +5,6 @@
 struct ExpandoRecord *expando_global_table_new(void)
 {
   struct ExpandoRecord *t = mutt_mem_calloc(EFMT_FORMAT_COUNT, sizeof(struct ExpandoRecord));
-  assert(t);
   return t;
 }
 
@@ -25,8 +24,7 @@ void expando_global_table_free(struct ExpandoRecord **ptr)
 
     if (r->string)
     {
-      // FIXME(g0mb4): uncomment it
-      //FREE(&r->string);
+      FREE(&r->string);
     }
   }
 
