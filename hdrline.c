@@ -65,17 +65,6 @@
 #endif
 
 /**
- * struct HdrFormatInfo - Data passed to index_format_str()
- */
-struct HdrFormatInfo
-{
-  struct Mailbox *mailbox;    ///< Current Mailbox
-  int msg_in_pager;           ///< Index of Email displayed in the Pager
-  struct Email *email;        ///< Current Email
-  const char *pager_progress; ///< String representing Pager position through Email
-};
-
-/**
  * enum FieldType - Header types
  *
  * Strings for printing headers

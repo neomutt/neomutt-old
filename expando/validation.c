@@ -3,87 +3,114 @@
 #include "mutt.h"
 #include "validation.h"
 
-static const char *alias_1[] = {
-  "a", "c", "f", "n", "r", "t", NULL,
+#include "index_format_callbacks.h"
+
+static const struct ExpandoFormatCallback alias_1[] = {
+  { "a", NULL }, { "c", NULL }, { "f", NULL },  { "n", NULL },
+  { "r", NULL }, { "t", NULL }, { NULL, NULL },
 };
 
-static const char *attach_1[] = {
-  "c", "C", "d", "D", "e", "f", "F", "I", "m",
-  "M", "n", "Q", "s", "t", "T", "u", "X", NULL,
+static const struct ExpandoFormatCallback attach_1[] = {
+  { "c", NULL }, { "C", NULL }, { "d", NULL },  { "D", NULL }, { "e", NULL },
+  { "f", NULL }, { "F", NULL }, { "I", NULL },  { "m", NULL }, { "M", NULL },
+  { "n", NULL }, { "Q", NULL }, { "s", NULL },  { "t", NULL }, { "T", NULL },
+  { "u", NULL }, { "X", NULL }, { NULL, NULL },
 };
 
-static const char *autocrypt_acct_1[] = {
-  "a", "k", "n", "p", "s", NULL,
+static const struct ExpandoFormatCallback autocrypt_acct_1[] = {
+  { "a", NULL }, { "k", NULL }, { "n", NULL },
+  { "p", NULL }, { "s", NULL }, { NULL, NULL },
 };
 
-static const char *compose_1[] = {
-  "a", "h", "l", "v", NULL,
+static const struct ExpandoFormatCallback compose_1[] = {
+  { "a", NULL }, { "h", NULL }, { "l", NULL }, { "v", NULL }, { NULL, NULL },
 };
 
-static const char *pgp_entry_1[] = {
-  "n", "p", "t", "u", "a", "A", "c", "C",  "f",
-  "F", "i", "I", "k", "K", "l", "L", NULL,
+static const struct ExpandoFormatCallback pgp_entry_1[] = {
+  { "n", NULL }, { "p", NULL },  { "t", NULL }, { "u", NULL }, { "a", NULL },
+  { "A", NULL }, { "c", NULL },  { "C", NULL }, { "f", NULL }, { "F", NULL },
+  { "i", NULL }, { "I", NULL },  { "k", NULL }, { "K", NULL }, { "l", NULL },
+  { "L", NULL }, { NULL, NULL },
 };
 
-static const char *folder_1[] = {
-  "C", "d", "D", "f", "F", "g", "i", "l", "m", "n", "N", "s", "t", "u", NULL,
+static const struct ExpandoFormatCallback folder_1[] = {
+  { "C", NULL }, { "d", NULL }, { "D", NULL }, { "f", NULL }, { "F", NULL },
+  { "g", NULL }, { "i", NULL }, { "l", NULL }, { "m", NULL }, { "n", NULL },
+  { "N", NULL }, { "s", NULL }, { "t", NULL }, { "u", NULL }, { NULL, NULL },
 };
 
-static const char *greeting_1[] = {
-  "n",
-  "u",
-  "v",
-  NULL,
+static const struct ExpandoFormatCallback greeting_1[] = {
+  { "n", NULL },
+  { "u", NULL },
+  { "v", NULL },
+  { NULL, NULL },
 };
 
-static const char *group_index_1[] = {
-  "C", "d", "f", "M", "N", "n", "s", NULL,
+static const struct ExpandoFormatCallback group_index_1[] = {
+  { "C", NULL }, { "d", NULL }, { "f", NULL }, { "M", NULL },
+  { "N", NULL }, { "n", NULL }, { "s", NULL }, { NULL, NULL },
 };
 
-static const char *index_1[] = {
-  "a", "A", "b", "B", "c", "C", "d", "D", "e", "E", "f", "F", "g", "H",
-  "i", "I", "J", "K", "l", "L", "m", "M", "n", "N", "O", "P", "q", "r",
-  "R", "s", "S", "t", "T", "u", "v", "W", "x", "X", "y", "Y", "Z", NULL,
+static const struct ExpandoFormatCallback index_1[] = {
+  { "a", NULL },    { "A", NULL },  { "b", NULL }, { "B", NULL }, { "c", NULL },
+  { "C", index_C }, { "d", NULL },  { "D", NULL }, { "e", NULL }, { "E", NULL },
+  { "f", NULL },    { "F", NULL },  { "g", NULL }, { "H", NULL }, { "i", NULL },
+  { "I", NULL },    { "J", NULL },  { "K", NULL }, { "l", NULL }, { "L", NULL },
+  { "m", NULL },    { "M", NULL },  { "n", NULL }, { "N", NULL }, { "O", NULL },
+  { "P", NULL },    { "q", NULL },  { "r", NULL }, { "R", NULL }, { "s", NULL },
+  { "S", NULL },    { "t", NULL },  { "T", NULL }, { "u", NULL }, { "v", NULL },
+  { "W", NULL },    { "x", NULL },  { "X", NULL }, { "y", NULL }, { "Y", NULL },
+  { "Z", NULL },    { NULL, NULL },
 };
 
-static const char *index_2[] = {
-  "cr", "Fp", "Gx", "zc", "zs", "zt", NULL,
+static const struct ExpandoFormatCallback index_2[] = {
+  { "cr", NULL }, { "Fp", NULL }, { "Gx", NULL }, { "zc", NULL },
+  { "zs", NULL }, { "zt", NULL }, { NULL, NULL },
 };
 
-static const char *mix_entry_1[] = {
-  "a", "c", "n", "s", NULL,
+static const struct ExpandoFormatCallback mix_entry_1[] = {
+  { "a", NULL }, { "c", NULL }, { "n", NULL }, { "s", NULL }, { NULL, NULL },
 };
 
-static const char *inews_1[] = {
-  "a", "p", "P", "s", "S", "u", NULL,
+static const struct ExpandoFormatCallback inews_1[] = {
+  { "a", NULL }, { "p", NULL }, { "P", NULL },  { "s", NULL },
+  { "S", NULL }, { "u", NULL }, { NULL, NULL },
 };
 
-static const char *pattern_1[] = {
-  "d",
-  "e",
-  "n",
-  NULL,
+static const struct ExpandoFormatCallback pattern_1[] = {
+  { "d", NULL },
+  { "e", NULL },
+  { "n", NULL },
+  { NULL, NULL },
 };
 
-static const char *pgp_command_1[] = {
-  "a", "f", "p", "r", "s", NULL,
+static const struct ExpandoFormatCallback pgp_command_1[] = {
+  { "a", NULL }, { "f", NULL }, { "p", NULL },
+  { "r", NULL }, { "s", NULL }, { NULL, NULL },
 };
 
-static const char *query_1[] = {
-  "a", "c", "e", "n", "t", NULL,
+static const struct ExpandoFormatCallback query_1[] = {
+  { "a", NULL }, { "c", NULL }, { "e", NULL },
+  { "n", NULL }, { "t", NULL }, { NULL, NULL },
 };
 
-static const char *sidebar_1[] = {
-  "!", "B", "d", "D", "F", "L", "n", "N", "o", "r", "S", "t", "Z", NULL,
+static const struct ExpandoFormatCallback sidebar_1[] = {
+  { "!", NULL }, { "B", NULL }, { "d", NULL }, { "D", NULL },  { "F", NULL },
+  { "L", NULL }, { "n", NULL }, { "N", NULL }, { "o", NULL },  { "r", NULL },
+  { "S", NULL }, { "t", NULL }, { "Z", NULL }, { NULL, NULL },
 };
 
-static const char *smime_command_1[] = {
-  "a", "c", "C", "d", "f", "i", "k", "s", NULL,
+static const struct ExpandoFormatCallback smime_command_1[] = {
+  { "a", NULL }, { "c", NULL }, { "C", NULL }, { "d", NULL },  { "f", NULL },
+  { "i", NULL }, { "k", NULL }, { "s", NULL }, { NULL, NULL },
 };
 
-static const char *status_1[] = {
-  "b", "d", "D", "f", "F", "h", "l", "L", "m", "M", "n", "o",
-  "p", "P", "r", "R", "s", "S", "t", "T", "u", "v", "V", NULL,
+static const struct ExpandoFormatCallback status_1[] = {
+  { "b", NULL }, { "d", NULL }, { "D", NULL }, { "f", NULL },  { "F", NULL },
+  { "h", NULL }, { "l", NULL }, { "L", NULL }, { "m", NULL },  { "M", NULL },
+  { "n", NULL }, { "o", NULL }, { "p", NULL }, { "P", NULL },  { "r", NULL },
+  { "R", NULL }, { "s", NULL }, { "S", NULL }, { "t", NULL },  { "T", NULL },
+  { "u", NULL }, { "v", NULL }, { "V", NULL }, { NULL, NULL },
 };
 
 const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT] = {

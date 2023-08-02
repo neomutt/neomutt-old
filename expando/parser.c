@@ -7,6 +7,7 @@
 #include "format_callbacks.h"
 #include "helpers.h"
 #include "parser.h"
+#include "validation.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -33,7 +34,8 @@ static struct ExpandoNode *new_text_node(const char *start, const char *end)
 }
 
 static struct ExpandoNode *new_expando_node(const char *start, const char *end,
-                                            const struct ExpandoFormat *format)
+                                            const struct ExpandoFormat *format,
+                                            expando_format_callback cb)
 {
   struct ExpandoExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoExpandoNode));
 
@@ -41,6 +43,7 @@ static struct ExpandoNode *new_expando_node(const char *start, const char *end,
   node->start = start;
   node->end = end;
   node->format = format;
+  node->format_cb = cb;
 
   return (struct ExpandoNode *) node;
 }
@@ -184,11 +187,12 @@ static const char *skip_until_classic_expando(const char *start)
 }
 
 // NOTE(g0mb4): no multibyte classic expando is allowed
-static const char *skip_classic_expando(const char *s, const char *valid_two_char_expandos[])
+static const char *skip_classic_expando(const char *s, const struct ExpandoFormatCallback *valid_two_char_expandos)
 {
-  for (size_t i = 0; valid_two_char_expandos && valid_two_char_expandos[i] != NULL; ++i)
+  for (size_t i = 0; valid_two_char_expandos && valid_two_char_expandos[i].name != NULL; ++i)
   {
-    if (valid_two_char_expandos[i][0] == *s && valid_two_char_expandos[i][1] == *(s + 1))
+    if (valid_two_char_expandos[i].name[0] == *s &&
+        valid_two_char_expandos[i].name[1] == *(s + 1))
     {
       s++;
       break;
@@ -292,53 +296,75 @@ static const struct ExpandoFormat *parse_format(const char *start, const char *e
   return format;
 }
 
-static void check_if_expando_is_valid(const char *start, const char *end,
-                                      const char *valid_short_expandos[],
-                                      const char *valid_long_expandos[],
-                                      struct ExpandoParseError *error)
+static expando_format_callback
+check_if_expando_is_valid(const char *start, const char *end,
+                          const struct ExpandoFormatCallback *valid_short_expandos,
+                          const struct ExpandoFormatCallback *valid_two_char_expandos,
+                          const struct ExpandoFormatCallback *valid_long_expandos,
+                          struct ExpandoParseError *error)
 {
   if (valid_short_expandos && mb_strlen_range(start, end) == 1)
   {
-    for (size_t i = 0; valid_short_expandos[i] != NULL; ++i)
+    for (size_t i = 0; valid_short_expandos[i].name != NULL; ++i)
     {
-      const int len = strlen(valid_short_expandos[i]);
-      if (strncmp(start, valid_short_expandos[i], len) == 0)
+      const int len = strlen(valid_short_expandos[i].name);
+      if (strncmp(start, valid_short_expandos[i].name, len) == 0)
       {
-        /* valid */
-        return;
+        // TODO(g0mb4): enable assert
+        // assert(valid_short_expandos[i].callback);
+        return valid_short_expandos[i].callback;
       }
     }
 
     error->position = start;
     const int len = end - start;
     snprintf(error->message, sizeof(error->message), "Invalid expando: `%.*s`.", len, start);
-    return;
+    return NULL;
+  }
+
+  if (valid_two_char_expandos && mb_strlen_range(start, end) > 1)
+  {
+    for (size_t i = 0; valid_two_char_expandos[i].name != NULL; ++i)
+    {
+      const int len = strlen(valid_two_char_expandos[i].name);
+      if (strncmp(start, valid_two_char_expandos[i].name, len) == 0)
+      {
+        return valid_two_char_expandos[i].callback;
+      }
+    }
+
+    error->position = start;
+    const int len = end - start;
+    snprintf(error->message, sizeof(error->message), "Invalid expando: `%.*s`.", len, start);
+    return NULL;
   }
 
   if (valid_long_expandos && mb_strlen_range(start, end) > 1)
   {
-    for (size_t i = 0; valid_long_expandos[i] != NULL; ++i)
+    for (size_t i = 0; valid_long_expandos[i].name != NULL; ++i)
     {
-      const int len = strlen(valid_long_expandos[i]);
-      if (strncmp(start, valid_long_expandos[i], len) == 0)
+      const int len = strlen(valid_long_expandos[i].name);
+      if (strncmp(start, valid_long_expandos[i].name, len) == 0)
       {
-        /* valid */
-        return;
+        return valid_long_expandos[i].callback;
       }
     }
 
     error->position = start;
     const int len = end - start;
     snprintf(error->message, sizeof(error->message), "Invalid expando: `%.*s`.", len, start);
-    return;
+    return NULL;
   }
+
+  return NULL;
 }
 
 static struct ExpandoNode *
 parse_node(const char *s, enum ExpandoConditionStart condition_start,
-           const char **parsed_until, const char *valid_short_expandos[],
-           const char *valid_two_char_expandos[],
-           const char *valid_long_expandos[], struct ExpandoParseError *error)
+           const char **parsed_until, const struct ExpandoFormatCallback *valid_short_expandos,
+           const struct ExpandoFormatCallback *valid_two_char_expandos,
+           const struct ExpandoFormatCallback *valid_long_expandos,
+           struct ExpandoParseError *error)
 {
   while (*s)
   {
@@ -539,15 +565,16 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
           return NULL;
         }
 
-        check_if_expando_is_valid(format_end, expando_end, valid_short_expandos,
-                                  valid_long_expandos, error);
+        expando_format_callback callback = check_if_expando_is_valid(
+            format_end, expando_end, valid_short_expandos,
+            valid_two_char_expandos, valid_long_expandos, error);
         if (error->position != NULL)
         {
           return NULL;
         }
 
         *parsed_until = expando_end;
-        return new_expando_node(format_end, expando_end, format);
+        return new_expando_node(format_end, expando_end, format, callback);
       }
     }
     // text
@@ -775,9 +802,10 @@ static void free_node(struct ExpandoNode *n)
 }
 
 void expando_tree_parse(struct ExpandoNode **root, const char **string,
-                        const char *valid_short_expandos[],
-                        const char *valid_two_char_expandos[],
-                        const char *valid_long_expandos[], struct ExpandoParseError *error)
+                        const struct ExpandoFormatCallback *valid_short_expandos,
+                        const struct ExpandoFormatCallback *valid_two_char_expandos,
+                        const struct ExpandoFormatCallback *valid_long_expandos,
+                        struct ExpandoParseError *error)
 {
   assert(string != NULL);
   assert(*string != NULL);

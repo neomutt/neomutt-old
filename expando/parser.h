@@ -19,14 +19,14 @@ struct ExpandoNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
-  format_callback format_cb;
+  expando_format_callback format_cb;
 };
 
 struct ExpandoTextNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
-  format_callback format_cb;
+  expando_format_callback format_cb;
 
   const char *start;
   const char *end;
@@ -54,7 +54,7 @@ struct ExpandoExpandoNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
-  format_callback format_cb;
+  expando_format_callback format_cb;
 
   // can be used either fo %n or {name}
   const char *start;
@@ -74,7 +74,7 @@ struct ExpandoDateNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
-  format_callback format_cb;
+  expando_format_callback format_cb;
 
   const char *start;
   const char *end;
@@ -94,7 +94,7 @@ struct ExpandoPadNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
-  format_callback format_cb;
+  expando_format_callback format_cb;
 
   enum ExpandoPadType pad_type;
   const char *start;
@@ -111,7 +111,7 @@ struct ExpandoConditionNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
-  format_callback format_cb;
+  expando_format_callback format_cb;
 
   struct ExpandoNode *condition;
   struct ExpandoNode *if_true;
@@ -122,7 +122,7 @@ struct ExpandoIndexFormatHookNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
-  format_callback format_cb;
+  expando_format_callback format_cb;
 
   const char *start;
   const char *end;
@@ -134,10 +134,13 @@ struct ExpandoParseError
   const char *position;
 };
 
+struct ExpandoFormatCallback;
+
 void expando_tree_parse(struct ExpandoNode **root, const char **string,
-                        const char *valid_short_expandos[],
-                        const char *valid_two_char_expandos[],
-                        const char *valid_long_expandos[], struct ExpandoParseError *error);
+                        const struct ExpandoFormatCallback *valid_short_expandos,
+                        const struct ExpandoFormatCallback *valid_two_char_expandos,
+                        const struct ExpandoFormatCallback *valid_long_expandos,
+                        struct ExpandoParseError *error);
 void expando_tree_free(struct ExpandoNode **root);
 void expando_tree_print(FILE *fp, struct ExpandoNode **root);
 

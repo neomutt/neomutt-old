@@ -5,8 +5,9 @@
 
 struct ExpandoNode;
 
-typedef int (*format_callback)(const struct ExpandoNode *self, char *buf, int buflen,
-                               int col, int cols, intptr_t data, MuttFormatFlags flags);
+typedef int (*expando_format_callback)(const struct ExpandoNode *self,
+                                       char *buf, int buflen, int col, int cols,
+                                       intptr_t data, MuttFormatFlags flags);
 
 int text_format_callback(const struct ExpandoNode *self, char *buf, int buflen,
                          int col, int cols, intptr_t data, MuttFormatFlags flags);
