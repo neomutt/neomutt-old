@@ -91,8 +91,8 @@ struct ExpandoPadNode
   struct ExpandoNode *next;
 
   enum ExpandoPadType pad_type;
-  // TODO(g0mb4): allow multibyte chars
-  char pad_char;
+  const char *start;
+  const char *end;
 };
 
 enum ExpandoConditionStart

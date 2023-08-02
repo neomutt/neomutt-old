@@ -4,7 +4,7 @@
 #include <wchar.h>
 
 /**
- * mb_strlen_range - Measure a string's length (number of characers)
+ * mb_strlen_range - Measure a non null-terminated string's length (number of characers)
  * @param start      Start of the string
  * @param end        End of the string
  * @return int       Number of characters
@@ -13,7 +13,7 @@ int mb_strlen_range(const char *start, const char *end)
 {
   int len = 0;
   const char *s = start;
-  while (s < end)
+  while (*s && s < end)
   {
     if ((*s & 0xC0) != 0x80)
     {
@@ -26,7 +26,7 @@ int mb_strlen_range(const char *start, const char *end)
 }
 
 /**
- * mb_strwidth_range - Measure a string's display width (in screen columns)
+ * mb_strwidth_range - Measure a non null-terminated string's display width (in screen columns)
  * @param start     Start of the string
  * @param end       End of the string
  * @return int      Number of columns the string requires
@@ -37,7 +37,7 @@ int mb_strwidth_range(const char *start, const char *end)
   int len = 0;
   int width = 0;
   const char *s = start;
-  while (s < end)
+  while (*s && s < end)
   {
     if (mbtowc(&wc, s, MB_CUR_MAX) >= 0)
     {

@@ -56,13 +56,15 @@ static struct ExpandoNode *new_date_node(const char *start, const char *end,
   return (struct ExpandoNode *) node;
 }
 
-static struct ExpandoNode *new_pad_node(enum ExpandoPadType pad_type, char pad_char)
+static struct ExpandoNode *new_pad_node(enum ExpandoPadType pad_type,
+                                        const char *start, const char *end)
 {
   struct ExpandoPadNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoPadNode));
 
   node->type = NT_PAD;
   node->pad_type = pad_type;
-  node->pad_char = pad_char;
+  node->start = start;
+  node->end = end;
 
   return (struct ExpandoNode *) node;
 }
@@ -413,18 +415,18 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
         {
           pt = PT_SOFT_FILL;
         }
+        s++;
 
-        // TODO(gmb): allow multibyte character
-        char pad_char = *(s + 1);
-        if (pad_char == '\0')
+        int consumed = mbtowc(NULL, s, MB_CUR_MAX);
+        if (consumed <= 0)
         {
-          error->position = s + 1;
+          error->position = s;
           snprintf(error->message, sizeof(error->message), "Invalid padding character.");
           return NULL;
         }
 
-        *parsed_until = s + 2;
-        return new_pad_node(pt, pad_char);
+        *parsed_until = s + consumed;
+        return new_pad_node(pt, s, s + consumed);
       }
       // "%"
       else if (*s == '%')
@@ -631,7 +633,8 @@ static void print_pad_node(FILE *fp, const struct ExpandoPadNode *n, int indent)
       assert(0 && "Unknown pad type.");
   }
 
-  fprintf(fp, "%*sPAD: `%c` (type=%s)\n", indent, "", n->pad_char, pt);
+  const int len = n->end - n->start;
+  fprintf(fp, "%*sPAD: `%.*s` (type=%s)\n", indent, "", len, n->start, pt);
 }
 
 static void print_condition_node(FILE *fp, const struct ExpandoConditionNode *n, int indent)
