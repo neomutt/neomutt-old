@@ -65,14 +65,19 @@ void check_expando_node(struct ExpandoNode *node, const char *expando,
   }
 }
 
-void check_pad_node(struct ExpandoNode *node, char pad_char, enum ExpandoPadType pad_type)
+void check_pad_node(struct ExpandoNode *node, const char *pad_char, enum ExpandoPadType pad_type)
 {
   TEST_CHECK(node != NULL);
   TEST_CHECK(node->type == NT_PAD);
 
   struct ExpandoPadNode *p = (struct ExpandoPadNode *) node;
 
-  TEST_CHECK(p->pad_char == pad_char);
+  const int n = strlen(pad_char);
+  const int m = (int) (p->end - p->start);
+
+  TEST_CHECK(n == m);
+  TEST_CHECK(strncmp(p->start, pad_char, n) == 0);
+
   TEST_CHECK(p->pad_type == pad_type);
 }
 

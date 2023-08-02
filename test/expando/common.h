@@ -10,7 +10,8 @@ struct ExpandoNode *get_nth_node(struct ExpandoNode **root, int n);
 void check_text_node(struct ExpandoNode *node, const char *text);
 void check_expando_node(struct ExpandoNode *node, const char *expando,
                         const struct ExpandoFormat *format);
-void check_pad_node(struct ExpandoNode *node, char pad_char, enum ExpandoPadType pad_type);
+void check_pad_node(struct ExpandoNode *node, const char *pad_char,
+                    enum ExpandoPadType pad_type);
 void check_date_node(struct ExpandoNode *node, const char *inner_text,
                      enum ExpandoDateType date_type, bool ingnore_locale);
 void check_condition_node_head(struct ExpandoNode *node);
