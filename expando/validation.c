@@ -86,7 +86,7 @@ static const char *status_1[] = {
   "p", "P", "r", "R", "s", "S", "t", "T", "u", "v", "V", NULL,
 };
 
-static const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT] = {
+const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT] = {
   [EFMT_ALIAS_FORMAT] = { "alias_format", alias_1, NULL, },
   [EFMT_ATTACH_FORMAT] = { "attach_format", attach_1, NULL },
   [EFMT_AUTOCRYPT_ACCT_FORMAT]

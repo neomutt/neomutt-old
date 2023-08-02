@@ -55,6 +55,7 @@
 #include "ncrypt/lib.h"
 #include "parse/lib.h"
 #include "question/lib.h"
+#include "expando/parser.h"
 #include "format_flags.h"
 #include "globals.h" // IWYU pragma: keep
 #include "hook.h"
@@ -1736,5 +1737,20 @@ void remove_from_stailq(struct ListHead *head, const char *str)
         break;
       }
     }
+  }
+}
+
+void mutt_expando_format_tree(char *buf, size_t buflen, size_t col, int cols,
+                              struct ExpandoNode **tree, intptr_t data, MuttFormatFlags flags)
+{
+  const struct ExpandoNode *n = *tree;
+  int start_col = col;
+  while (n && start_col < cols)
+  {
+    if (n->format_cb)
+    {
+      start_col += n->format_cb(n, buf, buflen, start_col, cols, data, flags);
+    }
+    n = n->next;
   }
 }

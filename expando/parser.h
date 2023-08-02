@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include "format_callbacks.h"
 
 enum ExpandoNodeType
 {
@@ -18,12 +19,14 @@ struct ExpandoNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
+  format_callback format_cb;
 };
 
 struct ExpandoTextNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
+  format_callback format_cb;
 
   const char *start;
   const char *end;
@@ -51,6 +54,7 @@ struct ExpandoExpandoNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
+  format_callback format_cb;
 
   // can be used either fo %n or {name}
   const char *start;
@@ -70,6 +74,7 @@ struct ExpandoDateNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
+  format_callback format_cb;
 
   const char *start;
   const char *end;
@@ -89,6 +94,7 @@ struct ExpandoPadNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
+  format_callback format_cb;
 
   enum ExpandoPadType pad_type;
   const char *start;
@@ -105,6 +111,7 @@ struct ExpandoConditionNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
+  format_callback format_cb;
 
   struct ExpandoNode *condition;
   struct ExpandoNode *if_true;
@@ -115,6 +122,7 @@ struct ExpandoIndexFormatHookNode
 {
   enum ExpandoNodeType type;
   struct ExpandoNode *next;
+  format_callback format_cb;
 
   const char *start;
   const char *end;

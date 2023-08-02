@@ -30,6 +30,8 @@
  */
 
 #include "config.h"
+#include <assert.h>
+#include <locale.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -43,11 +45,14 @@
 #include "core/lib.h"
 #include "alias/lib.h"
 #include "gui/lib.h"
-#include "hdrline.h"
 #include "attach/lib.h"
 #include "color/lib.h"
 #include "ncrypt/lib.h"
+#include "expando/global_table.h"
+#include "expando/parser.h"
+#include "expando/validation.h"
 #include "format_flags.h"
+#include "hdrline.h"
 #include "hook.h"
 #include "maillist.h"
 #include "mutt_thread.h"
@@ -1435,4 +1440,42 @@ void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
   hfi.pager_progress = progress;
 
   mutt_expando_format(buf, buflen, 0, cols, s, index_format_str, (intptr_t) &hfi, flags);
+}
+
+// FIXME(g0mb4): Refactor this
+extern const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT];
+
+void mutt_make_string_tree(char *buf, size_t buflen, int cols,
+                           struct Mailbox *m, int inpgr, struct Email *e,
+                           MuttFormatFlags flags, const char *progress)
+{
+  struct HdrFormatInfo hfi = { 0 };
+
+  hfi.email = e;
+  hfi.mailbox = m;
+  hfi.msg_in_pager = inpgr;
+  hfi.pager_progress = progress;
+
+  if (!NeoMutt->expando_table[EFMT_INDEX_FORMAT].tree)
+  {
+    const char *c_index_format = cs_subset_string(NeoMutt->sub, "index_format");
+    const char *input = mutt_str_dup(c_index_format);
+    assert(input);
+
+    struct ExpandoParseError error = { 0 };
+    struct ExpandoNode *root = NULL;
+
+    expando_tree_parse(&root, &input, expando_validation[EFMT_INDEX_FORMAT].valid_short_expandos,
+                       expando_validation[EFMT_INDEX_FORMAT].valid_two_char_expandos,
+                       NULL, &error);
+
+    assert(error.position == NULL);
+
+    NeoMutt->expando_table[EFMT_INDEX_FORMAT].string = input;
+    NeoMutt->expando_table[EFMT_INDEX_FORMAT].tree = root;
+  }
+
+  mutt_expando_format_tree(buf, buflen, 0, cols,
+                           &NeoMutt->expando_table[EFMT_INDEX_FORMAT].tree,
+                           (intptr_t) &hfi, flags);
 }

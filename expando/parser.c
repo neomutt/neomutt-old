@@ -4,6 +4,7 @@
  * Tóth János
  */
 
+#include "format_callbacks.h"
 #include "helpers.h"
 #include "parser.h"
 
@@ -25,6 +26,8 @@ static struct ExpandoNode *new_text_node(const char *start, const char *end)
   node->type = NT_TEXT;
   node->start = start;
   node->end = end;
+
+  node->format_cb = text_format_callback;
 
   return (struct ExpandoNode *) node;
 }
