@@ -7,6 +7,7 @@
 
 enum ExpandoNodeType
 {
+  NT_EMPTY = 0,
   NT_TEXT,
   NT_EXPANDO,
   NT_DATE,

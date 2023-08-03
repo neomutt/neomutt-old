@@ -237,7 +237,8 @@ EXPANDO_OBJS	= test/expando/common.o \
 			test/expando/date.o \
 			test/expando/old_if_else.o \
 			test/expando/new_if_else.o \
-			test/expando/index_format_hook.o
+			test/expando/index_format_hook.o \
+			test/expando/empty.o
 
 FILE_OBJS	= test/file/common.o \
 		  test/file/buf_file_expand_fmt_quote.o \

@@ -20,6 +20,15 @@
 static void free_node(struct ExpandoNode *n);
 static void print_node(FILE *fp, const struct ExpandoNode *n, int indent);
 
+static struct ExpandoNode *new_empty_node(void)
+{
+  struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
+
+  node->type = NT_EMPTY;
+
+  return node;
+}
+
 static struct ExpandoNode *new_text_node(const char *start, const char *end)
 {
   struct ExpandoTextNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoTextNode));
@@ -101,6 +110,11 @@ static struct ExpandoNode *new_index_format_hook_node(const char *start, const c
   node->end = end;
 
   return (struct ExpandoNode *) node;
+}
+
+static void free_empty_node(struct ExpandoNode *n)
+{
+  FREE(&n);
 }
 
 static void free_text_node(struct ExpandoTextNode *n)
@@ -591,6 +605,11 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
   return NULL;
 }
 
+static void print_empty_node(FILE *fp, const struct ExpandoNode *n, int indent)
+{
+  fprintf(fp, "%*sEMPTY\n", indent, "");
+}
+
 static void print_text_node(FILE *fp, const struct ExpandoTextNode *n, int indent)
 {
   const int len = n->end - n->start;
@@ -698,6 +717,12 @@ static void print_node(FILE *fp, const struct ExpandoNode *n, int indent)
 
   switch (n->type)
   {
+    case NT_EMPTY:
+    {
+      print_empty_node(fp, n, indent);
+    }
+    break;
+
     case NT_TEXT:
     {
       const struct ExpandoTextNode *nn = (const struct ExpandoTextNode *) n;
@@ -754,6 +779,12 @@ static void free_node(struct ExpandoNode *n)
 
   switch (n->type)
   {
+    case NT_EMPTY:
+    {
+      free_empty_node(n);
+    }
+    break;
+
     case NT_TEXT:
     {
       struct ExpandoTextNode *nn = (struct ExpandoTextNode *) n;
@@ -807,8 +838,11 @@ void expando_tree_parse(struct ExpandoNode **root, const char **string,
                         const struct ExpandoFormatCallback *valid_long_expandos,
                         struct ExpandoParseError *error)
 {
-  assert(string != NULL);
-  assert(*string != NULL);
+  if (!string || !*string || !**string)
+  {
+    append_node(root, new_empty_node());
+    return;
+  }
 
   const char *end = NULL;
   const char *start = *string;

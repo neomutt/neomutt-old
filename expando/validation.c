@@ -183,17 +183,16 @@ const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT] = {
 
 bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct Buffer *err)
 {
-  if (!*value->data)
-  {
-    return true;
-  }
-
   for (int i = 0; i < EFMT_FORMAT_COUNT; ++i)
   {
     if (mutt_str_equal(name->data, expando_validation[i].name))
     {
-      const char *input = buf_strdup(value);
-      assert(input);
+      const char *input = NULL;
+      if (*value->data)
+      {
+        input = buf_strdup(value);
+        assert(input);
+      }
 
       struct ExpandoParseError error = { 0 };
       struct ExpandoNode *root = NULL;
@@ -206,7 +205,12 @@ bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct B
         buf_printf(err, _("$%s: %s\nDefault value will be used."), name->data,
                    error.message);
         expando_tree_free(&root);
-        FREE(&input);
+
+        if (*value->data)
+        {
+          FREE(&input);
+        }
+
         return false;
       }
 

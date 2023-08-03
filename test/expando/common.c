@@ -25,6 +25,12 @@ struct ExpandoNode *get_nth_node(struct ExpandoNode **root, int n)
   return NULL;
 }
 
+void check_empty_node(struct ExpandoNode *node)
+{
+  TEST_CHECK(node != NULL);
+  TEST_CHECK(node->type == NT_EMPTY);
+}
+
 void check_text_node(struct ExpandoNode *node, const char *text)
 {
   TEST_CHECK(node != NULL);

@@ -7,6 +7,7 @@
 #include "expando/parser.h"
 
 struct ExpandoNode *get_nth_node(struct ExpandoNode **root, int n);
+void check_empty_node(struct ExpandoNode *node);
 void check_text_node(struct ExpandoNode *node, const char *text);
 void check_expando_node(struct ExpandoNode *node, const char *expando,
                         const struct ExpandoFormat *format);
