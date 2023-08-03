@@ -1434,7 +1434,7 @@ void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
 // FIXME(g0mb4): Refactor this
 extern const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT];
 
-void mutt_make_string_tree(char *buf, size_t buflen, int cols,
+void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
                            struct Mailbox *m, int inpgr, struct Email *e,
                            MuttFormatFlags flags, const char *progress)
 {
@@ -1464,7 +1464,7 @@ void mutt_make_string_tree(char *buf, size_t buflen, int cols,
     NeoMutt->expando_table[EFMT_INDEX_FORMAT].tree = root;
   }
 
-  mutt_expando_format_tree(buf, buflen, 0, cols,
+  mutt_expando_format_2gmb(buf, buflen, 0, cols,
                            &NeoMutt->expando_table[EFMT_INDEX_FORMAT].tree,
                            (intptr_t) &hfi, flags);
 }

@@ -1740,7 +1740,7 @@ void remove_from_stailq(struct ListHead *head, const char *str)
   }
 }
 
-void mutt_expando_format_tree(char *buf, size_t buflen, size_t col, int cols,
+void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
                               struct ExpandoNode **tree, intptr_t data, MuttFormatFlags flags)
 {
   const struct ExpandoNode *n = *tree;
