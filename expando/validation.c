@@ -60,7 +60,7 @@ static const struct ExpandoFormatCallback index_1[] = {
   { "P", NULL },    { "q", NULL },  { "r", NULL }, { "R", NULL }, { "s", NULL },
   { "S", NULL },    { "t", NULL },  { "T", NULL }, { "u", NULL }, { "v", NULL },
   { "W", NULL },    { "x", NULL },  { "X", NULL }, { "y", NULL }, { "Y", NULL },
-  { "Z", NULL },    { NULL, NULL },
+  { "Z", index_Z }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback index_2[] = {

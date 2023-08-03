@@ -265,3 +265,19 @@ int mutt_copy_message(FILE *fp_out, struct Email *e, struct Message *msg,
 {
   return 0;
 }
+
+bool check_for_mailing_list(struct AddressList *al, const char *pfx, char *buf, int buflen)
+{
+  return false;
+}
+
+typedef uint8_t MuttThreadFlags;
+int mutt_traverse_thread(struct Email *e, MuttThreadFlags flag)
+{
+  return 0;
+}
+
+int mutt_thread_style(void)
+{
+  return 0;
+}

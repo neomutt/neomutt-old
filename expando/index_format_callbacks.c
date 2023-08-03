@@ -1,9 +1,13 @@
 #include <assert.h>
 #include "email/lib.h"
+#include "core/neomutt.h"
+#include "alias/lib.h"
+#include "gui/curs_lib.h"
 #include "color/color.h"
 #include "hdrline.h"
 #include "helpers.h"
 #include "index_format_callbacks.h"
+#include "maillist.h"
 #include "mutt_thread.h"
 #include "parser.h"
 
@@ -37,6 +41,77 @@ static size_t add_index_color_2gmb(char *buf, size_t buflen,
   return 2;
 }
 
+static bool thread_is_new_2gmb(struct Email *e)
+{
+  return e->collapsed && (e->num_hidden > 1) && (mutt_thread_contains_unread(e) == 1);
+}
+
+/**
+ * thread_is_old - Does the email thread contain any unread emails?
+ * @param e Email
+ * @retval true Thread contains unread mail
+ */
+static bool thread_is_old_2gmb(struct Email *e)
+{
+  return e->collapsed && (e->num_hidden > 1) && (mutt_thread_contains_unread(e) == 2);
+}
+
+static bool user_in_addr_2gmb(struct AddressList *al)
+{
+  struct Address *a = NULL;
+  TAILQ_FOREACH(a, al, entries)
+  if (mutt_addr_is_user(a))
+    return true;
+  return false;
+}
+
+static enum ToChars user_is_recipient_2gmb(struct Email *e)
+{
+  if (!e || !e->env)
+    return FLAG_CHAR_TO_NOT_IN_THE_LIST;
+
+  struct Envelope *env = e->env;
+
+  if (!e->recip_valid)
+  {
+    e->recip_valid = true;
+
+    if (mutt_addr_is_user(TAILQ_FIRST(&env->from)))
+    {
+      e->recipient = FLAG_CHAR_TO_ORIGINATOR;
+    }
+    else if (user_in_addr_2gmb(&env->to))
+    {
+      if (TAILQ_NEXT(TAILQ_FIRST(&env->to), entries) || !TAILQ_EMPTY(&env->cc))
+        e->recipient = FLAG_CHAR_TO_TO; /* non-unique recipient */
+      else
+        e->recipient = FLAG_CHAR_TO_UNIQUE; /* unique recipient */
+    }
+    else if (user_in_addr_2gmb(&env->cc))
+    {
+      e->recipient = FLAG_CHAR_TO_CC;
+    }
+    else if (check_for_mailing_list(&env->to, NULL, NULL, 0))
+    {
+      e->recipient = FLAG_CHAR_TO_SUBSCRIBED_LIST;
+    }
+    else if (check_for_mailing_list(&env->cc, NULL, NULL, 0))
+    {
+      e->recipient = FLAG_CHAR_TO_SUBSCRIBED_LIST;
+    }
+    else if (user_in_addr_2gmb(&env->reply_to))
+    {
+      e->recipient = FLAG_CHAR_TO_REPLY_TO;
+    }
+    else
+    {
+      e->recipient = FLAG_CHAR_TO_NOT_IN_THE_LIST;
+    }
+  }
+
+  return e->recipient;
+}
+
 void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
 {
@@ -51,6 +126,7 @@ void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
 
   size_t colorlen = add_index_color_2gmb(fmt, sizeof(fmt), flags, MT_COLOR_INDEX_NUMBER);
   // TODO(g0mb4): see if it can be generalised
+  // NOTE(g0mb4): do proper format mutt_format_s_x()
   if (node->format)
   {
     const int fmt_len = (int) (node->format->end - node->format->start);
@@ -64,6 +140,95 @@ void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
 
   add_index_color_2gmb(fmt + colorlen, sizeof(fmt) - colorlen, flags, MT_COLOR_INDEX);
   int printed = snprintf(*buffer, *buffer_len, fmt, e->msgno + 1);
+
+  *start_col = mb_strwidth_range(*buffer, *buffer + printed);
+  *buffer_len -= printed;
+  *buffer += printed;
+}
+
+void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  const struct ExpandoExpandoNode *node = (struct ExpandoExpandoNode *) self;
+
+  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
+  struct Email *e = hfi->email;
+  const size_t msg_in_pager = hfi->msg_in_pager;
+
+  const struct MbTable *c_crypt_chars = cs_subset_mbtable(NeoMutt->sub, "crypt_chars");
+  const struct MbTable *c_flag_chars = cs_subset_mbtable(NeoMutt->sub, "flag_chars");
+  const struct MbTable *c_to_chars = cs_subset_mbtable(NeoMutt->sub, "to_chars");
+  const bool threads = mutt_using_threads();
+
+  // TODO(g0mb4): handle *start_col != 0
+  char fmt[128];
+
+  const char *first = NULL;
+  if (threads && thread_is_new_2gmb(e))
+  {
+    first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW_THREAD);
+  }
+  else if (threads && thread_is_old_2gmb(e))
+  {
+    first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD_THREAD);
+  }
+  else if (e->read && (msg_in_pager != e->msgno))
+  {
+    if (e->replied)
+      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_REPLIED);
+    else
+      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_ZEMPTY);
+  }
+  else
+  {
+    if (e->old)
+      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD);
+    else
+      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW);
+  }
+
+  /* Marked for deletion; deleted attachments; crypto */
+  const char *second = NULL;
+  if (e->deleted)
+    second = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_DELETED);
+  else if (e->attach_del)
+    second = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_DELETED_ATTACH);
+  else if ((WithCrypto != 0) && (e->security & SEC_GOODSIGN))
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_GOOD_SIGN);
+  else if ((WithCrypto != 0) && (e->security & SEC_ENCRYPT))
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_ENCRYPTED);
+  else if ((WithCrypto != 0) && (e->security & SEC_SIGN))
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_SIGNED);
+  else if (((WithCrypto & APPLICATION_PGP) != 0) && (e->security & PGP_KEY))
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_CONTAINS_KEY);
+  else
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_NO_CRYPTO);
+
+  /* Tagged, flagged and recipient flag */
+  const char *third = NULL;
+  if (e->tagged)
+    third = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_TAGGED);
+  else if (e->flagged)
+    third = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_IMPORTANT);
+  else
+    third = mbtable_get_nth_wchar(c_to_chars, user_is_recipient_2gmb(e));
+
+  size_t colorlen = add_index_color_2gmb(fmt, sizeof(fmt), flags, MT_COLOR_INDEX_FLAGS);
+  // TODO(g0mb4): see if it can be generalised
+  // NOTE(g0mb4): do proper format with mutt_format_s_x()
+  if (node->format)
+  {
+    // NOTE(g0mb4): format is ignored
+    snprintf(fmt + colorlen, sizeof(fmt) - colorlen, "%%s%%s%%s");
+  }
+  else
+  {
+    snprintf(fmt + colorlen, sizeof(fmt) - colorlen, "%%s%%s%%s");
+  }
+
+  add_index_color_2gmb(fmt + colorlen, sizeof(fmt) - colorlen, flags, MT_COLOR_INDEX);
+  int printed = snprintf(*buffer, *buffer_len, fmt, first, second, third);
 
   *start_col = mb_strwidth_range(*buffer, *buffer + printed);
   *buffer_len -= printed;

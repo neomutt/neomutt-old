@@ -5,4 +5,7 @@
 
 void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags);
+
+void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags);
 #endif
