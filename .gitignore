@@ -47,7 +47,6 @@ hcache/hcversion.h
 *.tmp
 *~
 tags
-.vscode/
 asan.*
 .env
 
