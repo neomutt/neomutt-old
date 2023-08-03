@@ -141,7 +141,7 @@ void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   add_index_color_2gmb(fmt + colorlen, sizeof(fmt) - colorlen, flags, MT_COLOR_INDEX);
   int printed = snprintf(*buffer, *buffer_len, fmt, e->msgno + 1);
 
-  *start_col = mb_strwidth_range(*buffer, *buffer + printed);
+  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
   *buffer_len -= printed;
   *buffer += printed;
 }
@@ -230,7 +230,7 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   add_index_color_2gmb(fmt + colorlen, sizeof(fmt) - colorlen, flags, MT_COLOR_INDEX);
   int printed = snprintf(*buffer, *buffer_len, fmt, first, second, third);
 
-  *start_col = mb_strwidth_range(*buffer, *buffer + printed);
+  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
   *buffer_len -= printed;
   *buffer += printed;
 }

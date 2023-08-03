@@ -1745,10 +1745,11 @@ void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
 {
   const struct ExpandoNode *n = *tree;
 
-  // NOTE(g0mb4): These values will be overwritten.
   int start_col = col;
   int buffer_len = buflen;
 
+  // TODO(g0mb4): Calculate buffer's start position from `col`,
+  //              so the callback doesn't need to know about it.
   while (n && start_col < cols && buffer_len > 0)
   {
     if (n->format_cb)
