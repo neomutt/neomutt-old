@@ -1744,12 +1744,16 @@ void mutt_expando_format_tree(char *buf, size_t buflen, size_t col, int cols,
                               struct ExpandoNode **tree, intptr_t data, MuttFormatFlags flags)
 {
   const struct ExpandoNode *n = *tree;
+
+  // NOTE(g0mb4): These values will be overwritten.
   int start_col = col;
-  while (n && start_col < cols)
+  int buffer_len = buflen;
+
+  while (n && start_col < cols && buffer_len > 0)
   {
     if (n->format_cb)
     {
-      start_col += n->format_cb(n, buf, buflen, start_col, cols, data, flags);
+      n->format_cb(n, &buf, &buffer_len, &start_col, cols, data, flags);
     }
     n = n->next;
   }
