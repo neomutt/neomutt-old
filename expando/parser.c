@@ -4,9 +4,9 @@
  * Tóth János
  */
 
+#include "parser.h"
 #include "format_callbacks.h"
 #include "helpers.h"
-#include "parser.h"
 #include "validation.h"
 
 #include <assert.h>
@@ -706,4 +706,3 @@ void expando_tree_free(struct ExpandoNode **root)
     free_node(f);
   }
 }
-

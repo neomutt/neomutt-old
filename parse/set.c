@@ -34,12 +34,12 @@
 #include "config/lib.h"
 #include "core/lib.h"
 #include "mutt.h"
+#include "set.h"
 #include "commands.h"
 #include "expando/validation.h"
 #include "extract.h"
 #include "globals.h"
 #include "muttlib.h"
-#include "set.h"
 
 /**
  * command_set_expand_value - Expand special characters

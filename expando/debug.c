@@ -1,6 +1,6 @@
 #include "config.h"
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
 #include "parser.h"
 
 static void print_node(FILE *fp, const struct ExpandoNode *n, int indent);
