@@ -13,6 +13,9 @@ They have simply been moved to keep the main repository tidier.
 - [libenter-tests](https://github.com/neomutt/neomutt-old/tree/libenter-tests)  
   Test for handling emojis and unicode combine characters
 
+- [expando-parser](https://github.com/neomutt/neomutt-old/tree/expando-parser)  
+  History for [@g0mb4](https://github.com/g0mb4)'s new expando parser
+
 ## NeoMutt 2023-04-07
 
 - [io-uring](https://github.com/neomutt/neomutt-old/tree/io-uring)  
