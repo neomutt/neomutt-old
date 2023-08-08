@@ -14,11 +14,11 @@ void test_expando_old_if_else(void)
   {
     struct ExpandoNode *n = get_nth_node(&root, 1);
     check_condition_node_head(n);
-    struct ExpandoConditionNode *cond = (struct ExpandoConditionNode *) n;
+    struct ExpandoConditionPrivate *cond = (struct ExpandoConditionPrivate *) n->ndata;
 
     check_expando_node(cond->condition, "l", NULL);
 
-    struct ExpandoFormat fmt = { 0 };
+    struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 4;
     fmt.max = 0;
     fmt.justification = FMT_J_RIGHT;
@@ -32,11 +32,11 @@ void test_expando_old_if_else(void)
   {
     struct ExpandoNode *n = get_nth_node(&root, 3);
     check_condition_node_head(n);
-    struct ExpandoConditionNode *cond = (struct ExpandoConditionNode *) n;
+    struct ExpandoConditionPrivate *cond = (struct ExpandoConditionPrivate *) n->ndata;
 
     check_expando_node(cond->condition, "l", NULL);
 
-    struct ExpandoFormat fmt = { 0 };
+    struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 4;
     fmt.max = 0;
     fmt.justification = FMT_J_RIGHT;

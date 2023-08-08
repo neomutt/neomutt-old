@@ -4,13 +4,14 @@
 #define TEST_NO_MAIN
 #include "config.h"
 #include "acutest.h"
+#include "expando/node.h"
 #include "expando/parser.h"
 
 struct ExpandoNode *get_nth_node(struct ExpandoNode **root, int n);
 void check_empty_node(struct ExpandoNode *node);
 void check_text_node(struct ExpandoNode *node, const char *text);
 void check_expando_node(struct ExpandoNode *node, const char *expando,
-                        const struct ExpandoFormat *format);
+                        const struct ExpandoFormatPrivate *format);
 void check_pad_node(struct ExpandoNode *node, const char *pad_char,
                     enum ExpandoPadType pad_type);
 void check_date_node(struct ExpandoNode *node, const char *inner_text,

@@ -13,7 +13,7 @@ void test_expando_formatted_expando(void)
   check_text_node(get_nth_node(&root, 1), " ");
 
   {
-    struct ExpandoFormat fmt = { 0 };
+    struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 8;
     fmt.max = 0;
     fmt.justification = FMT_J_RIGHT;
@@ -23,7 +23,7 @@ void test_expando_formatted_expando(void)
   }
 
   {
-    struct ExpandoFormat fmt = { 0 };
+    struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 8;
     fmt.max = 0;
     fmt.justification = FMT_J_LEFT;
@@ -33,7 +33,7 @@ void test_expando_formatted_expando(void)
   }
 
   {
-    struct ExpandoFormat fmt = { 0 };
+    struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 8;
     fmt.max = 0;
     fmt.justification = FMT_J_RIGHT;
@@ -43,7 +43,7 @@ void test_expando_formatted_expando(void)
   }
 
   {
-    struct ExpandoFormat fmt = { 0 };
+    struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 0;
     fmt.max = 8;
     fmt.justification = FMT_J_RIGHT;
@@ -53,7 +53,7 @@ void test_expando_formatted_expando(void)
   }
 
   {
-    struct ExpandoFormat fmt = { 0 };
+    struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 8;
     fmt.max = 8;
     fmt.justification = FMT_J_RIGHT;
@@ -63,7 +63,7 @@ void test_expando_formatted_expando(void)
   }
 
   {
-    struct ExpandoFormat fmt = { 0 };
+    struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 8;
     fmt.max = 8;
     fmt.justification = FMT_J_LEFT;
