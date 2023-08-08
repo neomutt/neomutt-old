@@ -55,7 +55,7 @@
 #include "ncrypt/lib.h"
 #include "parse/lib.h"
 #include "question/lib.h"
-#include "expando/parser.h"
+#include "expando/node.h"
 #include "format_flags.h"
 #include "globals.h" // IWYU pragma: keep
 #include "hook.h"

@@ -3,10 +3,10 @@
 #include "core/neomutt.h"
 #include "alias/lib.h"
 #include "gui/curs_lib.h"
-#include "index_format_callbacks.h"
 #include "color/color.h"
 #include "hdrline.h"
 #include "helpers.h"
+#include "index_format_callbacks.h"
 #include "maillist.h"
 #include "mutt_thread.h"
 #include "parser.h"
@@ -116,22 +116,21 @@ void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
-  const struct ExpandoExpandoNode *node = (struct ExpandoExpandoNode *) self;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
   struct Email *e = hfi->email;
 
   // TODO(g0mb4): handle *start_col != 0
   char fmt[128];
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   size_t colorlen = add_index_color_2gmb(fmt, sizeof(fmt), flags, MT_COLOR_INDEX_NUMBER);
   // TODO(g0mb4): see if it can be generalised
   // NOTE(g0mb4): do proper format mutt_format_s_x()
-  if (node->format)
+  if (format)
   {
-    const int fmt_len = (int) (node->format->end - node->format->start);
-    snprintf(fmt + colorlen, sizeof(fmt) - colorlen, "%%%.*sd", fmt_len,
-             node->format->start);
+    const int fmt_len = (int) (format->end - format->start);
+    snprintf(fmt + colorlen, sizeof(fmt) - colorlen, "%%%.*sd", fmt_len, format->start);
   }
   else
   {
@@ -150,7 +149,6 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
-  const struct ExpandoExpandoNode *node = (struct ExpandoExpandoNode *) self;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
   struct Email *e = hfi->email;
@@ -163,6 +161,7 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
 
   // TODO(g0mb4): handle *start_col != 0
   char fmt[128];
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   const char *first = NULL;
   if (threads && thread_is_new_2gmb(e))
@@ -217,7 +216,7 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   size_t colorlen = add_index_color_2gmb(fmt, sizeof(fmt), flags, MT_COLOR_INDEX_FLAGS);
   // TODO(g0mb4): see if it can be generalised
   // NOTE(g0mb4): do proper format with mutt_format_s_x()
-  if (node->format)
+  if (format)
   {
     // NOTE(g0mb4): format is ignored
     snprintf(fmt + colorlen, sizeof(fmt) - colorlen, "%%s%%s%%s");

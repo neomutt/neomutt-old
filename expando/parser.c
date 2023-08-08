@@ -4,9 +4,10 @@
  * Tóth János
  */
 
-#include "parser.h"
 #include "format_callbacks.h"
 #include "helpers.h"
+#include "node.h"
+#include "parser.h"
 #include "validation.h"
 
 #include <assert.h>
@@ -17,7 +18,16 @@
 #include "mutt/lib.h"
 #include "mutt/memory.h"
 
-static void free_node(struct ExpandoNode *n);
+/**
+ * ExpandoConditionStart - Signals parse_node() if the parsing started in a conditional statement or not
+ * 
+ * Easier to read than a simple true, false.
+ */
+enum ExpandoConditionStart
+{
+  CON_NO_CONDITION,
+  CON_START
+};
 
 static struct ExpandoNode *new_empty_node(void)
 {
@@ -30,7 +40,7 @@ static struct ExpandoNode *new_empty_node(void)
 
 static struct ExpandoNode *new_text_node(const char *start, const char *end)
 {
-  struct ExpandoTextNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoTextNode));
+  struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
   node->type = NT_TEXT;
   node->start = start;
@@ -38,49 +48,62 @@ static struct ExpandoNode *new_text_node(const char *start, const char *end)
 
   node->format_cb = text_format_callback;
 
-  return (struct ExpandoNode *) node;
+  return node;
 }
 
 static struct ExpandoNode *new_expando_node(const char *start, const char *end,
-                                            const struct ExpandoFormat *format,
+                                            const struct ExpandoFormatPrivate *format,
                                             expando_format_callback cb)
 {
-  struct ExpandoExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoExpandoNode));
+  struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
   node->type = NT_EXPANDO;
   node->start = start;
   node->end = end;
-  node->format = format;
+
+  node->ndata = (void *) format;
+  node->ndata_free = free_expando_private;
+
   node->format_cb = cb;
 
-  return (struct ExpandoNode *) node;
+  return node;
 }
 
 static struct ExpandoNode *new_date_node(const char *start, const char *end,
                                          enum ExpandoDateType date_type, bool ingnore_locale)
 {
-  struct ExpandoDateNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoDateNode));
+  struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
   node->type = NT_DATE;
   node->start = start;
   node->end = end;
-  node->date_type = date_type;
-  node->ingnore_locale = ingnore_locale;
 
-  return (struct ExpandoNode *) node;
+  struct ExpandoDatePrivate *dp = mutt_mem_calloc(1, sizeof(struct ExpandoDatePrivate));
+  dp->date_type = date_type;
+  dp->ingnore_locale = ingnore_locale;
+
+  node->ndata = (void *) dp;
+  node->ndata_free = free_expando_private;
+
+  return node;
 }
 
 static struct ExpandoNode *new_pad_node(enum ExpandoPadType pad_type,
                                         const char *start, const char *end)
 {
-  struct ExpandoPadNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoPadNode));
+  struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
   node->type = NT_PAD;
-  node->pad_type = pad_type;
   node->start = start;
   node->end = end;
 
-  return (struct ExpandoNode *) node;
+  struct ExpandoPadPrivate *pp = mutt_mem_calloc(1, sizeof(struct ExpandoPadPrivate));
+  pp->pad_type = pad_type;
+
+  node->ndata = (void *) pp;
+  node->ndata_free = free_expando_private;
+
+  return node;
 }
 
 static struct ExpandoNode *new_condition_node(struct ExpandoNode *condition,
@@ -90,80 +113,30 @@ static struct ExpandoNode *new_condition_node(struct ExpandoNode *condition,
   assert(condition != NULL);
   assert(if_true != NULL);
 
-  struct ExpandoConditionNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoConditionNode));
+  struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
   node->type = NT_CONDITION;
-  node->condition = condition;
-  node->if_true = if_true;
-  node->if_false = if_false;
 
-  return (struct ExpandoNode *) node;
+  struct ExpandoConditionPrivate *cp = mutt_mem_calloc(1, sizeof(struct ExpandoConditionPrivate));
+  cp->condition = condition;
+  cp->if_true = if_true;
+  cp->if_false = if_false;
+
+  node->ndata = (void *) cp;
+  node->ndata_free = free_expando_private_condition_node;
+
+  return node;
 }
 
 static struct ExpandoNode *new_index_format_hook_node(const char *start, const char *end)
 {
-  struct ExpandoIndexFormatHookNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoIndexFormatHookNode));
+  struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
   node->type = NT_INDEX_FORMAT_HOOK;
   node->start = start;
   node->end = end;
 
-  return (struct ExpandoNode *) node;
-}
-
-static void free_empty_node(struct ExpandoNode *n)
-{
-  FREE(&n);
-}
-
-static void free_text_node(struct ExpandoTextNode *n)
-{
-  FREE(&n);
-}
-
-static void free_date_node(struct ExpandoDateNode *n)
-{
-  FREE(&n);
-}
-
-static void free_expando_node(struct ExpandoExpandoNode *n)
-{
-  if (n->format)
-  {
-    FREE(&n->format);
-  }
-
-  FREE(&n);
-}
-
-static void free_pad_node(struct ExpandoPadNode *n)
-{
-  FREE(&n);
-}
-
-static void free_condition_node(struct ExpandoConditionNode *n)
-{
-  if (n->condition)
-  {
-    free_node(n->condition);
-  }
-
-  if (n->if_true)
-  {
-    free_node(n->if_true);
-  }
-
-  if (n->if_false)
-  {
-    free_node(n->if_false);
-  }
-
-  FREE(&n);
-}
-
-static void free_index_format_hook_node(struct ExpandoIndexFormatHookNode *n)
-{
-  FREE(&n);
+  return node;
 }
 
 static void append_node(struct ExpandoNode **root, struct ExpandoNode *new_node)
@@ -226,15 +199,15 @@ static const char *skip_until(const char *start, const char *terminator)
   return start;
 }
 
-static const struct ExpandoFormat *parse_format(const char *start, const char *end,
-                                                struct ExpandoParseError *error)
+static const struct ExpandoFormatPrivate *
+parse_format(const char *start, const char *end, struct ExpandoParseError *error)
 {
   if (start == end)
   {
     return NULL;
   }
 
-  struct ExpandoFormat *format = mutt_mem_calloc(1, sizeof(struct ExpandoFormat));
+  struct ExpandoFormatPrivate *format = mutt_mem_calloc(1, sizeof(struct ExpandoFormatPrivate));
 
   format->leader = ' ';
   format->start = start;
@@ -572,7 +545,7 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
       {
         const char *format_end = skip_until_classic_expando(s);
         const char *expando_end = skip_classic_expando(format_end, valid_two_char_expandos);
-        const struct ExpandoFormat *format = parse_format(s, format_end, error);
+        const struct ExpandoFormatPrivate *format = parse_format(s, format_end, error);
         if (error->position != NULL)
         {
           return NULL;
@@ -602,68 +575,6 @@ parse_node(const char *s, enum ExpandoConditionStart condition_start,
   error->position = s;
   snprintf(error->message, sizeof(error->message), "Internal parsing error.");
   return NULL;
-}
-
-static void free_node(struct ExpandoNode *n)
-{
-  if (n == NULL)
-  {
-    return;
-  }
-
-  switch (n->type)
-  {
-    case NT_EMPTY:
-    {
-      free_empty_node(n);
-    }
-    break;
-
-    case NT_TEXT:
-    {
-      struct ExpandoTextNode *nn = (struct ExpandoTextNode *) n;
-      free_text_node(nn);
-    }
-    break;
-
-    case NT_EXPANDO:
-    {
-      struct ExpandoExpandoNode *nn = (struct ExpandoExpandoNode *) n;
-      free_expando_node(nn);
-    }
-    break;
-
-    case NT_DATE:
-    {
-      struct ExpandoDateNode *nn = (struct ExpandoDateNode *) n;
-      free_date_node(nn);
-    }
-    break;
-
-    case NT_PAD:
-    {
-      struct ExpandoPadNode *nn = (struct ExpandoPadNode *) n;
-      free_pad_node(nn);
-    }
-    break;
-
-    case NT_INDEX_FORMAT_HOOK:
-    {
-      struct ExpandoIndexFormatHookNode *nn = (struct ExpandoIndexFormatHookNode *) n;
-      free_index_format_hook_node(nn);
-    }
-    break;
-
-    case NT_CONDITION:
-    {
-      struct ExpandoConditionNode *nn = (struct ExpandoConditionNode *) n;
-      free_condition_node(nn);
-    }
-    break;
-
-    default:
-      assert(0 && "Unknown node.");
-  }
 }
 
 void expando_tree_parse(struct ExpandoNode **root, const char **string,

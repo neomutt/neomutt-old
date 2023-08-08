@@ -21,18 +21,17 @@ void text_format_callback(const struct ExpandoNode *self, char **buffer,
                           intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_TEXT);
-  const struct ExpandoTextNode *n = (struct ExpandoTextNode *) self;
 
   // TODO(g0mb4): Handle *start_col != 0
-  int copylen = n->end - n->start;
+  int copylen = self->end - self->start;
   if (copylen > *buffer_len)
   {
     copylen = *buffer_len;
   }
 
-  memcpy(*buffer, n->start, copylen);
+  memcpy(*buffer, self->start, copylen);
 
   *buffer += copylen;
   *buffer_len -= copylen;
-  *start_col += mb_strwidth_range(n->start, n->end);
+  *start_col += mb_strwidth_range(self->start, self->end);
 }
