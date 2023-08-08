@@ -1,4 +1,5 @@
 #include "common.h"
+#include "limits.h"
 
 void test_expando_old_if_else(void)
 {
@@ -20,7 +21,7 @@ void test_expando_old_if_else(void)
 
     struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 4;
-    fmt.max = 0;
+    fmt.max = INT_MAX;
     fmt.justification = JUSTIFY_RIGHT;
     fmt.leader = ' ';
     check_expando_node(cond->if_true, "l", &fmt);
@@ -38,7 +39,7 @@ void test_expando_old_if_else(void)
 
     struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 4;
-    fmt.max = 0;
+    fmt.max = INT_MAX;
     fmt.justification = JUSTIFY_RIGHT;
     fmt.leader = ' ';
     check_expando_node(cond->if_true, "l", &fmt);

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "limits.h"
 
 void test_expando_formatted_expando(void)
 {
@@ -15,7 +16,7 @@ void test_expando_formatted_expando(void)
   {
     struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 8;
-    fmt.max = 0;
+    fmt.max = INT_MAX;
     fmt.justification = JUSTIFY_RIGHT;
     fmt.leader = ' ';
     check_expando_node(get_nth_node(&root, 2), "X", &fmt);
@@ -25,7 +26,7 @@ void test_expando_formatted_expando(void)
   {
     struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 8;
-    fmt.max = 0;
+    fmt.max = INT_MAX;
     fmt.justification = JUSTIFY_LEFT;
     fmt.leader = ' ';
     check_expando_node(get_nth_node(&root, 4), "X", &fmt);
@@ -35,7 +36,7 @@ void test_expando_formatted_expando(void)
   {
     struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 8;
-    fmt.max = 0;
+    fmt.max = INT_MAX;
     fmt.justification = JUSTIFY_RIGHT;
     fmt.leader = '0';
     check_expando_node(get_nth_node(&root, 6), "X", &fmt);

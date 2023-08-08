@@ -3,6 +3,8 @@
 #include "global_table.h"
 #include "node.h"
 
+void expando_tree_free(struct ExpandoNode **root);
+
 struct ExpandoRecord *expando_global_table_new(void)
 {
   struct ExpandoRecord *t = mutt_mem_calloc(EFMT_FORMAT_COUNT, sizeof(struct ExpandoRecord));
