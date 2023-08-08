@@ -6,7 +6,7 @@ void test_expando_padding(void)
   struct ExpandoParseError error = { 0 };
   struct ExpandoNode *root = NULL;
 
-  expando_tree_parse(&root, &input, NULL, NULL, NULL, &error);
+  expando_tree_parse(&root, &input, EFMT_FORMAT_COUNT_OR_DEBUG, &error);
 
   TEST_CHECK(error.position == NULL);
   check_pad_node(get_nth_node(&root, 0), "A", PT_FILL);
