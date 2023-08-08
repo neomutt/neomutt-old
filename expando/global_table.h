@@ -73,7 +73,7 @@ enum ExpandoFormatIndex
   EFMT_STATUS_FORMAT,
   EFMT_TS_ICON_FORMAT,
   EFMT_TS_STATUS_FORMAT,
-  EFMT_FORMAT_COUNT,
+  EFMT_FORMAT_COUNT_OR_DEBUG,
 };
 
 struct ExpandoRecord *expando_global_table_new(void);

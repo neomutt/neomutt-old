@@ -113,7 +113,7 @@ static const struct ExpandoFormatCallback status_1[] = {
   { "u", NULL }, { "v", NULL }, { "V", NULL }, { NULL, NULL },
 };
 
-const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT] = {
+const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT_OR_DEBUG] = {
   [EFMT_ALIAS_FORMAT] = { "alias_format", alias_1, NULL, },
   [EFMT_ATTACH_FORMAT] = { "attach_format", attach_1, NULL },
   [EFMT_AUTOCRYPT_ACCT_FORMAT]
@@ -183,9 +183,9 @@ const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT] = {
 
 bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct Buffer *err)
 {
-  for (int i = 0; i < EFMT_FORMAT_COUNT; ++i)
+  for (enum ExpandoFormatIndex index = 0; index < EFMT_FORMAT_COUNT_OR_DEBUG; ++index)
   {
-    if (mutt_str_equal(name->data, expando_validation[i].name))
+    if (mutt_str_equal(name->data, expando_validation[index].name))
     {
       const char *input = NULL;
       if (*value->data)
@@ -197,8 +197,7 @@ bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct B
       struct ExpandoParseError error = { 0 };
       struct ExpandoNode *root = NULL;
 
-      expando_tree_parse(&root, &input, expando_validation[i].valid_short_expandos,
-                         expando_validation[i].valid_two_char_expandos, NULL, &error);
+      expando_tree_parse(&root, &input, index, &error);
 
       if (error.position != NULL)
       {
@@ -214,8 +213,8 @@ bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct B
         return false;
       }
 
-      NeoMutt->expando_table[i].string = input;
-      NeoMutt->expando_table[i].tree = root;
+      NeoMutt->expando_table[index].string = input;
+      NeoMutt->expando_table[index].tree = root;
       return true;
     }
   }

@@ -7,7 +7,8 @@ void expando_tree_free(struct ExpandoNode **root);
 
 struct ExpandoRecord *expando_global_table_new(void)
 {
-  struct ExpandoRecord *t = mutt_mem_calloc(EFMT_FORMAT_COUNT, sizeof(struct ExpandoRecord));
+  struct ExpandoRecord *t = mutt_mem_calloc(EFMT_FORMAT_COUNT_OR_DEBUG,
+                                            sizeof(struct ExpandoRecord));
   return t;
 }
 
@@ -17,7 +18,7 @@ void expando_global_table_free(struct ExpandoRecord **ptr)
     return;
 
   struct ExpandoRecord *table = *ptr;
-  for (int i = 0; i < EFMT_FORMAT_COUNT; ++i)
+  for (int i = 0; i < EFMT_FORMAT_COUNT_OR_DEBUG; ++i)
   {
     struct ExpandoRecord *r = &table[i];
     if (r->tree)

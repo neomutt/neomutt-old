@@ -1,6 +1,9 @@
 #include "helpers.h"
 
+#include <stddef.h>
+#include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 
 /**
@@ -52,4 +55,17 @@ int mb_strwidth_range(const char *start, const char *end)
     s++;
   }
   return width;
+}
+
+void strftime_range(char *s, size_t max, const char *format_start,
+                    const char *format_end, const struct tm *tm)
+{
+  char tmp[256] = { 0 };
+  const int len = format_end - format_start;
+
+  assert(len < sizeof(tmp) - 1);
+  assert(max < sizeof(tmp) - 1);
+
+  memcpy(tmp, format_start, len);
+  strftime(s, max, tmp, tm);
 }

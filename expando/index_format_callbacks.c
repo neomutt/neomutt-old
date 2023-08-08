@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <locale.h>
 #include "email/lib.h"
 #include "core/neomutt.h"
 #include "alias/lib.h"
@@ -248,6 +249,66 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
 
   snprintf(tmp, sizeof(tmp), "%s%s%s", first, second, third);
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS, MT_COLOR_INDEX, format);
+
+  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
+
+  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
+  *buffer_len -= printed;
+  *buffer += printed;
+}
+
+void index_date(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+                int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_DATE);
+  assert(self->ndata != NULL);
+
+  struct ExpandoDatePrivate *dp = (struct ExpandoDatePrivate *) self->ndata;
+  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
+  struct Email *e = hfi->email;
+
+  struct tm tm = { 0 };
+  char fmt[128], tmp[128];
+
+  switch (dp->date_type)
+  {
+    case DT_LOCAL_SEND_TIME:
+      tm = mutt_date_localtime(e->date_sent);
+      break;
+
+    case DT_LOCAL_RECIEVE_TIME:
+      tm = mutt_date_localtime(e->received);
+      break;
+
+    case DT_SENDER_SEND_TIME:
+    {
+      /* restore sender's time zone */
+      time_t now = e->date_sent;
+      if (e->zoccident)
+        now -= (e->zhours * 3600 + e->zminutes * 60);
+      else
+        now += (e->zhours * 3600 + e->zminutes * 60);
+      tm = mutt_date_gmtime(now);
+    }
+    break;
+
+    default:
+      assert(0 && "Unknown date type.");
+  }
+
+  if (dp->ingnore_locale)
+  {
+    setlocale(LC_TIME, "C");
+  }
+
+  strftime_range(tmp, sizeof(tmp), self->start, self->end, &tm);
+
+  if (dp->ingnore_locale)
+  {
+    setlocale(LC_TIME, "");
+  }
+
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS, MT_COLOR_INDEX, NULL);
 
   int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
 
