@@ -1,6 +1,7 @@
 #include "mutt/memory.h"
-#include "global_table.h"
 #include "assert.h"
+#include "global_table.h"
+#include "node.h"
 
 struct ExpandoRecord *expando_global_table_new(void)
 {

@@ -212,6 +212,7 @@ parse_format(const char *start, const char *end, struct ExpandoParseError *error
   format->leader = ' ';
   format->start = start;
   format->end = end;
+  format->justification = JUSTIFY_RIGHT;
 
   bool is_min = true;
 
@@ -220,7 +221,7 @@ parse_format(const char *start, const char *end, struct ExpandoParseError *error
     switch (*start)
     {
       case '-':
-        format->justification = FMT_J_LEFT;
+        format->justification = JUSTIFY_LEFT;
         ++start;
         break;
 

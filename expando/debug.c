@@ -25,7 +25,25 @@ static void print_expando_node(FILE *fp, const struct ExpandoNode *n, int indent
     const int elen = n->end - n->start;
     fprintf(fp, "%*sEXPANDO: `%.*s`", indent, "", elen, n->start);
 
-    const char *just = f->justification == FMT_J_RIGHT ? "RIGHT" : "LEFT";
+    const char *just = NULL;
+
+    switch (f->justification)
+    {
+      case JUSTIFY_LEFT:
+        just = "LEFT";
+        break;
+
+      case JUSTIFY_CENTER:
+        just = "CENTER";
+        break;
+
+      case JUSTIFY_RIGHT:
+        just = "RIGHT";
+        break;
+
+      default:
+        assert(0 && "Unknown justification.");
+    }
     fprintf(fp, " (min=%d, max=%d, just=%s, leader=`%c`)\n", f->min, f->max, just, f->leader);
   }
   else

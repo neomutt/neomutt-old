@@ -2,6 +2,7 @@
 #define EXPANDO_NODE_H
 
 #include <stdbool.h>
+#include "gui/curs_lib.h"
 #include "format_callbacks.h"
 
 enum ExpandoNodeType
@@ -28,17 +29,11 @@ struct ExpandoNode
   void (*ndata_free)(void **ptr);
 };
 
-enum ExpandoFormatJustification
-{
-  FMT_J_RIGHT = 0,
-  FMT_J_LEFT
-};
-
 struct ExpandoFormatPrivate
 {
   int min;
   int max;
-  enum ExpandoFormatJustification justification;
+  enum FormatJustify justification;
   // NOTE(gmb): multibyte leader?
   char leader;
 

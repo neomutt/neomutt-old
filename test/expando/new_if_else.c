@@ -21,7 +21,7 @@ void test_expando_new_if_else(void)
     struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 4;
     fmt.max = 0;
-    fmt.justification = FMT_J_RIGHT;
+    fmt.justification = JUSTIFY_RIGHT;
     fmt.leader = ' ';
     check_expando_node(cond->if_true, "l", &fmt);
     TEST_CHECK(cond->if_false == NULL);
@@ -39,7 +39,7 @@ void test_expando_new_if_else(void)
     struct ExpandoFormatPrivate fmt = { 0 };
     fmt.min = 4;
     fmt.max = 0;
-    fmt.justification = FMT_J_RIGHT;
+    fmt.justification = JUSTIFY_RIGHT;
     fmt.leader = ' ';
     check_expando_node(cond->if_true, "l", &fmt);
     check_expando_node(cond->if_false, "c", &fmt);

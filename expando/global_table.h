@@ -1,7 +1,7 @@
 #ifndef EXPANDO_GLOBAL_TABLE_H
 #define EXPANDO_GLOBAL_TABLE_H
 
-#include "parser.h"
+struct ExpandoNode;
 
 /**
  * struct ExpandoRecord - parsed expando trees
