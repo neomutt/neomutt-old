@@ -308,7 +308,7 @@ void index_date(const struct ExpandoNode *self, char **buffer, int *buffer_len,
     setlocale(LC_TIME, "");
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS, MT_COLOR_INDEX, NULL);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE, MT_COLOR_INDEX, NULL);
 
   int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
 
