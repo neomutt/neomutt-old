@@ -6,6 +6,7 @@
 
 #include "format_callbacks.h"
 #include "helpers.h"
+#include "limits.h"
 #include "node.h"
 #include "parser.h"
 #include "validation.h"
@@ -213,6 +214,8 @@ parse_format(const char *start, const char *end, struct ExpandoParseError *error
   format->start = start;
   format->end = end;
   format->justification = JUSTIFY_RIGHT;
+  format->min = 0;
+  format->max = INT_MAX;
 
   bool is_min = true;
 
@@ -222,6 +225,11 @@ parse_format(const char *start, const char *end, struct ExpandoParseError *error
     {
       case '-':
         format->justification = JUSTIFY_LEFT;
+        ++start;
+        break;
+
+      case '=':
+        format->justification = JUSTIFY_CENTER;
         ++start;
         break;
 

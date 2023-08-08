@@ -112,6 +112,50 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
   return e->recipient;
 }
 
+static void format_int(char *buf, int buf_len, int number,
+                       MuttFormatFlags flags, enum ColorId pre,
+                       enum ColorId post, struct ExpandoFormatPrivate *format)
+{
+  char fmt[32];
+
+  if (format)
+  {
+    size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
+    int n = snprintf(fmt, sizeof(fmt), "%d", number);
+    mutt_simple_format(buf + colorlen1, buf_len - colorlen1, format->min, format->max,
+                       format->justification, format->leader, fmt, n, false);
+    add_index_color_2gmb(buf + colorlen1 + n, buf_len - colorlen1 - n, flags, post);
+  }
+  else
+  {
+    size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
+    int n = snprintf(buf + colorlen1, buf_len - colorlen1, "%d", number);
+    add_index_color_2gmb(buf + colorlen1 + n, buf_len - colorlen1 - n, flags, post);
+  }
+}
+
+static void format_string(char *buf, int buf_len, const char *s,
+                          MuttFormatFlags flags, enum ColorId pre,
+                          enum ColorId post, struct ExpandoFormatPrivate *format)
+{
+  char fmt[32];
+
+  if (format)
+  {
+    size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
+    int n = snprintf(fmt, sizeof(fmt), "%s", s);
+    mutt_simple_format(buf + colorlen1, buf_len - colorlen1, format->min, format->max,
+                       format->justification, format->leader, fmt, n, false);
+    add_index_color_2gmb(buf + colorlen1 + n, buf_len - colorlen1 - n, flags, post);
+  }
+  else
+  {
+    size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
+    int n = snprintf(buf + colorlen1, buf_len - colorlen1, "%s", s);
+    add_index_color_2gmb(buf + colorlen1 + n, buf_len - colorlen1 - n, flags, post);
+  }
+}
+
 void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
 {
@@ -124,21 +168,10 @@ void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   char fmt[128];
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
-  size_t colorlen = add_index_color_2gmb(fmt, sizeof(fmt), flags, MT_COLOR_INDEX_NUMBER);
-  // TODO(g0mb4): see if it can be generalised
-  // NOTE(g0mb4): do proper format mutt_format_s_x()
-  if (format)
-  {
-    const int fmt_len = (int) (format->end - format->start);
-    snprintf(fmt + colorlen, sizeof(fmt) - colorlen, "%%%.*sd", fmt_len, format->start);
-  }
-  else
-  {
-    snprintf(fmt + colorlen, sizeof(fmt) - colorlen, "%%d");
-  }
+  format_int(fmt, sizeof(fmt), e->msgno + 1, flags, MT_COLOR_INDEX_NUMBER,
+             MT_COLOR_INDEX, format);
 
-  add_index_color_2gmb(fmt + colorlen, sizeof(fmt) - colorlen, flags, MT_COLOR_INDEX);
-  int printed = snprintf(*buffer, *buffer_len, fmt, e->msgno + 1);
+  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
 
   *start_col += mb_strwidth_range(*buffer, *buffer + printed);
   *buffer_len -= printed;
@@ -160,7 +193,7 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   const bool threads = mutt_using_threads();
 
   // TODO(g0mb4): handle *start_col != 0
-  char fmt[128];
+  char fmt[128], tmp[128];
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   const char *first = NULL;
@@ -213,21 +246,10 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   else
     third = mbtable_get_nth_wchar(c_to_chars, user_is_recipient_2gmb(e));
 
-  size_t colorlen = add_index_color_2gmb(fmt, sizeof(fmt), flags, MT_COLOR_INDEX_FLAGS);
-  // TODO(g0mb4): see if it can be generalised
-  // NOTE(g0mb4): do proper format with mutt_format_s_x()
-  if (format)
-  {
-    // NOTE(g0mb4): format is ignored
-    snprintf(fmt + colorlen, sizeof(fmt) - colorlen, "%%s%%s%%s");
-  }
-  else
-  {
-    snprintf(fmt + colorlen, sizeof(fmt) - colorlen, "%%s%%s%%s");
-  }
+  snprintf(tmp, sizeof(tmp), "%s%s%s", first, second, third);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS, MT_COLOR_INDEX, format);
 
-  add_index_color_2gmb(fmt + colorlen, sizeof(fmt) - colorlen, flags, MT_COLOR_INDEX);
-  int printed = snprintf(*buffer, *buffer_len, fmt, first, second, third);
+  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
 
   *start_col += mb_strwidth_range(*buffer, *buffer + printed);
   *buffer_len -= printed;
