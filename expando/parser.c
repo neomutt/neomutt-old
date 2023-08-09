@@ -205,7 +205,7 @@ static const char *skip_classic_expando(const char *s, enum ExpandoFormatIndex i
 }
 
 // NOTE(g0mb4): Not used, but keep it for now.
-static const char *skip_until_chrs(const char *start, const char *terminators)
+const char *skip_until_chrs(const char *start, const char *terminators)
 {
   while (*start && strchr(terminators, *start) == NULL)
   {
