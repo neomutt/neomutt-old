@@ -498,3 +498,22 @@ void index_s(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   *buffer_len -= printed;
   *buffer += printed;
 }
+
+void index_l(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
+  struct Email *e = hfi->email;
+
+  char fmt[128];
+  format_int(fmt, sizeof(fmt), e->lines, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
+
+  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
+
+  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
+  *buffer_len -= printed;
+  *buffer += printed;
+}
