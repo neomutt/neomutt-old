@@ -85,6 +85,21 @@ enum ToChars
   FLAG_CHAR_TO_REPLY_TO,          ///< Character denoting that the user is in the Reply-To list
 };
 
+/**
+ * enum FieldType - Header types
+ *
+ * Strings for printing headers
+ */
+enum FieldType
+{
+  DISP_TO,    ///< To: string
+  DISP_CC,    ///< Cc: string
+  DISP_BCC,   ///< Bcc: string
+  DISP_FROM,  ///< From: string
+  DISP_PLAIN, ///< Empty string
+  DISP_MAX,
+};
+
 void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
                       struct Mailbox *m, int inpgr, struct Email *e,
                       MuttFormatFlags flags, const char *progress);

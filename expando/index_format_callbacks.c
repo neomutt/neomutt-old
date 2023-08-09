@@ -11,6 +11,7 @@
 #include "maillist.h"
 #include "mutt_thread.h"
 #include "parser.h"
+#include "sort.h"
 
 // TODO(g0mb4): see if it can be used for all formats
 // NOTE(g0mb4): copy of hdrline.c's add_index_color()
@@ -143,6 +144,8 @@ static void format_string(char *buf, int buf_len, const char *s,
 
   if (format)
   {
+    assert(strlen(s) < sizeof(fmt) - 1);
+
     size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
     int n = snprintf(fmt, sizeof(fmt), "%s", s);
     mutt_simple_format(buf + colorlen1, buf_len - colorlen1, format->min, format->max,
@@ -161,13 +164,13 @@ void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
   struct Email *e = hfi->email;
 
   // TODO(g0mb4): handle *start_col != 0
   char fmt[128];
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   format_int(fmt, sizeof(fmt), e->msgno + 1, flags, MT_COLOR_INDEX_NUMBER,
              MT_COLOR_INDEX, format);
@@ -183,6 +186,7 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
   struct Email *e = hfi->email;
@@ -195,7 +199,6 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
 
   // TODO(g0mb4): handle *start_col != 0
   char fmt[128], tmp[128];
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   const char *first = NULL;
   if (threads && thread_is_new_2gmb(e))
@@ -309,6 +312,128 @@ void index_date(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   }
 
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE, MT_COLOR_INDEX, NULL);
+
+  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
+
+  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
+  *buffer_len -= printed;
+  *buffer += printed;
+}
+
+/**
+ * make_from_prefix - Create a prefix for an author field
+ * @param disp   Type of field
+ * @retval ptr Prefix string (do not free it)
+ *
+ * If $from_chars is set, pick an appropriate character from it.
+ * If not, use the default prefix: "To", "Cc", etc
+ */
+static const char *make_from_prefix_2gmb(enum FieldType disp)
+{
+  /* need 2 bytes at the end, one for the space, another for NUL */
+  static char padded[8];
+  static const char *long_prefixes[DISP_MAX] = {
+    [DISP_TO] = "To ", [DISP_CC] = "Cc ", [DISP_BCC] = "Bcc ",
+    [DISP_FROM] = "",  [DISP_PLAIN] = "",
+  };
+
+  const struct MbTable *c_from_chars = cs_subset_mbtable(NeoMutt->sub, "from_chars");
+
+  if (!c_from_chars || !c_from_chars->chars || (c_from_chars->len == 0))
+    return long_prefixes[disp];
+
+  const char *pchar = mbtable_get_nth_wchar(c_from_chars, disp);
+  if (mutt_str_len(pchar) == 0)
+    return "";
+
+  snprintf(padded, sizeof(padded), "%s ", pchar);
+  return padded;
+}
+
+/**
+ * make_from - Generate a From: field (with optional prefix)
+ * @param env      Envelope of the email
+ * @param buf      Buffer to store the result
+ * @param buflen   Size of the buffer
+ * @param do_lists Should we check for mailing lists?
+ * @param flags    Format flags, see #MuttFormatFlags
+ *
+ * Generate the %F or %L field in $index_format.
+ * This is the author, or recipient of the email.
+ *
+ * The field can optionally be prefixed by a character from $from_chars.
+ * If $from_chars is not set, the prefix will be, "To", "Cc", etc
+ */
+static void make_from_2gmb(struct Envelope *env, char *buf, size_t buflen,
+                           bool do_lists, MuttFormatFlags flags)
+{
+  if (!env || !buf)
+    return;
+
+  bool me;
+  enum FieldType disp;
+  struct AddressList *name = NULL;
+
+  me = mutt_addr_is_user(TAILQ_FIRST(&env->from));
+
+  if (do_lists || me)
+  {
+    if (check_for_mailing_list(&env->to, make_from_prefix_2gmb(DISP_TO), buf, buflen))
+      return;
+    if (check_for_mailing_list(&env->cc, make_from_prefix_2gmb(DISP_CC), buf, buflen))
+      return;
+  }
+
+  if (me && !TAILQ_EMPTY(&env->to))
+  {
+    disp = (flags & MUTT_FORMAT_PLAIN) ? DISP_PLAIN : DISP_TO;
+    name = &env->to;
+  }
+  else if (me && !TAILQ_EMPTY(&env->cc))
+  {
+    disp = DISP_CC;
+    name = &env->cc;
+  }
+  else if (me && !TAILQ_EMPTY(&env->bcc))
+  {
+    disp = DISP_BCC;
+    name = &env->bcc;
+  }
+  else if (!TAILQ_EMPTY(&env->from))
+  {
+    disp = DISP_FROM;
+    name = &env->from;
+  }
+  else
+  {
+    *buf = '\0';
+    return;
+  }
+
+  snprintf(buf, buflen, "%s%s", make_from_prefix_2gmb(disp),
+           mutt_get_name(TAILQ_FIRST(name)));
+}
+
+void index_L(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const bool optional = (flags & MUTT_FORMAT_OPTIONAL);
+
+  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
+  struct Email *e = hfi->email;
+
+  char fmt[128], tmp[128];
+
+  if (optional)
+  {
+    return;
+  }
+
+  make_from_2gmb(e->env, tmp, sizeof(tmp), true, flags);
+
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR, MT_COLOR_INDEX, format);
 
   int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
 

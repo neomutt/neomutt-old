@@ -65,21 +65,6 @@
 #endif
 
 /**
- * enum FieldType - Header types
- *
- * Strings for printing headers
- */
-enum FieldType
-{
-  DISP_TO,    ///< To: string
-  DISP_CC,    ///< Cc: string
-  DISP_BCC,   ///< Bcc: string
-  DISP_FROM,  ///< From: string
-  DISP_PLAIN, ///< Empty string
-  DISP_MAX,
-};
-
-/**
  * add_index_color - Insert a color marker into a string
  * @param buf    Buffer to store marker
  * @param buflen Buffer length

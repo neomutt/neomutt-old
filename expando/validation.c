@@ -52,14 +52,16 @@ static const struct ExpandoFormatCallback group_index_1[] = {
 };
 
 static const struct ExpandoFormatCallback index_1[] = {
-  { "a", NULL },    { "A", NULL },  { "b", NULL }, { "B", NULL }, { "c", NULL },
-  { "C", index_C }, { "d", NULL },  { "D", NULL }, { "e", NULL }, { "E", NULL },
-  { "f", NULL },    { "F", NULL },  { "g", NULL }, { "H", NULL }, { "i", NULL },
-  { "I", NULL },    { "J", NULL },  { "K", NULL }, { "l", NULL }, { "L", NULL },
-  { "m", NULL },    { "M", NULL },  { "n", NULL }, { "N", NULL }, { "O", NULL },
-  { "P", NULL },    { "q", NULL },  { "r", NULL }, { "R", NULL }, { "s", NULL },
-  { "S", NULL },    { "t", NULL },  { "T", NULL }, { "u", NULL }, { "v", NULL },
-  { "W", NULL },    { "x", NULL },  { "X", NULL }, { "y", NULL }, { "Y", NULL },
+  { "a", NULL },    { "A", NULL },    { "b", NULL }, { "B", NULL },
+  { "c", NULL },    { "C", index_C }, { "d", NULL }, { "D", NULL },
+  { "e", NULL },    { "E", NULL },    { "f", NULL }, { "F", NULL },
+  { "g", NULL },    { "H", NULL },    { "i", NULL }, { "I", NULL },
+  { "J", NULL },    { "K", NULL },    { "l", NULL }, { "L", index_L },
+  { "m", NULL },    { "M", NULL },    { "n", NULL }, { "N", NULL },
+  { "O", NULL },    { "P", NULL },    { "q", NULL }, { "r", NULL },
+  { "R", NULL },    { "s", NULL },    { "S", NULL }, { "t", NULL },
+  { "T", NULL },    { "u", NULL },    { "v", NULL }, { "W", NULL },
+  { "x", NULL },    { "X", NULL },    { "y", NULL }, { "Y", NULL },
   { "Z", index_Z }, { NULL, NULL },
 };
 

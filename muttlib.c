@@ -1745,6 +1745,7 @@ void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
 {
   const struct ExpandoNode *n = *tree;
 
+  buflen--; // save space for terminating '\0'
   int start_col = col;
   int buffer_len = buflen;
 
@@ -1758,4 +1759,5 @@ void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
     }
     n = n->next;
   }
+  *buf = '\0';
 }
