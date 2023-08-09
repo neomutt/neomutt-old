@@ -10,6 +10,7 @@
 #include "index_format_callbacks.h"
 #include "maillist.h"
 #include "mutt_thread.h"
+#include "muttlib.h"
 #include "parser.h"
 #include "sort.h"
 #include "subjectrx.h"
@@ -510,6 +511,50 @@ void index_l(const struct ExpandoNode *self, char **buffer, int *buffer_len,
 
   char fmt[128];
   format_int(fmt, sizeof(fmt), e->lines, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
+
+  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
+
+  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
+  *buffer_len -= printed;
+  *buffer += printed;
+}
+
+void index_c(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
+  struct Email *e = hfi->email;
+
+  char fmt[128], tmp[128];
+
+  mutt_str_pretty_size(tmp, sizeof(tmp), e->body->length);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
+                MT_COLOR_INDEX, format, NO_TREE);
+
+  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
+
+  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
+  *buffer_len -= printed;
+  *buffer += printed;
+}
+
+void index_cr(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
+  struct Email *e = hfi->email;
+
+  char fmt[128], tmp[128];
+
+  mutt_str_pretty_size(tmp, sizeof(tmp), email_size(e));
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
+                MT_COLOR_INDEX, format, NO_TREE);
 
   int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
 

@@ -53,7 +53,7 @@ static const struct ExpandoFormatCallback group_index_1[] = {
 
 static const struct ExpandoFormatCallback index_1[] = {
   { "a", NULL },    { "A", NULL },    { "b", NULL },    { "B", NULL },
-  { "c", NULL },    { "C", index_C }, { "d", NULL },    { "D", NULL },
+  { "c", index_c }, { "C", index_C }, { "d", NULL },    { "D", NULL },
   { "e", NULL },    { "E", NULL },    { "f", NULL },    { "F", NULL },
   { "g", NULL },    { "H", NULL },    { "i", NULL },    { "I", NULL },
   { "J", NULL },    { "K", NULL },    { "l", index_l }, { "L", index_L },
@@ -66,8 +66,8 @@ static const struct ExpandoFormatCallback index_1[] = {
 };
 
 static const struct ExpandoFormatCallback index_2[] = {
-  { "cr", NULL }, { "Fp", NULL }, { "Gx", NULL }, { "zc", NULL },
-  { "zs", NULL }, { "zt", NULL }, { NULL, NULL },
+  { "cr", index_cr }, { "Fp", NULL }, { "Gx", NULL }, { "zc", NULL },
+  { "zs", NULL },     { "zt", NULL }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback mix_entry_1[] = {
