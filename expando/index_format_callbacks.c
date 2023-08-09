@@ -17,9 +17,14 @@
 
 // TODO(g0mb4): see if it can be used for all formats
 // NOTE(g0mb4): copy of hdrline.c's add_index_color()
-static size_t add_index_color_2gmb(char *buf, size_t buflen,
-                                   MuttFormatFlags flags, enum ColorId color)
+static size_t add_index_color_2gmb(char *buf, int buflen, MuttFormatFlags flags,
+                                   enum ColorId color)
 {
+  if (buflen <= 0)
+  {
+    return 0;
+  }
+
   /* only add color markers if we are operating on main index entries. */
   if (!(flags & MUTT_FORMAT_INDEX))
     return 0;
@@ -144,18 +149,24 @@ enum HasTreeChars
   HAS_TREE
 };
 
+// FIXME(g0mb4): It cuts the string, e.g. subject (%s) in $index_format
 static void format_string(char *buf, int buf_len, const char *s,
                           MuttFormatFlags flags, enum ColorId pre, enum ColorId post,
                           struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree)
 {
-  char fmt[32];
+  char fmt[256];
 
   if (format)
   {
-    assert(strlen(s) < sizeof(fmt) - 1);
+    int len = sizeof(fmt);
+    // space for colors
+    if (len > buf_len - 6)
+    {
+      len = buf_len - 6;
+    }
 
     size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
-    int n = snprintf(fmt, sizeof(fmt), "%s", s);
+    int n = snprintf(fmt, len, "%s", s);
     mutt_simple_format(buf + colorlen1, buf_len - colorlen1, format->min,
                        format->max, format->justification, format->leader, fmt,
                        n, has_tree == HAS_TREE);
