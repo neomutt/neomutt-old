@@ -281,3 +281,13 @@ int mutt_thread_style(void)
 {
   return 0;
 }
+
+const char *mutt_get_name(const char *s)
+{
+  return NULL;
+}
+
+bool subjrx_apply_mods(struct Envelope *env)
+{
+  return false;
+}
