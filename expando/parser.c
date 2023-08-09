@@ -123,6 +123,7 @@ static struct ExpandoNode *new_condition_node(struct ExpandoNode *condition,
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
   node->type = NT_CONDITION;
+  node->format_cb = conditional_format_callback;
 
   struct ExpandoConditionPrivate *cp = mutt_mem_calloc(1, sizeof(struct ExpandoConditionPrivate));
   cp->condition = condition;
