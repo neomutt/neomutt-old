@@ -3,7 +3,7 @@
 
 void test_expando_formatted_expando(void)
 {
-  const char *input = "%X %8X %-8X %08X %.8X %8.8X %-8.8X";
+  const char *input = "%X %8X %-8X %08X %.8X %8.8X %-8.8X %=8X";
   struct ExpandoParseError error = { 0 };
   struct ExpandoNode *root = NULL;
 
@@ -70,6 +70,16 @@ void test_expando_formatted_expando(void)
     fmt.justification = JUSTIFY_LEFT;
     fmt.leader = ' ';
     check_expando_node(get_nth_node(&root, 12), "X", &fmt);
+    check_text_node(get_nth_node(&root, 13), " ");
+  }
+
+  {
+    struct ExpandoFormatPrivate fmt = { 0 };
+    fmt.min = 8;
+    fmt.max = INT_MAX;
+    fmt.justification = JUSTIFY_CENTER;
+    fmt.leader = ' ';
+    check_expando_node(get_nth_node(&root, 14), "X", &fmt);
   }
 
   expando_tree_free(&root);
