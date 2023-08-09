@@ -12,6 +12,7 @@
 #include "mutt_thread.h"
 #include "parser.h"
 #include "sort.h"
+#include "subjectrx.h"
 
 // TODO(g0mb4): see if it can be used for all formats
 // NOTE(g0mb4): copy of hdrline.c's add_index_color()
@@ -136,9 +137,15 @@ static void format_int(char *buf, int buf_len, int number,
   }
 }
 
+enum HasTreeChars
+{
+  NO_TREE = 0,
+  HAS_TREE
+};
+
 static void format_string(char *buf, int buf_len, const char *s,
-                          MuttFormatFlags flags, enum ColorId pre,
-                          enum ColorId post, struct ExpandoFormatPrivate *format)
+                          MuttFormatFlags flags, enum ColorId pre, enum ColorId post,
+                          struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree)
 {
   char fmt[32];
 
@@ -148,8 +155,9 @@ static void format_string(char *buf, int buf_len, const char *s,
 
     size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
     int n = snprintf(fmt, sizeof(fmt), "%s", s);
-    mutt_simple_format(buf + colorlen1, buf_len - colorlen1, format->min, format->max,
-                       format->justification, format->leader, fmt, n, false);
+    mutt_simple_format(buf + colorlen1, buf_len - colorlen1, format->min,
+                       format->max, format->justification, format->leader, fmt,
+                       n, has_tree == HAS_TREE);
     add_index_color_2gmb(buf + colorlen1 + n, buf_len - colorlen1 - n, flags, post);
   }
   else
@@ -251,7 +259,8 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
     third = mbtable_get_nth_wchar(c_to_chars, user_is_recipient_2gmb(e));
 
   snprintf(tmp, sizeof(tmp), "%s%s%s", first, second, third);
-  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS, MT_COLOR_INDEX, format);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS,
+                MT_COLOR_INDEX, format, NO_TREE);
 
   int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
 
@@ -311,7 +320,8 @@ void index_date(const struct ExpandoNode *self, char **buffer, int *buffer_len,
     setlocale(LC_TIME, "");
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE, MT_COLOR_INDEX, NULL);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE,
+                MT_COLOR_INDEX, NULL, NO_TREE);
 
   int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
 
@@ -433,7 +443,54 @@ void index_L(const struct ExpandoNode *self, char **buffer, int *buffer_len,
 
   make_from_2gmb(e->env, tmp, sizeof(tmp), true, flags);
 
-  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR, MT_COLOR_INDEX, format);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
+                MT_COLOR_INDEX, format, NO_TREE);
+
+  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
+
+  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
+  *buffer_len -= printed;
+  *buffer += printed;
+}
+
+void index_s(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
+  struct Email *e = hfi->email;
+
+  char fmt[128], tmp[128];
+
+  subjrx_apply_mods(e->env);
+  char *subj = NULL;
+
+  if (e->env->disp_subj)
+    subj = e->env->disp_subj;
+  else
+    subj = e->env->subject;
+
+  if (flags & MUTT_FORMAT_TREE && !e->collapsed)
+  {
+    if (flags & MUTT_FORMAT_FORCESUBJ)
+    {
+      snprintf(tmp, sizeof(tmp), "%s%s", e->tree, NONULL(subj));
+      format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SUBJECT,
+                    MT_COLOR_INDEX, format, HAS_TREE);
+    }
+    else
+    {
+      format_string(fmt, sizeof(fmt), e->tree, flags, MT_COLOR_INDEX_SUBJECT,
+                    MT_COLOR_INDEX, format, HAS_TREE);
+    }
+  }
+  else
+  {
+    format_string(fmt, sizeof(fmt), NONULL(subj), flags, MT_COLOR_INDEX_SUBJECT,
+                  MT_COLOR_INDEX, format, NO_TREE);
+  }
 
   int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
 
