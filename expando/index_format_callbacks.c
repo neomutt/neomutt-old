@@ -155,7 +155,7 @@ static void format_int(char *buf, int buf_len, int number,
                        enum ColorId post, struct ExpandoFormatPrivate *format)
 {
   char tmp[32]; // 64 bit INT_MAX has 20 digits
-  const int n = snprintf(tmp, sizeof(tmp), "%d", number);
+  snprintf(tmp, sizeof(tmp), "%d", number);
   format_string(buf, buf_len, tmp, flags, pre, post, format, NO_TREE);
 }
 

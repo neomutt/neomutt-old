@@ -114,11 +114,11 @@ static struct ExpandoNode *new_pad_node(enum ExpandoPadType pad_type,
 }
 
 static struct ExpandoNode *new_condition_node(struct ExpandoNode *condition,
-                                              struct ExpandoNode *if_true,
-                                              struct ExpandoNode *if_false)
+                                              struct ExpandoNode *if_true_tree,
+                                              struct ExpandoNode *if_false_tree)
 {
   assert(condition != NULL);
-  assert(if_true != NULL);
+  assert(if_true_tree != NULL);
 
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
@@ -127,8 +127,8 @@ static struct ExpandoNode *new_condition_node(struct ExpandoNode *condition,
 
   struct ExpandoConditionPrivate *cp = mutt_mem_calloc(1, sizeof(struct ExpandoConditionPrivate));
   cp->condition = condition;
-  cp->if_true = if_true;
-  cp->if_false = if_false;
+  cp->if_true_tree = if_true_tree;
+  cp->if_false_tree = if_false_tree;
 
   node->ndata = (void *) cp;
   node->ndata_free = free_expando_private_condition_node;
@@ -204,9 +204,30 @@ static const char *skip_classic_expando(const char *s, enum ExpandoFormatIndex i
   return s;
 }
 
-static const char *skip_until(const char *start, const char *terminator)
+// NOTE(g0mb4): Not used, but keep it for now.
+static const char *skip_until_chrs(const char *start, const char *terminators)
 {
-  while (*start && strchr(terminator, *start) == NULL)
+  while (*start && strchr(terminators, *start) == NULL)
+  {
+    ++start;
+  }
+
+  return start;
+}
+
+static const char *skip_until_ch(const char *start, char terminator)
+{
+  while (*start && *start != terminator)
+  {
+    ++start;
+  }
+
+  return start;
+}
+
+static const char *skip_until_ch2(const char *start, char terminator1, char terminator2)
+{
+  while (*start && !(*start == terminator1 || *start == terminator2))
   {
     ++start;
   }
@@ -377,7 +398,8 @@ static expando_format_callback check_if_expando_is_valid(const char *start, cons
 }
 
 static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart condition_start,
-                                      const char **parsed_until, enum ExpandoFormatIndex index,
+                                      const char **parsed_until, char terminator,
+                                      enum ExpandoFormatIndex index,
                                       struct ExpandoParseError *error)
 {
   while (*s)
@@ -420,7 +442,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
 
           ++s;
           dt = DT_SENDER_SEND_TIME;
-          end = skip_until(s, "}");
+          end = skip_until_ch(s, '}');
           if (*end != '}')
           {
             error->position = end;
@@ -432,7 +454,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         {
           ++s;
           dt = DT_LOCAL_SEND_TIME;
-          end = skip_until(s, "]");
+          end = skip_until_ch(s, ']');
           if (*end != ']')
           {
             error->position = end;
@@ -452,7 +474,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
 
           ++s;
           dt = DT_LOCAL_RECIEVE_TIME;
-          end = skip_until(s, ")");
+          end = skip_until_ch(s, ')');
           if (*end != ')')
           {
             error->position = end;
@@ -509,9 +531,11 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
       else if (*s == '?' || *s == '<')
       {
         bool old_style = *s == '?';
+        char end_terminator = old_style ? '?' : '>';
 
         const char *next = NULL;
-        struct ExpandoNode *condition = parse_node(s, CON_START, &next, index, error);
+        struct ExpandoNode *condition = parse_node(s, CON_START, &next,
+                                                   terminator, index, error);
         if (condition == NULL)
         {
           return NULL;
@@ -526,52 +550,75 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
 
         s = next + 1;
 
-        struct ExpandoNode *if_true = parse_node(s, CON_NO_CONDITION, &next, index, error);
-        if (if_true == NULL)
+        const char *if_true_end = skip_until_ch2(s, '&', end_terminator);
+
+        bool only_true = *if_true_end == end_terminator;
+        bool invalid = *if_true_end != '&' && !only_true;
+
+        if (invalid)
         {
+          error->position = if_true_end;
+          snprintf(error->message, sizeof(error->message),
+                   "Missing '&' or '%c'.", end_terminator);
           return NULL;
         }
-        if ((old_style && *next == '?') || (!old_style && *next == '>'))
+
+        const char *if_true_start = s;
+        const char *if_true_parsed = NULL;
+        struct ExpandoNode *if_true_tree = NULL;
+
+        while (if_true_start < if_true_end)
         {
-          *parsed_until = next + 1;
-          return new_condition_node(condition, if_true, NULL);
-        }
-        else if (*next == '&')
-        {
-          s = next + 1;
-          struct ExpandoNode *if_false = parse_node(s, CON_NO_CONDITION, &next, index, error);
-          if (if_true == NULL)
+          char if_terminator = only_true ? end_terminator : '&';
+
+          struct ExpandoNode *n = parse_node(if_true_start, CON_NO_CONDITION, &if_true_parsed,
+                                             if_terminator, index, error);
+          if (n == NULL)
           {
             return NULL;
           }
 
-          if (old_style)
-          {
-            if (*next != '?')
-            {
-              error->position = next;
-              snprintf(error->message, sizeof(error->message), "Missing '?'.");
-              return NULL;
-            }
-          }
-          else
-          {
-            if (*next != '>')
-            {
-              error->position = next;
-              snprintf(error->message, sizeof(error->message), "Missing '>'.");
-              return NULL;
-            }
-          }
+          append_node(&if_true_tree, n);
 
-          *parsed_until = next + 1;
-          return new_condition_node(condition, if_true, if_false);
+          if_true_start = if_true_parsed;
+        }
+
+        if (only_true)
+        {
+          *parsed_until = if_true_end + 1;
+          return new_condition_node(condition, if_true_tree, NULL);
         }
         else
         {
-          error->position = next;
-          snprintf(error->message, sizeof(error->message), "Invalid conditional.");
-          return NULL;
+          const char *if_false_start = if_true_end + 1;
+          const char *if_false_end = skip_until_ch(s, end_terminator);
+
+          if (*if_false_end != end_terminator)
+          {
+            error->position = s;
+            snprintf(error->message, sizeof(error->message), "Missing '%c'.", end_terminator);
+            return NULL;
+          }
+
+          const char *if_false_parsed = NULL;
+          struct ExpandoNode *if_false_tree = NULL;
+
+          while (if_false_start < if_false_end)
+          {
+            struct ExpandoNode *n = parse_node(if_false_start, CON_NO_CONDITION, &if_false_parsed,
+                                               end_terminator, index, error);
+            if (n == NULL)
+            {
+              return NULL;
+            }
+
+            append_node(&if_false_tree, n);
+
+            if_false_start = if_false_parsed;
+          }
+
+          *parsed_until = if_false_end + 1;
+          return new_condition_node(condition, if_true_tree, if_false_tree);
         }
       }
       // index format hook
@@ -585,7 +632,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         }
 
         ++s;
-        const char *end = skip_until(s, "@");
+        const char *end = skip_until_ch(s, '@');
 
         if (*end != '@')
         {
@@ -622,7 +669,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
     // text
     else
     {
-      const char *end = skip_until(s, "%");
+      const char *end = skip_until_ch2(s, '%', terminator);
       *parsed_until = end;
       return new_text_node(s, end);
     }
@@ -647,7 +694,7 @@ void expando_tree_parse(struct ExpandoNode **root, const char **string,
 
   while (*start)
   {
-    struct ExpandoNode *n = parse_node(start, CON_NO_CONDITION, &end, index, error);
+    struct ExpandoNode *n = parse_node(start, CON_NO_CONDITION, &end, 0, index, error);
 
     if (n == NULL)
     {
@@ -662,10 +709,5 @@ void expando_tree_parse(struct ExpandoNode **root, const char **string,
 void expando_tree_free(struct ExpandoNode **root)
 {
   struct ExpandoNode *n = *root;
-  while (n)
-  {
-    struct ExpandoNode *f = n;
-    n = n->next;
-    free_node(f);
-  }
+  free_tree(n);
 }

@@ -710,7 +710,7 @@ main
 
     if (error.position == NULL)
     {
-      expando_tree_print(stdout, &root);
+      expando_tree_print(stdout, &root, 0);
     }
     else
     {

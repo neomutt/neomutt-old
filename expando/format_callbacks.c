@@ -2,7 +2,27 @@
 #include <string.h>
 #include "format_callbacks.h"
 #include "helpers.h"
+#include "muttlib.h"
 #include "parser.h"
+
+void format_tree(struct ExpandoNode **tree, char *buf, size_t buflen,
+                 size_t col, int cols, intptr_t data, MuttFormatFlags flags)
+{
+  const struct ExpandoNode *n = *tree;
+  int start_col = col;
+  int buffer_len = buflen;
+
+  // TODO(g0mb4): Calculate buffer's start position from `col`,
+  //              so the callback doesn't need to know about it.
+  while (n && start_col < cols && buffer_len > 0)
+  {
+    if (n->format_cb)
+    {
+      n->format_cb(n, &buf, &buffer_len, &start_col, cols, data, flags);
+    }
+    n = n->next;
+  }
+}
 
 /**
  * text_format_callback - Callback for every text node. 
@@ -57,28 +77,33 @@ void conditional_format_callback(const struct ExpandoNode *self, char **buffer,
   struct ExpandoConditionPrivate *cp = (struct ExpandoConditionPrivate *) self->ndata;
 
   assert(cp->condition);
-  assert(cp->if_true);
+  assert(cp->if_true_tree);
+
+  // TODO(g0mb4): Activate assert and remove if(), as soon as the global table is filled.
+  //assert(cp->condition->format_cb);
+  if (!cp->condition->format_cb)
+  {
+    return;
+  }
 
   char tmp[128] = { 0 };
   int len = sizeof(tmp) - 1;
   char *ptmp = &tmp[0];
 
-  MuttFormatFlags temp_flags = flags;
-  temp_flags &= ~MUTT_FORMAT_INDEX; // disable formatting
+  const MuttFormatFlags temp_flags = MUTT_FORMAT_NO_FLAGS;
 
   int scol = 0;
   cp->condition->format_cb(cp->condition, &ptmp, &len, &scol, len, data, temp_flags);
 
   if (!mutt_str_equal(tmp, "0"))
   {
-    cp->if_true->format_cb(cp->if_true, buffer, buffer_len, start_col, max_cols, data, flags);
+    format_tree(&cp->if_true_tree, *buffer, *buffer_len, *start_col, max_cols, data, flags);
   }
   else
   {
-    if (cp->if_false)
+    if (cp->if_false_tree)
     {
-      cp->if_false->format_cb(cp->if_false, buffer, buffer_len, start_col,
-                              max_cols, data, flags);
+      format_tree(&cp->if_false_tree, *buffer, *buffer_len, *start_col, max_cols, data, flags);
     }
   }
 }

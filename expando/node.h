@@ -69,11 +69,12 @@ struct ExpandoPadPrivate
 struct ExpandoConditionPrivate
 {
   struct ExpandoNode *condition;
-  struct ExpandoNode *if_true;
-  struct ExpandoNode *if_false;
+  struct ExpandoNode *if_true_tree;
+  struct ExpandoNode *if_false_tree;
 };
 
 void free_node(struct ExpandoNode *node);
+void free_tree(struct ExpandoNode *node);
 
 void free_expando_private(void **ptr);
 void free_expando_private_condition_node(void **ptr);

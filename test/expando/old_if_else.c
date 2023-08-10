@@ -24,8 +24,8 @@ void test_expando_old_if_else(void)
     fmt.max = INT_MAX;
     fmt.justification = JUSTIFY_RIGHT;
     fmt.leader = ' ';
-    check_expando_node(cond->if_true, "l", &fmt);
-    TEST_CHECK(cond->if_false == NULL);
+    check_expando_node(cond->if_true_tree, "l", &fmt);
+    TEST_CHECK(cond->if_false_tree == NULL);
   }
 
   check_text_node(get_nth_node(&root, 2), "  if-else: ");
@@ -42,8 +42,8 @@ void test_expando_old_if_else(void)
     fmt.max = INT_MAX;
     fmt.justification = JUSTIFY_RIGHT;
     fmt.leader = ' ';
-    check_expando_node(cond->if_true, "l", &fmt);
-    check_expando_node(cond->if_false, "c", &fmt);
+    check_expando_node(cond->if_true_tree, "l", &fmt);
+    check_expando_node(cond->if_false_tree, "c", &fmt);
   }
 
   expando_tree_free(&root);

@@ -50,7 +50,6 @@
 #include "ncrypt/lib.h"
 #include "expando/global_table.h"
 #include "expando/parser.h"
-#include "expando/validation.h"
 #include "format_flags.h"
 #include "hdrline.h"
 #include "hook.h"
@@ -1429,9 +1428,8 @@ void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
 
   if (!NeoMutt->expando_table[EFMT_INDEX_FORMAT].tree)
   {
-    const char *c_index_format = cs_subset_string(NeoMutt->sub, "index_format");
-    const char *input = mutt_str_dup(c_index_format);
-    assert(input);
+    const char *c_format = cs_subset_string(NeoMutt->sub, "index_format");
+    const char *input = mutt_str_dup(c_format);
 
     struct ExpandoParseError error = { 0 };
     struct ExpandoNode *root = NULL;

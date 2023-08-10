@@ -119,12 +119,12 @@ static void print_condition_node(FILE *fp, const struct ExpandoNode *n, int inde
   fprintf(fp, "%*sCONDITION: ", indent, "");
   print_node(fp, c->condition, indent);
   fprintf(fp, "%*sIF TRUE : ", indent + 4, "");
-  print_node(fp, c->if_true, indent + 4);
+  expando_tree_print(fp, &c->if_true_tree, indent + 4);
 
-  if (c->if_false)
+  if (c->if_false_tree)
   {
     fprintf(fp, "%*sIF FALSE: ", indent + 4, "");
-    print_node(fp, c->if_false, indent + 4);
+    expando_tree_print(fp, &c->if_false_tree, indent + 4);
   }
 }
 
@@ -191,12 +191,12 @@ static void print_node(FILE *fp, const struct ExpandoNode *n, int indent)
   }
 }
 
-void expando_tree_print(FILE *fp, struct ExpandoNode **root)
+void expando_tree_print(FILE *fp, struct ExpandoNode **root, int indent)
 {
   const struct ExpandoNode *n = *root;
   while (n)
   {
-    print_node(fp, n, 0);
+    print_node(fp, n, indent);
     n = n->next;
   }
 }

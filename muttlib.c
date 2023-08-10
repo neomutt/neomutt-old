@@ -1743,21 +1743,5 @@ void remove_from_stailq(struct ListHead *head, const char *str)
 void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
                               struct ExpandoNode **tree, intptr_t data, MuttFormatFlags flags)
 {
-  const struct ExpandoNode *n = *tree;
-
-  buflen--; // save space for terminating '\0'
-  int start_col = col;
-  int buffer_len = buflen;
-
-  // TODO(g0mb4): Calculate buffer's start position from `col`,
-  //              so the callback doesn't need to know about it.
-  while (n && start_col < cols && buffer_len > 0)
-  {
-    if (n->format_cb)
-    {
-      n->format_cb(n, &buf, &buffer_len, &start_col, cols, data, flags);
-    }
-    n = n->next;
-  }
-  *buf = '\0';
+  format_tree(tree, buf, buflen, col, cols, data, flags);
 }
