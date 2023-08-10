@@ -27,7 +27,6 @@
 #include <locale.h>
 #include <stdbool.h>
 #include "account.h"
-#include "expando/global_table.h"
 #include "mailbox.h"
 #ifdef __APPLE__
 #include <xlocale.h>

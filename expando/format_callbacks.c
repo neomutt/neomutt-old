@@ -1,9 +1,10 @@
+#include "config.h"
 #include <assert.h>
 #include <string.h>
+#include "mutt/lib.h"
 #include "format_callbacks.h"
 #include "helpers.h"
-#include "muttlib.h"
-#include "parser.h"
+#include "node.h"
 
 void format_tree(struct ExpandoNode **tree, char *buf, size_t buflen,
                  size_t col, int cols, intptr_t data, MuttFormatFlags flags)
@@ -25,16 +26,16 @@ void format_tree(struct ExpandoNode **tree, char *buf, size_t buflen,
 }
 
 /**
- * text_format_callback - Callback for every text node. 
- * 
+ * text_format_callback - Callback for every text node.
+ *
  * TODO(g0mb4): Fill these:
- * @param self 
- * @param buffer 
- * @param buffer_len 
- * @param start_col 
- * @param max_cols 
- * @param data 
- * @param flags 
+ * @param self
+ * @param buffer
+ * @param buffer_len
+ * @param start_col
+ * @param max_cols
+ * @param data
+ * @param flags
  */
 void text_format_callback(const struct ExpandoNode *self, char **buffer,
                           int *buffer_len, int *start_col, int max_cols,
@@ -58,15 +59,15 @@ void text_format_callback(const struct ExpandoNode *self, char **buffer,
 
 /**
  * conditional_format_callback - Callback for every conditional node.
- * 
+ *
  * TODO(g0mb4): Fill these:
- * @param self 
- * @param buffer 
- * @param buffer_len 
- * @param start_col 
- * @param max_cols 
- * @param data 
- * @param flags 
+ * @param self
+ * @param buffer
+ * @param buffer_len
+ * @param start_col
+ * @param max_cols
+ * @param data
+ * @param flags
  */
 void conditional_format_callback(const struct ExpandoNode *self, char **buffer,
                                  int *buffer_len, int *start_col, int max_cols,

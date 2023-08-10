@@ -34,18 +34,16 @@
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/lib.h"
+#include "status.h"
 #include "index/lib.h"
 #include "menu/lib.h"
 #include "postpone/lib.h"
-#include "expando/parser.h"
-#include "expando/validation.h"
 #include "format_flags.h"
 #include "globals.h"
 #include "mutt_mailbox.h"
 #include "mutt_thread.h"
 #include "muttlib.h"
 #include "mview.h"
-#include "status.h"
 
 extern const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT_OR_DEBUG];
 

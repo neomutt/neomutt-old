@@ -1,6 +1,7 @@
 #include "config.h"
 #include <assert.h>
 #include <stdio.h>
+#include "gui/lib.h"
 #include "node.h"
 #include "parser.h"
 

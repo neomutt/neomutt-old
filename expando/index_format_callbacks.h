@@ -1,7 +1,10 @@
-#ifndef EXPANDO_INDEX_FORMAT_CALLBACKS_H
-#define EXPANDO_INDEX_FORMAT_CALLBACKS_H
+#ifndef MUTT_EXPANDO_INDEX_FORMAT_CALLBACKS_H
+#define MUTT_EXPANDO_INDEX_FORMAT_CALLBACKS_H
 
-#include "format_callbacks.h"
+#include <stdint.h>
+#include "format_flags.h"
+
+struct ExpandoNode;
 
 void index_date(const struct ExpandoNode *self, char **buffer, int *buffer_len,
                 int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags);
@@ -26,4 +29,5 @@ void index_c(const struct ExpandoNode *self, char **buffer, int *buffer_len,
 
 void index_cr(const struct ExpandoNode *self, char **buffer, int *buffer_len,
               int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags);
-#endif
+
+#endif /* MUTT_EXPANDO_INDEX_FORMAT_CALLBACKS_H */

@@ -1,5 +1,5 @@
-#ifndef EXPANDO_NODE_H
-#define EXPANDO_NODE_H
+#ifndef MUTT_EXPANDO_NODE_H
+#define MUTT_EXPANDO_NODE_H
 
 #include <stdbool.h>
 #include "gui/curs_lib.h"
@@ -79,4 +79,4 @@ void free_tree(struct ExpandoNode *node);
 void free_expando_private(void **ptr);
 void free_expando_private_condition_node(void **ptr);
 
-#endif
+#endif /* MUTT_EXPANDO_NODE_H */

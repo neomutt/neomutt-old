@@ -1,6 +1,7 @@
-#include "node.h"
-
+#include "config.h"
+#include <stddef.h>
 #include "mutt/memory.h"
+#include "node.h"
 
 void free_node(struct ExpandoNode *node)
 {

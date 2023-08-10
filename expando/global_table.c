@@ -1,7 +1,6 @@
+#include "config.h"
 #include "mutt/memory.h"
-#include "assert.h"
 #include "global_table.h"
-#include "node.h"
 
 void expando_tree_free(struct ExpandoNode **root);
 

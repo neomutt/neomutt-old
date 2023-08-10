@@ -1,17 +1,26 @@
+#include "config.h"
 #include <assert.h>
 #include <locale.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include "mutt/lib.h"
+#include "address/address.h"
+#include "config/lib.h"
 #include "email/lib.h"
 #include "core/neomutt.h"
 #include "alias/lib.h"
 #include "gui/curs_lib.h"
+#include "index_format_callbacks.h"
+#include "ncrypt/lib.h"
 #include "color/color.h"
 #include "hdrline.h"
 #include "helpers.h"
-#include "index_format_callbacks.h"
 #include "maillist.h"
 #include "mutt_thread.h"
 #include "muttlib.h"
-#include "parser.h"
+#include "node.h"
 #include "sort.h"
 #include "subjectrx.h"
 
@@ -118,7 +127,7 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
 
 /**
  * enum HasTreeChars - Signals if the string constains tree characters.
- * 
+ *
  * Characters like: '┌', '┴'.
  * More readale than a simple true / false.
  */

@@ -154,6 +154,7 @@
 #include "attach/lib.h"
 #include "browser/lib.h"
 #include "color/lib.h"
+#include "expando/lib.h"
 #include "history/lib.h"
 #include "index/lib.h"
 #include "menu/lib.h"
@@ -162,8 +163,6 @@
 #include "question/lib.h"
 #include "send/lib.h"
 #include "alternates.h"
-#include "expando/helpers.h"
-#include "expando/parser.h"
 #include "external.h"
 #include "globals.h" // IWYU pragma: keep
 #include "hook.h"

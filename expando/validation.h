@@ -1,10 +1,10 @@
-#ifndef EXPANDO_VALIDATION_H
-#define EXPANDO_VALIDATION_H
+#ifndef MUTT_EXPANDO_VALIDATION_H
+#define MUTT_EXPANDO_VALIDATION_H
 
-#include "mutt/buffer.h"
+#include <stdbool.h>
 #include "format_callbacks.h"
-#include "global_table.h"
-#include "parser.h"
+
+struct Buffer;
 
 struct ExpandoFormatCallback
 {
@@ -22,4 +22,4 @@ struct ExpandoValidation
 
 bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct Buffer *err);
 
-#endif
+#endif /* MUTT_EXPANDO_VALIDATION_H */

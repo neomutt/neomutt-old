@@ -1,9 +1,13 @@
+#include "config.h"
+#include <stddef.h>
 #include <assert.h>
+#include <stdbool.h>
+#include "mutt/lib.h"
 #include "core/neomutt.h"
-#include "mutt.h"
 #include "validation.h"
-
+#include "global_table.h"
 #include "index_format_callbacks.h"
+#include "parser.h"
 
 static const struct ExpandoFormatCallback alias_1[] = {
   { "a", NULL }, { "c", NULL }, { "f", NULL },  { "n", NULL },

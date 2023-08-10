@@ -29,12 +29,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "attach/lib.h"
-#include "expando/parser.h"
 #include "format_flags.h"
 
 struct Address;
 struct Body;
 struct Buffer;
+struct ExpandoNode;
 struct ListHead;
 struct passwd;
 struct stat;

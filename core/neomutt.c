@@ -31,6 +31,7 @@
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "neomutt.h"
+#include "expando/lib.h"
 #include "account.h"
 #include "mailbox.h"
 

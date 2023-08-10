@@ -1,7 +1,5 @@
-#ifndef EXPANDO_GLOBAL_TABLE_H
-#define EXPANDO_GLOBAL_TABLE_H
-
-struct ExpandoNode;
+#ifndef MUTT_EXPANDO_GLOBAL_TABLE_H
+#define MUTT_EXPANDO_GLOBAL_TABLE_H
 
 /**
  * struct ExpandoRecord - parsed expando trees
@@ -79,4 +77,4 @@ enum ExpandoFormatIndex
 struct ExpandoRecord *expando_global_table_new(void);
 void expando_global_table_free(struct ExpandoRecord **table);
 
-#endif
+#endif /* MUTT_EXPANDO_GLOBAL_TABLE_H */
