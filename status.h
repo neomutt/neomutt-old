@@ -24,10 +24,13 @@
 #define MUTT_STATUS_H
 
 #include <stdio.h>
+#include "expando/global_table.h"
 
 struct IndexSharedData;
 struct Menu;
 
+
 void menu_status_line(char *buf, size_t buflen, struct IndexSharedData *shared, struct Menu *menu, int cols, const char *fmt);
+void menu_status_line_2gmb(char *buf, size_t buflen, struct IndexSharedData *shared, struct Menu *menu, int cols, enum ExpandoFormatIndex format_index);
 
 #endif /* MUTT_STATUS_H */

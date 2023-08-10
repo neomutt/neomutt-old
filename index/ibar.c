@@ -94,9 +94,10 @@ static int ibar_recalc(struct MuttWindow *win)
   struct IndexSharedData *shared = ibar_data->shared;
   struct IndexPrivateData *priv = ibar_data->priv;
 
-  const char *c_status_format = cs_subset_string(shared->sub, "status_format");
-  menu_status_line(buf, sizeof(buf), shared, priv->menu, win->state.cols,
-                   NONULL(c_status_format));
+  menu_status_line_2gmb(buf, sizeof(buf), shared, priv->menu, win->state.cols, EFMT_STATUS_FORMAT);
+  //const char *c_status_format = cs_subset_string(shared->sub, "status_format");
+  //menu_status_line(buf, sizeof(buf), shared, priv->menu, win->state.cols,
+  // NONULL(c_status_format));
 
   if (!mutt_str_equal(buf, ibar_data->status_format))
   {

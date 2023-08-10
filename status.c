@@ -27,22 +27,27 @@
  */
 
 #include "config.h"
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/lib.h"
-#include "status.h"
 #include "index/lib.h"
 #include "menu/lib.h"
 #include "postpone/lib.h"
+#include "expando/parser.h"
+#include "expando/validation.h"
 #include "format_flags.h"
 #include "globals.h"
 #include "mutt_mailbox.h"
 #include "mutt_thread.h"
 #include "muttlib.h"
 #include "mview.h"
+#include "status.h"
+
+extern const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT_OR_DEBUG];
 
 /**
  * get_sort_str - Get the sort method as a string
@@ -483,4 +488,32 @@ void menu_status_line(char *buf, size_t buflen, struct IndexSharedData *shared,
 
   mutt_expando_format(buf, buflen, 0, cols, fmt, status_format_str,
                       (intptr_t) &data, MUTT_FORMAT_NO_FLAGS);
+}
+void menu_status_line_2gmb(char *buf, size_t buflen, struct IndexSharedData *shared,
+                           struct Menu *menu, int cols, enum ExpandoFormatIndex format_index)
+{
+  struct MenuStatusLineData data = { shared, menu };
+
+  assert(format_index >= 0 && format_index <= EFMT_FORMAT_COUNT_OR_DEBUG);
+
+  if (!NeoMutt->expando_table[format_index].tree)
+  {
+    const char *c_format = cs_subset_string(NeoMutt->sub,
+                                            expando_validation[format_index].name);
+    const char *input = mutt_str_dup(c_format);
+
+    struct ExpandoParseError error = { 0 };
+    struct ExpandoNode *root = NULL;
+
+    expando_tree_parse(&root, &input, format_index, &error);
+
+    assert(error.position == NULL);
+
+    NeoMutt->expando_table[format_index].string = input;
+    NeoMutt->expando_table[format_index].tree = root;
+  }
+
+  mutt_expando_format_2gmb(buf, buflen, 0, cols,
+                           &NeoMutt->expando_table[format_index].tree,
+                           (intptr_t) &data, MUTT_FORMAT_NO_FLAGS);
 }
