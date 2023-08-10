@@ -97,13 +97,27 @@ void conditional_format_callback(const struct ExpandoNode *self, char **buffer,
 
   if (!mutt_str_equal(tmp, "0"))
   {
-    format_tree(&cp->if_true_tree, *buffer, *buffer_len, *start_col, max_cols, data, flags);
+    memset(tmp, 0, sizeof(tmp));
+    format_tree(&cp->if_true_tree, tmp, sizeof(tmp), 0, sizeof(tmp), data, flags);
+
+    const int copylen = strlen(tmp);
+    memcpy(*buffer, tmp, copylen);
+    *start_col += mb_strwidth_range(*buffer, *buffer + copylen);
+    *buffer += copylen;
+    *buffer_len -= copylen;
   }
   else
   {
     if (cp->if_false_tree)
     {
-      format_tree(&cp->if_false_tree, *buffer, *buffer_len, *start_col, max_cols, data, flags);
+      memset(tmp, 0, sizeof(tmp));
+      format_tree(&cp->if_false_tree, tmp, sizeof(tmp), 0, sizeof(tmp), data, flags);
+
+      const int copylen = strlen(tmp);
+      memcpy(*buffer, tmp, copylen);
+      *start_col += mb_strwidth_range(*buffer, *buffer + copylen);
+      *buffer += copylen;
+      *buffer_len -= copylen;
     }
   }
 }
