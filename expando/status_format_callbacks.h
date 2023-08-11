@@ -29,18 +29,18 @@
 struct ExpandoNode;
 
 int status_r(const struct ExpandoNode *self, char *buf, int buf_len,
-             int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+             int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int status_D(const struct ExpandoNode *self, char *buf, int buf_len,
-              int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+              int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int status_f(const struct ExpandoNode *self, char *buf, int buf_len,
-              int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+              int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int status_M(const struct ExpandoNode *self, char *buf, int buf_len,
-              int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+              int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int status_m(const struct ExpandoNode *self, char *buf, int buf_len,
-              int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+              int cols_len, intptr_t data, MuttFormatFlags flags);
 
 #endif /* MUTT_EXPANDO_STATUS_FORMAT_CALLBACKS_H */

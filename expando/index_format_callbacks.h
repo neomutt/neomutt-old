@@ -29,27 +29,27 @@
 struct ExpandoNode;
 
 int index_date(const struct ExpandoNode *self, char *buf,
-                int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+                int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int index_C(const struct ExpandoNode *self, char *buf,
-             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int index_Z(const struct ExpandoNode *self, char *buf,
-             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int index_L(const struct ExpandoNode *self, char *buf,
-             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int index_s(const struct ExpandoNode *self, char *buf,
-             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int index_l(const struct ExpandoNode *self, char *buf,
-             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int index_c(const struct ExpandoNode *self, char *buf,
-             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int index_cr(const struct ExpandoNode *self, char *buf,
-              int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+              int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 #endif /* MUTT_EXPANDO_INDEX_FORMAT_CALLBACKS_H */

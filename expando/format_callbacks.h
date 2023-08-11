@@ -33,7 +33,7 @@ struct ExpandoFormatPrivate;
 
 typedef int (*expando_format_callback)(const struct ExpandoNode *self, char *buf,
                                         int buf_len, int cols_len,
-                                        intptr_t data, MuttFormatFlags flags, bool *optional);
+                                        intptr_t data, MuttFormatFlags flags);
 
 
 /**
@@ -60,12 +60,12 @@ void format_int(char *buf, int buf_len, int number,
 
 
 void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len, int start_col, int max_col,
-                 intptr_t data, MuttFormatFlags flags, bool *optional);
+                 intptr_t data, MuttFormatFlags flags);
 
 int text_format_callback(const struct ExpandoNode *self, char *buf,
-                         int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+                         int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int conditional_format_callback(const struct ExpandoNode *self, char *buf,
-                                int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
+                                int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 #endif /* MUTT_EXPANDO_FORMAT_CALLBACKS_H */

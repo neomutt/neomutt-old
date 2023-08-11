@@ -123,7 +123,7 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
 }
 
 int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
-            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
+            int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -140,7 +140,7 @@ int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
 }
 
 int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
-            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
+            int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -214,7 +214,7 @@ int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
 }
 
 int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
-               int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
+               int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_DATE);
   assert(self->ndata != NULL);
@@ -365,7 +365,7 @@ static void make_from_2gmb(struct Envelope *env, char *buf, size_t buflen,
 }
 
 int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
-            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
+            int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -375,28 +375,15 @@ int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
 
   char fmt[128], tmp[128];
 
-  if (!*optional)
-  {
-    make_from_2gmb(e->env, tmp, sizeof(tmp), true, flags);
-    format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
-                  MT_COLOR_INDEX, format, NO_TREE);
+  make_from_2gmb(e->env, tmp, sizeof(tmp), true, flags);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
+                MT_COLOR_INDEX, format, NO_TREE);
 
-    return snprintf(buf, buf_len, "%s", fmt);
-  }
-  else if (!check_for_mailing_list(&e->env->to, NULL, NULL, 0) &&
-           !check_for_mailing_list(&e->env->cc, NULL, NULL, 0))
-  {
-    *optional = false;
-    return 0;
-  }
-  else
-  {
-    return 0;
-  }
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
-            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
+            int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -438,7 +425,7 @@ int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
 }
 
 int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
-            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
+            int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -448,25 +435,12 @@ int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
 
   char fmt[128];
 
-  if (!*optional)
-  {
-    format_int(fmt, sizeof(fmt), e->lines, flags, MT_COLOR_INDEX_NUMBER,
-               MT_COLOR_INDEX, format);
-    return snprintf(buf, buf_len, "%s", fmt);
-  }
-  else if (e->lines <= 0)
-  {
-    *optional = false;
-    return 0;
-  }
-  else
-  {
-    return 0;
-  }
+  format_int(fmt, sizeof(fmt), e->lines, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
-            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
+            int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -484,7 +458,7 @@ int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
 }
 
 int index_cr(const struct ExpandoNode *self, char *buf, int buf_len,
-             int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
+             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
