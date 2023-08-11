@@ -29,6 +29,15 @@
 struct IndexSharedData;
 struct Menu;
 
+/**
+ * struct MenuStatusLineData - Data for creating a Menu line
+ */
+struct MenuStatusLineData
+{
+  struct IndexSharedData *shared; ///< Data shared between Index, Pager and Sidebar
+  struct Menu *menu;              ///< Current Menu
+};
+
 void menu_status_line(char *buf, size_t buflen, struct IndexSharedData *shared, struct Menu *menu, int cols, const char *fmt);
 void menu_status_line_2gmb(char *buf, size_t buflen, struct IndexSharedData *shared, struct Menu *menu, int cols, enum ExpandoFormatIndex format_index);
 

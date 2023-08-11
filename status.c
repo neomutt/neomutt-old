@@ -34,7 +34,6 @@
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/lib.h"
-#include "status.h"
 #include "index/lib.h"
 #include "menu/lib.h"
 #include "postpone/lib.h"
@@ -44,6 +43,7 @@
 #include "mutt_thread.h"
 #include "muttlib.h"
 #include "mview.h"
+#include "status.h"
 
 extern const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT_OR_DEBUG];
 
@@ -61,15 +61,6 @@ static char *get_sort_str(char *buf, size_t buflen, enum SortType method)
            mutt_map_get_name(method & SORT_MASK, SortMethods));
   return buf;
 }
-
-/**
- * struct MenuStatusLineData - Data for creating a Menu line
- */
-struct MenuStatusLineData
-{
-  struct IndexSharedData *shared; ///< Data shared between Index, Pager and Sidebar
-  struct Menu *menu;              ///< Current Menu
-};
 
 /**
  * status_format_str - Create the status bar string - Implements ::format_t - @ingroup expando_api
