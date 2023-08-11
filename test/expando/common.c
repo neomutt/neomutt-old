@@ -118,12 +118,14 @@ void check_index_hook_node(struct ExpandoNode *node, const char *name)
 }
 
 /* For the linker */
+struct AddressList;
 bool check_for_mailing_list(struct AddressList *al, const char *pfx, char *buf, int buflen)
 {
   return false;
 }
 
 typedef uint8_t MuttThreadFlags;
+struct Email;
 int mutt_traverse_thread(struct Email *e, MuttThreadFlags flag)
 {
   return 0;
@@ -139,9 +141,16 @@ const char *mutt_get_name(const char *s)
   return NULL;
 }
 
+struct Envelope;
 bool subjrx_apply_mods(struct Envelope *env)
 {
   return false;
 }
 
 bool OptAttachMsg;
+
+struct MailboxView;
+bool mview_has_limit(const struct MailboxView *mv)
+{
+  return false;
+}
