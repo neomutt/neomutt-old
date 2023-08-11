@@ -95,21 +95,35 @@ void format_int(char *buf, int buf_len, int number, MuttFormatFlags flags,
   format_string(buf, buf_len, tmp, flags, pre, post, format, NO_TREE);
 }
 
-void format_tree(struct ExpandoNode **tree, char *buf, size_t buflen,
-                 size_t col, int cols, intptr_t data, MuttFormatFlags flags)
+// TODO(g0mb4): Implement this properly
+char *got_to_column(const char *s, int col)
+{
+  assert(col == 0);
+  return (char *) s;
+}
+
+void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len, int start_col,
+                 int max_col, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   const struct ExpandoNode *n = *tree;
-  int start_col = col;
-  int buffer_len = buflen;
+  char *buffer = got_to_column(buf, start_col);
+  int buffer_len = buf_len;
 
-  // TODO(g0mb4): Calculate buffer's start position from `col`,
-  //              so the callback doesn't need to know about it.
-  while (n && start_col < cols && buffer_len > 0)
+  assert(max_col >= start_col);
+  int col_len = max_col - start_col;
+
+  int printed = 0;
+  while (n && buffer_len > 0 && col_len > 0)
   {
     if (n->format_cb)
     {
-      n->format_cb(n, &buf, &buffer_len, &start_col, cols, data, flags);
+      printed = n->format_cb(n, buffer, buffer_len, col_len, data, flags, optional);
+
+      col_len -= mb_strwidth_range(buffer, buffer + printed);
+      buffer_len -= printed;
+      buffer += printed;
     }
+
     n = n->next;
   }
 }
@@ -126,24 +140,21 @@ void format_tree(struct ExpandoNode **tree, char *buf, size_t buflen,
  * @param data
  * @param flags
  */
-void text_format_callback(const struct ExpandoNode *self, char **buffer,
-                          int *buffer_len, int *start_col, int max_cols,
-                          intptr_t data, MuttFormatFlags flags)
+int text_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
+                         int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_TEXT);
 
-  // TODO(g0mb4): Handle *start_col != 0
   int copylen = self->end - self->start;
-  if (copylen > *buffer_len)
+  if (copylen > buf_len)
   {
-    copylen = *buffer_len;
+    copylen = buf_len;
   }
 
-  memcpy(*buffer, self->start, copylen);
+  // FIXME(g0mb4): handle cols_len
+  memcpy(buf, self->start, copylen);
 
-  *buffer += copylen;
-  *buffer_len -= copylen;
-  *start_col += mb_strwidth_range(self->start, self->end);
+  return copylen;
 }
 
 /**
@@ -158,9 +169,9 @@ void text_format_callback(const struct ExpandoNode *self, char **buffer,
  * @param data
  * @param flags
  */
-void conditional_format_callback(const struct ExpandoNode *self, char **buffer,
-                                 int *buffer_len, int *start_col, int max_cols,
-                                 intptr_t data, MuttFormatFlags flags)
+int conditional_format_callback(const struct ExpandoNode *self, char *buf,
+                                int buf_len, int cols_len, intptr_t data,
+                                MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_CONDITION);
   assert(self->ndata);
@@ -173,41 +184,46 @@ void conditional_format_callback(const struct ExpandoNode *self, char **buffer,
   //assert(cp->condition->format_cb);
   if (!cp->condition->format_cb)
   {
-    return;
+    return 0;
   }
 
   char tmp[128] = { 0 };
-  int len = sizeof(tmp) - 1;
-  char *ptmp = &tmp[0];
+  int printed = cp->condition->format_cb(cp->condition, tmp, sizeof(tmp), sizeof(tmp),
+                                         data, MUTT_FORMAT_NO_FLAGS, optional);
 
-  const MuttFormatFlags temp_flags = MUTT_FORMAT_NO_FLAGS;
-
-  int scol = 0;
-  cp->condition->format_cb(cp->condition, &ptmp, &len, &scol, len, data, temp_flags);
-
-  if (!mutt_str_equal(tmp, "0"))
+  if (printed > 0 && !mutt_str_equal(tmp, "0"))
   {
     memset(tmp, 0, sizeof(tmp));
-    format_tree(&cp->if_true_tree, tmp, sizeof(tmp), 0, sizeof(tmp), data, flags);
+    format_tree(&cp->if_true_tree, tmp, sizeof(tmp), 0, sizeof(tmp), data, flags, optional);
 
-    const int copylen = strlen(tmp);
-    memcpy(*buffer, tmp, copylen);
-    *start_col += mb_strwidth_range(*buffer, *buffer + copylen);
-    *buffer += copylen;
-    *buffer_len -= copylen;
+    int copylen = strlen(tmp);
+    if (copylen > buf_len)
+    {
+      copylen = buf_len;
+    }
+    // FIXME(g0mb4): handle cols_len
+    memcpy(buf, tmp, copylen);
+    return copylen;
   }
   else
   {
     if (cp->if_false_tree)
     {
       memset(tmp, 0, sizeof(tmp));
-      format_tree(&cp->if_false_tree, tmp, sizeof(tmp), 0, sizeof(tmp), data, flags);
+      format_tree(&cp->if_false_tree, tmp, sizeof(tmp), 0, sizeof(tmp), data, flags, optional);
 
-      const int copylen = strlen(tmp);
-      memcpy(*buffer, tmp, copylen);
-      *start_col += mb_strwidth_range(*buffer, *buffer + copylen);
-      *buffer += copylen;
-      *buffer_len -= copylen;
+      // FIXME(g0mb4): handle cols_len
+      int copylen = strlen(tmp);
+      if (copylen > buf_len)
+      {
+        copylen = buf_len;
+      }
+      memcpy(buf, tmp, copylen);
+      return copylen;
+    }
+    else
+    {
+      return 0;
     }
   }
 }

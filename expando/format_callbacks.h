@@ -31,9 +31,9 @@
 struct ExpandoNode;
 struct ExpandoFormatPrivate;
 
-typedef void (*expando_format_callback)(const struct ExpandoNode *self, char **buffer,
-                                        int *buffer_len, int *start_col, int max_cols,
-                                        intptr_t data, MuttFormatFlags flags);
+typedef int (*expando_format_callback)(const struct ExpandoNode *self, char *buf,
+                                        int buf_len, int cols_len,
+                                        intptr_t data, MuttFormatFlags flags, bool *optional);
 
 
 /**
@@ -48,6 +48,8 @@ enum HasTreeChars
   HAS_TREE
 };
 
+char * got_to_column(const char *s, int col);
+
 void format_string(char *buf, int buf_len, const char *s,
                    MuttFormatFlags flags, enum ColorId pre, enum ColorId post,
                    struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree);
@@ -57,15 +59,13 @@ void format_int(char *buf, int buf_len, int number,
                 enum ColorId post, struct ExpandoFormatPrivate *format);
 
 
-void format_tree(struct ExpandoNode **tree, char *buf, size_t buflen, size_t col, int cols,
-                 intptr_t data, MuttFormatFlags flags);
+void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len, int start_col, int max_col,
+                 intptr_t data, MuttFormatFlags flags, bool *optional);
 
-void text_format_callback(const struct ExpandoNode *self, char **buffer,
-                          int *buffer_len, int *start_col, int max_cols,
-                          intptr_t data, MuttFormatFlags flags);
+int text_format_callback(const struct ExpandoNode *self, char *buf,
+                         int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
 
-void conditional_format_callback(const struct ExpandoNode *self, char **buffer,
-                                 int *buffer_len, int *start_col, int max_cols,
-                                 intptr_t data, MuttFormatFlags flags);
+int conditional_format_callback(const struct ExpandoNode *self, char *buf,
+                                int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional);
 
 #endif /* MUTT_EXPANDO_FORMAT_CALLBACKS_H */

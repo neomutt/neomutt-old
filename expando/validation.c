@@ -141,12 +141,12 @@ static const struct ExpandoFormatCallback smime_command_1[] = {
 };
 
 static const struct ExpandoFormatCallback status_1[] = {
-  { "b", NULL }, { "d", NULL }, { "D", status_D }, { "f", status_f },
-  { "F", NULL }, { "h", NULL }, { "l", NULL },     { "L", NULL },
-  { "m", NULL }, { "M", NULL }, { "n", NULL },     { "o", NULL },
-  { "p", NULL }, { "P", NULL }, { "r", status_r }, { "R", NULL },
-  { "s", NULL }, { "S", NULL }, { "t", NULL },     { "T", NULL },
-  { "u", NULL }, { "v", NULL }, { "V", NULL },     { NULL, NULL },
+  { "b", NULL },     { "d", NULL },     { "D", status_D }, { "f", status_f },
+  { "F", NULL },     { "h", NULL },     { "l", NULL },     { "L", NULL },
+  { "m", status_m }, { "M", status_M }, { "n", NULL },     { "o", NULL },
+  { "p", NULL },     { "P", NULL },     { "r", status_r }, { "R", NULL },
+  { "s", NULL },     { "S", NULL },     { "t", NULL },     { "T", NULL },
+  { "u", NULL },     { "v", NULL },     { "V", NULL },     { NULL, NULL },
 };
 
 const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT_OR_DEBUG] = {

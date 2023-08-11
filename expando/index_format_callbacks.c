@@ -122,8 +122,8 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
   return e->recipient;
 }
 
-void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
-             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -131,21 +131,16 @@ void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
   struct Email *e = hfi->email;
 
-  // TODO(g0mb4): handle *start_col != 0
   char fmt[128];
 
   format_int(fmt, sizeof(fmt), e->msgno + 1, flags, MT_COLOR_INDEX_NUMBER,
              MT_COLOR_INDEX, format);
 
-  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
-
-  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
-  *buffer_len -= printed;
-  *buffer += printed;
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
-void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
-             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -159,7 +154,6 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   const struct MbTable *c_to_chars = cs_subset_mbtable(NeoMutt->sub, "to_chars");
   const bool threads = mutt_using_threads();
 
-  // TODO(g0mb4): handle *start_col != 0
   char fmt[128], tmp[128];
 
   const char *first = NULL;
@@ -216,15 +210,11 @@ void index_Z(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS,
                 MT_COLOR_INDEX, format, NO_TREE);
 
-  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
-
-  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
-  *buffer_len -= printed;
-  *buffer += printed;
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
-void index_date(const struct ExpandoNode *self, char **buffer, int *buffer_len,
-                int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
+               int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_DATE);
   assert(self->ndata != NULL);
@@ -277,11 +267,7 @@ void index_date(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE,
                 MT_COLOR_INDEX, NULL, NO_TREE);
 
-  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
-
-  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
-  *buffer_len -= printed;
-  *buffer += printed;
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 /**
@@ -378,37 +364,39 @@ static void make_from_2gmb(struct Envelope *env, char *buf, size_t buflen,
            mutt_get_name(TAILQ_FIRST(name)));
 }
 
-void index_L(const struct ExpandoNode *self, char **buffer, int *buffer_len,
-             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
-  const bool optional = (flags & MUTT_FORMAT_OPTIONAL);
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
   struct Email *e = hfi->email;
 
   char fmt[128], tmp[128];
 
-  if (optional)
+  if (!*optional)
   {
-    return;
+    make_from_2gmb(e->env, tmp, sizeof(tmp), true, flags);
+    format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
+                  MT_COLOR_INDEX, format, NO_TREE);
+
+    return snprintf(buf, buf_len, "%s", fmt);
   }
-
-  make_from_2gmb(e->env, tmp, sizeof(tmp), true, flags);
-
-  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
-                MT_COLOR_INDEX, format, NO_TREE);
-
-  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
-
-  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
-  *buffer_len -= printed;
-  *buffer += printed;
+  else if (!check_for_mailing_list(&e->env->to, NULL, NULL, 0) &&
+           !check_for_mailing_list(&e->env->cc, NULL, NULL, 0))
+  {
+    *optional = false;
+    return 0;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
-void index_s(const struct ExpandoNode *self, char **buffer, int *buffer_len,
-             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -446,15 +434,11 @@ void index_s(const struct ExpandoNode *self, char **buffer, int *buffer_len,
                   MT_COLOR_INDEX, format, NO_TREE);
   }
 
-  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
-
-  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
-  *buffer_len -= printed;
-  *buffer += printed;
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
-void index_l(const struct ExpandoNode *self, char **buffer, int *buffer_len,
-             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -463,17 +447,26 @@ void index_l(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   struct Email *e = hfi->email;
 
   char fmt[128];
-  format_int(fmt, sizeof(fmt), e->lines, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
 
-  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
-
-  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
-  *buffer_len -= printed;
-  *buffer += printed;
+  if (!*optional)
+  {
+    format_int(fmt, sizeof(fmt), e->lines, flags, MT_COLOR_INDEX_NUMBER,
+               MT_COLOR_INDEX, format);
+    return snprintf(buf, buf_len, "%s", fmt);
+  }
+  else if (e->lines <= 0)
+  {
+    *optional = false;
+    return 0;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
-void index_c(const struct ExpandoNode *self, char **buffer, int *buffer_len,
-             int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -487,15 +480,11 @@ void index_c(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
                 MT_COLOR_INDEX, format, NO_TREE);
 
-  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
-
-  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
-  *buffer_len -= printed;
-  *buffer += printed;
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
-void index_cr(const struct ExpandoNode *self, char **buffer, int *buffer_len,
-              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+int index_cr(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags, bool *optional)
 {
   assert(self->type == NT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
@@ -509,9 +498,5 @@ void index_cr(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
                 MT_COLOR_INDEX, format, NO_TREE);
 
-  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
-
-  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
-  *buffer_len -= printed;
-  *buffer += printed;
+  return snprintf(buf, buf_len, "%s", fmt);
 }
