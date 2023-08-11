@@ -30,10 +30,10 @@
 #include <assert.h>
 #include "config/lib.h"
 #include "core/neomutt.h"
+#include "postpone/lib.h"
 #include "globals.h"
 #include "index/shared_data.h"
 #include "muttlib.h"
-#include "mview.h"
 #include "node.h"
 #include "status.h"
 #include "status_format_callbacks.h"
@@ -251,6 +251,23 @@ int status_t(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? mailbox->msg_tagged : 0;
+  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int status_p(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct IndexSharedData *shared = msld->shared;
+  struct Mailbox *mailbox = shared->mailbox;
+
+  char fmt[128];
+
+  const int num = mutt_num_postponed(mailbox, false);
   format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

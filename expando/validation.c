@@ -144,7 +144,7 @@ static const struct ExpandoFormatCallback status_1[] = {
   { "b", NULL },     { "d", status_d }, { "D", status_D }, { "f", status_f },
   { "F", status_F }, { "h", NULL },     { "l", NULL },     { "L", NULL },
   { "m", status_m }, { "M", status_M }, { "n", status_n }, { "o", status_o },
-  { "p", NULL },     { "P", NULL },     { "r", status_r }, { "R", NULL },
+  { "p", status_p }, { "P", NULL },     { "r", status_r }, { "R", NULL },
   { "s", NULL },     { "S", NULL },     { "t", status_t }, { "T", NULL },
   { "u", NULL },     { "v", NULL },     { "V", NULL },     { NULL, NULL },
 };
