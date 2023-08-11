@@ -154,3 +154,14 @@ bool mview_has_limit(const struct MailboxView *mv)
 {
   return false;
 }
+
+int mutt_num_postponed(struct Mailbox *m, bool force)
+{
+  return 0;
+}
+
+typedef uint8_t CheckStatsFlags;
+int mutt_mailbox_check(struct Mailbox *m_cur, CheckStatsFlags flags)
+{
+  return 0;
+}
