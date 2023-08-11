@@ -26,12 +26,36 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "format_flags.h"
+#include "color/color.h"
 
 struct ExpandoNode;
+struct ExpandoFormatPrivate;
 
 typedef void (*expando_format_callback)(const struct ExpandoNode *self, char **buffer,
                                         int *buffer_len, int *start_col, int max_cols,
                                         intptr_t data, MuttFormatFlags flags);
+
+
+/**
+ * enum HasTreeChars - Signals if the string constains tree characters.
+ *
+ * Characters like: '┌', '┴'.
+ * More readale than a simple true / false.
+ */
+enum HasTreeChars
+{
+  NO_TREE = 0,
+  HAS_TREE
+};
+
+void format_string(char *buf, int buf_len, const char *s,
+                   MuttFormatFlags flags, enum ColorId pre, enum ColorId post,
+                   struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree);
+
+void format_int(char *buf, int buf_len, int number,
+                MuttFormatFlags flags, enum ColorId pre,
+                enum ColorId post, struct ExpandoFormatPrivate *format);
+
 
 void format_tree(struct ExpandoNode **tree, char *buf, size_t buflen, size_t col, int cols,
                  intptr_t data, MuttFormatFlags flags);

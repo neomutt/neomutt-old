@@ -31,4 +31,10 @@ struct ExpandoNode;
 void status_r(const struct ExpandoNode *self, char **buffer, int *buffer_len,
               int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags);
 
+void status_D(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags);
+
+void status_f(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags);
+
 #endif /* MUTT_EXPANDO_STATUS_FORMAT_CALLBACKS_H */

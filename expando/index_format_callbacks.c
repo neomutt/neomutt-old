@@ -40,47 +40,16 @@
 #include "core/neomutt.h"
 #include "alias/lib.h"
 #include "gui/curs_lib.h"
-#include "index_format_callbacks.h"
 #include "ncrypt/lib.h"
-#include "color/color.h"
 #include "hdrline.h"
 #include "helpers.h"
+#include "index_format_callbacks.h"
 #include "maillist.h"
 #include "mutt_thread.h"
 #include "muttlib.h"
 #include "node.h"
 #include "sort.h"
 #include "subjectrx.h"
-
-// TODO(g0mb4): see if it can be used for all formats
-// NOTE(g0mb4): copy of hdrline.c's add_index_color()
-static size_t add_index_color_2gmb(char *buf, int buflen, MuttFormatFlags flags,
-                                   enum ColorId color)
-{
-  /* only add color markers if we are operating on main index entries. */
-  if (!(flags & MUTT_FORMAT_INDEX))
-    return 0;
-
-  /* this item is going to be passed to an external filter */
-  if (flags & MUTT_FORMAT_NOFILTER)
-    return 0;
-
-  if (buflen <= 2)
-    return 0;
-
-  if (color == MT_COLOR_INDEX)
-  { /* buf might be uninitialized other cases */
-    const size_t len = mutt_str_len(buf);
-    buf += len;
-    buflen -= len;
-  }
-
-  buf[0] = MUTT_SPECIAL_INDEX;
-  buf[1] = color;
-  buf[2] = '\0';
-
-  return 2;
-}
 
 static bool thread_is_new_2gmb(struct Email *e)
 {
@@ -151,49 +120,6 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
   }
 
   return e->recipient;
-}
-
-/**
- * enum HasTreeChars - Signals if the string constains tree characters.
- *
- * Characters like: '┌', '┴'.
- * More readale than a simple true / false.
- */
-enum HasTreeChars
-{
-  NO_TREE = 0,
-  HAS_TREE
-};
-
-// NOTE(g0mb4): It cuts a long string, e.g. subject (%s) in $index_format
-static void format_string(char *buf, int buf_len, const char *s,
-                          MuttFormatFlags flags, enum ColorId pre, enum ColorId post,
-                          struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree)
-{
-  if (format)
-  {
-    const size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
-    mutt_simple_format(buf + colorlen1, buf_len - colorlen1, format->min,
-                       format->max, format->justification, format->leader, s,
-                       strlen(s), has_tree == HAS_TREE);
-    const int n = strlen(buf);
-    add_index_color_2gmb(buf + n, buf_len - n, flags, post);
-  }
-  else
-  {
-    const size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
-    const int n = snprintf(buf + colorlen1, buf_len - colorlen1, "%s", s);
-    add_index_color_2gmb(buf + colorlen1 + n, buf_len - colorlen1 - n, flags, post);
-  }
-}
-
-static void format_int(char *buf, int buf_len, int number,
-                       MuttFormatFlags flags, enum ColorId pre,
-                       enum ColorId post, struct ExpandoFormatPrivate *format)
-{
-  char tmp[32]; // 64 bit INT_MAX has 20 digits
-  snprintf(tmp, sizeof(tmp), "%d", number);
-  format_string(buf, buf_len, tmp, flags, pre, post, format, NO_TREE);
 }
 
 void index_C(const struct ExpandoNode *self, char **buffer, int *buffer_len,

@@ -72,3 +72,73 @@ void status_r(const struct ExpandoNode *self, char **buffer, int *buffer_len,
   *buffer_len -= printed;
   *buffer += printed;
 }
+
+void status_D(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct IndexSharedData *shared = msld->shared;
+  struct Mailbox *mailbox = shared->mailbox;
+
+  char fmt[128], tmp[128];
+
+  // If there's a descriptive name, use it. Otherwise, use %f
+  if (mailbox && mailbox->name)
+  {
+    mutt_str_copy(tmp, mailbox->name, sizeof(tmp));
+    format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+    int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
+
+    *start_col += mb_strwidth_range(*buffer, *buffer + printed);
+    *buffer_len -= printed;
+    *buffer += printed;
+
+    return;
+  }
+
+  status_f(self, buffer, buffer_len, start_col, max_cols, data, flags);
+}
+
+void status_f(const struct ExpandoNode *self, char **buffer, int *buffer_len,
+              int *start_col, int max_cols, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct IndexSharedData *shared = msld->shared;
+  struct Mailbox *mailbox = shared->mailbox;
+  char fmt[128], tmp[128];
+
+#ifdef USE_COMP_MBOX
+  if (mailbox && mailbox->compress_info && (mailbox->realpath[0] != '\0'))
+  {
+    mutt_str_copy(tmp, mailbox->realpath, sizeof(tmp));
+    mutt_pretty_mailbox(tmp, sizeof(tmp));
+  }
+  else
+#endif
+      if (mailbox && (mailbox->type == MUTT_NOTMUCH) && mailbox->name)
+  {
+    mutt_str_copy(tmp, mailbox->name, sizeof(tmp));
+  }
+  else if (mailbox && !buf_is_empty(&mailbox->pathbuf))
+  {
+    mutt_str_copy(tmp, mailbox_path(mailbox), sizeof(tmp));
+    mutt_pretty_mailbox(tmp, sizeof(tmp));
+  }
+  else
+  {
+    mutt_str_copy(tmp, _("(no mailbox)"), sizeof(tmp));
+  }
+
+  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  int printed = snprintf(*buffer, *buffer_len, "%s", fmt);
+
+  *start_col += mb_strwidth_range(*buffer, *buffer + printed);
+  *buffer_len -= printed;
+  *buffer += printed;
+}
