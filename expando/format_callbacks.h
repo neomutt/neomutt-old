@@ -48,7 +48,7 @@ enum HasTreeChars
   HAS_TREE
 };
 
-char * got_to_column(const char *s, int col);
+char *got_to_column(char **start, int col);
 
 void format_string(char *buf, int buf_len, const char *s,
                    MuttFormatFlags flags, enum ColorId pre, enum ColorId post,

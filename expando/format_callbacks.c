@@ -96,8 +96,9 @@ void format_int(char *buf, int buf_len, int number, MuttFormatFlags flags,
 }
 
 // TODO(g0mb4): Implement this properly
-char *got_to_column(const char *s, int col)
+char *got_to_column(char **start, int col)
 {
+  char *s = *start;
   assert(col == 0);
   return (char *) s;
 }
@@ -106,8 +107,8 @@ void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
                  int start_col, int max_col, intptr_t data, MuttFormatFlags flags)
 {
   const struct ExpandoNode *n = *tree;
-  char *buffer = got_to_column(buf, start_col);
-  int buffer_len = buf_len;
+  char *buffer = got_to_column(&buf, start_col);
+  int buffer_len = buf_len - (buffer - buf);
 
   assert(max_col >= start_col);
   int col_len = max_col - start_col;
