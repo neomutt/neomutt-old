@@ -148,8 +148,8 @@ int status_M(const struct ExpandoNode *self, char *buf, int buf_len,
 
   char fmt[128];
 
-  const int vcount = mailbox ? mailbox->vcount : 0;
-  format_int(fmt, sizeof(fmt), vcount, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  const int num = mailbox ? mailbox->vcount : 0;
+  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -165,7 +165,24 @@ int status_m(const struct ExpandoNode *self, char *buf, int buf_len,
 
   char fmt[128];
 
-  const int msg_count = mailbox ? mailbox->msg_count : 0;
-  format_int(fmt, sizeof(fmt), msg_count, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  const int num = mailbox ? mailbox->msg_count : 0;
+  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int status_n(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct IndexSharedData *shared = msld->shared;
+  struct Mailbox *mailbox = shared->mailbox;
+
+  char fmt[128];
+
+  const int num = mailbox ? mailbox->msg_new : 0;
+  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
