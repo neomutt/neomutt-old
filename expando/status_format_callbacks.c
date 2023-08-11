@@ -289,3 +289,22 @@ int status_b(const struct ExpandoNode *self, char *buf, int buf_len,
   format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
+
+int status_l(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct IndexSharedData *shared = msld->shared;
+  struct Mailbox *mailbox = shared->mailbox;
+
+  char tmp[128], fmt[128];
+
+  const off_t num = mailbox ? mailbox->size : 0;
+  mutt_str_pretty_size(tmp, sizeof(tmp), num);
+  format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+
+  return snprintf(buf, buf_len, "%s", fmt);
+}

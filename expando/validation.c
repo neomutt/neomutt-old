@@ -142,7 +142,7 @@ static const struct ExpandoFormatCallback smime_command_1[] = {
 
 static const struct ExpandoFormatCallback status_1[] = {
   { "b", status_b }, { "d", status_d }, { "D", status_D }, { "f", status_f },
-  { "F", status_F }, { "h", NULL },     { "l", NULL },     { "L", NULL },
+  { "F", status_F }, { "h", NULL },     { "l", status_l }, { "L", NULL },
   { "m", status_m }, { "M", status_M }, { "n", status_n }, { "o", status_o },
   { "p", status_p }, { "P", NULL },     { "r", status_r }, { "R", NULL },
   { "s", NULL },     { "S", NULL },     { "t", status_t }, { "T", NULL },
