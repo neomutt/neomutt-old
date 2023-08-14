@@ -165,3 +165,8 @@ int mutt_mailbox_check(struct Mailbox *m_cur, CheckStatsFlags flags)
 {
   return 0;
 }
+
+const char *get_use_threads_str(int)
+{
+  return NULL;
+}
