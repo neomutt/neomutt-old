@@ -369,3 +369,43 @@ int status_S(const struct ExpandoNode *self, char *buf, int buf_len,
 
   return snprintf(buf, buf_len, "%s", fmt);
 }
+
+int status_P(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct Menu *menu = msld->menu;
+
+  char tmp[128], fmt[128];
+
+  if (!menu)
+  {
+    return 0;
+  }
+
+  char *cp = NULL;
+  if (menu->top + menu->page_len >= menu->max)
+  {
+    cp = menu->top ?
+             /* L10N: Status bar message: the end of the list emails is visible in the index */
+             _("end") :
+             /* L10N: Status bar message: all the emails are visible in the index */
+             _("all");
+  }
+  else
+  {
+    int count = (100 * (menu->top + menu->page_len)) / menu->max;
+    /* L10N: Status bar, percentage of way through index.
+           `%d` is the number, `%%` is the percent symbol.
+           They may be reordered, or space inserted, if you wish. */
+    snprintf(tmp, sizeof(tmp), _("%d%%"), count);
+    cp = tmp;
+  }
+
+  format_string(fmt, sizeof(fmt), cp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+
+  return snprintf(buf, buf_len, "%s", fmt);
+}
