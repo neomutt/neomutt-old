@@ -25,15 +25,16 @@
  *
  * Parse expando string
  *
- * | File                             | Description                   |
- * | :------------------------------- | :---------------------------- |
- * | expando/format_callbacks.c       | @subpage expando_format       |
- * | expando/global_table.c           | @subpage expando_global       |
- * | expando/helpers.c                | @subpage expando_helpers      |
- * | expando/index_format_callbacks.c | @subpage expando_index_format |
- * | expando/node.c                   | @subpage expando_node         |
- * | expando/parser.c                 | @subpage expando_parser       |
- * | expando/validation.c             | @subpage expando_validation   |
+ * | File                              | Description                    |
+ * | :-------------------------------- | :----------------------------- |
+ * | expando/format_callbacks.c        | @subpage expando_format        |
+ * | expando/global_table.c            | @subpage expando_global        |
+ * | expando/helpers.c                 | @subpage expando_helpers       |
+ * | expando/index_format_callbacks.c  | @subpage expando_index_format  |
+ * | expando/node.c                    | @subpage expando_node          |
+ * | expando/parser.c                  | @subpage expando_parser        |
+ * | expando/status_format_callbacks.c | @subpage expando_status_format |
+ * | expando/validation.c              | @subpage expando_validation    |
  */
 
 #ifndef MUTT_EXPANDO_LIB_H

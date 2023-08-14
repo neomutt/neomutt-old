@@ -34,6 +34,7 @@
 #include "globals.h"
 #include "index/shared_data.h"
 #include "mutt_mailbox.h"
+#include "mutt_thread.h"
 #include "muttlib.h"
 #include "node.h"
 #include "status.h"
@@ -305,6 +306,21 @@ int status_l(const struct ExpandoNode *self, char *buf, int buf_len,
   const off_t num = mailbox ? mailbox->size : 0;
   mutt_str_pretty_size(tmp, sizeof(tmp), num);
   format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int status_T(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  char fmt[128];
+
+  const enum UseThreads c_use_threads = mutt_thread_style();
+  format_string(fmt, sizeof(fmt), get_use_threads_str(c_use_threads),
+                MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
 
   return snprintf(buf, buf_len, "%s", fmt);
 }
