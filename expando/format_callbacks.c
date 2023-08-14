@@ -307,10 +307,10 @@ static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int b
               sizeof(tmp), data, flags);
 
   const int right_len = mutt_str_len(tmp);
-  const int right_width = mutt_strwidth(tmp);
 
   int len = buf_len;
   int cols = cols_len;
+
   bool is_space_to_write = ((len - pad_len) > 0) && ((cols - pad_width) > 0);
 
   while (is_space_to_write)
@@ -324,11 +324,23 @@ static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int b
     is_space_to_write = ((len - pad_len) > 0) && ((cols - pad_width) > 0);
   }
 
-  // consume remaining space
-  while (cols > 0)
+  if (cols_len > 0)
   {
-    cols--;
-    buf++;
+    // consume remaining space
+    while (cols > 0)
+    {
+      cols--;
+      buf++;
+    }
+  }
+  else
+  {
+    // revind buffer
+    while (cols < 0)
+    {
+      cols++;
+      buf--;
+    }
   }
 
   memcpy(buf - right_len - 1, tmp, right_len);
