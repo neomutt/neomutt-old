@@ -260,8 +260,8 @@ static int pad_format_hard_fill(const struct ExpandoNode *self, char *buf, int b
   char tmp[128] = { 0 };
   format_tree((struct ExpandoNode **) &self->next, tmp, sizeof(tmp), 0,
               sizeof(tmp), data, flags);
-  int right_len = mutt_str_len(tmp);
-  int right_width = mutt_strwidth(tmp);
+  const int right_len = mutt_str_len(tmp);
+  const int right_width = mutt_strwidth(tmp);
 
   int len = buf_len;
   int cols = cols_len;
@@ -285,6 +285,46 @@ static int pad_format_hard_fill(const struct ExpandoNode *self, char *buf, int b
   return buf_len;
 }
 
+// FIXME(g0mb4): pass whole buffer, not just the advanced pointer
+static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int buf_len,
+                                int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  const int pad_len = self->end - self->start;
+  const int pad_width = mb_strwidth_nonnull(self->start, self->end);
+
+  char tmp[128] = { 0 };
+  format_tree((struct ExpandoNode **) &self->next, tmp, sizeof(tmp), 0,
+              sizeof(tmp), data, flags);
+
+  const int right_len = mutt_str_len(tmp);
+
+  int len = buf_len;
+  int cols = cols_len;
+  bool is_space_to_write = ((len - pad_len) > 0) && ((cols - pad_width) > 0);
+
+  while (is_space_to_write)
+  {
+    memcpy(buf, self->start, pad_len);
+
+    buf += pad_len;
+    len -= pad_len;
+    cols -= pad_width;
+
+    is_space_to_write = ((len - pad_len) > 0) && ((cols - pad_width) > 0);
+  }
+
+  // consume remaining space
+  while (cols > 0)
+  {
+    cols--;
+    buf++;
+  }
+
+  memcpy(buf - right_len - 1, tmp, right_len);
+
+  return buf_len;
+}
+
 int pad_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
                         int cols_len, intptr_t data, MuttFormatFlags flags)
 {
@@ -300,7 +340,7 @@ int pad_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
     case PT_HARD_FILL:
       return pad_format_hard_fill(self, buf, buf_len, cols_len, data, flags);
     case PT_SOFT_FILL:
-      return 0;
+      return pad_format_soft_fill(self, buf, buf_len, cols_len, data, flags);
     default:
       assert(0 && "Unknown pad type.");
   };
