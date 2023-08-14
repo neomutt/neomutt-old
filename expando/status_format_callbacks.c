@@ -324,3 +324,48 @@ int status_T(const struct ExpandoNode *self, char *buf, int buf_len,
 
   return snprintf(buf, buf_len, "%s", fmt);
 }
+
+/**
+ * get_sort_str - Get the sort method as a string
+ * @param buf    Buffer for the sort string
+ * @param buflen Length of the buffer
+ * @param method Sort method, see #SortType
+ * @retval ptr Buffer pointer
+ */
+static char *get_sort_str_2gmb(char *buf, size_t buflen, enum SortType method)
+{
+  snprintf(buf, buflen, "%s%s%s", (method & SORT_REVERSE) ? "reverse-" : "",
+           (method & SORT_LAST) ? "last-" : "",
+           mutt_map_get_name(method & SORT_MASK, SortMethods));
+  return buf;
+}
+
+int status_s(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  char fmt[128], tmp[128];
+
+  const enum SortType c_sort = cs_subset_sort(NeoMutt->sub, "sort");
+  format_string(fmt, sizeof(fmt), get_sort_str_2gmb(tmp, sizeof(tmp), c_sort),
+                MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int status_S(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  char fmt[128], tmp[128];
+
+  const enum SortType c_sort_aux = cs_subset_sort(NeoMutt->sub, "sort_aux");
+  format_string(fmt, sizeof(fmt), get_sort_str_2gmb(tmp, sizeof(tmp), c_sort_aux),
+                MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+
+  return snprintf(buf, buf_len, "%s", fmt);
+}
