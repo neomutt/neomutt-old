@@ -257,7 +257,7 @@ static int pad_format_fill_eol(const struct ExpandoNode *self, char *buf, int bu
     is_space_to_write = ((len - pad_len) > 0) && ((cols - pad_width) > 0);
   }
 
-  // consume whole buffer
+  // formatting of the whole buffer is done
   return buf_len;
 }
 
@@ -292,10 +292,10 @@ static int pad_format_hard_fill(const struct ExpandoNode *self, char *buf, int b
 
   memcpy(buf, tmp, right_len);
 
+  // formatting of the whole buffer is done
   return buf_len;
 }
 
-// FIXME(g0mb4): does not seems right
 static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int buf_len,
                                 int cols_len, intptr_t data, MuttFormatFlags flags)
 {
@@ -335,7 +335,7 @@ static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int b
   }
   else
   {
-    // revind buffer
+    // rewind buffer
     while (cols < 0)
     {
       cols++;
@@ -345,6 +345,7 @@ static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int b
 
   memcpy(buf - right_len - 1, tmp, right_len);
 
+  // formatting of the whole buffer is done
   return buf_len;
 }
 
@@ -368,6 +369,6 @@ int pad_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
       assert(0 && "Unknown pad type.");
   };
 
-  assert(0 && "Unreacheale");
+  assert(0 && "Unreachable");
   return 0;
 }
