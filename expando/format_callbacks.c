@@ -125,6 +125,16 @@ void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
 
     n = n->next;
   }
+
+  // give softpad nodes a chance to act
+  while (n)
+  {
+    if (n->type == NT_PAD && n->format_cb)
+    {
+      n->format_cb(n, buffer, buffer_len, col_len, data, flags);
+    }
+    n = n->next;
+  }
 }
 
 /**
@@ -285,7 +295,7 @@ static int pad_format_hard_fill(const struct ExpandoNode *self, char *buf, int b
   return buf_len;
 }
 
-// FIXME(g0mb4): pass whole buffer, not just the advanced pointer
+// FIXME(g0mb4): does not seems right
 static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int buf_len,
                                 int cols_len, intptr_t data, MuttFormatFlags flags)
 {
@@ -297,6 +307,7 @@ static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int b
               sizeof(tmp), data, flags);
 
   const int right_len = mutt_str_len(tmp);
+  const int right_width = mutt_strwidth(tmp);
 
   int len = buf_len;
   int cols = cols_len;
