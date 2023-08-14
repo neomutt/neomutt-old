@@ -226,28 +226,62 @@ int conditional_format_callback(const struct ExpandoNode *self, char *buf, int b
   }
 }
 
-static int pad_format_fill(const struct ExpandoNode *self, char *buf, int buf_len,
-                           int cols_len, intptr_t data, MuttFormatFlags flags)
+static int pad_format_fill_eol(const struct ExpandoNode *self, char *buf, int buf_len,
+                               int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  const int size = self->end - self->start;
-  const int width = mb_strwidth_nonnull(self->start, self->end);
+  const int pad_len = self->end - self->start;
+  const int pad_width = mb_strwidth_nonnull(self->start, self->end);
 
   int len = buf_len;
   int cols = cols_len;
-  bool is_space_to_write = ((len - size) > 0) && ((cols - width) > 0);
+  bool is_space_to_write = ((len - pad_len) > 0) && ((cols - pad_width) > 0);
 
   while (is_space_to_write)
   {
-    memcpy(buf, self->start, size);
+    memcpy(buf, self->start, pad_len);
 
-    buf += size;
-    len -= size;
-    cols -= width;
+    buf += pad_len;
+    len -= pad_len;
+    cols -= pad_width;
 
-    is_space_to_write = ((len - size) > 0) && ((cols - width) > 0);
+    is_space_to_write = ((len - pad_len) > 0) && ((cols - pad_width) > 0);
   }
 
   // consume whole buffer
+  return buf_len;
+}
+
+static int pad_format_hard_fill(const struct ExpandoNode *self, char *buf, int buf_len,
+                                int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  const int pad_len = self->end - self->start;
+  const int pad_width = mb_strwidth_nonnull(self->start, self->end);
+
+  char tmp[128] = { 0 };
+  format_tree((struct ExpandoNode **) &self->next, tmp, sizeof(tmp), 0,
+              sizeof(tmp), data, flags);
+  int right_len = mutt_str_len(tmp);
+  int right_width = mutt_strwidth(tmp);
+
+  int len = buf_len;
+  int cols = cols_len;
+  bool is_space_to_write = ((len - pad_len - right_len) > 0) &&
+                           ((cols - pad_width - right_width) > 0);
+
+  while (is_space_to_write)
+  {
+    memcpy(buf, self->start, pad_len);
+
+    buf += pad_len;
+    len -= pad_len;
+    cols -= pad_width;
+
+    is_space_to_write = ((len - pad_len - right_len) > 0) &&
+                        ((cols - pad_width - right_width) > 0);
+  }
+
+  memcpy(buf, tmp, right_len);
+
   return buf_len;
 }
 
@@ -262,9 +296,9 @@ int pad_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
   switch (pp->pad_type)
   {
     case PT_FILL_EOL:
-      return pad_format_fill(self, buf, buf_len, cols_len, data, flags);
+      return pad_format_fill_eol(self, buf, buf_len, cols_len, data, flags);
     case PT_HARD_FILL:
-      return 0;
+      return pad_format_hard_fill(self, buf, buf_len, cols_len, data, flags);
     case PT_SOFT_FILL:
       return 0;
     default:
