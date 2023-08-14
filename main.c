@@ -713,7 +713,7 @@ main
     }
     else
     {
-      int location = mb_strwidth_range(string_to_parse, error.position);
+      int location = mb_strwidth_nonnull(string_to_parse, error.position);
       printf("%*s^\n", location, "");
       printf("Parsing error: %s\n", error.message);
     }

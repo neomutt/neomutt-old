@@ -35,8 +35,6 @@
 #include "mutt_thread.h"
 #include "node.h"
 
-// TODO(g0mb4): see if it can be used for all formats
-// NOTE(g0mb4): copy of hdrline.c's add_index_color()
 static size_t add_index_color_2gmb(char *buf, int buflen, MuttFormatFlags flags,
                                    enum ColorId color)
 {
@@ -111,7 +109,7 @@ void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
   int buffer_len = buf_len - (buffer - buf);
 
   assert(max_col >= start_col);
-  int col_len = max_col - start_col;
+  int col_len = max_col - start_col + 1;
 
   int printed = 0;
   while (n && buffer_len > 0 && col_len > 0)
@@ -120,7 +118,7 @@ void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
     {
       printed = n->format_cb(n, buffer, buffer_len, col_len, data, flags);
 
-      col_len -= mb_strwidth_range(buffer, buffer + printed);
+      col_len -= mb_strwidth_nonnull(buffer, buffer + printed);
       buffer_len -= printed;
       buffer += printed;
     }
@@ -226,4 +224,53 @@ int conditional_format_callback(const struct ExpandoNode *self, char *buf, int b
       return 0;
     }
   }
+}
+
+static int pad_format_fill(const struct ExpandoNode *self, char *buf, int buf_len,
+                           int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  const int size = self->end - self->start;
+  const int width = mb_strwidth_nonnull(self->start, self->end);
+
+  int len = buf_len;
+  int cols = cols_len;
+  bool is_space_to_write = ((len - size) > 0) && ((cols - width) > 0);
+
+  while (is_space_to_write)
+  {
+    memcpy(buf, self->start, size);
+
+    buf += size;
+    len -= size;
+    cols -= width;
+
+    is_space_to_write = ((len - size) > 0) && ((cols - width) > 0);
+  }
+
+  // consume whole buffer
+  return buf_len;
+}
+
+int pad_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
+                        int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == NT_PAD);
+  assert(self->ndata);
+
+  struct ExpandoPadPrivate *pp = (struct ExpandoPadPrivate *) self->ndata;
+
+  switch (pp->pad_type)
+  {
+    case PT_FILL_EOL:
+      return pad_format_fill(self, buf, buf_len, cols_len, data, flags);
+    case PT_HARD_FILL:
+      return 0;
+    case PT_SOFT_FILL:
+      return 0;
+    default:
+      assert(0 && "Unknown pad type.");
+  };
+
+  assert(0 && "Unreacheale");
+  return 0;
 }

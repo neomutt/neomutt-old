@@ -78,7 +78,7 @@ struct ExpandoDatePrivate
 
 enum ExpandoPadType
 {
-  PT_FILL,
+  PT_FILL_EOL,
   PT_HARD_FILL,
   PT_SOFT_FILL
 };

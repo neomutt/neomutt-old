@@ -92,8 +92,8 @@ static void print_pad_node(FILE *fp, const struct ExpandoNode *n, int indent)
   const char *pt = NULL;
   switch (p->pad_type)
   {
-    case PT_FILL:
-      pt = "FILL";
+    case PT_FILL_EOL:
+      pt = "FILL_EOL";
       break;
 
     case PT_HARD_FILL:

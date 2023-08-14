@@ -68,4 +68,7 @@ int text_format_callback(const struct ExpandoNode *self, char *buf,
 int conditional_format_callback(const struct ExpandoNode *self, char *buf,
                                 int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
+int pad_format_callback(const struct ExpandoNode *self, char *buf,
+                         int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
 #endif /* MUTT_EXPANDO_FORMAT_CALLBACKS_H */

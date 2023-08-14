@@ -35,12 +35,12 @@
 #include <string.h>
 #include "mutt/memory.h"
 #include "gui/curs_lib.h"
-#include "parser.h"
 #include "format_callbacks.h"
 #include "helpers.h"
 #include "index_format_callbacks.h"
 #include "limits.h"
 #include "node.h"
+#include "parser.h"
 #include "validation.h"
 
 extern const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT_OR_DEBUG];
@@ -126,6 +126,8 @@ static struct ExpandoNode *new_pad_node(enum ExpandoPadType pad_type,
   node->type = NT_PAD;
   node->start = start;
   node->end = end;
+
+  node->format_cb = pad_format_callback;
 
   struct ExpandoPadPrivate *pp = mutt_mem_calloc(1, sizeof(struct ExpandoPadPrivate));
   pp->pad_type = pad_type;
@@ -364,7 +366,7 @@ static expando_format_callback check_if_expando_is_valid(const char *start, cons
     valid_long_expandos = NULL;
   }
 
-  if (valid_short_expandos && mb_strlen_range(start, end) == 1)
+  if (valid_short_expandos && mb_strlen_nonnull(start, end) == 1)
   {
     for (size_t i = 0; valid_short_expandos[i].name != NULL; ++i)
     {
@@ -383,7 +385,7 @@ static expando_format_callback check_if_expando_is_valid(const char *start, cons
     return NULL;
   }
 
-  if (valid_two_char_expandos && mb_strlen_range(start, end) > 1)
+  if (valid_two_char_expandos && mb_strlen_nonnull(start, end) > 1)
   {
     for (size_t i = 0; valid_two_char_expandos[i].name != NULL; ++i)
     {
@@ -402,7 +404,7 @@ static expando_format_callback check_if_expando_is_valid(const char *start, cons
     return NULL;
   }
 
-  if (valid_long_expandos && mb_strlen_range(start, end) > 1)
+  if (valid_long_expandos && mb_strlen_nonnull(start, end) > 1)
   {
     for (size_t i = 0; valid_long_expandos[i].name != NULL; ++i)
     {
@@ -524,7 +526,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         enum ExpandoPadType pt = 0;
         if (*s == '|')
         {
-          pt = PT_FILL;
+          pt = PT_FILL_EOL;
         }
         else if (*s == '>')
         {

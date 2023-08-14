@@ -9,7 +9,7 @@ void test_expando_padding(void)
   expando_tree_parse(&root, &input, EFMT_FORMAT_COUNT_OR_DEBUG, &error);
 
   TEST_CHECK(error.position == NULL);
-  check_pad_node(get_nth_node(&root, 0), "A", PT_FILL);
+  check_pad_node(get_nth_node(&root, 0), "A", PT_FILL_EOL);
   check_text_node(get_nth_node(&root, 1), " ");
   check_pad_node(get_nth_node(&root, 2), "B", PT_HARD_FILL);
   check_text_node(get_nth_node(&root, 3), " ");

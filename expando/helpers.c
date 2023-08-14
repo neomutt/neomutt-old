@@ -35,12 +35,12 @@
 #include "helpers.h"
 
 /**
- * mb_strlen_range - Measure a non null-terminated string's length (number of characers)
+ * mb_strlen_nonnull - Measure a non null-terminated string's length (number of characers)
  * @param start      Start of the string
  * @param end        End of the string
  * @return int       Number of characters
  */
-int mb_strlen_range(const char *start, const char *end)
+int mb_strlen_nonnull(const char *start, const char *end)
 {
   int len = 0;
   const char *s = start;
@@ -57,12 +57,12 @@ int mb_strlen_range(const char *start, const char *end)
 }
 
 /**
- * mb_strwidth_range - Measure a non null-terminated string's display width (in screen columns)
+ * mb_strwidth_nonnull - Measure a non null-terminated string's display width (in screen columns)
  * @param start     Start of the string
  * @param end       End of the string
  * @return int      Number of columns the string requires
  */
-int mb_strwidth_range(const char *start, const char *end)
+int mb_strwidth_nonnull(const char *start, const char *end)
 {
   wchar_t wc = 0;
   int len = 0;
