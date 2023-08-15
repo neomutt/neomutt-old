@@ -45,7 +45,6 @@ struct NeoMutt
   struct ConfigSubset *sub;          ///< Inherited config items
   struct AccountList accounts;       ///< List of all Accounts
   locale_t time_c_locale;            ///< Current locale but LC_TIME=C
-  struct ExpandoRecord *expando_table; ///< Global table of parsed expandos
 };
 
 extern struct NeoMutt *NeoMutt;
