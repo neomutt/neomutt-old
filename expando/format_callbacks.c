@@ -140,14 +140,6 @@ void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
 /**
  * text_format_callback - Callback for every text node.
  *
- * TODO(g0mb4): Fill these:
- * @param self
- * @param buffer
- * @param buffer_len
- * @param start_col
- * @param max_cols
- * @param data
- * @param flags
  */
 int text_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
                          int cols_len, intptr_t data, MuttFormatFlags flags)
@@ -169,14 +161,6 @@ int text_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
 /**
  * conditional_format_callback - Callback for every conditional node.
  *
- * TODO(g0mb4): Fill these:
- * @param self
- * @param buffer
- * @param buffer_len
- * @param start_col
- * @param max_cols
- * @param data
- * @param flags
  */
 int conditional_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
                                 int cols_len, intptr_t data, MuttFormatFlags flags)
@@ -343,12 +327,17 @@ static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int b
     }
   }
 
+  // TODO(g0mb4): Check boundaries
   memcpy(buf - right_len - 1, tmp, right_len);
 
   // formatting of the whole buffer is done
   return buf_len;
 }
 
+/**
+ * pad_format_callback - Callback for every pad node.
+ *
+ */
 int pad_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
                         int cols_len, intptr_t data, MuttFormatFlags flags)
 {
