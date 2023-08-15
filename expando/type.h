@@ -23,8 +23,6 @@
 #ifndef MUTT_EXPANDO_TYPE_H
 #define MUTT_EXPANDO_TYPE_H
 
-#include "node.h"
-
 /**
  * struct ExpandoRecord - parsed expando trees
  *
@@ -37,7 +35,6 @@ struct ExpandoRecord
   const char *string;       ///< Pointer to the parsed string
   struct ExpandoNode *tree; ///< Parsed tree
 };
-
 
 void                  expando_free(struct ExpandoRecord **ptr);
 struct ExpandoRecord *expando_new (const char *format);

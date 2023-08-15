@@ -21,17 +21,15 @@
  */
 
 /**
- * @page config_address Type: Expando
+ * @page config_expandos Type: Expando
  *
  */
 
 #include "config.h"
 #include <stddef.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
-#include "config/types.h"
 #include "expando/lib.h"
 #include "assert.h"
 
@@ -48,7 +46,7 @@ static void expando_destroy(const struct ConfigSet *cs, void *var, const struct 
 }
 
 /**
- * expando_string_set - Set an Address by string - Implements ConfigSetType::string_set() - @ingroup cfg_type_string_set
+ * expando_string_set - Set an ExpandoRecord by string - Implements ConfigSetType::string_set() - @ingroup cfg_type_string_set
  */
 static int expando_string_set(const struct ConfigSet *cs, void *var, struct ConfigDef *cdef,
                               const char *value, struct Buffer *err)
@@ -90,7 +88,7 @@ static int expando_string_set(const struct ConfigSet *cs, void *var, struct Conf
 }
 
 /**
- * expando_string_get - Get an Address as a string - Implements ConfigSetType::string_get() - @ingroup cfg_type_string_get
+ * expando_string_get - Get an ExpandoRecord as a string - Implements ConfigSetType::string_get() - @ingroup cfg_type_string_get
  */
 static int expando_string_get(const struct ConfigSet *cs, void *var,
                               const struct ConfigDef *cdef, struct Buffer *result)
@@ -114,16 +112,19 @@ static int expando_string_get(const struct ConfigSet *cs, void *var,
   return CSR_SUCCESS;
 }
 
+/**
+ * expando_native_set - Set an ExpandoRecord object from an ExpandoRecord config item - Implements ConfigSetType::native_get() - @ingroup cfg_type_native_get
+ */
 static int expando_native_set(const struct ConfigSet *cs, void *var,
                               const struct ConfigDef *cdef, intptr_t value,
                               struct Buffer *err)
 {
-  assert(0);
-  return CSR_SUCCESS;
+  assert(0 && "Unreachable");
+  return CSR_ERR_CODE;
 }
 
 /**
- * expando_native_get - Get an Address object from an Address config item - Implements ConfigSetType::native_get() - @ingroup cfg_type_native_get
+ * expando_native_get - Get an ExpandoRecord object from an ExpandoRecord config item - Implements ConfigSetType::native_get() - @ingroup cfg_type_native_get
  */
 static intptr_t expando_native_get(const struct ConfigSet *cs, void *var,
                                    const struct ConfigDef *cdef, struct Buffer *err)
@@ -133,7 +134,7 @@ static intptr_t expando_native_get(const struct ConfigSet *cs, void *var,
 }
 
 /**
- * address_reset - Reset an Address to its initial value - Implements ConfigSetType::reset() - @ingroup cfg_type_reset
+ * expando_reset - Reset an ExpandoRecord to its initial value - Implements ConfigSetType::reset() - @ingroup cfg_type_reset
  */
 static int expando_reset(const struct ConfigSet *cs, void *var,
                          const struct ConfigDef *cdef, struct Buffer *err)
@@ -164,8 +165,8 @@ static int expando_reset(const struct ConfigSet *cs, void *var,
 }
 
 /**
- * address_new - Create an Address from a string
- * @param addr Email address to parse
+ * expando_new - Create an ExpandoRecord from a string
+ * @param addr Format string to parse
  * @retval ptr New Address object
  */
 struct ExpandoRecord *expando_new(const char *format)
@@ -176,7 +177,7 @@ struct ExpandoRecord *expando_new(const char *format)
 }
 
 /**
- * address_free - Free an Address object
+ * expando_free - Free an ExpandoRecord object
  * @param[out] ptr Address to free
  */
 void expando_free(struct ExpandoRecord **ptr)
