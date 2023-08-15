@@ -41,6 +41,7 @@
 #define DT_STRING   13  ///< a string
 #define DT_SYNONYM  14  ///< synonym for another variable
 #define DT_MYVAR    15  ///< a user-defined variable (my_foo)
+#define DT_EXPANDO  16  ///< an expando
 
 #define DTYPE(x) ((x) & 0x1F)  ///< Mask for the Data Type
 

@@ -20,44 +20,26 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef MUTT_EXPANDO_TYPE_H
+#define MUTT_EXPANDO_TYPE_H
+
+#include "node.h"
+
 /**
- * @page expando_global XXX
+ * struct ExpandoRecord - parsed expando trees
  *
- * XXX
+ * The text data is stored in the tree as a pair of pointers (start, end)
+ * NOT as a null-terminated string, to avoid memory allocations.
+ * This is why the pointer of the PARSED string is required alongside the tree.
  */
-
-#include "config.h"
-#include "mutt/memory.h"
-#include "global_table.h"
-
-void expando_tree_free(struct ExpandoNode **root);
-
-struct ExpandoRecord *expando_global_table_new(void)
+struct ExpandoRecord
 {
-  struct ExpandoRecord *t = mutt_mem_calloc(EFMT_FORMAT_COUNT_OR_DEBUG,
-                                            sizeof(struct ExpandoRecord));
-  return t;
-}
+  const char *string;       ///< Pointer to the parsed string
+  struct ExpandoNode *tree; ///< Parsed tree
+};
 
-void expando_global_table_free(struct ExpandoRecord **ptr)
-{
-  if (!ptr || !*ptr)
-    return;
 
-  struct ExpandoRecord *table = *ptr;
-  for (int i = 0; i < EFMT_FORMAT_COUNT_OR_DEBUG; ++i)
-  {
-    struct ExpandoRecord *r = &table[i];
-    if (r->tree)
-    {
-      expando_tree_free(&r->tree);
-    }
+void                  expando_free(struct ExpandoRecord **ptr);
+struct ExpandoRecord *expando_new (const char *format);
 
-    if (r->string)
-    {
-      FREE(&r->string);
-    }
-  }
-
-  FREE(ptr);
-}
+#endif /* MUTT_EXPANDO_TYPE_H */

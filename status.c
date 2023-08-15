@@ -45,8 +45,6 @@
 #include "mview.h"
 #include "status.h"
 
-extern const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT_OR_DEBUG];
-
 /**
  * get_sort_str - Get the sort method as a string
  * @param buf    Buffer for the sort string
@@ -479,30 +477,11 @@ void menu_status_line(char *buf, size_t buflen, struct IndexSharedData *shared,
                       (intptr_t) &data, MUTT_FORMAT_NO_FLAGS);
 }
 void menu_status_line_2gmb(char *buf, size_t buflen, struct IndexSharedData *shared,
-                           struct Menu *menu, int cols, enum ExpandoFormatIndex format_index)
+                           struct Menu *menu, int cols, const struct ExpandoRecord *record)
 {
+  assert(record);
   struct MenuStatusLineData data = { shared, menu };
 
-  assert(format_index >= 0 && format_index <= EFMT_FORMAT_COUNT_OR_DEBUG);
-
-  if (!NeoMutt->expando_table[format_index].tree)
-  {
-    const char *c_format = cs_subset_string(NeoMutt->sub,
-                                            expando_validation[format_index].name);
-    const char *input = mutt_str_dup(c_format);
-
-    struct ExpandoParseError error = { 0 };
-    struct ExpandoNode *root = NULL;
-
-    expando_tree_parse(&root, &input, format_index, &error);
-
-    assert(error.position == NULL);
-
-    NeoMutt->expando_table[format_index].string = input;
-    NeoMutt->expando_table[format_index].tree = root;
-  }
-
-  mutt_expando_format_2gmb(buf, buflen, 0, cols,
-                           &NeoMutt->expando_table[format_index].tree,
+  mutt_expando_format_2gmb(buf, buflen, 0, cols, &record->tree,
                            (intptr_t) &data, MUTT_FORMAT_NO_FLAGS);
 }

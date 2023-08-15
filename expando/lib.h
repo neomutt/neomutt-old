@@ -34,6 +34,7 @@
  * | expando/node.c                    | @subpage expando_node          |
  * | expando/parser.c                  | @subpage expando_parser        |
  * | expando/status_format_callbacks.c | @subpage expando_status_format |
+ * | expando/type.c                    | @subpage expando_type          |
  * | expando/validation.c              | @subpage expando_validation    |
  */
 
@@ -42,11 +43,12 @@
 
 // IWYU pragma: begin_exports
 #include "format_callbacks.h"
-#include "global_table.h"
 #include "helpers.h"
 #include "index_format_callbacks.h"
 #include "node.h"
 #include "parser.h"
+#include "status_format_callbacks.h"
+#include "type.h"
 #include "validation.h"
 // IWYU pragma: end_exports
 

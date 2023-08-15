@@ -1415,6 +1415,7 @@ void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
 }
 
 void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
+                           const struct ExpandoRecord *record,
                            struct Mailbox *m, int inpgr, struct Email *e,
                            MuttFormatFlags flags, const char *progress)
 {
@@ -1425,23 +1426,5 @@ void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
   hfi.msg_in_pager = inpgr;
   hfi.pager_progress = progress;
 
-  if (!NeoMutt->expando_table[EFMT_INDEX_FORMAT].tree)
-  {
-    const char *c_format = cs_subset_string(NeoMutt->sub, "index_format");
-    const char *input = mutt_str_dup(c_format);
-
-    struct ExpandoParseError error = { 0 };
-    struct ExpandoNode *root = NULL;
-
-    expando_tree_parse(&root, &input, EFMT_INDEX_FORMAT, &error);
-
-    assert(error.position == NULL);
-
-    NeoMutt->expando_table[EFMT_INDEX_FORMAT].string = input;
-    NeoMutt->expando_table[EFMT_INDEX_FORMAT].tree = root;
-  }
-
-  mutt_expando_format_2gmb(buf, buflen, 0, cols,
-                           &NeoMutt->expando_table[EFMT_INDEX_FORMAT].tree,
-                           (intptr_t) &hfi, flags);
+  mutt_expando_format_2gmb(buf, buflen, 0, cols, &record->tree, (intptr_t) &hfi, flags);
 }

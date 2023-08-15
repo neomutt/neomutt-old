@@ -30,10 +30,9 @@
 #include <stddef.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
-#include "neomutt.h"
-#include "expando/lib.h"
 #include "account.h"
 #include "mailbox.h"
+#include "neomutt.h"
 
 struct NeoMutt *NeoMutt = NULL; ///< Global NeoMutt object
 
@@ -71,8 +70,6 @@ struct NeoMutt *neomutt_new(struct ConfigSet *cs)
   n->notify_resize = notify_new();
   notify_set_parent(n->notify_resize, n->notify);
 
-  n->expando_table = expando_global_table_new();
-
   return n;
 }
 
@@ -94,8 +91,6 @@ void neomutt_free(struct NeoMutt **ptr)
   notify_free(&n->notify);
   if (n->time_c_locale)
     freelocale(n->time_c_locale);
-
-  expando_global_table_free(&n->expando_table);
 
   FREE(ptr);
 }

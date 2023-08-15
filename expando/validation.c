@@ -31,11 +31,9 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "mutt/lib.h"
+#include "config/lib.h"
 #include "core/neomutt.h"
-#include "global_table.h"
-#include "index_format_callbacks.h"
-#include "parser.h"
-#include "status_format_callbacks.h"
+#include "expando/lib.h"
 #include "validation.h"
 
 static const struct ExpandoFormatCallback alias_1[] = {
@@ -151,99 +149,87 @@ static const struct ExpandoFormatCallback status_1[] = {
 
 const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT_OR_DEBUG] = {
   // clang-format off
-  [EFMT_ALIAS_FORMAT]                  = { "alias_format",                  alias_1,          NULL },
-  [EFMT_ATTACH_FORMAT]                 = { "attach_format",                 attach_1,         NULL },
-  [EFMT_ATTRIBUTION_INTRO]             = { "attribution_intro",             index_1,          index_2 },
-  [EFMT_ATTRIBUTION_TRAILER]           = { "attribution_trailer",           index_1,          index_2 },
-  [EFMT_AUTOCRYPT_ACCT_FORMAT]         = { "autocrypt_acct_format",         autocrypt_acct_1, NULL },
-  [EFMT_COMPOSE_FORMAT]                = { "compose_format",                compose_1,        NULL },
-  [EFMT_FOLDER_FORMAT]                 = { "folder_format",                 folder_1,         NULL },
-  [EFMT_FORWARD_ATTRIBUTION_INTRO]     = { "forward_attribution_intro",     index_1,          index_2 },
-  [EFMT_FORWARD_ATTRIBUTION_TRAILER]   = { "forward_attribution_trailer",   index_1,          index_2 },
-  [EFMT_FORWARD_FORMAT]                = { "forward_format",                index_1,          index_2 },
-  [EFMT_GREETING]                      = { "greeting",                      greeting_1,       NULL },
-  [EFMT_GROUP_INDEX_FORMAT]            = { "group_index_format",            group_index_1,    NULL },
-  [EFMT_INDENT_STRING]                 = { "indent_string",                 index_1,          index_2 },
-  [EFMT_INDEX_FORMAT]                  = { "index_format",                  index_1,          index_2 },
-  [EFMT_INEWS]                         = { "inews",                         inews_1,          NULL },
-  [EFMT_MAILBOX_FOLDER_FORMAT]         = { "mailbox_folder_format",         folder_1,         NULL },
-  [EFMT_MESSAGE_FORMAT]                = { "message_format",                index_1,          index_2 },
-  [EFMT_MIX_ENTRY_FORMAT]              = { "mix_entry_format",              mix_entry_1,      NULL },
-  [EFMT_NEWSRC]                        = { "newsrc",                        inews_1,          NULL },
-  [EFMT_NEW_MAIL_COMMAND]              = { "new_mail_command",              status_1,         NULL },
-  [EFMT_PAGER_FORMAT]                  = { "pager_format",                  index_1,          index_2 },
-  [EFMT_PATTERN_FORMAT]                = { "pattern_format",                pattern_1,        NULL },
-  [EFMT_PGP_CLEAR_SIGN_COMMAND]        = { "pgp_clear_sign_command",        pgp_command_1,    NULL },
-  [EFMT_PGP_DECODE_COMMAND]            = { "pgp_decode_command",            pgp_command_1,    NULL },
-  [EFMT_PGP_DECRYPT_COMMAND]           = { "pgp_decrypt_command",           pgp_command_1,    NULL },
-  [EFMT_PGP_ENCRYPT_ONLY_COMMAND]      = { "pgp_encrypt_only_command",      pgp_command_1,    NULL },
-  [EFMT_PGP_ENCRYPT_SIGN_COMMAND]      = { "pgp_encrypt_sign_command",      pgp_command_1,    NULL },
-  [EFMT_PGP_ENTRY_FORMAT]              = { "pgp_entry_format",              pgp_entry_1,      NULL },
-  [EFMT_PGP_EXPORT_COMMAND]            = { "pgp_export_command",            pgp_command_1,    NULL },
-  [EFMT_PGP_GET_KEYS_COMMAND]          = { "pgp_get_keys_command",          pgp_command_1,    NULL },
-  [EFMT_PGP_IMPORT_COMMAND]            = { "pgp_import_command",            pgp_command_1,    NULL },
-  [EFMT_PGP_LIST_PUBRING_COMMAND]      = { "pgp_list_pubring_command",      pgp_command_1,    NULL },
-  [EFMT_PGP_LIST_SECRING_COMMAND]      = { "pgp_list_secring_command",      pgp_command_1,    NULL },
-  [EFMT_PGP_SIGN_COMMAND]              = { "pgp_sign_command",              pgp_command_1,    NULL },
-  [EFMT_PGP_VERIFY_COMMAND]            = { "pgp_verify_command",            pgp_command_1,    NULL },
-  [EFMT_PGP_VERIFY_KEY_COMMAND]        = { "pgp_verify_key_command",        pgp_command_1,    NULL },
-  [EFMT_QUERY_FORMAT]                  = { "query_format",                  query_1,          NULL },
-  [EFMT_SIDEBAR_FORMAT]                = { "sidebar_format",                sidebar_1,        NULL },
-  [EFMT_SMIME_DECRYPT_COMMAND]         = { "smime_decrypt_command",         smime_command_1,  NULL },
-  [EFMT_SMIME_ENCRYPT_COMMAND]         = { "smime_encrypt_command",         smime_command_1,  NULL },
-  [EFMT_SMIME_ENCRYPT_WITH]            = { "smime_encrypt_with",            smime_command_1,  NULL },
-  [EFMT_SMIME_GET_CERT_COMMAND]        = { "smime_get_cert_command",        smime_command_1,  NULL },
-  [EFMT_SMIME_GET_CERT_EMAIL_COMMAND]  = { "smime_get_cert_email_command",  smime_command_1,  NULL },
-  [EFMT_SMIME_GET_SIGNER_CERT_COMMAND] = { "smime_get_signer_cert_command", smime_command_1,  NULL },
-  [EFMT_SMIME_IMPORT_CERT_COMMAND]     = { "smime_import_cert_command",     smime_command_1,  NULL },
-  [EFMT_SMIME_PK7OUT_COMMAND]          = { "smime_pk7out_command",          smime_command_1,  NULL },
-  [EFMT_SMIME_SIGN_COMMAND]            = { "smime_sign_command",            smime_command_1,  NULL },
-  [EFMT_SMIME_SIGN_DIGEST_ALG]         = { "smime_sign_digest_alg",         smime_command_1,  NULL },
-  [EFMT_SMIME_VERIFY_COMMAND]          = { "smime_verify_command",          smime_command_1,  NULL },
-  [EFMT_SMIME_VERIFY_OPAQUE_COMMAND]   = { "smime_verify_opaque_command",   smime_command_1,  NULL },
-  [EFMT_STATUS_FORMAT]                 = { "status_format",                 status_1,         NULL },
-  [EFMT_TS_ICON_FORMAT]                = { "ts_icon_format",                status_1,         NULL },
-  [EFMT_TS_STATUS_FORMAT]              = { "ts_status_format",              status_1,         NULL },
+  [EFMT_ALIAS_FORMAT]                  = { "alias_format",                  alias_1,          NULL,    NULL },
+  [EFMT_ATTACH_FORMAT]                 = { "attach_format",                 attach_1,         NULL,    NULL },
+  [EFMT_ATTRIBUTION_INTRO]             = { "attribution_intro",             index_1,          index_2, NULL },
+  [EFMT_ATTRIBUTION_TRAILER]           = { "attribution_trailer",           index_1,          index_2, NULL },
+  [EFMT_AUTOCRYPT_ACCT_FORMAT]         = { "autocrypt_acct_format",         autocrypt_acct_1, NULL,    NULL },
+  [EFMT_COMPOSE_FORMAT]                = { "compose_format",                compose_1,        NULL,    NULL },
+  [EFMT_FOLDER_FORMAT]                 = { "folder_format",                 folder_1,         NULL,    NULL },
+  [EFMT_FORWARD_ATTRIBUTION_INTRO]     = { "forward_attribution_intro",     index_1,          index_2, NULL },
+  [EFMT_FORWARD_ATTRIBUTION_TRAILER]   = { "forward_attribution_trailer",   index_1,          index_2, NULL },
+  [EFMT_FORWARD_FORMAT]                = { "forward_format",                index_1,          index_2, NULL },
+  [EFMT_GREETING]                      = { "greeting",                      greeting_1,       NULL,    NULL },
+  [EFMT_GROUP_INDEX_FORMAT]            = { "group_index_format",            group_index_1,    NULL,    NULL },
+  [EFMT_INDENT_STRING]                 = { "indent_string",                 index_1,          index_2, NULL },
+  [EFMT_INDEX_FORMAT]                  = { "index_format",                  index_1,          index_2, NULL },
+  [EFMT_INEWS]                         = { "inews",                         inews_1,          NULL,    NULL },
+  [EFMT_MAILBOX_FOLDER_FORMAT]         = { "mailbox_folder_format",         folder_1,         NULL,    NULL },
+  [EFMT_MESSAGE_FORMAT]                = { "message_format",                index_1,          index_2, NULL },
+  [EFMT_MIX_ENTRY_FORMAT]              = { "mix_entry_format",              mix_entry_1,      NULL,    NULL },
+  [EFMT_NEWSRC]                        = { "newsrc",                        inews_1,          NULL,    NULL },
+  [EFMT_NEW_MAIL_COMMAND]              = { "new_mail_command",              status_1,         NULL,    NULL },
+  [EFMT_PAGER_FORMAT]                  = { "pager_format",                  index_1,          index_2, NULL },
+  [EFMT_PATTERN_FORMAT]                = { "pattern_format",                pattern_1,        NULL,    NULL },
+  [EFMT_PGP_CLEAR_SIGN_COMMAND]        = { "pgp_clear_sign_command",        pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_DECODE_COMMAND]            = { "pgp_decode_command",            pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_DECRYPT_COMMAND]           = { "pgp_decrypt_command",           pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_ENCRYPT_ONLY_COMMAND]      = { "pgp_encrypt_only_command",      pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_ENCRYPT_SIGN_COMMAND]      = { "pgp_encrypt_sign_command",      pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_ENTRY_FORMAT]              = { "pgp_entry_format",              pgp_entry_1,      NULL,    NULL },
+  [EFMT_PGP_EXPORT_COMMAND]            = { "pgp_export_command",            pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_GET_KEYS_COMMAND]          = { "pgp_get_keys_command",          pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_IMPORT_COMMAND]            = { "pgp_import_command",            pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_LIST_PUBRING_COMMAND]      = { "pgp_list_pubring_command",      pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_LIST_SECRING_COMMAND]      = { "pgp_list_secring_command",      pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_SIGN_COMMAND]              = { "pgp_sign_command",              pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_VERIFY_COMMAND]            = { "pgp_verify_command",            pgp_command_1,    NULL,    NULL },
+  [EFMT_PGP_VERIFY_KEY_COMMAND]        = { "pgp_verify_key_command",        pgp_command_1,    NULL,    NULL },
+  [EFMT_QUERY_FORMAT]                  = { "query_format",                  query_1,          NULL,    NULL },
+  [EFMT_SIDEBAR_FORMAT]                = { "sidebar_format",                sidebar_1,        NULL,    NULL },
+  [EFMT_SMIME_DECRYPT_COMMAND]         = { "smime_decrypt_command",         smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_ENCRYPT_COMMAND]         = { "smime_encrypt_command",         smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_ENCRYPT_WITH]            = { "smime_encrypt_with",            smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_GET_CERT_COMMAND]        = { "smime_get_cert_command",        smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_GET_CERT_EMAIL_COMMAND]  = { "smime_get_cert_email_command",  smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_GET_SIGNER_CERT_COMMAND] = { "smime_get_signer_cert_command", smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_IMPORT_CERT_COMMAND]     = { "smime_import_cert_command",     smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_PK7OUT_COMMAND]          = { "smime_pk7out_command",          smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_SIGN_COMMAND]            = { "smime_sign_command",            smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_SIGN_DIGEST_ALG]         = { "smime_sign_digest_alg",         smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_VERIFY_COMMAND]          = { "smime_verify_command",          smime_command_1,  NULL,    NULL },
+  [EFMT_SMIME_VERIFY_OPAQUE_COMMAND]   = { "smime_verify_opaque_command",   smime_command_1,  NULL,    NULL },
+  [EFMT_STATUS_FORMAT]                 = { "status_format",                 status_1,         NULL,    NULL },
+  [EFMT_TS_ICON_FORMAT]                = { "ts_icon_format",                status_1,         NULL,    NULL },
+  [EFMT_TS_STATUS_FORMAT]              = { "ts_status_format",              status_1,         NULL,    NULL },
   // clang-format on
 };
 
-bool expando_validate_string(struct Buffer *name, struct Buffer *value, struct Buffer *err)
+int expando_validator(const struct ConfigSet *cs, const struct ConfigDef *cdef,
+                      intptr_t value, struct Buffer *err)
 {
+  struct ExpandoRecord *r = (struct ExpandoRecord *) value;
   for (enum ExpandoFormatIndex index = 0; index < EFMT_FORMAT_COUNT_OR_DEBUG; ++index)
   {
-    if (mutt_str_equal(name->data, expando_validation[index].name))
+    if (mutt_str_equal(cdef->name, expando_validation[index].name))
     {
-      const char *input = NULL;
-      if (*value->data)
-      {
-        input = buf_strdup(value);
-        assert(input);
-      }
-
       struct ExpandoParseError error = { 0 };
       struct ExpandoNode *root = NULL;
 
-      expando_tree_parse(&root, &input, index, &error);
+      expando_tree_parse(&root, &r->string, index, &error);
 
       if (error.position != NULL)
       {
-        buf_printf(err, _("$%s: %s\nDefault value will be used."), name->data,
+        buf_printf(err, _("$%s: %s\nDefault value will be used."), cdef->name,
                    error.message);
         expando_tree_free(&root);
-
-        if (*value->data)
-        {
-          FREE(&input);
-        }
-
-        return false;
+        return CSR_ERR_INVALID;
       }
 
-      NeoMutt->expando_table[index].string = input;
-      NeoMutt->expando_table[index].tree = root;
-      return true;
+      r->tree = root;
+      return CSR_SUCCESS;
     }
   }
 
-  return true;
+  return CSR_ERR_INVALID;
 }

@@ -24,7 +24,7 @@
 #define MUTT_EXPANDO_PARSER_H
 
 #include <stdio.h>
-#include "global_table.h"
+#include "validation.h"
 
 struct ExpandoNode;
 

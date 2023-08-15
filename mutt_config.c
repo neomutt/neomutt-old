@@ -34,6 +34,7 @@
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/lib.h"
+#include "expando/lib.h"
 #include "globals.h"
 #include "init.h"
 #include "mutt_logging.h"
@@ -88,6 +89,15 @@ const struct Mapping SortMethods[] = {
   { "subject",       SORT_SUBJECT },
   { "threads",       SORT_THREADS },
   { "to",            SORT_TO },
+  { NULL, 0 },
+  // clang-format on
+};
+
+/**
+ * ExpandoIndexData - 
+ */
+const struct ExpandoFormatCallback ExpandoIndexData[] = {
+  // clang-format off
   { NULL, 0 },
   // clang-format on
 };
@@ -305,7 +315,7 @@ static struct ConfigDef MainVars[] = {
   { "indent_string", DT_STRING, IP "> ", 0, NULL,
     "String used to indent 'reply' text"
   },
-  { "index_format", DT_STRING|DT_NOT_EMPTY|R_INDEX, IP "%4C %Z %{%b %d} %-15.15L (%<l?%4l&%4c>) %s", 0, NULL,
+  { "index_format", DT_EXPANDO|DT_NOT_EMPTY|R_INDEX, IP "%4C %Z %{%b %d} %-15.15L (%<l?%4l&%4c>) %s", 0, expando_validator,
     "printf-like format string for the index menu (emails)"
   },
   { "keep_flagged", DT_BOOL, false, 0, NULL,
@@ -515,7 +525,7 @@ static struct ConfigDef MainVars[] = {
   { "status_chars", DT_MBTABLE|R_INDEX, IP "-*%A", 0, NULL,
     "Indicator characters for the status bar"
   },
-  { "status_format", DT_STRING|R_INDEX, IP "-%r-NeoMutt: %D [Msgs:%<M?%M/>%m%<n? New:%n>%<o? Old:%o>%<d? Del:%d>%<F? Flag:%F>%<t? Tag:%t>%<p? Post:%p>%<b? Inc:%b>%<l? %l>]---(%<T?%T/>%s/%S)-%>-(%P)---", 0, NULL,
+  { "status_format", DT_EXPANDO|R_INDEX, IP "-%r-NeoMutt: %D [Msgs:%<M?%M/>%m%<n? New:%n>%<o? Old:%o>%<d? Del:%d>%<F? Flag:%F>%<t? Tag:%t>%<p? Post:%p>%<b? Inc:%b>%<l? %l>]---(%<T?%T/>%s/%S)-%>-(%P)---", 0, expando_validator,
     "printf-like format string for the index's status line"
   },
   { "status_on_top", DT_BOOL, false, 0, NULL,
@@ -678,6 +688,7 @@ static void init_types(struct ConfigSet *cs)
   CONFIG_INIT_TYPE(cs, Address);
   CONFIG_INIT_TYPE(cs, Bool);
   CONFIG_INIT_TYPE(cs, Enum);
+  CONFIG_INIT_TYPE(cs, Expando);
   CONFIG_INIT_TYPE(cs, Long);
   CONFIG_INIT_TYPE(cs, Mbtable);
   CONFIG_INIT_TYPE(cs, MyVar);

@@ -101,7 +101,7 @@ char *got_to_column(char **start, int col)
   return (char *) s;
 }
 
-void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
+void format_tree(const struct ExpandoNode *const *tree, char *buf, size_t buf_len,
                  int start_col, int max_col, intptr_t data, MuttFormatFlags flags)
 {
   const struct ExpandoNode *n = *tree;

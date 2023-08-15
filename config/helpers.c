@@ -306,3 +306,21 @@ const char *cs_subset_string(const struct ConfigSubset *sub, const char *name)
 
   return (const char *) value;
 }
+
+const struct ExpandoRecord *cs_subset_expando(const struct ConfigSubset *sub, const char *name)
+{
+  assert(sub && name);
+
+  struct HashElem *he = cs_subset_create_inheritance(sub, name);
+  assert(he);
+
+#ifndef NDEBUG
+  struct HashElem *he_base = cs_get_base(he);
+  assert(DTYPE(he_base->type) == DT_EXPANDO);
+#endif
+
+  intptr_t value = cs_subset_he_native_get(sub, he, NULL);
+  assert(value != INT_MIN);
+
+  return (const struct ExpandoRecord *) value;
+}

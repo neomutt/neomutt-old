@@ -4,9 +4,7 @@
 #define TEST_NO_MAIN
 #include "config.h"
 #include "acutest.h"
-#include "expando/global_table.h"
-#include "expando/node.h"
-#include "expando/parser.h"
+#include "expando/lib.h"
 
 struct ExpandoNode *get_nth_node(struct ExpandoNode **root, int n);
 void check_empty_node(struct ExpandoNode *node);

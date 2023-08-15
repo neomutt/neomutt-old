@@ -39,6 +39,6 @@ struct MenuStatusLineData
 };
 
 void menu_status_line(char *buf, size_t buflen, struct IndexSharedData *shared, struct Menu *menu, int cols, const char *fmt);
-void menu_status_line_2gmb(char *buf, size_t buflen, struct IndexSharedData *shared, struct Menu *menu, int cols, enum ExpandoFormatIndex format_index);
+void menu_status_line_2gmb(char *buf, size_t buflen, struct IndexSharedData *shared, struct Menu *menu, int cols, const struct ExpandoRecord *record);
 
 #endif /* MUTT_STATUS_H */
