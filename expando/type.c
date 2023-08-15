@@ -167,7 +167,7 @@ static int expando_reset(const struct ConfigSet *cs, void *var,
 /**
  * expando_new - Create an ExpandoRecord from a string
  * @param addr Format string to parse
- * @retval ptr New Address object
+ * @retval ptr New ExpandoRecord object
  */
 struct ExpandoRecord *expando_new(const char *format)
 {
@@ -178,7 +178,7 @@ struct ExpandoRecord *expando_new(const char *format)
 
 /**
  * expando_free - Free an ExpandoRecord object
- * @param[out] ptr Address to free
+ * @param[out] ptr ExpandoRecord to free
  */
 void expando_free(struct ExpandoRecord **ptr)
 {
