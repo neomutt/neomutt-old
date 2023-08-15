@@ -94,15 +94,6 @@ const struct Mapping SortMethods[] = {
 };
 
 /**
- * ExpandoIndexData - 
- */
-const struct ExpandoFormatCallback ExpandoIndexData[] = {
-  // clang-format off
-  { NULL, 0 },
-  // clang-format on
-};
-
-/**
  * multipart_validator - Validate the "show_multipart_alternative" config variable - Implements ConfigDef::validator() - @ingroup cfg_def_validator
  */
 static int multipart_validator(const struct ConfigSet *cs, const struct ConfigDef *cdef,
