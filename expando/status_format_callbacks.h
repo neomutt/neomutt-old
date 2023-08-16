@@ -79,4 +79,22 @@ int status_S(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_P(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
+int status_h(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int status_L(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int status_R(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int status_u(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int status_v(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int status_V(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
 #endif /* MUTT_EXPANDO_STATUS_FORMAT_CALLBACKS_H */

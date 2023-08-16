@@ -36,6 +36,7 @@
 #include "mutt_mailbox.h"
 #include "mutt_thread.h"
 #include "muttlib.h"
+#include "mview.h"
 #include "node.h"
 #include "status.h"
 #include "status_format_callbacks.h"
@@ -306,7 +307,6 @@ int status_l(const struct ExpandoNode *self, char *buf, int buf_len,
   const off_t num = mailbox ? mailbox->size : 0;
   mutt_str_pretty_size(tmp, sizeof(tmp), num);
   format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
-
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -319,9 +319,8 @@ int status_T(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const enum UseThreads c_use_threads = mutt_thread_style();
-  format_string(fmt, sizeof(fmt), get_use_threads_str(c_use_threads),
-                MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
-
+  const char *s = get_use_threads_str(c_use_threads);
+  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -349,9 +348,8 @@ int status_s(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128], tmp[128];
 
   const enum SortType c_sort = cs_subset_sort(NeoMutt->sub, "sort");
-  format_string(fmt, sizeof(fmt), get_sort_str_2gmb(tmp, sizeof(tmp), c_sort),
-                MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
-
+  const char *s = get_sort_str_2gmb(tmp, sizeof(tmp), c_sort);
+  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -364,9 +362,8 @@ int status_S(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128], tmp[128];
 
   const enum SortType c_sort_aux = cs_subset_sort(NeoMutt->sub, "sort_aux");
-  format_string(fmt, sizeof(fmt), get_sort_str_2gmb(tmp, sizeof(tmp), c_sort_aux),
-                MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
-
+  const char *s = get_sort_str_2gmb(tmp, sizeof(tmp), c_sort_aux);
+  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -406,6 +403,101 @@ int status_P(const struct ExpandoNode *self, char *buf, int buf_len,
   }
 
   format_string(fmt, sizeof(fmt), cp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
 
+int status_h(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  char fmt[128];
+
+  const char *s = NONULL(ShortHostname);
+  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int status_L(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct IndexSharedData *shared = msld->shared;
+  struct MailboxView *mailbox_view = shared->mailbox_view;
+
+  char tmp[128], fmt[128];
+
+  const off_t num = mailbox_view ? mailbox_view->vsize : 0;
+  mutt_str_pretty_size(tmp, sizeof(tmp), num);
+  format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int status_R(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct IndexSharedData *shared = msld->shared;
+  struct Mailbox *mailbox = shared->mailbox;
+
+  char fmt[128];
+
+  const int num = mailbox ? (mailbox->msg_count - mailbox->msg_unread) : 0;
+  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int status_u(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct IndexSharedData *shared = msld->shared;
+  struct Mailbox *mailbox = shared->mailbox;
+
+  char fmt[128];
+
+  const int num = mailbox ? mailbox->msg_unread : 0;
+  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int status_v(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  char fmt[256]; // mutt_make_version() has a 256 bytes long buffer
+
+  const char *s = mutt_make_version();
+  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int status_V(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+
+  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
+  struct IndexSharedData *shared = msld->shared;
+  struct MailboxView *mailbox_view = shared->mailbox_view;
+
+  char fmt[128];
+
+  const char *s = mview_has_limit(mailbox_view) ? mailbox_view->pattern : "";
+  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
 }

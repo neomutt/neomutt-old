@@ -378,7 +378,6 @@ int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
   make_from_2gmb(e->env, tmp, sizeof(tmp), true, flags);
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
                 MT_COLOR_INDEX, format, NO_TREE);
-
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -435,7 +434,8 @@ int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
 
   char fmt[128];
 
-  format_int(fmt, sizeof(fmt), e->lines, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
+  const int num = e->lines;
+  format_int(fmt, sizeof(fmt), num, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -453,7 +453,6 @@ int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
   mutt_str_pretty_size(tmp, sizeof(tmp), e->body->length);
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
                 MT_COLOR_INDEX, format, NO_TREE);
-
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -471,6 +470,5 @@ int index_cr(const struct ExpandoNode *self, char *buf, int buf_len,
   mutt_str_pretty_size(tmp, sizeof(tmp), email_size(e));
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
                 MT_COLOR_INDEX, format, NO_TREE);
-
   return snprintf(buf, buf_len, "%s", fmt);
 }

@@ -170,3 +170,8 @@ const char *get_use_threads_str(int)
 {
   return NULL;
 }
+
+const char *mutt_make_version(void)
+{
+  return "";
+}
