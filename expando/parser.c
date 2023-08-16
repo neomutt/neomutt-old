@@ -363,7 +363,7 @@ static expando_format_callback check_if_expando_is_valid(const char *start, cons
   {
     valid_short_expandos = expando_validation[index].valid_short_expandos;
     valid_two_char_expandos = expando_validation[index].valid_two_char_expandos;
-    valid_long_expandos = NULL;
+    valid_long_expandos = expando_validation[index].valid_long_expandos;
   }
 
   if (valid_short_expandos && mb_strlen_nonnull(start, end) == 1)
