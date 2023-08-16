@@ -27,6 +27,7 @@
  *
  * | File                              | Description                    |
  * | :-------------------------------- | :----------------------------- |
+ * | expando/alias_format_callbacks.c  | @subpage expando_alias_format  |
  * | expando/format_callbacks.c        | @subpage expando_format        |
  * | expando/global_table.c            | @subpage expando_global        |
  * | expando/helpers.c                 | @subpage expando_helpers       |
@@ -42,6 +43,7 @@
 #define MUTT_EXPANDO_LIB_H
 
 // IWYU pragma: begin_exports
+#include "alias_format_callbacks.h"
 #include "format_callbacks.h"
 #include "helpers.h"
 #include "index_format_callbacks.h"

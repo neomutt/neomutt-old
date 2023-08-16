@@ -30,10 +30,8 @@
 #include <assert.h>
 #include <string.h>
 #include "mutt/lib.h"
-#include "format_callbacks.h"
-#include "helpers.h"
+#include "expando/lib.h"
 #include "mutt_thread.h"
-#include "node.h"
 
 static size_t add_index_color_2gmb(char *buf, int buflen, MuttFormatFlags flags,
                                    enum ColorId color)
@@ -64,6 +62,7 @@ static size_t add_index_color_2gmb(char *buf, int buflen, MuttFormatFlags flags,
 }
 
 // NOTE(g0mb4): It cuts a long string, e.g. subject (%s) in $index_format
+// TODO(g0mb4): implement MuttFormatFlags
 void format_string(char *buf, int buf_len, const char *s, MuttFormatFlags flags,
                    enum ColorId pre, enum ColorId post,
                    struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree)

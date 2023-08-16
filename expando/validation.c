@@ -37,8 +37,8 @@
 #include "validation.h"
 
 static const struct ExpandoFormatCallback alias_1[] = {
-  { "a", NULL }, { "c", NULL }, { "f", NULL },  { "n", NULL },
-  { "r", NULL }, { "t", NULL }, { NULL, NULL },
+  { "a", alias_a }, { "c", alias_c }, { "f", alias_f }, { "n", alias_n },
+  { "r", alias_r }, { "t", alias_t }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback attach_1[] = {

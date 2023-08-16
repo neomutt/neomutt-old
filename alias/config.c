@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "mutt/lib.h"
+#include "expando/lib.h"
 #include "config/lib.h"
 
 /**
@@ -52,7 +53,7 @@ static struct ConfigDef AliasVars[] = {
   { "alias_file", DT_PATH|DT_PATH_FILE, IP "~/.neomuttrc", 0, NULL,
     "Save new aliases to this file"
   },
-  { "alias_format", DT_STRING|DT_NOT_EMPTY, IP "%3n %f%t %-15a %-56r | %c", 0, NULL,
+  { "alias_format", DT_EXPANDO|DT_NOT_EMPTY, IP "%3n %f%t %-15a %-56r | %c", 0, expando_validator,
     "printf-like format string for the alias menu"
   },
   { "sort_alias", DT_SORT|DT_SORT_REVERSE, SORT_ALIAS, IP SortAliasMethods, NULL,

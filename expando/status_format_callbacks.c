@@ -30,6 +30,7 @@
 #include <assert.h>
 #include "config/lib.h"
 #include "core/neomutt.h"
+#include "expando/lib.h"
 #include "postpone/lib.h"
 #include "globals.h"
 #include "index/shared_data.h"
@@ -37,9 +38,7 @@
 #include "mutt_thread.h"
 #include "muttlib.h"
 #include "mview.h"
-#include "node.h"
 #include "status.h"
-#include "status_format_callbacks.h"
 
 int status_r(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
