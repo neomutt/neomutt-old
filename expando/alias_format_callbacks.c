@@ -85,6 +85,7 @@ int alias_f(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   // NOTE(g0mb4): use $flag_chars?
+  // NOTE(g0mb4): use "" if not applicable, so it can be used in a conditional?
   const char *s = av->is_deleted ? "D" : " ";
   format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
@@ -136,6 +137,7 @@ int alias_t(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   // NOTE(g0mb4): use $flag_chars?
+  // NOTE(g0mb4): use "" if not applicable, so it can be used in a conditional?
   const char *s = av->is_tagged ? "*" : " ";
   format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
