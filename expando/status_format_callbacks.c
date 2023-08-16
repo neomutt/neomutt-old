@@ -43,7 +43,7 @@
 int status_r(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -81,7 +81,7 @@ int status_r(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_D(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -104,7 +104,7 @@ int status_D(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_f(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -141,7 +141,7 @@ int status_f(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_M(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -158,7 +158,7 @@ int status_M(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_m(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -175,7 +175,7 @@ int status_m(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_n(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -192,7 +192,7 @@ int status_n(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_o(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -209,7 +209,7 @@ int status_o(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_d(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -226,7 +226,7 @@ int status_d(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_F(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -243,7 +243,7 @@ int status_F(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_t(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -260,7 +260,7 @@ int status_t(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_p(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -277,7 +277,7 @@ int status_p(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_b(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -294,7 +294,7 @@ int status_b(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_l(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
@@ -313,7 +313,7 @@ int status_l(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_T(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   char fmt[128];
@@ -343,7 +343,7 @@ static char *get_sort_str_2gmb(char *buf, size_t buflen, enum SortType method)
 int status_s(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   char fmt[128], tmp[128];
@@ -358,7 +358,7 @@ int status_s(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_S(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   char fmt[128], tmp[128];
@@ -373,7 +373,7 @@ int status_S(const struct ExpandoNode *self, char *buf, int buf_len,
 int status_P(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;

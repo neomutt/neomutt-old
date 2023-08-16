@@ -28,13 +28,13 @@ struct ExpandoNode *get_nth_node(struct ExpandoNode **root, int n)
 void check_empty_node(struct ExpandoNode *node)
 {
   TEST_CHECK(node != NULL);
-  TEST_CHECK(node->type == NT_EMPTY);
+  TEST_CHECK(node->type == ENT_EMPTY);
 }
 
 void check_text_node(struct ExpandoNode *node, const char *text)
 {
   TEST_CHECK(node != NULL);
-  TEST_CHECK(node->type == NT_TEXT);
+  TEST_CHECK(node->type == ENT_TEXT);
 
   const int n = strlen(text);
   const int m = (int) (node->end - node->start);
@@ -46,7 +46,7 @@ void check_expando_node(struct ExpandoNode *node, const char *expando,
                         const struct ExpandoFormatPrivate *format)
 {
   TEST_CHECK(node != NULL);
-  TEST_CHECK(node->type == NT_EXPANDO);
+  TEST_CHECK(node->type == ENT_EXPANDO);
 
   const int n = strlen(expando);
   const int m = (int) (node->end - node->start);
@@ -72,7 +72,7 @@ void check_expando_node(struct ExpandoNode *node, const char *expando,
 void check_pad_node(struct ExpandoNode *node, const char *pad_char, enum ExpandoPadType pad_type)
 {
   TEST_CHECK(node != NULL);
-  TEST_CHECK(node->type == NT_PAD);
+  TEST_CHECK(node->type == ENT_PAD);
 
   const int n = strlen(pad_char);
   const int m = (int) (node->end - node->start);
@@ -88,7 +88,7 @@ void check_date_node(struct ExpandoNode *node, const char *inner_text,
                      enum ExpandoDateType date_type, bool ingnore_locale)
 {
   TEST_CHECK(node != NULL);
-  TEST_CHECK(node->type == NT_DATE);
+  TEST_CHECK(node->type == ENT_DATE);
 
   const int n = strlen(inner_text);
   const int m = (int) (node->end - node->start);
@@ -103,13 +103,13 @@ void check_date_node(struct ExpandoNode *node, const char *inner_text,
 void check_condition_node_head(struct ExpandoNode *node)
 {
   TEST_CHECK(node != NULL);
-  TEST_CHECK(node->type == NT_CONDITION);
+  TEST_CHECK(node->type == ENT_CONDITION);
 }
 
 void check_index_hook_node(struct ExpandoNode *node, const char *name)
 {
   TEST_CHECK(node != NULL);
-  TEST_CHECK(node->type == NT_INDEX_FORMAT_HOOK);
+  TEST_CHECK(node->type == ENT_INDEX_FORMAT_HOOK);
 
   const int n = strlen(name);
   const int m = (int) (node->end - node->start);

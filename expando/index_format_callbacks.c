@@ -125,7 +125,7 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
 int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
@@ -142,7 +142,7 @@ int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
@@ -216,7 +216,7 @@ int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
                int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_DATE);
+  assert(self->type == ENT_DATE);
   assert(self->ndata != NULL);
 
   struct ExpandoDatePrivate *dp = (struct ExpandoDatePrivate *) self->ndata;
@@ -228,15 +228,15 @@ int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
 
   switch (dp->date_type)
   {
-    case DT_LOCAL_SEND_TIME:
+    case EDT_LOCAL_SEND_TIME:
       tm = mutt_date_localtime(e->date_sent);
       break;
 
-    case DT_LOCAL_RECIEVE_TIME:
+    case EDT_LOCAL_RECIEVE_TIME:
       tm = mutt_date_localtime(e->received);
       break;
 
-    case DT_SENDER_SEND_TIME:
+    case EDT_SENDER_SEND_TIME:
     {
       /* restore sender's time zone */
       time_t now = e->date_sent;
@@ -367,7 +367,7 @@ static void make_from_2gmb(struct Envelope *env, char *buf, size_t buflen,
 int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
@@ -385,7 +385,7 @@ int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
@@ -427,7 +427,7 @@ int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
@@ -442,7 +442,7 @@ int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
@@ -460,7 +460,7 @@ int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_cr(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_EXPANDO);
+  assert(self->type == ENT_EXPANDO);
   struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
 
   struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;

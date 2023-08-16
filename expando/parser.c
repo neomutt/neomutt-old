@@ -43,7 +43,7 @@
 #include "parser.h"
 #include "validation.h"
 
-extern const struct ExpandoValidation expando_validation[EFMT_FORMAT_COUNT_OR_DEBUG];
+extern const struct ExpandoValidation expando_validation[EFMTI_FORMAT_COUNT_OR_DEBUG];
 
 /**
  * ExpandoConditionStart - Signals parse_node() if the parsing started in a conditional statement or not
@@ -60,7 +60,7 @@ static struct ExpandoNode *new_empty_node(void)
 {
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
-  node->type = NT_EMPTY;
+  node->type = ENT_EMPTY;
 
   return node;
 }
@@ -69,7 +69,7 @@ static struct ExpandoNode *new_text_node(const char *start, const char *end)
 {
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
-  node->type = NT_TEXT;
+  node->type = ENT_TEXT;
   node->start = start;
   node->end = end;
 
@@ -84,7 +84,7 @@ static struct ExpandoNode *new_expando_node(const char *start, const char *end,
 {
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
-  node->type = NT_EXPANDO;
+  node->type = ENT_EXPANDO;
   node->start = start;
   node->end = end;
 
@@ -102,7 +102,7 @@ static struct ExpandoNode *new_date_node(const char *start, const char *end,
 {
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
-  node->type = NT_DATE;
+  node->type = ENT_DATE;
   node->start = start;
   node->end = end;
 
@@ -123,7 +123,7 @@ static struct ExpandoNode *new_pad_node(enum ExpandoPadType pad_type,
 {
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
-  node->type = NT_PAD;
+  node->type = ENT_PAD;
   node->start = start;
   node->end = end;
 
@@ -147,7 +147,7 @@ static struct ExpandoNode *new_condition_node(struct ExpandoNode *condition,
 
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
-  node->type = NT_CONDITION;
+  node->type = ENT_CONDITION;
   node->format_cb = conditional_format_callback;
 
   struct ExpandoConditionPrivate *cp = mutt_mem_calloc(1, sizeof(struct ExpandoConditionPrivate));
@@ -165,7 +165,7 @@ static struct ExpandoNode *new_index_format_hook_node(const char *start, const c
 {
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
-  node->type = NT_INDEX_FORMAT_HOOK;
+  node->type = ENT_INDEX_FORMAT_HOOK;
   node->start = start;
   node->end = end;
 
@@ -210,7 +210,7 @@ static const char *skip_classic_expando(const char *s, enum ExpandoFormatIndex i
 {
   const struct ExpandoFormatCallback *valid_two_char_expandos = NULL;
 
-  if (index >= 0 && index < EFMT_FORMAT_COUNT_OR_DEBUG)
+  if (index >= 0 && index < EFMTI_FORMAT_COUNT_OR_DEBUG)
   {
     valid_two_char_expandos = expando_validation[index].valid_two_char_expandos;
   }
@@ -359,7 +359,7 @@ static expando_format_callback check_if_expando_is_valid(const char *start, cons
   const struct ExpandoFormatCallback *valid_two_char_expandos = NULL;
   const struct ExpandoFormatCallback *valid_long_expandos = NULL;
 
-  if (index >= 0 && index < EFMT_FORMAT_COUNT_OR_DEBUG)
+  if (index >= 0 && index < EFMTI_FORMAT_COUNT_OR_DEBUG)
   {
     valid_short_expandos = expando_validation[index].valid_short_expandos;
     valid_two_char_expandos = expando_validation[index].valid_two_char_expandos;
@@ -439,8 +439,8 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
       // dates
       if (*s == '{' || *s == '[' || *s == '(')
       {
-        if (!(index == EFMT_FORMAT_COUNT_OR_DEBUG || index == EFMT_INDEX_FORMAT ||
-              index == EFMT_PGP_ENTRY_FORMAT || index == EFMT_FOLDER_FORMAT))
+        if (!(index == EFMTI_FORMAT_COUNT_OR_DEBUG || index == EFMTI_INDEX_FORMAT ||
+              index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT))
         {
           error->position = s;
           snprintf(error->message, sizeof(error->message), "Date is not allowed.");
@@ -462,7 +462,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
 
         if (*s == '{')
         {
-          if (index == EFMT_PGP_ENTRY_FORMAT || index == EFMT_FOLDER_FORMAT)
+          if (index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT)
           {
             error->position = s;
             snprintf(error->message, sizeof(error->message), "Invalid date format.");
@@ -470,7 +470,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
           }
 
           ++s;
-          dt = DT_SENDER_SEND_TIME;
+          dt = EDT_SENDER_SEND_TIME;
           end = skip_until_ch(s, '}');
           if (*end != '}')
           {
@@ -482,7 +482,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         else if (*s == '[')
         {
           ++s;
-          dt = DT_LOCAL_SEND_TIME;
+          dt = EDT_LOCAL_SEND_TIME;
           end = skip_until_ch(s, ']');
           if (*end != ']')
           {
@@ -494,7 +494,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         // '('
         else
         {
-          if (index == EFMT_PGP_ENTRY_FORMAT || index == EFMT_FOLDER_FORMAT)
+          if (index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT)
           {
             error->position = s;
             snprintf(error->message, sizeof(error->message), "Invalid date format.");
@@ -502,7 +502,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
           }
 
           ++s;
-          dt = DT_LOCAL_RECIEVE_TIME;
+          dt = EDT_LOCAL_RECIEVE_TIME;
           end = skip_until_ch(s, ')');
           if (*end != ')')
           {
@@ -512,7 +512,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
           }
         }
 
-        if (index == EFMT_INDEX_FORMAT)
+        if (index == EFMTI_INDEX_FORMAT)
         {
           date_cb = index_date;
         }
@@ -526,16 +526,16 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         enum ExpandoPadType pt = 0;
         if (*s == '|')
         {
-          pt = PT_FILL_EOL;
+          pt = EPT_FILL_EOL;
         }
         else if (*s == '>')
         {
-          pt = PT_HARD_FILL;
+          pt = EPT_HARD_FILL;
         }
-        // '*'
+        // '*'s
         else
         {
-          pt = PT_SOFT_FILL;
+          pt = EPT_SOFT_FILL;
         }
         s++;
 
@@ -653,7 +653,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
       // index format hook
       else if (*s == '@')
       {
-        if (!(index == EFMT_FORMAT_COUNT_OR_DEBUG || index == EFMT_INDEX_FORMAT))
+        if (!(index == EFMTI_FORMAT_COUNT_OR_DEBUG || index == EFMTI_INDEX_FORMAT))
         {
           error->position = s;
           snprintf(error->message, sizeof(error->message), "Index-hook-format is not allowed.");

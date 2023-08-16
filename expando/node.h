@@ -29,13 +29,13 @@
 
 enum ExpandoNodeType
 {
-  NT_EMPTY = 0,
-  NT_TEXT,
-  NT_EXPANDO,
-  NT_DATE,
-  NT_PAD,
-  NT_CONDITION,
-  NT_INDEX_FORMAT_HOOK
+  ENT_EMPTY = 0,
+  ENT_TEXT,
+  ENT_EXPANDO,
+  ENT_DATE,
+  ENT_PAD,
+  ENT_CONDITION,
+  ENT_INDEX_FORMAT_HOOK
 };
 
 struct ExpandoNode
@@ -65,9 +65,9 @@ struct ExpandoFormatPrivate
 
 enum ExpandoDateType
 {
-  DT_SENDER_SEND_TIME,
-  DT_LOCAL_SEND_TIME,
-  DT_LOCAL_RECIEVE_TIME,
+  EDT_SENDER_SEND_TIME,
+  EDT_LOCAL_SEND_TIME,
+  EDT_LOCAL_RECIEVE_TIME,
 };
 
 struct ExpandoDatePrivate
@@ -78,9 +78,9 @@ struct ExpandoDatePrivate
 
 enum ExpandoPadType
 {
-  PT_FILL_EOL,
-  PT_HARD_FILL,
-  PT_SOFT_FILL
+  EPT_FILL_EOL,
+  EPT_HARD_FILL,
+  EPT_SOFT_FILL
 };
 
 struct ExpandoPadPrivate

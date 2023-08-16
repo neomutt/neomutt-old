@@ -129,7 +129,7 @@ void format_tree(const struct ExpandoNode *const *tree, char *buf, size_t buf_le
   // give softpad nodes a chance to act
   while (n)
   {
-    if (n->type == NT_PAD && n->format_cb)
+    if (n->type == ENT_PAD && n->format_cb)
     {
       n->format_cb(n, buffer, buffer_len, col_len, data, flags);
     }
@@ -144,7 +144,7 @@ void format_tree(const struct ExpandoNode *const *tree, char *buf, size_t buf_le
 int text_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
                          int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_TEXT);
+  assert(self->type == ENT_TEXT);
 
   int copylen = self->end - self->start;
   if (copylen > buf_len)
@@ -165,7 +165,7 @@ int text_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
 int conditional_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
                                 int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_CONDITION);
+  assert(self->type == ENT_CONDITION);
   assert(self->ndata);
   struct ExpandoConditionPrivate *cp = (struct ExpandoConditionPrivate *) self->ndata;
 
@@ -341,18 +341,18 @@ static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int b
 int pad_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
                         int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == NT_PAD);
+  assert(self->type == ENT_PAD);
   assert(self->ndata);
 
   struct ExpandoPadPrivate *pp = (struct ExpandoPadPrivate *) self->ndata;
 
   switch (pp->pad_type)
   {
-    case PT_FILL_EOL:
+    case EPT_FILL_EOL:
       return pad_format_fill_eol(self, buf, buf_len, cols_len, data, flags);
-    case PT_HARD_FILL:
+    case EPT_HARD_FILL:
       return pad_format_hard_fill(self, buf, buf_len, cols_len, data, flags);
-    case PT_SOFT_FILL:
+    case EPT_SOFT_FILL:
       return pad_format_soft_fill(self, buf, buf_len, cols_len, data, flags);
     default:
       assert(0 && "Unknown pad type.");

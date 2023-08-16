@@ -2,8 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include "gui/lib.h"
-#include "node.h"
-#include "parser.h"
+#include "lib.h"
 
 static void print_node(FILE *fp, const struct ExpandoNode *n, int indent);
 
@@ -64,15 +63,15 @@ static void print_date_node(FILE *fp, const struct ExpandoNode *n, int indent)
 
   switch (d->date_type)
   {
-    case DT_SENDER_SEND_TIME:
+    case EDT_SENDER_SEND_TIME:
       dt = "SENDER_SEND_TIME";
       break;
 
-    case DT_LOCAL_SEND_TIME:
+    case EDT_LOCAL_SEND_TIME:
       dt = "DT_LOCAL_SEND_TIME";
       break;
 
-    case DT_LOCAL_RECIEVE_TIME:
+    case EDT_LOCAL_RECIEVE_TIME:
       dt = "DT_LOCAL_RECIEVE_TIME";
       break;
 
@@ -92,15 +91,15 @@ static void print_pad_node(FILE *fp, const struct ExpandoNode *n, int indent)
   const char *pt = NULL;
   switch (p->pad_type)
   {
-    case PT_FILL_EOL:
+    case EPT_FILL_EOL:
       pt = "FILL_EOL";
       break;
 
-    case PT_HARD_FILL:
+    case EPT_HARD_FILL:
       pt = "HARD_FILL";
       break;
 
-    case PT_SOFT_FILL:
+    case EPT_SOFT_FILL:
       pt = "SOFT_FILL";
       break;
 
@@ -145,43 +144,43 @@ static void print_node(FILE *fp, const struct ExpandoNode *n, int indent)
 
   switch (n->type)
   {
-    case NT_EMPTY:
+    case ENT_EMPTY:
     {
       print_empty_node(fp, n, indent);
     }
     break;
 
-    case NT_TEXT:
+    case ENT_TEXT:
     {
       print_text_node(fp, n, indent);
     }
     break;
 
-    case NT_EXPANDO:
+    case ENT_EXPANDO:
     {
       print_expando_node(fp, n, indent);
     }
     break;
 
-    case NT_DATE:
+    case ENT_DATE:
     {
       print_date_node(fp, n, indent);
     }
     break;
 
-    case NT_PAD:
+    case ENT_PAD:
     {
       print_pad_node(fp, n, indent);
     }
     break;
 
-    case NT_INDEX_FORMAT_HOOK:
+    case ENT_INDEX_FORMAT_HOOK:
     {
       print_index_format_hook_node(fp, n, indent);
     }
     break;
 
-    case NT_CONDITION:
+    case ENT_CONDITION:
     {
       print_condition_node(fp, n, indent);
     }

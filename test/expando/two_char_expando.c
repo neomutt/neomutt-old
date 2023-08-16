@@ -8,7 +8,7 @@ void test_expando_two_char_expando(void)
   struct ExpandoParseError error = { 0 };
   struct ExpandoNode *root = NULL;
 
-  expando_tree_parse(&root, &input, EFMT_INDEX_FORMAT, &error);
+  expando_tree_parse(&root, &input, EFMTI_INDEX_FORMAT, &error);
 
   TEST_CHECK(error.position == NULL);
   check_expando_node(get_nth_node(&root, 0), "cr", NULL);
