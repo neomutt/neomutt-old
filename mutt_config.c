@@ -372,7 +372,7 @@ static struct ConfigDef MainVars[] = {
   { "net_inc", DT_NUMBER|DT_NOT_NEGATIVE, 10, 0, NULL,
     "(socket) Update the progress bar after this many KB sent/received (0 to disable)"
   },
-  { "new_mail_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "new_mail_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "External command to run when new mail arrives"
   },
   { "pipe_decode", DT_BOOL, false, 0, NULL,
@@ -552,10 +552,10 @@ static struct ConfigDef MainVars[] = {
   { "ts_enabled", DT_BOOL|R_INDEX, false, 0, NULL,
     "Allow NeoMutt to set the terminal status line and icon"
   },
-  { "ts_icon_format", DT_STRING|R_INDEX, IP "M%<n?AIL&ail>", 0, NULL,
+  { "ts_icon_format", DT_EXPANDO|R_INDEX, IP "M%<n?AIL&ail>", 0, expando_validator,
     "printf-like format string for the terminal's icon title"
   },
-  { "ts_status_format", DT_STRING|R_INDEX, IP "NeoMutt with %<m?%m messages&no messages>%<n? [%n NEW]>", 0, NULL,
+  { "ts_status_format", DT_EXPANDO|R_INDEX, IP "NeoMutt with %<m?%m messages&no messages>%<n? [%n NEW]>", 0, expando_validator,
     "printf-like format string for the terminal's status (window title)"
   },
   { "use_domain", DT_BOOL, true, 0, NULL,

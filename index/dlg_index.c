@@ -1172,12 +1172,12 @@ struct Mailbox *dlg_index(struct MuttWindow *dlg, struct Mailbox *m_init)
               const bool c_beep_new = cs_subset_bool(shared->sub, "beep_new");
               if (c_beep_new)
                 mutt_beep(true);
-              const char *const c_new_mail_command = cs_subset_string(shared->sub, "new_mail_command");
+              const struct ExpandoRecord *c_new_mail_command =
+                  cs_subset_expando(shared->sub, "new_mail_command");
               if (c_new_mail_command)
               {
                 char cmd[1024] = { 0 };
-                menu_status_line(cmd, sizeof(cmd), shared, NULL, sizeof(cmd),
-                                 NONULL(c_new_mail_command));
+                menu_status_line(cmd, sizeof(cmd), shared, NULL, sizeof(cmd), c_new_mail_command);
                 if (mutt_system(cmd) != 0)
                   mutt_error(_("Error running \"%s\""), cmd);
               }
@@ -1218,12 +1218,13 @@ struct Mailbox *dlg_index(struct MuttWindow *dlg, struct Mailbox *m_init)
           const bool c_beep_new = cs_subset_bool(shared->sub, "beep_new");
           if (c_beep_new)
             mutt_beep(true);
-          const char *const c_new_mail_command = cs_subset_string(shared->sub, "new_mail_command");
+          const struct ExpandoRecor *c_new_mail_command =
+              cs_subset_expando(shared->sub, "new_mail_command");
           if (c_new_mail_command)
           {
             char cmd[1024] = { 0 };
             menu_status_line(cmd, sizeof(cmd), shared, priv->menu, sizeof(cmd),
-                             NONULL(c_new_mail_command));
+                             c_new_mail_command);
             if (mutt_system(cmd) != 0)
               mutt_error(_("Error running \"%s\""), cmd);
           }

@@ -141,11 +141,9 @@ static int expando_reset(const struct ConfigSet *cs, void *var,
 {
   assert(cdef->validator);
 
-  struct ExpandoRecord *r = NULL;
-  const char *initial = (const char *) cdef->initial;
+  const char *initial = NONULL((const char *) cdef->initial);
 
-  if (initial)
-    r = expando_new(initial);
+  struct ExpandoRecord *r = expando_new(initial);
 
   int rc = cdef->validator(cs, cdef, (intptr_t) r, err);
 

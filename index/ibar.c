@@ -96,7 +96,7 @@ static int ibar_recalc(struct MuttWindow *win)
   struct IndexPrivateData *priv = ibar_data->priv;
 
   const struct ExpandoRecord *c_status_format = cs_subset_expando(shared->sub, "status_format");
-  menu_status_line_2gmb(buf, sizeof(buf), shared, priv->menu, win->state.cols, c_status_format);
+  menu_status_line(buf, sizeof(buf), shared, priv->menu, win->state.cols, c_status_format);
 
   if (!mutt_str_equal(buf, ibar_data->status_format))
   {
@@ -108,9 +108,8 @@ static int ibar_recalc(struct MuttWindow *win)
   const bool c_ts_enabled = cs_subset_bool(shared->sub, "ts_enabled");
   if (c_ts_enabled && TsSupported)
   {
-    const char *c_ts_status_format = cs_subset_string(shared->sub, "ts_status_format");
-    menu_status_line(buf, sizeof(buf), shared, priv->menu, sizeof(buf),
-                     NONULL(c_ts_status_format));
+    const struct ExpandoRecord *c_ts_status_format = cs_subset_expando(shared->sub, "ts_status_format");
+    menu_status_line(buf, sizeof(buf), shared, priv->menu, sizeof(buf), c_ts_status_format);
     if (!mutt_str_equal(buf, ibar_data->ts_status_format))
     {
       mutt_str_replace(&ibar_data->ts_status_format, buf);
@@ -118,9 +117,8 @@ static int ibar_recalc(struct MuttWindow *win)
       mutt_debug(LL_DEBUG5, "recalc done, request WA_REPAINT\n");
     }
 
-    const char *c_ts_icon_format = cs_subset_string(shared->sub, "ts_icon_format");
-    menu_status_line(buf, sizeof(buf), shared, priv->menu, sizeof(buf),
-                     NONULL(c_ts_icon_format));
+    const struct ExpandoRecord *c_ts_icon_format = cs_subset_expando(shared->sub, "ts_icon_format");
+    menu_status_line(buf, sizeof(buf), shared, priv->menu, sizeof(buf), c_ts_icon_format);
     if (!mutt_str_equal(buf, ibar_data->ts_icon_format))
     {
       mutt_str_replace(&ibar_data->ts_icon_format, buf);

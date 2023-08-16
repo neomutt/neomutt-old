@@ -208,6 +208,8 @@ const struct ExpandoValidation expando_validation[EFMTI_FORMAT_COUNT_OR_DEBUG] =
 int expando_validator(const struct ConfigSet *cs, const struct ConfigDef *cdef,
                       intptr_t value, struct Buffer *err)
 {
+  assert(value != 0);
+
   struct ExpandoRecord *r = (struct ExpandoRecord *) value;
   for (enum ExpandoFormatIndex index = 0; index < EFMTI_FORMAT_COUNT_OR_DEBUG; ++index)
   {

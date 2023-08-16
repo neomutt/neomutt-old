@@ -331,7 +331,7 @@ int status_T(const struct ExpandoNode *self, char *buf, int buf_len,
  * @param method Sort method, see #SortType
  * @retval ptr Buffer pointer
  */
-static char *get_sort_str_2gmb(char *buf, size_t buflen, enum SortType method)
+static char *get_sort_str(char *buf, size_t buflen, enum SortType method)
 {
   snprintf(buf, buflen, "%s%s%s", (method & SORT_REVERSE) ? "reverse-" : "",
            (method & SORT_LAST) ? "last-" : "",
@@ -348,7 +348,7 @@ int status_s(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128], tmp[128];
 
   const enum SortType c_sort = cs_subset_sort(NeoMutt->sub, "sort");
-  const char *s = get_sort_str_2gmb(tmp, sizeof(tmp), c_sort);
+  const char *s = get_sort_str(tmp, sizeof(tmp), c_sort);
   format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
 }
@@ -362,7 +362,7 @@ int status_S(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128], tmp[128];
 
   const enum SortType c_sort_aux = cs_subset_sort(NeoMutt->sub, "sort_aux");
-  const char *s = get_sort_str_2gmb(tmp, sizeof(tmp), c_sort_aux);
+  const char *s = get_sort_str(tmp, sizeof(tmp), c_sort_aux);
   format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
 }

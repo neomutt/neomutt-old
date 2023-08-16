@@ -451,12 +451,12 @@ int dlg_pager(struct PagerView *pview)
         const bool c_beep_new = cs_subset_bool(NeoMutt->sub, "beep_new");
         if (c_beep_new)
           mutt_beep(true);
-        const char *const c_new_mail_command = cs_subset_string(NeoMutt->sub, "new_mail_command");
+        const struct ExpandoRecord *c_new_mail_command =
+            cs_subset_expando(NeoMutt->sub, "new_mail_command");
         if (c_new_mail_command)
         {
           char cmd[1024] = { 0 };
-          menu_status_line(cmd, sizeof(cmd), shared, NULL, sizeof(cmd),
-                           NONULL(c_new_mail_command));
+          menu_status_line(cmd, sizeof(cmd), shared, NULL, sizeof(cmd), c_new_mail_command);
           if (mutt_system(cmd) != 0)
             mutt_error(_("Error running \"%s\""), cmd);
         }
