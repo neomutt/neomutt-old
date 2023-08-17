@@ -49,11 +49,13 @@ static size_t add_index_color_2gmb(char *buf, int buflen, MuttFormatFlags flags,
 
   if (color == MT_COLOR_INDEX)
   { /* buf might be uninitialized other cases */
+    // TODO(g0mb4): Investigate this
     const size_t len = mutt_str_len(buf);
     buf += len;
     buflen -= len;
   }
 
+  // TODO(g0mb4): Investigate this
   buf[0] = MUTT_SPECIAL_INDEX;
   buf[1] = color;
   buf[2] = '\0';
