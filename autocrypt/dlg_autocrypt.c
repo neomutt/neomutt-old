@@ -75,6 +75,7 @@
 #include "core/lib.h"
 #include "gui/lib.h"
 #include "lib.h"
+#include "expando/lib.h"
 #include "menu/lib.h"
 #include "format_flags.h"
 #include "functions.h"
@@ -111,71 +112,6 @@ static const struct Mapping AutocryptAcctHelp[] = {
 };
 
 /**
- * autocrypt_format_str - Format a string for the Autocrypt account list - Implements ::format_t - @ingroup expando_api
- *
- * | Expando | Description
- * | :------ | :----------------------------------------------------------------
- * | \%a     | Email address
- * | \%k     | Gpg keyid
- * | \%n     | Current entry number
- * | \%p     | Prefer-encrypt flag
- * | \%s     | Status flag (active/inactive)
- */
-static const char *autocrypt_format_str(char *buf, size_t buflen, size_t col, int cols,
-                                        char op, const char *src, const char *prec,
-                                        const char *if_str, const char *else_str,
-                                        intptr_t data, MuttFormatFlags flags)
-{
-  struct AccountEntry *entry = (struct AccountEntry *) data;
-  char tmp[128] = { 0 };
-
-  switch (op)
-  {
-    case 'a':
-      mutt_format_s(buf, buflen, prec, buf_string(entry->addr->mailbox));
-      break;
-    case 'k':
-      mutt_format_s(buf, buflen, prec, entry->account->keyid);
-      break;
-    case 'n':
-      snprintf(tmp, sizeof(tmp), "%%%sd", prec);
-      snprintf(buf, buflen, tmp, entry->num);
-      break;
-    case 'p':
-      if (entry->account->prefer_encrypt)
-      {
-        /* L10N: Autocrypt Account menu.
-           flag that an account has prefer-encrypt set */
-        mutt_format_s(buf, buflen, prec, _("prefer encrypt"));
-      }
-      else
-      {
-        /* L10N: Autocrypt Account menu.
-           flag that an account has prefer-encrypt unset;
-           thus encryption will need to be manually enabled.  */
-        mutt_format_s(buf, buflen, prec, _("manual encrypt"));
-      }
-      break;
-    case 's':
-      if (entry->account->enabled)
-      {
-        /* L10N: Autocrypt Account menu.
-           flag that an account is enabled/active */
-        mutt_format_s(buf, buflen, prec, _("active"));
-      }
-      else
-      {
-        /* L10N: Autocrypt Account menu.
-           flag that an account is disabled/inactive */
-        mutt_format_s(buf, buflen, prec, _("inactive"));
-      }
-      break;
-  }
-
-  return (src);
-}
-
-/**
  * autocrypt_make_entry - Create a line for the Autocrypt account menu - Implements Menu::make_entry() - @ingroup menu_make_entry
  *
  * @sa $autocrypt_acct_format, autocrypt_format_str()
@@ -184,10 +120,11 @@ static void autocrypt_make_entry(struct Menu *menu, char *buf, size_t buflen, in
 {
   struct AccountEntry *entry = &((struct AccountEntry *) menu->mdata)[num];
 
-  const char *const c_autocrypt_acct_format = cs_subset_string(NeoMutt->sub, "autocrypt_acct_format");
-  mutt_expando_format(buf, buflen, 0, menu->win->state.cols,
-                      NONULL(c_autocrypt_acct_format), autocrypt_format_str,
-                      (intptr_t) entry, MUTT_FORMAT_ARROWCURSOR);
+  const struct ExpandoRecord *c_autocrypt_acct_format =
+      cs_subset_expando(NeoMutt->sub, "autocrypt_acct_format");
+  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
+                           &c_autocrypt_acct_format->tree, (intptr_t) entry,
+                           MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

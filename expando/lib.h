@@ -44,6 +44,7 @@
 
 // IWYU pragma: begin_exports
 #include "alias_format_callbacks.h"
+#include "autocrypt_format_callbacks.h"
 #include "format_callbacks.h"
 #include "helpers.h"
 #include "index_format_callbacks.h"

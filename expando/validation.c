@@ -49,8 +49,8 @@ static const struct ExpandoFormatCallback attach_1[] = {
 };
 
 static const struct ExpandoFormatCallback autocrypt_acct_1[] = {
-  { "a", NULL }, { "k", NULL }, { "n", NULL },
-  { "p", NULL }, { "s", NULL }, { NULL, NULL },
+  { "a", autocrypt_a }, { "k", autocrypt_k }, { "n", autocrypt_n },
+  { "p", autocrypt_p }, { "s", autocrypt_s }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback compose_1[] = {
