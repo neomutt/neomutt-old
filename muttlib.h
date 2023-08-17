@@ -68,7 +68,7 @@ void add_to_stailq     (struct ListHead *head, const char *str);
 void remove_from_stailq(struct ListHead *head, const char *str);
 
 void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
-                              const struct ExpandoNode *const *tree, intptr_t data,
+                              struct ExpandoNode *const *tree, intptr_t data,
                               MuttFormatFlags flags);
 
 #endif /* MUTT_MUTTLIB_H */

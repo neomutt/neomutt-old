@@ -59,7 +59,7 @@ void format_int(char *buf, int buf_len, int number,
                 enum ColorId post, struct ExpandoFormatPrivate *format);
 
 
-void format_tree(const struct ExpandoNode *const *tree, char *buf, size_t buf_len, int start_col, int max_col,
+void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len, int start_col, int max_col,
                  intptr_t data, MuttFormatFlags flags);
 
 int text_format_callback(const struct ExpandoNode *self, char *buf,
