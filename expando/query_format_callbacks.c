@@ -29,27 +29,21 @@
 #include "config.h"
 #include <assert.h>
 #include "mutt/lib.h"
-#include "config/lib.h"
-#include "core/neomutt.h"
+#include "address/address.h"
 #include "alias/alias.h"
 #include "alias/gui.h"
 #include "expando/lib.h"
-#include "postpone/lib.h"
-#include "globals.h"
-#include "index/shared_data.h"
-#include "mutt_mailbox.h"
-#include "mutt_thread.h"
-#include "muttlib.h"
-#include "mview.h"
+#include "format_flags.h"
 
 int query_a(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct AliasView *av = (struct AliasView *) data;
-  struct Alias *alias = av->alias;
+  const struct AliasView *av = (const struct AliasView *) data;
+  const struct Alias *alias = av->alias;
 
   char fmt[256], tmp[256] = { 0 };
 
@@ -72,9 +66,10 @@ int query_c(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct AliasView *av = (struct AliasView *) data;
+  const struct AliasView *av = (const struct AliasView *) data;
 
   char fmt[128];
 
@@ -87,10 +82,11 @@ int query_e(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct AliasView *av = (struct AliasView *) data;
-  struct Alias *alias = av->alias;
+  const struct AliasView *av = (const struct AliasView *) data;
+  const struct Alias *alias = av->alias;
 
   char fmt[128];
 
@@ -103,10 +99,11 @@ int query_n(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct AliasView *av = (struct AliasView *) data;
-  struct Alias *alias = av->alias;
+  const struct AliasView *av = (const struct AliasView *) data;
+  const struct Alias *alias = av->alias;
 
   char fmt[128];
 
@@ -119,9 +116,10 @@ int query_t(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct AliasView *av = (struct AliasView *) data;
+  const struct AliasView *av = (const struct AliasView *) data;
 
   char fmt[128];
 

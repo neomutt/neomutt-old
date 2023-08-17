@@ -125,10 +125,11 @@ int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
-  struct Email *e = hfi->email;
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
 
   char fmt[128];
 
@@ -142,9 +143,10 @@ int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
   struct Email *e = hfi->email;
   const size_t msg_in_pager = hfi->msg_in_pager;
 
@@ -219,8 +221,8 @@ int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
   assert(self->ndata != NULL);
 
   struct ExpandoDatePrivate *dp = (struct ExpandoDatePrivate *) self->ndata;
-  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
-  struct Email *e = hfi->email;
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
 
   struct tm tm = { 0 };
   char fmt[128], tmp[128];
@@ -367,10 +369,11 @@ int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
-  struct Email *e = hfi->email;
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
 
   char fmt[128], tmp[128];
 
@@ -384,10 +387,11 @@ int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
-  struct Email *e = hfi->email;
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
 
   char fmt[128], tmp[128];
 
@@ -426,10 +430,11 @@ int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
-  struct Email *e = hfi->email;
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
 
   char fmt[128];
 
@@ -442,10 +447,11 @@ int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
-  struct Email *e = hfi->email;
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
 
   char fmt[128], tmp[128];
 
@@ -459,10 +465,11 @@ int index_cr(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct HdrFormatInfo *hfi = (struct HdrFormatInfo *) data;
-  struct Email *e = hfi->email;
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
 
   char fmt[128], tmp[128];
 

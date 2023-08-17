@@ -26,6 +26,7 @@
  * XXX
  */
 
+#include "config.h"
 #include <assert.h>
 #include "mutt/lib.h"
 #include "address/address.h"
@@ -38,7 +39,8 @@ int autocrypt_a(const struct ExpandoNode *self, char *buf, int buf_len,
                 int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct AccountEntry *entry = (const struct AccountEntry *) data;
 
@@ -53,7 +55,8 @@ int autocrypt_k(const struct ExpandoNode *self, char *buf, int buf_len,
                 int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct AccountEntry *entry = (const struct AccountEntry *) data;
 
@@ -68,7 +71,8 @@ int autocrypt_n(const struct ExpandoNode *self, char *buf, int buf_len,
                 int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct AccountEntry *entry = (const struct AccountEntry *) data;
 
@@ -83,7 +87,8 @@ int autocrypt_p(const struct ExpandoNode *self, char *buf, int buf_len,
                 int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct AccountEntry *entry = (const struct AccountEntry *) data;
 
@@ -111,7 +116,8 @@ int autocrypt_s(const struct ExpandoNode *self, char *buf, int buf_len,
                 int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct AccountEntry *entry = (const struct AccountEntry *) data;
 

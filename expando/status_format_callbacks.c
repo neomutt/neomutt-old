@@ -44,11 +44,12 @@ int status_r(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   size_t i = 0;
 
@@ -82,11 +83,12 @@ int status_D(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128], tmp[128];
 
@@ -105,11 +107,12 @@ int status_f(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
   char fmt[128], tmp[128];
 
 #ifdef USE_COMP_MBOX
@@ -142,11 +145,12 @@ int status_M(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
 
@@ -159,11 +163,12 @@ int status_m(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
 
@@ -176,11 +181,12 @@ int status_n(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
 
@@ -193,11 +199,12 @@ int status_o(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
 
@@ -210,11 +217,12 @@ int status_d(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
 
@@ -227,11 +235,12 @@ int status_F(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
 
@@ -244,11 +253,12 @@ int status_t(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
 
@@ -261,10 +271,11 @@ int status_p(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
   struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
@@ -278,10 +289,11 @@ int status_b(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
   struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
@@ -295,11 +307,12 @@ int status_l(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char tmp[128], fmt[128];
 
@@ -313,7 +326,8 @@ int status_T(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   char fmt[128];
 
@@ -342,7 +356,8 @@ int status_s(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   char fmt[128], tmp[128];
 
@@ -356,7 +371,8 @@ int status_S(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   char fmt[128], tmp[128];
 
@@ -370,10 +386,11 @@ int status_P(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct Menu *menu = msld->menu;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct Menu *menu = msld->menu;
 
   char tmp[128], fmt[128];
 
@@ -409,7 +426,8 @@ int status_h(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   char fmt[128];
 
@@ -422,11 +440,12 @@ int status_L(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct MailboxView *mailbox_view = shared->mailbox_view;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct MailboxView *mailbox_view = shared->mailbox_view;
 
   char tmp[128], fmt[128];
 
@@ -441,11 +460,12 @@ int status_R(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
 
@@ -458,11 +478,12 @@ int status_u(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct Mailbox *mailbox = shared->mailbox;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct Mailbox *mailbox = shared->mailbox;
 
   char fmt[128];
 
@@ -475,7 +496,8 @@ int status_v(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
   char fmt[256]; // mutt_make_version() has a 256 bytes long buffer
 
@@ -488,11 +510,12 @@ int status_V(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
-  struct ExpandoFormatPrivate *format = (struct ExpandoFormatPrivate *) self->ndata;
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
 
-  struct MenuStatusLineData *msld = (struct MenuStatusLineData *) data;
-  struct IndexSharedData *shared = msld->shared;
-  struct MailboxView *mailbox_view = shared->mailbox_view;
+  const struct MenuStatusLineData *msld = (const struct MenuStatusLineData *) data;
+  const struct IndexSharedData *shared = msld->shared;
+  const struct MailboxView *mailbox_view = shared->mailbox_view;
 
   char fmt[128];
 

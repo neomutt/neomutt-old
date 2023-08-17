@@ -52,11 +52,11 @@ char *got_to_column(char **start, int col);
 
 void format_string(char *buf, int buf_len, const char *s,
                    MuttFormatFlags flags, enum ColorId pre, enum ColorId post,
-                   struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree);
+                   const struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree);
 
 void format_int(char *buf, int buf_len, int number,
                 MuttFormatFlags flags, enum ColorId pre,
-                enum ColorId post, struct ExpandoFormatPrivate *format);
+                enum ColorId post, const struct ExpandoFormatPrivate *format);
 
 
 void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len, int start_col, int max_col,

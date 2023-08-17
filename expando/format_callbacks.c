@@ -67,7 +67,7 @@ static size_t add_index_color_2gmb(char *buf, int buflen, MuttFormatFlags flags,
 // TODO(g0mb4): implement MuttFormatFlags
 void format_string(char *buf, int buf_len, const char *s, MuttFormatFlags flags,
                    enum ColorId pre, enum ColorId post,
-                   struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree)
+                   const struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree)
 {
   if (format)
   {
@@ -86,8 +86,8 @@ void format_string(char *buf, int buf_len, const char *s, MuttFormatFlags flags,
   }
 }
 
-void format_int(char *buf, int buf_len, int number, MuttFormatFlags flags,
-                enum ColorId pre, enum ColorId post, struct ExpandoFormatPrivate *format)
+void format_int(char *buf, int buf_len, int number, MuttFormatFlags flags, enum ColorId pre,
+                enum ColorId post, const struct ExpandoFormatPrivate *format)
 {
   char tmp[32]; // 64 bit INT_MAX has 20 digits
   snprintf(tmp, sizeof(tmp), "%d", number);
