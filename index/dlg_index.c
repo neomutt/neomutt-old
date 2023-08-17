@@ -1218,7 +1218,7 @@ struct Mailbox *dlg_index(struct MuttWindow *dlg, struct Mailbox *m_init)
           const bool c_beep_new = cs_subset_bool(shared->sub, "beep_new");
           if (c_beep_new)
             mutt_beep(true);
-          const struct ExpandoRecor *c_new_mail_command =
+          const struct ExpandoRecord *c_new_mail_command =
               cs_subset_expando(shared->sub, "new_mail_command");
           if (c_new_mail_command)
           {
