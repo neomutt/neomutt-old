@@ -62,7 +62,7 @@ static struct ConfigDef AliasVars[] = {
   { "query_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
     "External command to query and external address book"
   },
-  { "query_format", DT_STRING|DT_NOT_EMPTY, IP "%3c %t %-25.25n %-25.25a | %e", 0, NULL,
+  { "query_format", DT_EXPANDO|DT_NOT_EMPTY, IP "%3c %t %-25.25n %-25.25a | %e", 0, expando_validator,
     "printf-like format string for the query menu (address book)"
   },
   { NULL },

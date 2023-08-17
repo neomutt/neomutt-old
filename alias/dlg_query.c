@@ -83,6 +83,7 @@
 #include "mutt.h"
 #include "lib.h"
 #include "enter/lib.h"
+#include "expando/lib.h"
 #include "history/lib.h"
 #include "menu/lib.h"
 #include "pattern/lib.h"
@@ -139,84 +140,6 @@ bool alias_to_addrlist(struct AddressList *al, struct Alias *alias)
 }
 
 /**
- * query_format_str - Format a string for the query menu - Implements ::format_t - @ingroup expando_api
- *
- * | Expando | Description
- * | :------ | :-------------------------------------------------------
- * | \%a     | Destination address
- * | \%c     | Current entry number
- * | \%e     | Extra information
- * | \%n     | Destination name
- * | \%t     | `*` if current entry is tagged, a space otherwise
- */
-static const char *query_format_str(char *buf, size_t buflen, size_t col, int cols,
-                                    char op, const char *src, const char *prec,
-                                    const char *if_str, const char *else_str,
-                                    intptr_t data, MuttFormatFlags flags)
-{
-  struct AliasView *av = (struct AliasView *) data;
-  struct Alias *alias = av->alias;
-  char fmt[128] = { 0 };
-  bool optional = (flags & MUTT_FORMAT_OPTIONAL);
-
-  switch (op)
-  {
-    case 'a':
-    {
-      struct Buffer *tmpbuf = buf_pool_get();
-      char tmp[256] = { 0 };
-      tmp[0] = '<';
-      mutt_addrlist_write(&alias->addr, tmpbuf, true);
-      mutt_str_copy(tmp + 1, buf_string(tmpbuf), sizeof(tmp) - 1);
-      buf_pool_release(&tmpbuf);
-      const size_t len = strlen(tmp);
-      if (len < (sizeof(tmp) - 1))
-      {
-        tmp[len] = '>';
-        tmp[len + 1] = '\0';
-      }
-      mutt_format_s(buf, buflen, prec, tmp);
-      break;
-    }
-    case 'c':
-      snprintf(fmt, sizeof(fmt), "%%%sd", prec);
-      snprintf(buf, buflen, fmt, av->num + 1);
-      break;
-    case 'e':
-      if (!optional)
-        mutt_format_s(buf, buflen, prec, NONULL(alias->comment));
-      else if (!alias->comment || (*alias->comment == '\0'))
-        optional = false;
-      break;
-    case 'n':
-      mutt_format_s(buf, buflen, prec, NONULL(alias->name));
-      break;
-    case 't':
-      snprintf(fmt, sizeof(fmt), "%%%sc", prec);
-      snprintf(buf, buflen, fmt, av->is_tagged ? '*' : ' ');
-      break;
-    default:
-      snprintf(fmt, sizeof(fmt), "%%%sc", prec);
-      snprintf(buf, buflen, fmt, op);
-      break;
-  }
-
-  if (optional)
-  {
-    mutt_expando_format(buf, buflen, col, cols, if_str, query_format_str, data,
-                        MUTT_FORMAT_NO_FLAGS);
-  }
-  else if (flags & MUTT_FORMAT_OPTIONAL)
-  {
-    mutt_expando_format(buf, buflen, col, cols, else_str, query_format_str,
-                        data, MUTT_FORMAT_NO_FLAGS);
-  }
-
-  /* We return the format string, unchanged */
-  return src;
-}
-
-/**
  * query_make_entry - Format a menu item for the query list - Implements Menu::make_entry() - @ingroup menu_make_entry
  *
  * @sa $query_format, query_format_str()
@@ -227,10 +150,10 @@ static void query_make_entry(struct Menu *menu, char *buf, size_t buflen, int li
   const struct AliasViewArray *ava = &mdata->ava;
   struct AliasView *av = ARRAY_GET(ava, line);
 
-  const char *const c_query_format = cs_subset_string(mdata->sub, "query_format");
+  const struct ExpandoRecord *c_query_format = cs_subset_expando(mdata->sub, "query_format");
 
-  mutt_expando_format(buf, buflen, 0, menu->win->state.cols, NONULL(c_query_format),
-                      query_format_str, (intptr_t) av, MUTT_FORMAT_ARROWCURSOR);
+  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols, c_query_format,
+                           (intptr_t) av, MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

@@ -123,8 +123,8 @@ static const struct ExpandoFormatCallback pgp_command_1[] = {
 };
 
 static const struct ExpandoFormatCallback query_1[] = {
-  { "a", NULL }, { "c", NULL }, { "e", NULL },
-  { "n", NULL }, { "t", NULL }, { NULL, NULL },
+  { "a", query_a }, { "c", query_c }, { "e", query_e },
+  { "n", query_n }, { "t", query_t }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback sidebar_1[] = {

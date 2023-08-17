@@ -49,6 +49,7 @@
 #include "index_format_callbacks.h"
 #include "node.h"
 #include "parser.h"
+#include "query_format_callbacks.h"
 #include "status_format_callbacks.h"
 #include "type.h"
 #include "validation.h"
