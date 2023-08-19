@@ -35,12 +35,12 @@
 #include <string.h>
 #include "mutt/memory.h"
 #include "gui/curs_lib.h"
+#include "parser.h"
 #include "format_callbacks.h"
 #include "helpers.h"
 #include "index_format_callbacks.h"
 #include "limits.h"
 #include "node.h"
-#include "parser.h"
 #include "validation.h"
 
 extern const struct ExpandoValidation expando_validation[EFMTI_FORMAT_COUNT_OR_DEBUG];

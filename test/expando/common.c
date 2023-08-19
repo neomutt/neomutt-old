@@ -117,36 +117,6 @@ void check_index_hook_node(struct ExpandoNode *node, const char *name)
   TEST_CHECK(strncmp(node->start, name, n) == 0);
 }
 
-/* For the linker */
-struct AddressList;
-bool check_for_mailing_list(struct AddressList *al, const char *pfx, char *buf, int buflen)
-{
-  return false;
-}
-
-typedef uint8_t MuttThreadFlags;
-struct Email;
-int mutt_traverse_thread(struct Email *e, MuttThreadFlags flag)
-{
-  return 0;
-}
-
-int mutt_thread_style(void)
-{
-  return 0;
-}
-
-const char *mutt_get_name(const char *s)
-{
-  return NULL;
-}
-
-struct Envelope;
-bool subjrx_apply_mods(struct Envelope *env)
-{
-  return false;
-}
-
 bool OptAttachMsg;
 
 struct MailboxView;
@@ -166,7 +136,7 @@ int mutt_mailbox_check(struct Mailbox *m_cur, CheckStatsFlags flags)
   return 0;
 }
 
-const char *get_use_threads_str(int)
+const char *get_use_threads_str(int value)
 {
   return NULL;
 }

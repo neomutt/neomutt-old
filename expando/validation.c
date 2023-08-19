@@ -33,8 +33,8 @@
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/neomutt.h"
-#include "expando/lib.h"
 #include "validation.h"
+#include "expando/lib.h"
 
 static const struct ExpandoFormatCallback alias_1[] = {
   { "a", alias_a }, { "c", alias_c }, { "f", alias_f }, { "n", alias_n },

@@ -34,12 +34,12 @@
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/lib.h"
+#include "status.h"
 #include "index/lib.h"
 #include "menu/lib.h"
 #include "postpone/lib.h"
 #include "format_flags.h"
 #include "muttlib.h"
-#include "status.h"
 
 /**
  * menu_status_line - Create the status line

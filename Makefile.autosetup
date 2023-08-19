@@ -420,12 +420,13 @@ $(PWD)/envelope:
 ###############################################################################
 # libexpando
 LIBEXPANDO=	libexpando.a
-LIBEXPANDOOBJS=	expando/debug.o expando/format_callbacks.o \
-		expando/helpers.o expando/parser.o expando/validation.o \
-		expando/node.o expando/type.o \
-		expando/index_format_callbacks.o expando/status_format_callbacks.o \
-		expando/alias_format_callbacks.o expando/query_format_callbacks.o \
-		expando/autocrypt_format_callbacks.o
+LIBEXPANDOOBJS=	expando/alias_format_callbacks.o \
+		expando/autocrypt_format_callbacks.o \
+		expando/format_callbacks.o expando/helpers.o \
+		expando/index_format_callbacks.o expando/node.o \
+		expando/parser.o expando/query_format_callbacks.o \
+		expando/status_format_callbacks.o expando/type.o \
+		expando/validation.o expando/debug.o
 CLEANFILES+=	$(LIBEXPANDO) $(LIBEXPANDOOBJS)
 ALLOBJS+=	$(LIBEXPANDOOBJS)
 

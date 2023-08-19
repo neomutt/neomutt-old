@@ -2,10 +2,10 @@ name: ASAN Tests
 
 on:
   pull_request:
-  # push:
-  #   branches:
-  #     - 'main'
-  #     - 'devel/**'
+  push:
+    branches:
+      - 'main'
+      - 'devel/**'
   workflow_dispatch:
 
 jobs:

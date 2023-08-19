@@ -36,6 +36,8 @@
 #include "copy.h"
 #include "mx.h"
 
+struct AddressList;
+struct Envelope;
 struct MuttWindow;
 struct PagerView;
 
