@@ -10,6 +10,9 @@ They have simply been moved to keep the main repository tidier.
 - [neomutt-object](https://github.com/neomutt/neomutt-old/tree/neomutt-object)  
   [@nabijaczleweli](https://github.com/nabijaczleweli)'s plan to save a pointer dereference (see [#3979](https://github.com/neomutt/neomutt/pull/3979))
 
+- [keep_mailbox](https://github.com/neomutt/neomutt-old/tree/keep_mailbox)  
+  [@sassmann](https://github.com/sassmann)'s Keep mailbox in memory
+
 - [help_stripes](https://github.com/neomutt/neomutt-old/tree/help_stripes)  
   [@g0mb4](https://github.com/g0mb4)'s original striped help page
 
