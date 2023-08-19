@@ -7,6 +7,9 @@ They have simply been moved to keep the main repository tidier.
 
 ## NeoMutt 2023-05-17
 
+- [neomutt-object](https://github.com/neomutt/neomutt-old/tree/neomutt-object)  
+  [@nabijaczleweli](https://github.com/nabijaczleweli)'s plan to save a pointer dereference (see [#3979](https://github.com/neomutt/neomutt/pull/3979))
+
 - [help_stripes](https://github.com/neomutt/neomutt-old/tree/help_stripes)  
   [@g0mb4](https://github.com/g0mb4)'s original striped help page
 
