@@ -18,4 +18,4 @@ void check_date_node(struct ExpandoNode *node, const char *inner_text,
 void check_condition_node_head(struct ExpandoNode *node);
 void check_index_hook_node(struct ExpandoNode *node, const char *name);
 
-#endif
+#endif /* TEST_EXPANDO_COMMON_H */
