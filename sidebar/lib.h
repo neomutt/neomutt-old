@@ -44,6 +44,15 @@
 
 struct MuttWindow;
 
+/**
+ * struct SidebarFormatData - Data passed to sidebar_format_str()
+ */
+struct SidebarFormatData
+{
+  struct SbEntry *entry;          ///< Info about a folder
+  struct IndexSharedData *shared; ///< Shared Index Data
+};
+
 void sb_init   (void);
 void sb_cleanup(void);
 

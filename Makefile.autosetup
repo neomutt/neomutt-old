@@ -425,7 +425,7 @@ LIBEXPANDOOBJS=	expando/alias_format_callbacks.o \
 		expando/format_callbacks.o expando/greeting_format_callbacks.o \
 		expando/helpers.o expando/index_format_callbacks.o expando/node.o \
 		expando/parser.o expando/query_format_callbacks.o \
-		expando/status_format_callbacks.o expando/type.o \
+		expando/sidebar_format_callbacks.o expando/status_format_callbacks.o expando/type.o \
 		expando/validation.o expando/debug.o
 CLEANFILES+=	$(LIBEXPANDO) $(LIBEXPANDOOBJS)
 ALLOBJS+=	$(LIBEXPANDOOBJS)

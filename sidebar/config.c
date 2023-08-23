@@ -31,6 +31,7 @@
 #include <stdbool.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
+#include "expando/lib.h"
 
 /**
  * SortSidebarMethods - Sort methods for the sidebar
@@ -68,7 +69,7 @@ static struct ConfigDef SidebarVars[] = {
   { "sidebar_folder_indent", DT_BOOL, false, 0, NULL,
     "(sidebar) Indent nested folders"
   },
-  { "sidebar_format", DT_STRING|DT_NOT_EMPTY, IP "%D%*  %n", 0, NULL,
+  { "sidebar_format", DT_EXPANDO|DT_NOT_EMPTY, IP "%D%*  %n", 0, expando_validator,
     "(sidebar) printf-like format string for the sidebar panel"
   },
   { "sidebar_indent_string", DT_STRING, IP "  ", 0, NULL,

@@ -128,9 +128,12 @@ static const struct ExpandoFormatCallback query_1[] = {
 };
 
 static const struct ExpandoFormatCallback sidebar_1[] = {
-  { "!", NULL }, { "B", NULL }, { "d", NULL }, { "D", NULL },  { "F", NULL },
-  { "L", NULL }, { "n", NULL }, { "N", NULL }, { "o", NULL },  { "r", NULL },
-  { "S", NULL }, { "t", NULL }, { "Z", NULL }, { NULL, NULL },
+  { "!", sidebar_bang }, { "a", sidebar_a }, { "B", sidebar_B },
+  { "d", sidebar_d },    { "D", sidebar_D }, { "F", sidebar_F },
+  { "L", sidebar_L },    { "n", sidebar_n }, { "N", sidebar_N },
+  { "o", sidebar_o },    { "p", sidebar_p }, { "r", sidebar_r },
+  { "S", sidebar_S },    { "t", sidebar_t }, { "Z", sidebar_Z },
+  { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback smime_command_1[] = {
