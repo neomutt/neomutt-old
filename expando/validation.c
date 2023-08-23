@@ -71,9 +71,9 @@ static const struct ExpandoFormatCallback folder_1[] = {
 };
 
 static const struct ExpandoFormatCallback greeting_1[] = {
-  { "n", NULL },
-  { "u", NULL },
-  { "v", NULL },
+  { "n", greeting_n },
+  { "u", greeting_u },
+  { "v", greeting_v },
   { NULL, NULL },
 };
 

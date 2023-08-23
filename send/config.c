@@ -33,6 +33,7 @@
 #include <string.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
+#include "expando/lib.h"
 #include "smtp.h"
 #ifdef USE_SASL_CYRUS
 #include "conn/lib.h"
@@ -215,7 +216,7 @@ static struct ConfigDef SendVars[] = {
   { "forward_references", DT_BOOL, false, 0, NULL,
     "Set the 'In-Reply-To' and 'References' headers when forwarding a message"
   },
-  { "greeting", DT_STRING, 0, 0, NULL,
+  { "greeting", DT_EXPANDO, 0, 0, expando_validator,
     "Greeting string added to the top of all messages"
   },
   { "hdrs", DT_BOOL, true, 0, NULL,
