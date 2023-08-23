@@ -133,8 +133,8 @@ int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
 
   char fmt[128];
 
-  format_int(fmt, sizeof(fmt), e->msgno + 1, flags, MT_COLOR_INDEX_NUMBER,
-             MT_COLOR_INDEX, format);
+  const int num = e->msgno + 1;
+  format_int(fmt, sizeof(fmt), num, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
 
   return snprintf(buf, buf_len, "%s", fmt);
 }
