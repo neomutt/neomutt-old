@@ -145,3 +145,10 @@ const char *mutt_make_version(void)
 {
   return "";
 }
+
+struct ConfigSubset;
+struct ComposeAttachData;
+unsigned long cum_attachs_size(struct ConfigSubset *sub, struct ComposeAttachData *adata)
+{
+  return 0;
+}

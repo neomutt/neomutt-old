@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "config/lib.h"
+#include "expando/lib.h"
 
 #ifndef ISPELL
 #define ISPELL "ispell"
@@ -40,7 +41,7 @@
  */
 static struct ConfigDef ComposeVars[] = {
   // clang-format off
-  { "compose_format", DT_STRING, IP "-- NeoMutt: Compose  [Approx. msg size: %l   Atts: %a]%>-", 0, NULL,
+  { "compose_format", DT_EXPANDO, IP "-- NeoMutt: Compose  [Approx. msg size: %l   Atts: %a]%>-", 0, expando_validator,
     "printf-like format string for the Compose panel's status bar"
   },
   { "compose_show_user_headers", DT_BOOL, true, 0, NULL,

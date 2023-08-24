@@ -54,7 +54,8 @@ static const struct ExpandoFormatCallback autocrypt_acct_1[] = {
 };
 
 static const struct ExpandoFormatCallback compose_1[] = {
-  { "a", NULL }, { "h", NULL }, { "l", NULL }, { "v", NULL }, { NULL, NULL },
+  { "a", compose_a }, { "h", compose_h }, { "l", compose_l },
+  { "v", compose_v }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback pgp_entry_1[] = {
