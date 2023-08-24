@@ -85,6 +85,7 @@
 #include "conn/lib.h"
 #include "gui/lib.h"
 #include "lib.h"
+#include "expando/lib.h"
 #include "menu/lib.h"
 #include "format_flags.h"
 #include "functions.h"
@@ -919,10 +920,10 @@ static void folder_make_entry(struct Menu *menu, char *buf, size_t buflen, int l
 #ifdef USE_NNTP
   if (OptNews)
   {
-    const char *const c_group_index_format = cs_subset_string(NeoMutt->sub, "group_index_format");
-    mutt_expando_format(buf, buflen, 0, menu->win->state.cols,
-                        NONULL(c_group_index_format), group_index_format_str,
-                        (intptr_t) &folder, MUTT_FORMAT_ARROWCURSOR);
+    const struct ExpandoRecord *c_group_index_format = cs_subset_expando(NeoMutt->sub, "group_index_format");
+    mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
+                             &c_group_index_format->tree, (intptr_t) &folder,
+                             MUTT_FORMAT_ARROWCURSOR);
   }
   else
 #endif

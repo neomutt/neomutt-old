@@ -48,6 +48,7 @@
 #include "compose_format_callbacks.h"
 #include "format_callbacks.h"
 #include "greeting_format_callbacks.h"
+#include "group_index_format_callbacks.h"
 #include "helpers.h"
 #include "index_format_callbacks.h"
 #include "node.h"

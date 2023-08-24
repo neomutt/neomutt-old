@@ -32,6 +32,7 @@
 #include <stdbool.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
+#include "expando/lib.h"
 
 /**
  * SortBrowserMethods - Sort methods for the folder/dir browser
@@ -61,7 +62,7 @@ static struct ConfigDef BrowserVars[] = {
   { "folder_format", DT_STRING|DT_NOT_EMPTY, IP "%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %i", 0, NULL,
     "printf-like format string for the browser's display of folders"
   },
-  { "group_index_format", DT_STRING|DT_NOT_EMPTY|R_INDEX, IP "%4C %M%N %5s  %-45.45f %d", 0, NULL,
+  { "group_index_format", DT_EXPANDO|DT_NOT_EMPTY|R_INDEX, IP "%4C %M%N %5s  %-45.45f %d", 0, expando_validator,
     "(nntp) printf-like format string for the browser's display of newsgroups"
   },
   { "mailbox_folder_format", DT_STRING|DT_NOT_EMPTY, IP "%2C %<n?%6n&      > %6m %i", 0, NULL,

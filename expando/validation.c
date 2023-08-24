@@ -79,8 +79,10 @@ static const struct ExpandoFormatCallback greeting_1[] = {
 };
 
 static const struct ExpandoFormatCallback group_index_1[] = {
-  { "C", NULL }, { "d", NULL }, { "f", NULL }, { "M", NULL },
-  { "N", NULL }, { "n", NULL }, { "s", NULL }, { NULL, NULL },
+  { "a", group_index_a }, { "C", group_index_C }, { "d", group_index_d },
+  { "f", group_index_f }, { "M", group_index_M }, { "n", group_index_n },
+  { "N", group_index_N }, { "p", group_index_p }, { "s", group_index_s },
+  { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback index_1[] = {
