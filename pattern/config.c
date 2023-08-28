@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "config/lib.h"
+#include "expando/lib.h"
 
 /**
  * PatternVars - Config definitions for the pattern library
@@ -39,7 +40,7 @@ static struct ConfigDef PatternVars[] = {
   { "external_search_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
     "External search command"
   },
-  { "pattern_format", DT_STRING, IP "%2n %-15e  %d", 0, NULL,
+  { "pattern_format", DT_EXPANDO, IP "%2n %-15e  %d", 0, expando_validator,
     "printf-like format string for the pattern completion menu"
   },
   { "thorough_search", DT_BOOL, true, 0, NULL,

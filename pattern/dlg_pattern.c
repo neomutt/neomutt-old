@@ -77,6 +77,7 @@
 #include "core/lib.h"
 #include "gui/lib.h"
 #include "lib.h"
+#include "expando/lib.h"
 #include "menu/lib.h"
 #include "format_flags.h"
 #include "functions.h"
@@ -96,42 +97,6 @@ static const struct Mapping PatternHelp[] = {
 };
 
 /**
- * pattern_format_str - Format a string for the pattern completion menu - Implements ::format_t - @ingroup expando_api
- *
- * | Expando | Description
- * | :------ | :---------------------
- * | \%d     | Pattern description
- * | \%e     | Pattern expression
- * | \%n     | Index number
- */
-static const char *pattern_format_str(char *buf, size_t buflen, size_t col, int cols,
-                                      char op, const char *src, const char *prec,
-                                      const char *if_str, const char *else_str,
-                                      intptr_t data, MuttFormatFlags flags)
-{
-  struct PatternEntry *entry = (struct PatternEntry *) data;
-
-  switch (op)
-  {
-    case 'd':
-      mutt_format_s(buf, buflen, prec, NONULL(entry->desc));
-      break;
-    case 'e':
-      mutt_format_s(buf, buflen, prec, NONULL(entry->expr));
-      break;
-    case 'n':
-    {
-      char tmp[32] = { 0 };
-      snprintf(tmp, sizeof(tmp), "%%%sd", prec);
-      snprintf(buf, buflen, tmp, entry->num);
-      break;
-    }
-  }
-
-  return src;
-}
-
-/**
  * make_pattern_entry - Create a line for the Pattern Completion menu - Implements Menu::make_entry() - @ingroup menu_make_entry
  *
  * @sa $pattern_format, pattern_format_str()
@@ -140,9 +105,10 @@ static void make_pattern_entry(struct Menu *menu, char *buf, size_t buflen, int 
 {
   struct PatternEntry *entry = &((struct PatternEntry *) menu->mdata)[num];
 
-  const char *const c_pattern_format = cs_subset_string(NeoMutt->sub, "pattern_format");
-  mutt_expando_format(buf, buflen, 0, menu->win->state.cols, NONULL(c_pattern_format),
-                      pattern_format_str, (intptr_t) entry, MUTT_FORMAT_ARROWCURSOR);
+  const struct ExpandoRecord *c_pattern_format = cs_subset_expando(NeoMutt->sub, "pattern_format");
+  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
+                           &c_pattern_format->tree, (intptr_t) entry,
+                           MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

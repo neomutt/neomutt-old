@@ -120,9 +120,9 @@ static const struct ExpandoFormatCallback nntp_1[] = {
 };
 
 static const struct ExpandoFormatCallback pattern_1[] = {
-  { "d", NULL },
-  { "e", NULL },
-  { "n", NULL },
+  { "d", pattern_d },
+  { "e", pattern_e },
+  { "n", pattern_n },
   { NULL, NULL },
 };
 
