@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "config/lib.h"
+#include "expando/lib.h"
 
 /**
  * NntpVars - Config definitions for the NNTP library
@@ -45,7 +46,7 @@ static struct ConfigDef NntpVars[] = {
   { "newsgroups_charset", DT_STRING, IP "utf-8", 0, charset_validator,
     "(nntp) Character set of newsgroups' descriptions"
   },
-  { "newsrc", DT_PATH|DT_PATH_FILE, IP "~/.newsrc", 0, NULL,
+  { "newsrc", DT_EXPANDO|DT_PATH_FILE, IP "~/.newsrc", 0, expando_validator,
     "(nntp) File containing list of subscribed newsgroups"
   },
   { "news_cache_dir", DT_PATH|DT_PATH_DIR, IP "~/.neomutt", 0, NULL,

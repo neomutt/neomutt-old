@@ -114,9 +114,9 @@ static const struct ExpandoFormatCallback mix_entry_1[] = {
   { "s", mix_s }, { NULL, NULL },
 };
 
-static const struct ExpandoFormatCallback inews_1[] = {
-  { "a", NULL }, { "p", NULL }, { "P", NULL },  { "s", NULL },
-  { "S", NULL }, { "u", NULL }, { NULL, NULL },
+static const struct ExpandoFormatCallback nntp_1[] = {
+  { "a", nntp_a }, { "p", nntp_p }, { "P", nntp_P }, { "s", nntp_s },
+  { "S", nntp_S }, { "u", nntp_u }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback pattern_1[] = {
@@ -176,11 +176,11 @@ const struct ExpandoValidation expando_validation[EFMTI_FORMAT_COUNT_OR_DEBUG] =
   [EFMTI_HISTORY_FORMAT]                = { "history_format",                history_1,        NULL,    NULL },
   [EFMTI_INDENT_STRING]                 = { "indent_string",                 index_1,          index_2, NULL },
   [EFMTI_INDEX_FORMAT]                  = { "index_format",                  index_1,          index_2, NULL },
-  [EFMTI_INEWS]                         = { "inews",                         inews_1,          NULL,    NULL },
+  [EFMTI_INEWS]                         = { "inews",                         nntp_1,          NULL,    NULL },
   [EFMTI_MAILBOX_FOLDER_FORMAT]         = { "mailbox_folder_format",         folder_1,         NULL,    NULL },
   [EFMTI_MESSAGE_FORMAT]                = { "message_format",                index_1,          index_2, NULL },
   [EFMTI_MIX_ENTRY_FORMAT]              = { "mix_entry_format",              mix_entry_1,      NULL,    NULL },
-  [EFMTI_NEWSRC]                        = { "newsrc",                        inews_1,          NULL,    NULL },
+  [EFMTI_NEWSRC]                        = { "newsrc",                        nntp_1,          NULL,    NULL },
   [EFMTI_NEW_MAIL_COMMAND]              = { "new_mail_command",              status_1,         NULL,    NULL },
   [EFMTI_PAGER_FORMAT]                  = { "pager_format",                  index_1,          index_2, NULL },
   [EFMTI_PATTERN_FORMAT]                = { "pattern_format",                pattern_1,        NULL,    NULL },

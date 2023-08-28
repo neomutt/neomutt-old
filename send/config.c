@@ -357,7 +357,7 @@ static struct ConfigDef SendVarsNntp[] = {
   { "ask_x_comment_to", DT_BOOL, false, 0, NULL,
     "(nntp) Ask the user for the 'X-Comment-To' field before editing"
   },
-  { "inews", DT_STRING|DT_COMMAND, 0, 0, simple_command_validator,
+  { "inews", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(nntp) External command to post news articles"
   },
   { "mime_subject", DT_DEPRECATED|DT_BOOL, 0, IP "2021-03-24" },

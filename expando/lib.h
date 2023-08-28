@@ -53,6 +53,7 @@
 #include "history_format_callbacks.h"
 #include "index_format_callbacks.h"
 #include "mix_format_callbacks.h"
+#include "nntp_format_callbacks.h"
 #include "node.h"
 #include "parser.h"
 #include "query_format_callbacks.h"
