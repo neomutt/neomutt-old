@@ -50,6 +50,7 @@
 #include "greeting_format_callbacks.h"
 #include "group_index_format_callbacks.h"
 #include "helpers.h"
+#include "history_format_callbacks.h"
 #include "index_format_callbacks.h"
 #include "node.h"
 #include "parser.h"

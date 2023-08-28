@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "config/lib.h"
+#include "expando/lib.h"
 
 /**
  * HistoryVars - Config definitions for the command history
@@ -41,6 +42,9 @@ static struct ConfigDef HistoryVars[] = {
   },
   { "history_file", DT_PATH|DT_PATH_FILE, IP "~/.mutthistory", 0, NULL,
     "File to save history in"
+  },
+  { "history_format", DT_EXPANDO, IP "%s", 0, expando_validator,
+    "printf-like format string for the history menu"
   },
   { "history_remove_dups", DT_BOOL, false, 0, NULL,
     "Remove duplicate entries from the history"

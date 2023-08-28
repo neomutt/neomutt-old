@@ -85,6 +85,11 @@ static const struct ExpandoFormatCallback group_index_1[] = {
   { NULL, NULL },
 };
 
+static const struct ExpandoFormatCallback history_1[] = {
+  { "s", history_s },
+  { NULL, NULL },
+};
+
 static const struct ExpandoFormatCallback index_1[] = {
   { "a", NULL },    { "A", NULL },    { "b", NULL },    { "B", NULL },
   { "c", index_c }, { "C", index_C }, { "d", NULL },    { "D", NULL },
@@ -167,6 +172,7 @@ const struct ExpandoValidation expando_validation[EFMTI_FORMAT_COUNT_OR_DEBUG] =
   [EFMTI_FORWARD_FORMAT]                = { "forward_format",                index_1,          index_2, NULL },
   [EFMTI_GREETING]                      = { "greeting",                      greeting_1,       NULL,    NULL },
   [EFMTI_GROUP_INDEX_FORMAT]            = { "group_index_format",            group_index_1,    NULL,    NULL },
+  [EFMTI_HISTORY_FORMAT]                = { "history_format",                history_1,        NULL,    NULL },
   [EFMTI_INDENT_STRING]                 = { "indent_string",                 index_1,          index_2, NULL },
   [EFMTI_INDEX_FORMAT]                  = { "index_format",                  index_1,          index_2, NULL },
   [EFMTI_INEWS]                         = { "inews",                         inews_1,          NULL,    NULL },

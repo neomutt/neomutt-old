@@ -152,3 +152,10 @@ unsigned long cum_attachs_size(struct ConfigSubset *sub, struct ComposeAttachDat
 {
   return 0;
 }
+
+typedef uint8_t MuttFormatFlags;
+void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
+                              struct ExpandoNode *const *tree, intptr_t data,
+                              MuttFormatFlags flags)
+{
+}
