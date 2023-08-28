@@ -110,7 +110,8 @@ static const struct ExpandoFormatCallback index_2[] = {
 };
 
 static const struct ExpandoFormatCallback mix_entry_1[] = {
-  { "a", NULL }, { "c", NULL }, { "n", NULL }, { "s", NULL }, { NULL, NULL },
+  { "a", mix_a }, { "c", mix_c }, { "n", mix_n },
+  { "s", mix_s }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback inews_1[] = {

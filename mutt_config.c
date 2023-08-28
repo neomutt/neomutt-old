@@ -622,7 +622,7 @@ static struct ConfigDef MainVars[] = {
  */
 static struct ConfigDef MainVarsMixmaster[] = {
   // clang-format off
-  { "mix_entry_format", DT_STRING|DT_NOT_EMPTY, IP "%4n %c %-16s %a", 0, NULL,
+  { "mix_entry_format", DT_EXPANDO|DT_NOT_EMPTY, IP "%4n %c %-16s %a", 0, expando_validator,
     "(mixmaster) printf-like format string for the mixmaster chain"
   },
   { "mixmaster", DT_STRING|DT_COMMAND, IP MIXMASTER_DEFAULT, 0, NULL,
