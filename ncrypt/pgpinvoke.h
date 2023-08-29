@@ -34,6 +34,20 @@ struct ListHead;
 
 /* The PGP invocation interface */
 
+/**
+ * struct PgpCommandContext - Data for a PGP command
+ *
+ * The actual command line formatter.
+ */
+struct PgpCommandContext
+{
+  bool need_passphrase;  ///< %p
+  const char *fname;     ///< %f
+  const char *sig_fname; ///< %s
+  const char *signas;    ///< %a
+  const char *ids;       ///< %r
+};
+
 void pgp_class_invoke_import(const char *fname);
 void pgp_class_invoke_getkeys(struct Address *addr);
 

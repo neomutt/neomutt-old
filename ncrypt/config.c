@@ -31,6 +31,7 @@
 #include <stdbool.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
+#include "expando/lib.h"
 
 /**
  * SortKeyMethods - Sort methods for encryption keys
@@ -178,43 +179,43 @@ static struct ConfigDef NcryptVarsPgp[] = {
   { "pgp_check_gpg_decrypt_status_fd", DT_BOOL, true, 0, NULL,
     "File descriptor used for status info"
   },
-  { "pgp_clear_sign_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_clear_sign_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to inline-sign a message"
   },
-  { "pgp_decode_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_decode_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to decode a PGP attachment"
   },
-  { "pgp_decrypt_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_decrypt_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to decrypt a PGP message"
   },
   { "pgp_decryption_okay", DT_REGEX, 0, 0, NULL,
     "Text indicating a successful decryption"
   },
-  { "pgp_encrypt_only_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_encrypt_only_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to encrypt, but not sign a message"
   },
-  { "pgp_encrypt_sign_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_encrypt_sign_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to encrypt and sign a message"
   },
-  { "pgp_export_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_export_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to export a public key from the user's keyring"
   },
-  { "pgp_get_keys_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_get_keys_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to download a key for an email address"
   },
   { "pgp_good_sign", DT_REGEX, 0, 0, NULL,
     "Text indicating a good signature"
   },
-  { "pgp_import_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_import_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to import a key into the user's keyring"
   },
-  { "pgp_list_pubring_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_list_pubring_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to list the public keys in a user's keyring"
   },
-  { "pgp_list_secring_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_list_secring_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to list the private keys in a user's keyring"
   },
-  { "pgp_sign_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_sign_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to create a detached PGP signature"
   },
   { "pgp_timeout", DT_LONG|DT_NOT_NEGATIVE, 300, 0, NULL,
@@ -223,10 +224,10 @@ static struct ConfigDef NcryptVarsPgp[] = {
   { "pgp_use_gpg_agent", DT_BOOL, true, 0, NULL,
     "Use a PGP agent for caching passwords"
   },
-  { "pgp_verify_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_verify_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to verify PGP signatures"
   },
-  { "pgp_verify_key_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "pgp_verify_key_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(pgp) External command to verify key information"
   },
   { "pgp_clearsign_command",  DT_SYNONYM, IP "pgp_clear_sign_command", IP "2021-02-11" },

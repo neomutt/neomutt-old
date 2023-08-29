@@ -57,6 +57,7 @@
 #include "node.h"
 #include "parser.h"
 #include "pattern_format_callbacks.h"
+#include "pgp_command_format_callbacks.h"
 #include "query_format_callbacks.h"
 #include "sidebar_format_callbacks.h"
 #include "status_format_callbacks.h"

@@ -426,7 +426,8 @@ LIBEXPANDOOBJS=	expando/alias_format_callbacks.o \
 		expando/group_index_format_callbacks.o expando/helpers.o \
 		expando/history_format_callbacks.o expando/index_format_callbacks.o \
 		expando/mix_format_callbacks.o expando/nntp_format_callbacks.o expando/node.o \
-		expando/parser.o expando/pattern_format_callbacks.o expando/query_format_callbacks.o \
+		expando/parser.o expando/pattern_format_callbacks.o \
+		expando/pgp_command_format_callbacks.o expando/query_format_callbacks.o \
 		expando/sidebar_format_callbacks.o expando/status_format_callbacks.o expando/type.o \
 		expando/validation.o expando/debug.o
 CLEANFILES+=	$(LIBEXPANDO) $(LIBEXPANDOOBJS)
