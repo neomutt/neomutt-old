@@ -84,7 +84,7 @@ static int smtp_auth_validator(const struct ConfigSet *cs, const struct ConfigDe
 }
 
 /**
- * simple_command_validator - Validate the "sendmail" and "inews" config variables - Implements ConfigDef::validator() - @ingroup cfg_def_validator
+ * simple_command_validator - Validate the "sendmail" config variable - Implements ConfigDef::validator() - @ingroup cfg_def_validator
  */
 static int simple_command_validator(const struct ConfigSet *cs, const struct ConfigDef *cdef,
                                     intptr_t value, struct Buffer *err)
@@ -101,6 +101,30 @@ static int simple_command_validator(const struct ConfigSet *cs, const struct Con
   // L10N: This applies to the "$sendmail" and "$inews" config variables.
   buf_printf(err, _("Option %s must not contain shell metacharacters: %c"), cdef->name, c);
   return CSR_ERR_INVALID;
+}
+
+/**
+ * simple_command_expando_validator - Validate the and "inews" config variable - Implements ConfigDef::validator() - @ingroup cfg_def_validator
+ */
+static int simple_command_expando_validator(const struct ConfigSet *cs,
+                                            const struct ConfigDef *cdef,
+                                            intptr_t value, struct Buffer *err)
+{
+  // Check for shell metacharacters that won't do what the user expects
+  const char *valstr = (const char *) value;
+  if (valstr)
+  {
+    const char c = valstr[strcspn(valstr, "|&;()<>[]{}$`'~\"\\*?")];
+    if (c != '\0')
+    {
+      // L10N: This applies to the "$sendmail" and "$inews" config variables.
+      buf_printf(err, _("Option %s must not contain shell metacharacters: %c"),
+                 cdef->name, c);
+      return CSR_ERR_INVALID;
+    }
+  }
+
+  return expando_validator(cs, cdef, value, err);
 }
 
 /**
@@ -357,7 +381,7 @@ static struct ConfigDef SendVarsNntp[] = {
   { "ask_x_comment_to", DT_BOOL, false, 0, NULL,
     "(nntp) Ask the user for the 'X-Comment-To' field before editing"
   },
-  { "inews", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
+  { "inews", DT_EXPANDO|DT_COMMAND, 0, 0, simple_command_expando_validator,
     "(nntp) External command to post news articles"
   },
   { "mime_subject", DT_DEPRECATED|DT_BOOL, 0, IP "2021-03-24" },
