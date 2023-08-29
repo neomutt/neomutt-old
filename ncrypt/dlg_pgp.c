@@ -78,6 +78,7 @@
 #include "core/lib.h"
 #include "gui/lib.h"
 #include "lib.h"
+#include "expando/lib.h"
 #include "menu/lib.h"
 #include "format_flags.h"
 #include "keymap.h"
@@ -100,18 +101,6 @@ static const struct Mapping PgpHelp[] = {
   { NULL, 0 },
   // clang-format on
 };
-
-/**
- * struct PgpEntry - An entry in a PGP key menu
- */
-struct PgpEntry
-{
-  size_t num; ///< Index number
-  struct PgpUid *uid;
-};
-
-/// Characters used to show the trust level for PGP keys
-static const char TrustFlags[] = "?- +";
 
 /**
  * pgp_sort_address - Compare two keys by their addresses - Implements ::sort_t - @ingroup sort_api
@@ -210,242 +199,6 @@ done:
 }
 
 /**
- * pgp_key_abilities - Turn PGP key abilities into a string
- * @param flags Flags, see #KeyFlags
- * @retval ptr Abilities string
- *
- * @note This returns a pointer to a static buffer
- */
-static char *pgp_key_abilities(KeyFlags flags)
-{
-  static char buf[3];
-
-  if (!(flags & KEYFLAG_CANENCRYPT))
-    buf[0] = '-';
-  else if (flags & KEYFLAG_PREFER_SIGNING)
-    buf[0] = '.';
-  else
-    buf[0] = 'e';
-
-  if (!(flags & KEYFLAG_CANSIGN))
-    buf[1] = '-';
-  else if (flags & KEYFLAG_PREFER_ENCRYPTION)
-    buf[1] = '.';
-  else
-    buf[1] = 's';
-
-  buf[2] = '\0';
-
-  return buf;
-}
-
-/**
- * pgp_flags - Turn PGP key flags into a string
- * @param flags Flags, see #KeyFlags
- * @retval char Flag character
- */
-static char pgp_flags(KeyFlags flags)
-{
-  if (flags & KEYFLAG_REVOKED)
-    return 'R';
-  if (flags & KEYFLAG_EXPIRED)
-    return 'X';
-  if (flags & KEYFLAG_DISABLED)
-    return 'd';
-  if (flags & KEYFLAG_CRITICAL)
-    return 'c';
-
-  return ' ';
-}
-
-/**
- * pgp_entry_format_str - Format an entry on the PGP key selection menu - Implements ::format_t - @ingroup expando_api
- *
- * | Expando | Description
- * | :------ | :-------------------------------------------------------
- * | \%n     | Number
- * | \%t     | Trust/validity of the key-uid association
- * | \%u     | User id
- * | \%[fmt] | Date of key using strftime(3)
- * |         |
- * | \%a     | Algorithm
- * | \%c     | Capabilities
- * | \%f     | Flags
- * | \%k     | Key id
- * | \%l     | Length
- * |         |
- * | \%A     | Algorithm of the principal key
- * | \%C     | Capabilities of the principal key
- * | \%F     | Flags of the principal key
- * | \%K     | Key id of the principal key
- * | \%L     | Length of the principal key
- */
-static const char *pgp_entry_format_str(char *buf, size_t buflen, size_t col, int cols,
-                                        char op, const char *src, const char *prec,
-                                        const char *if_str, const char *else_str,
-                                        intptr_t data, MuttFormatFlags flags)
-{
-  char fmt[128] = { 0 };
-  bool optional = (flags & MUTT_FORMAT_OPTIONAL);
-
-  struct PgpEntry *entry = (struct PgpEntry *) data;
-  struct PgpUid *uid = entry->uid;
-  struct PgpKeyInfo *key = uid->parent;
-  struct PgpKeyInfo *pkey = pgp_principal_key(key);
-
-  if (isupper((unsigned char) op))
-    key = pkey;
-
-  KeyFlags kflags = key->flags | (pkey->flags & KEYFLAG_RESTRICTIONS) | uid->flags;
-
-  switch (tolower(op))
-  {
-    case 'a':
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, key->algorithm);
-      }
-      break;
-    case 'c':
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, pgp_key_abilities(kflags));
-      }
-      else if (!(kflags & KEYFLAG_ABILITIES))
-      {
-        optional = false;
-      }
-      break;
-    case 'f':
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%sc", prec);
-        snprintf(buf, buflen, fmt, pgp_flags(kflags));
-      }
-      else if (!(kflags & KEYFLAG_RESTRICTIONS))
-      {
-        optional = false;
-      }
-      break;
-    case 'k':
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, pgp_this_keyid(key));
-      }
-      break;
-    case 'l':
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%sd", prec);
-        snprintf(buf, buflen, fmt, key->keylen);
-      }
-      break;
-    case 'n':
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%sd", prec);
-        snprintf(buf, buflen, fmt, entry->num);
-      }
-      break;
-    case 't':
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%sc", prec);
-        snprintf(buf, buflen, fmt, TrustFlags[uid->trust & 0x03]);
-      }
-      else if (!(uid->trust & 0x03))
-      {
-        /* undefined trust */
-        optional = false;
-      }
-      break;
-    case 'u':
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, NONULL(uid->addr));
-      }
-      break;
-    case '[':
-    {
-      char buf2[128];
-      bool use_c_locale = false;
-      size_t len;
-
-      char *p = buf;
-
-      const char *cp = src;
-      if (*cp == '!')
-      {
-        use_c_locale = true;
-        cp++;
-      }
-
-      len = buflen - 1;
-      while ((len > 0) && (*cp != ']'))
-      {
-        if (*cp == '%')
-        {
-          cp++;
-          if (len >= 2)
-          {
-            *p++ = '%';
-            *p++ = *cp;
-            len -= 2;
-          }
-          else
-          {
-            break; /* not enough space */
-          }
-          cp++;
-        }
-        else
-        {
-          *p++ = *cp++;
-          len--;
-        }
-      }
-      *p = '\0';
-
-      if (use_c_locale)
-      {
-        mutt_date_localtime_format_locale(buf2, sizeof(buf2), buf,
-                                          key->gen_time, NeoMutt->time_c_locale);
-      }
-      else
-      {
-        mutt_date_localtime_format(buf2, sizeof(buf2), buf, key->gen_time);
-      }
-
-      snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-      snprintf(buf, buflen, fmt, buf2);
-      if (len > 0)
-        src = cp + 1;
-      break;
-    }
-    default:
-      *buf = '\0';
-  }
-
-  if (optional)
-  {
-    mutt_expando_format(buf, buflen, col, cols, if_str, pgp_entry_format_str,
-                        data, MUTT_FORMAT_NO_FLAGS);
-  }
-  else if (flags & MUTT_FORMAT_OPTIONAL)
-  {
-    mutt_expando_format(buf, buflen, col, cols, else_str, pgp_entry_format_str,
-                        data, MUTT_FORMAT_NO_FLAGS);
-  }
-
-  /* We return the format string, unchanged */
-  return src;
-}
-
-/**
  * pgp_make_entry - Format a menu item for the pgp key list - Implements Menu::make_entry() - @ingroup menu_make_entry
  *
  * @sa $pgp_entry_format, pgp_entry_format_str()
@@ -458,10 +211,10 @@ static void pgp_make_entry(struct Menu *menu, char *buf, size_t buflen, int line
   entry.uid = key_table[line];
   entry.num = line + 1;
 
-  const char *const c_pgp_entry_format = cs_subset_string(NeoMutt->sub, "pgp_entry_format");
-  mutt_expando_format(buf, buflen, 0, menu->win->state.cols,
-                      NONULL(c_pgp_entry_format), pgp_entry_format_str,
-                      (intptr_t) &entry, MUTT_FORMAT_ARROWCURSOR);
+  const struct ExpandoRecord *c_pgp_entry_format = cs_subset_expando(NeoMutt->sub, "pgp_entry_format");
+  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
+                           &c_pgp_entry_format->tree, (intptr_t) &entry,
+                           MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

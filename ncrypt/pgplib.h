@@ -29,6 +29,15 @@
 #include "lib.h"
 
 /**
+ * struct PgpEntry - An entry in a PGP key menu
+ */
+struct PgpEntry
+{
+  size_t num; ///< Index number
+  struct PgpUid *uid;
+};
+
+/**
  * struct PgpUid - PGP User ID
  */
 struct PgpUid

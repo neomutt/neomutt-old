@@ -35,13 +35,8 @@
 #include <string.h>
 #include "mutt/memory.h"
 #include "gui/curs_lib.h"
-#include "parser.h"
-#include "format_callbacks.h"
-#include "helpers.h"
-#include "index_format_callbacks.h"
+#include "lib.h"
 #include "limits.h"
-#include "node.h"
-#include "validation.h"
 
 extern const struct ExpandoValidation expando_validation[EFMTI_FORMAT_COUNT_OR_DEBUG];
 
@@ -515,6 +510,10 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         if (index == EFMTI_INDEX_FORMAT)
         {
           date_cb = index_date;
+        }
+        else if (index == EFMTI_PGP_ENTRY_FORMAT)
+        {
+          date_cb = pgp_entry_date;
         }
 
         *parsed_until = end + 1;

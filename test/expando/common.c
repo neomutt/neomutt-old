@@ -165,3 +165,14 @@ void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
                               MuttFormatFlags flags)
 {
 }
+
+struct PgpKeyInfo;
+struct PgpKeyInfo *pgp_principal_key(struct PgpKeyInfo *key)
+{
+  return NULL;
+}
+
+char *pgp_this_keyid(struct PgpKeyInfo *k)
+{
+  return NULL;
+}

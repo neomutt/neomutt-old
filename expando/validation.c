@@ -59,10 +59,11 @@ static const struct ExpandoFormatCallback compose_1[] = {
 };
 
 static const struct ExpandoFormatCallback pgp_entry_1[] = {
-  { "n", NULL }, { "p", NULL },  { "t", NULL }, { "u", NULL }, { "a", NULL },
-  { "A", NULL }, { "c", NULL },  { "C", NULL }, { "f", NULL }, { "F", NULL },
-  { "i", NULL }, { "I", NULL },  { "k", NULL }, { "K", NULL }, { "l", NULL },
-  { "L", NULL }, { NULL, NULL },
+  { "n", pgp_entry_n }, { "t", pgp_entry_t }, { "u", pgp_entry_u },
+  { "a", pgp_entry_a }, { "A", pgp_entry_A }, { "c", pgp_entry_c },
+  { "C", pgp_entry_C }, { "f", pgp_entry_f }, { "F", pgp_entry_F },
+  { "k", pgp_entry_k }, { "K", pgp_entry_K }, { "l", pgp_entry_l },
+  { "L", pgp_entry_L }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback folder_1[] = {
