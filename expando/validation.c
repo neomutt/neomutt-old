@@ -147,8 +147,9 @@ static const struct ExpandoFormatCallback sidebar_1[] = {
 };
 
 static const struct ExpandoFormatCallback smime_command_1[] = {
-  { "a", NULL }, { "c", NULL }, { "C", NULL }, { "d", NULL },  { "f", NULL },
-  { "i", NULL }, { "k", NULL }, { "s", NULL }, { NULL, NULL },
+  { "a", smime_command_a }, { "c", smime_command_c }, { "C", smime_command_C },
+  { "d", smime_command_d }, { "f", smime_command_f }, { "i", smime_command_i },
+  { "k", smime_command_k }, { "s", smime_command_s }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback status_1[] = {

@@ -48,6 +48,7 @@
 #include "mutt.h"
 #include "lib.h"
 #include "enter/lib.h"
+#include "expando/lib.h"
 #include "history/lib.h"
 #include "question/lib.h"
 #include "send/lib.h"
@@ -61,20 +62,6 @@
 #ifdef CRYPT_BACKEND_CLASSIC_SMIME
 #include "smime.h"
 #endif
-
-/**
- * struct SmimeCommandContext - Data for a SIME command
- */
-struct SmimeCommandContext
-{
-  const char *key;           ///< %k
-  const char *cryptalg;      ///< %a
-  const char *digestalg;     ///< %d
-  const char *fname;         ///< %f
-  const char *sig_fname;     ///< %s
-  const char *certificates;  ///< %c
-  const char *intermediates; ///< %i
-};
 
 /// Cached Smime Passphrase
 static char SmimePass[256];
@@ -207,183 +194,6 @@ bool smime_class_valid_passphrase(void)
  */
 
 /**
- * smime_command_format_str - Format an SMIME command - Implements ::format_t - @ingroup expando_api
- *
- * | Expando | Description
- * | :------ | :----------------------------------------------------------------
- * | \%a     | Algorithm used for encryption
- * | \%C     | CA location: Depending on whether `$smime_ca_location` points to a directory or file
- * | \%c     | One or more certificate IDs
- * | \%d     | Message digest algorithm specified with `$smime_sign_digest_alg`
- * | \%f     | File containing a message
- * | \%i     | Intermediate certificates
- * | \%k     | The key-pair specified with `$smime_default_key`
- * | \%s     | File containing the signature part of a multipart/signed attachment when verifying it
- */
-static const char *smime_command_format_str(char *buf, size_t buflen, size_t col,
-                                            int cols, char op, const char *src,
-                                            const char *prec, const char *if_str,
-                                            const char *else_str, intptr_t data,
-                                            MuttFormatFlags flags)
-{
-  char fmt[128] = { 0 };
-  struct SmimeCommandContext *cctx = (struct SmimeCommandContext *) data;
-  bool optional = (flags & MUTT_FORMAT_OPTIONAL);
-
-  switch (op)
-  {
-    case 'C':
-    {
-      const char *const c_smime_ca_location = cs_subset_path(NeoMutt->sub, "smime_ca_location");
-      if (!optional)
-      {
-        struct Buffer *path = buf_pool_get();
-        struct Buffer *buf1 = buf_pool_get();
-        struct Buffer *buf2 = buf_pool_get();
-        struct stat st = { 0 };
-
-        buf_strcpy(path, c_smime_ca_location);
-        buf_expand_path(path);
-        buf_quote_filename(buf1, buf_string(path), true);
-
-        if ((stat(buf_string(path), &st) != 0) || !S_ISDIR(st.st_mode))
-          buf_printf(buf2, "-CAfile %s", buf_string(buf1));
-        else
-          buf_printf(buf2, "-CApath %s", buf_string(buf1));
-
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, buf_string(buf2));
-
-        buf_pool_release(&path);
-        buf_pool_release(&buf1);
-        buf_pool_release(&buf2);
-      }
-      else if (!c_smime_ca_location)
-      {
-        optional = false;
-      }
-      break;
-    }
-
-    case 'c':
-    { /* certificate (list) */
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, NONULL(cctx->certificates));
-      }
-      else if (!cctx->certificates)
-      {
-        optional = false;
-      }
-      break;
-    }
-
-    case 'i':
-    { /* intermediate certificates  */
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, NONULL(cctx->intermediates));
-      }
-      else if (!cctx->intermediates)
-      {
-        optional = false;
-      }
-      break;
-    }
-
-    case 's':
-    { /* detached signature */
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, NONULL(cctx->sig_fname));
-      }
-      else if (!cctx->sig_fname)
-      {
-        optional = false;
-      }
-      break;
-    }
-
-    case 'k':
-    { /* private key */
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, NONULL(cctx->key));
-      }
-      else if (!cctx->key)
-      {
-        optional = false;
-      }
-      break;
-    }
-
-    case 'a':
-    { /* algorithm for encryption */
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, NONULL(cctx->cryptalg));
-      }
-      else if (!cctx->key)
-      {
-        optional = false;
-      }
-      break;
-    }
-
-    case 'f':
-    { /* file to process */
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, NONULL(cctx->fname));
-      }
-      else if (!cctx->fname)
-      {
-        optional = false;
-      }
-      break;
-    }
-
-    case 'd':
-    { /* algorithm for the signature message digest */
-      if (!optional)
-      {
-        snprintf(fmt, sizeof(fmt), "%%%ss", prec);
-        snprintf(buf, buflen, fmt, NONULL(cctx->digestalg));
-      }
-      else if (!cctx->key)
-      {
-        optional = false;
-      }
-      break;
-    }
-
-    default:
-      *buf = '\0';
-      break;
-  }
-
-  if (optional)
-  {
-    mutt_expando_format(buf, buflen, col, cols, if_str,
-                        smime_command_format_str, data, MUTT_FORMAT_NO_FLAGS);
-  }
-  else if (flags & MUTT_FORMAT_OPTIONAL)
-  {
-    mutt_expando_format(buf, buflen, col, cols, else_str,
-                        smime_command_format_str, data, MUTT_FORMAT_NO_FLAGS);
-  }
-
-  /* We return the format string, unchanged */
-  return src;
-}
-
-/**
  * smime_command - Format an SMIME command string
  * @param buf    Buffer for the result
  * @param buflen Length of buffer
@@ -392,11 +202,11 @@ static const char *smime_command_format_str(char *buf, size_t buflen, size_t col
  *
  * @sa smime_command_format_str()
  */
-static void smime_command(char *buf, size_t buflen,
-                          struct SmimeCommandContext *cctx, const char *fmt)
+static void smime_command(char *buf, size_t buflen, struct SmimeCommandContext *cctx,
+                          const struct ExpandoRecord *r)
 {
-  mutt_expando_format(buf, buflen, 0, buflen, NONULL(fmt), smime_command_format_str,
-                      (intptr_t) cctx, MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format_2gmb(buf, buflen, 0, buflen, &r->tree, (intptr_t) cctx,
+                           MUTT_FORMAT_NO_FLAGS);
   mutt_debug(LL_DEBUG2, "%s\n", buf);
 }
 
@@ -426,13 +236,15 @@ static pid_t smime_invoke(FILE **fp_smime_in, FILE **fp_smime_out, FILE **fp_smi
                           int fp_smime_infd, int fp_smime_outfd, int fp_smime_errfd,
                           const char *fname, const char *sig_fname, const char *cryptalg,
                           const char *digestalg, const char *key, const char *certificates,
-                          const char *intermediates, const char *format)
+                          const char *intermediates, const struct ExpandoRecord *r)
 {
   struct SmimeCommandContext cctx = { 0 };
   char cmd[STR_COMMAND] = { 0 };
 
-  if (!format || (*format == '\0'))
+  if (!r)
+  {
     return (pid_t) -1;
+  }
 
   cctx.fname = fname;
   cctx.sig_fname = sig_fname;
@@ -442,7 +254,7 @@ static pid_t smime_invoke(FILE **fp_smime_in, FILE **fp_smime_out, FILE **fp_smi
   cctx.certificates = certificates;
   cctx.intermediates = intermediates;
 
-  smime_command(cmd, sizeof(cmd), &cctx, format);
+  smime_command(cmd, sizeof(cmd), &cctx, r);
 
   return filter_create_fd(cmd, fp_smime_in, fp_smime_out, fp_smime_err,
                           fp_smime_infd, fp_smime_outfd, fp_smime_errfd);
@@ -919,7 +731,8 @@ static int smime_handle_cert_email(const char *certificate, const char *mailbox,
     return 1;
   }
 
-  const char *const c_smime_get_cert_email_command = cs_subset_string(NeoMutt->sub, "smime_get_cert_email_command");
+  const struct ExpandoRecord *c_smime_get_cert_email_command =
+      cs_subset_expando(NeoMutt->sub, "smime_get_cert_email_command");
   pid = smime_invoke(NULL, NULL, NULL, -1, fileno(fp_out), fileno(fp_err), certificate,
                      NULL, NULL, NULL, NULL, NULL, NULL, c_smime_get_cert_email_command);
   if (pid == -1)
@@ -1027,7 +840,7 @@ static char *smime_extract_certificate(const char *infile)
 
   /* Step 1: Convert the signature to a PKCS#7 structure, as we can't
    * extract the full set of certificates directly. */
-  const char *const c_smime_pk7out_command = cs_subset_string(NeoMutt->sub, "smime_pk7out_command");
+  const struct ExpandoRecord *c_smime_pk7out_command = cs_subset_expando(NeoMutt->sub, "smime_pk7out_command");
   pid = smime_invoke(NULL, NULL, NULL, -1, fileno(fp_out), fileno(fp_err), infile,
                      NULL, NULL, NULL, NULL, NULL, NULL, c_smime_pk7out_command);
   if (pid == -1)
@@ -1061,7 +874,8 @@ static char *smime_extract_certificate(const char *infile)
   }
 
   // Step 2: Extract the certificates from a PKCS#7 structure.
-  const char *const c_smime_get_cert_command = cs_subset_string(NeoMutt->sub, "smime_get_cert_command");
+  const struct ExpandoRecord *c_smime_get_cert_command =
+      cs_subset_expando(NeoMutt->sub, "smime_get_cert_command");
   pid = smime_invoke(NULL, NULL, NULL, -1, fileno(fp_cert), fileno(fp_err),
                      buf_string(pk7out), NULL, NULL, NULL, NULL, NULL, NULL,
                      c_smime_get_cert_command);
@@ -1139,7 +953,8 @@ static char *smime_extract_signer_certificate(const char *infile)
 
   /* Extract signer's certificate
    */
-  const char *const c_smime_get_signer_cert_command = cs_subset_string(NeoMutt->sub, "smime_get_signer_cert_command");
+  const struct ExpandoRecord *c_smime_get_signer_cert_command =
+      cs_subset_expando(NeoMutt->sub, "smime_get_signer_cert_command");
   pid = smime_invoke(NULL, NULL, NULL, -1, -1, fileno(fp_err), infile, NULL, NULL, NULL,
                      NULL, buf_string(certfile), NULL, c_smime_get_signer_cert_command);
   if (pid == -1)
@@ -1217,7 +1032,8 @@ void smime_class_invoke_import(const char *infile, const char *mailbox)
   {
     mutt_endwin();
 
-    const char *const c_smime_import_cert_command = cs_subset_string(NeoMutt->sub, "smime_import_cert_command");
+    const struct ExpandoRecord *c_smime_import_cert_command =
+        cs_subset_expando(NeoMutt->sub, "smime_import_cert_command");
     FILE *fp_smime_in = NULL;
     pid_t pid = smime_invoke(&fp_smime_in, NULL, NULL, -1, fileno(fp_out),
                              fileno(fp_err), certfile, NULL, NULL, NULL, NULL,
@@ -1344,7 +1160,8 @@ static pid_t smime_invoke_encrypt(FILE **fp_smime_in, FILE **fp_smime_out,
                                   const char *fname, const char *uids)
 {
   const char *const c_smime_encrypt_with = cs_subset_string(NeoMutt->sub, "smime_encrypt_with");
-  const char *const c_smime_encrypt_command = cs_subset_string(NeoMutt->sub, "smime_encrypt_command");
+  const struct ExpandoRecord *c_smime_encrypt_command =
+      cs_subset_expando(NeoMutt->sub, "smime_encrypt_command");
   return smime_invoke(fp_smime_in, fp_smime_out, fp_smime_err, fp_smime_infd,
                       fp_smime_outfd, fp_smime_errfd, fname, NULL, c_smime_encrypt_with,
                       NULL, NULL, uids, NULL, c_smime_encrypt_command);
@@ -1370,7 +1187,7 @@ static pid_t smime_invoke_sign(FILE **fp_smime_in, FILE **fp_smime_out,
                                int fp_smime_errfd, const char *fname)
 {
   const char *const c_smime_sign_digest_alg = cs_subset_string(NeoMutt->sub, "smime_sign_digest_alg");
-  const char *const c_smime_sign_command = cs_subset_string(NeoMutt->sub, "smime_sign_command");
+  const struct ExpandoRecord *c_smime_sign_command = cs_subset_expando(NeoMutt->sub, "smime_sign_command");
   return smime_invoke(fp_smime_in, fp_smime_out, fp_smime_err, fp_smime_infd, fp_smime_outfd,
                       fp_smime_errfd, fname, NULL, NULL, c_smime_sign_digest_alg,
                       buf_string(&SmimeKeyToUse), buf_string(&SmimeCertToUse),
@@ -1715,8 +1532,9 @@ static pid_t smime_invoke_verify(FILE **fp_smime_in, FILE **fp_smime_out,
                                  int fp_smime_outfd, int fp_smime_errfd,
                                  const char *fname, const char *sig_fname, int opaque)
 {
-  const char *const c_smime_verify_opaque_command = cs_subset_string(NeoMutt->sub, "smime_verify_opaque_command");
-  const char *const c_smime_verify_command = cs_subset_string(NeoMutt->sub, "smime_verify_command");
+  const struct ExpandoRecord *c_smime_verify_opaque_command =
+      cs_subset_expando(NeoMutt->sub, "smime_verify_opaque_command");
+  const struct ExpandoRecord *c_smime_verify_command = cs_subset_expando(NeoMutt->sub, "smime_verify_command");
   return smime_invoke(fp_smime_in, fp_smime_out, fp_smime_err, fp_smime_infd, fp_smime_outfd,
                       fp_smime_errfd, fname, sig_fname, NULL, NULL, NULL, NULL, NULL,
                       (opaque ? c_smime_verify_opaque_command : c_smime_verify_command));
@@ -1741,7 +1559,8 @@ static pid_t smime_invoke_decrypt(FILE **fp_smime_in, FILE **fp_smime_out,
                                   FILE **fp_smime_err, int fp_smime_infd, int fp_smime_outfd,
                                   int fp_smime_errfd, const char *fname)
 {
-  const char *const c_smime_decrypt_command = cs_subset_string(NeoMutt->sub, "smime_decrypt_command");
+  const struct ExpandoRecord *c_smime_decrypt_command =
+      cs_subset_expando(NeoMutt->sub, "smime_decrypt_command");
   return smime_invoke(fp_smime_in, fp_smime_out, fp_smime_err, fp_smime_infd,
                       fp_smime_outfd, fp_smime_errfd, fname, NULL, NULL, NULL,
                       buf_string(&SmimeKeyToUse), buf_string(&SmimeCertToUse),

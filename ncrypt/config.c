@@ -114,7 +114,7 @@ static struct ConfigDef NcryptVars[] = {
   { "smime_default_key", DT_STRING, 0, 0, NULL,
     "Default key for SMIME operations"
   },
-  { "smime_encrypt_with", DT_STRING, IP "aes256", 0, NULL,
+  { "smime_encrypt_with", DT_EXPANDO, IP "aes256", 0, expando_validator,
     "Algorithm for encryption"
   },
   { "smime_self_encrypt", DT_BOOL, true, 0, NULL,
@@ -252,46 +252,46 @@ static struct ConfigDef NcryptVarsSmime[] = {
   { "smime_certificates", DT_PATH|DT_PATH_DIR, 0, 0, NULL,
     "File containing user's public certificates"
   },
-  { "smime_decrypt_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_decrypt_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to decrypt an SMIME message"
   },
   { "smime_decrypt_use_default_key", DT_BOOL, true, 0, NULL,
     "Use the default key for decryption"
   },
-  { "smime_encrypt_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_encrypt_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to encrypt a message"
   },
-  { "smime_get_cert_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_get_cert_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to extract a certificate from a message"
   },
-  { "smime_get_cert_email_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_get_cert_email_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to get a certificate for an email"
   },
-  { "smime_get_signer_cert_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_get_signer_cert_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to extract a certificate from an email"
   },
-  { "smime_import_cert_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_import_cert_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to import a certificate"
   },
   { "smime_keys", DT_PATH|DT_PATH_DIR, 0, 0, NULL,
     "File containing user's private certificates"
   },
-  { "smime_pk7out_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_pk7out_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to extract a public certificate"
   },
-  { "smime_sign_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_sign_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to sign a message"
   },
-  { "smime_sign_digest_alg", DT_STRING, IP "sha256", 0, NULL,
+  { "smime_sign_digest_alg", DT_EXPANDO, IP "sha256", 0, expando_validator,
     "Digest algorithm"
   },
   { "smime_timeout", DT_NUMBER|DT_NOT_NEGATIVE, 300, 0, NULL,
     "Time in seconds to cache a passphrase"
   },
-  { "smime_verify_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_verify_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to verify a signed message"
   },
-  { "smime_verify_opaque_command", DT_STRING|DT_COMMAND, 0, 0, NULL,
+  { "smime_verify_opaque_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to verify a signature"
   },
   { NULL },
