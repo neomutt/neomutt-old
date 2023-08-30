@@ -118,9 +118,9 @@ int pgp_entry_date(const struct ExpandoNode *self, char *buf, int buf_len,
 
   format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, NULL, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_n(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -138,9 +138,9 @@ int pgp_entry_n(const struct ExpandoNode *self, char *buf, int buf_len,
   const int num = entry->num;
   format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_t(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -163,9 +163,9 @@ int pgp_entry_t(const struct ExpandoNode *self, char *buf, int buf_len,
   snprintf(tmp, sizeof(tmp), "%c", TrustFlags[uid->trust & 0x03]);
   format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_u(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -184,9 +184,9 @@ int pgp_entry_u(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = NONULL(uid->addr);
   format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_a(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -206,9 +206,9 @@ int pgp_entry_a(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = key->algorithm;
   format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_A(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -229,9 +229,9 @@ int pgp_entry_A(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = pkey->algorithm;
   format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_c(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -253,9 +253,9 @@ int pgp_entry_c(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = pgp_key_abilities(kflags);
   format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_C(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -278,9 +278,9 @@ int pgp_entry_C(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = pgp_key_abilities(kflags);
   format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_f(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -302,9 +302,9 @@ int pgp_entry_f(const struct ExpandoNode *self, char *buf, int buf_len,
   snprintf(tmp, sizeof(tmp), "%c", pgp_flags(kflags));
   format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_F(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -327,9 +327,9 @@ int pgp_entry_F(const struct ExpandoNode *self, char *buf, int buf_len,
   snprintf(tmp, sizeof(tmp), "%c", pgp_flags(kflags));
   format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_k(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -349,9 +349,9 @@ int pgp_entry_k(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = pgp_this_keyid(key);
   format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_K(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -372,9 +372,9 @@ int pgp_entry_K(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = pgp_this_keyid(pkey);
   format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_l(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -394,9 +394,9 @@ int pgp_entry_l(const struct ExpandoNode *self, char *buf, int buf_len,
   const int num = key->keylen;
   format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
 
 int pgp_entry_L(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -417,7 +417,7 @@ int pgp_entry_L(const struct ExpandoNode *self, char *buf, int buf_len,
   const int num = pkey->keylen;
   format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* HAVE_PGP */
   return 0;
-#endif
+#endif /* HAVE_PGP */
 }
