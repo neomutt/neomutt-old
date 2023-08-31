@@ -176,3 +176,13 @@ char *pgp_this_keyid(struct PgpKeyInfo *k)
 {
   return NULL;
 }
+
+bool first_mailing_list(char *buf, size_t buflen, struct AddressList *al)
+{
+  return false;
+}
+
+char *nm_email_get_folder_rel_db(struct Mailbox *m, struct Email *e)
+{
+  return NULL;
+}

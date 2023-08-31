@@ -49,6 +49,9 @@
 #include "muttlib.h"
 #include "sort.h"
 #include "subjectrx.h"
+#ifdef USE_NOTMUCH
+#include "notmuch/lib.h"
+#endif
 
 static bool thread_is_new_2gmb(struct Email *e)
 {
@@ -129,7 +132,7 @@ int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
 
   struct ExpandoDatePrivate *dp = (struct ExpandoDatePrivate *) self->ndata;
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
+  const struct Email *email = hfi->email;
 
   struct tm tm = { 0 };
   char fmt[128], tmp[128];
@@ -137,21 +140,21 @@ int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
   switch (dp->date_type)
   {
     case EDT_LOCAL_SEND_TIME:
-      tm = mutt_date_localtime(e->date_sent);
+      tm = mutt_date_localtime(email->date_sent);
       break;
 
     case EDT_LOCAL_RECIEVE_TIME:
-      tm = mutt_date_localtime(e->received);
+      tm = mutt_date_localtime(email->received);
       break;
 
     case EDT_SENDER_SEND_TIME:
     {
       /* restore sender's time zone */
-      time_t now = e->date_sent;
-      if (e->zoccident)
-        now -= (e->zhours * 3600 + e->zminutes * 60);
+      time_t now = email->date_sent;
+      if (email->zoccident)
+        now -= (email->zhours * 3600 + email->zminutes * 60);
       else
-        now += (e->zhours * 3600 + e->zminutes * 60);
+        now += (email->zhours * 3600 + email->zminutes * 60);
       tm = mutt_date_gmtime(now);
     }
     break;
@@ -275,25 +278,120 @@ static void make_from_2gmb(struct Envelope *env, char *buf, size_t buflen,
 int index_a(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  const struct Address *from = TAILQ_FIRST(&email->env->from);
+
+  char fmt[128];
+  const char *s = "";
+  if (from && from->mailbox)
+  {
+    s = mutt_addr_for_display(from);
+  }
+
+  format_string(fmt, sizeof(fmt), s, flags, MT_COLOR_INDEX_AUTHOR,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_A(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  const struct Address *reply_to = TAILQ_FIRST(&email->env->reply_to);
+
+  char fmt[128];
+
+  if (reply_to && reply_to->mailbox)
+  {
+    const char *s = mutt_addr_for_display(reply_to);
+    format_string(fmt, sizeof(fmt), s, flags, MT_COLOR_INDEX_AUTHOR,
+                  MT_COLOR_INDEX, format, NO_TREE);
+    return snprintf(buf, buf_len, "%s", fmt);
+  }
+
+  return index_a(self, buf, buf_len, cols_len, data, flags);
 }
 
 int index_b(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+  struct Mailbox *mailbox = hfi->mailbox;
+
+  char tmp[128], fmt[128];
+  char *p = NULL;
+
+  if (mailbox)
+  {
+    p = strrchr(mailbox_path(mailbox), '/');
+
+#ifdef USE_NOTMUCH
+    if (mailbox->type == MUTT_NOTMUCH)
+    {
+      char *rel_path = nm_email_get_folder_rel_db(mailbox, email);
+      if (rel_path)
+      {
+        p = rel_path;
+      }
+    }
+#endif
+
+    if (p)
+    {
+      mutt_str_copy(tmp, p + 1, sizeof(tmp));
+    }
+    else
+    {
+      mutt_str_copy(tmp, mailbox_path(mailbox), sizeof(tmp));
+    }
+  }
+  else
+  {
+    mutt_str_copy(tmp, "(null)", sizeof(tmp));
+  }
+
+  format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_B(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  char tmp1[128], tmp2[128], fmt[128];
+
+  if (first_mailing_list(tmp1, sizeof(tmp1), &email->env->to) ||
+      first_mailing_list(tmp1, sizeof(tmp1), &email->env->cc))
+  {
+    mutt_str_copy(tmp2, tmp1, sizeof(tmp2));
+    format_string(fmt, sizeof(fmt), tmp2, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+    return snprintf(buf, buf_len, "%s", fmt);
+  }
+
+  return index_b(self, buf, buf_len, cols_len, data, flags);
 }
 
 int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -304,11 +402,11 @@ int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
+  const struct Email *email = hfi->email;
 
   char fmt[128], tmp[128];
 
-  mutt_str_pretty_size(tmp, sizeof(tmp), e->body->length);
+  mutt_str_pretty_size(tmp, sizeof(tmp), email->body->length);
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
                 MT_COLOR_INDEX, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
@@ -322,11 +420,11 @@ int index_cr(const struct ExpandoNode *self, char *buf, int buf_len,
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
+  const struct Email *email = hfi->email;
 
   char fmt[128], tmp[128];
 
-  mutt_str_pretty_size(tmp, sizeof(tmp), email_size(e));
+  mutt_str_pretty_size(tmp, sizeof(tmp), email_size(email));
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
                 MT_COLOR_INDEX, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
@@ -340,11 +438,11 @@ int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
+  const struct Email *email = hfi->email;
 
   char fmt[128];
 
-  const int num = e->msgno + 1;
+  const int num = email->msgno + 1;
   format_int(fmt, sizeof(fmt), num, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
 
   return snprintf(buf, buf_len, "%s", fmt);
@@ -419,7 +517,25 @@ int index_i(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_I(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  const struct Address *from = TAILQ_FIRST(&email->env->from);
+
+  char tmp[128], fmt[128];
+
+  if (mutt_mb_get_initials(mutt_get_name(from), tmp, sizeof(tmp)))
+  {
+    format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
+                  MT_COLOR_INDEX, format, NO_TREE);
+    return snprintf(buf, buf_len, "%s", fmt);
+  }
+
+  return index_a(self, buf, buf_len, cols_len, data, flags);
 }
 
 int index_J(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -431,7 +547,26 @@ int index_J(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_K(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  char tmp1[128], tmp2[128], fmt[128];
+
+  if (first_mailing_list(tmp1, sizeof(tmp1), &email->env->to) ||
+      first_mailing_list(tmp1, sizeof(tmp1), &email->env->cc))
+  {
+    mutt_str_copy(tmp2, tmp1, sizeof(tmp2));
+    format_string(fmt, sizeof(fmt), tmp2, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+    return snprintf(buf, buf_len, "%s", fmt);
+  }
+
+  const char *s = "";
+  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -442,11 +577,11 @@ int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
+  const struct Email *email = hfi->email;
 
   char fmt[128];
 
-  const int num = e->lines;
+  const int num = email->lines;
   format_int(fmt, sizeof(fmt), num, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
@@ -459,11 +594,11 @@ int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
+  const struct Email *email = hfi->email;
 
   char fmt[128], tmp[128];
 
-  make_from_2gmb(e->env, tmp, sizeof(tmp), true, flags);
+  make_from_2gmb(email->env, tmp, sizeof(tmp), true, flags);
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
                 MT_COLOR_INDEX, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
@@ -531,30 +666,30 @@ int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
+  const struct Email *email = hfi->email;
 
   char fmt[128], tmp[128];
 
-  subjrx_apply_mods(e->env);
+  subjrx_apply_mods(email->env);
   char *subj = NULL;
 
-  if (e->env->disp_subj)
-    subj = e->env->disp_subj;
+  if (email->env->disp_subj)
+    subj = email->env->disp_subj;
   else
-    subj = e->env->subject;
+    subj = email->env->subject;
 
-  if (flags & MUTT_FORMAT_TREE && !e->collapsed)
+  if (flags & MUTT_FORMAT_TREE && !email->collapsed)
   {
     if (flags & MUTT_FORMAT_FORCESUBJ)
     {
-      snprintf(tmp, sizeof(tmp), "%s%s", e->tree, NONULL(subj));
+      snprintf(tmp, sizeof(tmp), "%s%s", email->tree, NONULL(subj));
       format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SUBJECT,
                     MT_COLOR_INDEX, format, HAS_TREE);
     }
     else
     {
-      format_string(fmt, sizeof(fmt), e->tree, flags, MT_COLOR_INDEX_SUBJECT,
-                    MT_COLOR_INDEX, format, HAS_TREE);
+      format_string(fmt, sizeof(fmt), email->tree, flags,
+                    MT_COLOR_INDEX_SUBJECT, MT_COLOR_INDEX, format, HAS_TREE);
     }
   }
   else
