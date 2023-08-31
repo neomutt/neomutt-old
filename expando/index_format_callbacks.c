@@ -121,99 +121,6 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
   return e->recipient;
 }
 
-int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
-            int cols_len, intptr_t data, MuttFormatFlags flags)
-{
-  assert(self->type == ENT_EXPANDO);
-  const struct ExpandoFormatPrivate *format =
-      (const struct ExpandoFormatPrivate *) self->ndata;
-
-  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
-
-  char fmt[128];
-
-  const int num = e->msgno + 1;
-  format_int(fmt, sizeof(fmt), num, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
-
-  return snprintf(buf, buf_len, "%s", fmt);
-}
-
-int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
-            int cols_len, intptr_t data, MuttFormatFlags flags)
-{
-  assert(self->type == ENT_EXPANDO);
-  const struct ExpandoFormatPrivate *format =
-      (const struct ExpandoFormatPrivate *) self->ndata;
-
-  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  struct Email *e = hfi->email;
-  const size_t msg_in_pager = hfi->msg_in_pager;
-
-  const struct MbTable *c_crypt_chars = cs_subset_mbtable(NeoMutt->sub, "crypt_chars");
-  const struct MbTable *c_flag_chars = cs_subset_mbtable(NeoMutt->sub, "flag_chars");
-  const struct MbTable *c_to_chars = cs_subset_mbtable(NeoMutt->sub, "to_chars");
-  const bool threads = mutt_using_threads();
-
-  char fmt[128], tmp[128];
-
-  const char *first = NULL;
-  if (threads && thread_is_new_2gmb(e))
-  {
-    first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW_THREAD);
-  }
-  else if (threads && thread_is_old_2gmb(e))
-  {
-    first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD_THREAD);
-  }
-  else if (e->read && (msg_in_pager != e->msgno))
-  {
-    if (e->replied)
-      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_REPLIED);
-    else
-      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_ZEMPTY);
-  }
-  else
-  {
-    if (e->old)
-      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD);
-    else
-      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW);
-  }
-
-  /* Marked for deletion; deleted attachments; crypto */
-  const char *second = NULL;
-  if (e->deleted)
-    second = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_DELETED);
-  else if (e->attach_del)
-    second = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_DELETED_ATTACH);
-  else if ((WithCrypto != 0) && (e->security & SEC_GOODSIGN))
-    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_GOOD_SIGN);
-  else if ((WithCrypto != 0) && (e->security & SEC_ENCRYPT))
-    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_ENCRYPTED);
-  else if ((WithCrypto != 0) && (e->security & SEC_SIGN))
-    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_SIGNED);
-  else if (((WithCrypto & APPLICATION_PGP) != 0) && (e->security & PGP_KEY))
-    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_CONTAINS_KEY);
-  else
-    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_NO_CRYPTO);
-
-  /* Tagged, flagged and recipient flag */
-  const char *third = NULL;
-  if (e->tagged)
-    third = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_TAGGED);
-  else if (e->flagged)
-    third = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_IMPORTANT);
-  else
-    third = mbtable_get_nth_wchar(c_to_chars, user_is_recipient_2gmb(e));
-
-  snprintf(tmp, sizeof(tmp), "%s%s%s", first, second, third);
-  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS,
-                MT_COLOR_INDEX, format, NO_TREE);
-
-  return snprintf(buf, buf_len, "%s", fmt);
-}
-
 int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
                int cols_len, intptr_t data, MuttFormatFlags flags)
 {
@@ -365,6 +272,185 @@ static void make_from_2gmb(struct Envelope *env, char *buf, size_t buflen,
            mutt_get_name(TAILQ_FIRST(name)));
 }
 
+int index_a(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_A(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_b(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_B(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
+
+  char fmt[128], tmp[128];
+
+  mutt_str_pretty_size(tmp, sizeof(tmp), e->body->length);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int index_cr(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
+
+  char fmt[128], tmp[128];
+
+  mutt_str_pretty_size(tmp, sizeof(tmp), email_size(e));
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
+
+  char fmt[128];
+
+  const int num = e->msgno + 1;
+  format_int(fmt, sizeof(fmt), num, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
+
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int index_d(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_D(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_e(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_E(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_f(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_F(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_Fp(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_g(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_Gx(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_H(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_i(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_I(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_J(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_K(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *e = hfi->email;
+
+  char fmt[128];
+
+  const int num = e->lines;
+  format_int(fmt, sizeof(fmt), num, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+}
+
 int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
@@ -381,6 +467,60 @@ int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
                 MT_COLOR_INDEX, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int index_m(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_M(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_n(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_N(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_O(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_P(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_q(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_r(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_R(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
 }
 
 int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -426,55 +566,155 @@ int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
-int index_l(const struct ExpandoNode *self, char *buf, int buf_len,
+int index_S(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == ENT_EXPANDO);
-  const struct ExpandoFormatPrivate *format =
-      (const struct ExpandoFormatPrivate *) self->ndata;
-
-  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
-
-  char fmt[128];
-
-  const int num = e->lines;
-  format_int(fmt, sizeof(fmt), num, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
-  return snprintf(buf, buf_len, "%s", fmt);
+  return 0;
 }
 
-int index_c(const struct ExpandoNode *self, char *buf, int buf_len,
+int index_t(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  assert(self->type == ENT_EXPANDO);
-  const struct ExpandoFormatPrivate *format =
-      (const struct ExpandoFormatPrivate *) self->ndata;
-
-  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
-
-  char fmt[128], tmp[128];
-
-  mutt_str_pretty_size(tmp, sizeof(tmp), e->body->length);
-  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
-                MT_COLOR_INDEX, format, NO_TREE);
-  return snprintf(buf, buf_len, "%s", fmt);
+  return 0;
 }
 
-int index_cr(const struct ExpandoNode *self, char *buf, int buf_len,
+int index_T(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_u(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_v(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_W(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_x(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_X(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_y(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_Y(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_zc(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
+  return 0;
+}
+
+int index_zs(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_zt(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return 0;
+}
+
+int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
+            int cols_len, intptr_t data, MuttFormatFlags flags)
+{
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  const struct Email *e = hfi->email;
+  struct Email *e = hfi->email;
+  const size_t msg_in_pager = hfi->msg_in_pager;
+
+  const struct MbTable *c_crypt_chars = cs_subset_mbtable(NeoMutt->sub, "crypt_chars");
+  const struct MbTable *c_flag_chars = cs_subset_mbtable(NeoMutt->sub, "flag_chars");
+  const struct MbTable *c_to_chars = cs_subset_mbtable(NeoMutt->sub, "to_chars");
+  const bool threads = mutt_using_threads();
 
   char fmt[128], tmp[128];
 
-  mutt_str_pretty_size(tmp, sizeof(tmp), email_size(e));
-  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_SIZE,
+  const char *first = NULL;
+  if (threads && thread_is_new_2gmb(e))
+  {
+    first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW_THREAD);
+  }
+  else if (threads && thread_is_old_2gmb(e))
+  {
+    first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD_THREAD);
+  }
+  else if (e->read && (msg_in_pager != e->msgno))
+  {
+    if (e->replied)
+      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_REPLIED);
+    else
+      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_ZEMPTY);
+  }
+  else
+  {
+    if (e->old)
+      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD);
+    else
+      first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW);
+  }
+
+  /* Marked for deletion; deleted attachments; crypto */
+  const char *second = NULL;
+  if (e->deleted)
+    second = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_DELETED);
+  else if (e->attach_del)
+    second = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_DELETED_ATTACH);
+  else if ((WithCrypto != 0) && (e->security & SEC_GOODSIGN))
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_GOOD_SIGN);
+  else if ((WithCrypto != 0) && (e->security & SEC_ENCRYPT))
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_ENCRYPTED);
+  else if ((WithCrypto != 0) && (e->security & SEC_SIGN))
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_SIGNED);
+  else if (((WithCrypto & APPLICATION_PGP) != 0) && (e->security & PGP_KEY))
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_CONTAINS_KEY);
+  else
+    second = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_NO_CRYPTO);
+
+  /* Tagged, flagged and recipient flag */
+  const char *third = NULL;
+  if (e->tagged)
+    third = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_TAGGED);
+  else if (e->flagged)
+    third = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_IMPORTANT);
+  else
+    third = mbtable_get_nth_wchar(c_to_chars, user_is_recipient_2gmb(e));
+
+  snprintf(tmp, sizeof(tmp), "%s%s%s", first, second, third);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS,
                 MT_COLOR_INDEX, format, NO_TREE);
+
   return snprintf(buf, buf_len, "%s", fmt);
 }

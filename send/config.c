@@ -156,13 +156,13 @@ static struct ConfigDef SendVars[] = {
   { "attach_charset", DT_SLIST|SLIST_SEP_COLON|SLIST_ALLOW_EMPTY, 0, 0, charset_slist_validator,
     "When attaching files, use one of these character sets"
   },
-  { "attribution_intro", DT_STRING, IP "On %d, %n wrote:", 0, NULL,
+  { "attribution_intro", DT_EXPANDO, IP "On %d, %n wrote:", 0, expando_validator,
     "Message to start a reply, 'On DATE, PERSON wrote:'"
   },
   { "attribution_locale", DT_STRING, 0, 0, NULL,
     "Locale for dates in the attribution message"
   },
-  { "attribution_trailer", DT_STRING, 0, 0, NULL,
+  { "attribution_trailer", DT_EXPANDO, 0, 0, expando_validator,
     "Suffix message to add after reply text"
   },
   { "bounce_delivered", DT_BOOL, true, 0, NULL,
@@ -222,10 +222,10 @@ static struct ConfigDef SendVars[] = {
   { "forward_attachments", DT_QUAD, MUTT_ASKYES, 0, NULL,
     "Forward attachments when forwarding a message"
   },
-  { "forward_attribution_intro", DT_STRING, IP "----- Forwarded message from %f -----", 0, NULL,
+  { "forward_attribution_intro", DT_EXPANDO, IP "----- Forwarded message from %f -----", 0, expando_validator,
     "Prefix message for forwarded messages"
   },
-  { "forward_attribution_trailer", DT_STRING, IP "----- End forwarded message -----", 0, NULL,
+  { "forward_attribution_trailer", DT_EXPANDO, IP "----- End forwarded message -----", 0, expando_validator,
     "Suffix message for forwarded messages"
   },
   { "forward_decrypt", DT_BOOL, true, 0, NULL,
@@ -234,7 +234,7 @@ static struct ConfigDef SendVars[] = {
   { "forward_edit", DT_QUAD, MUTT_YES, 0, NULL,
     "Automatically start the editor when forwarding a message"
   },
-  { "forward_format", DT_STRING|DT_NOT_EMPTY, IP "[%a: %s]", 0, NULL,
+  { "forward_format", DT_EXPANDO|DT_NOT_EMPTY, IP "[%a: %s]", 0, expando_validator,
     "printf-like format string to control the subject when forwarding a message"
   },
   { "forward_references", DT_BOOL, false, 0, NULL,

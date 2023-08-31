@@ -92,22 +92,23 @@ static const struct ExpandoFormatCallback history_1[] = {
 };
 
 static const struct ExpandoFormatCallback index_1[] = {
-  { "a", NULL },    { "A", NULL },    { "b", NULL },    { "B", NULL },
-  { "c", index_c }, { "C", index_C }, { "d", NULL },    { "D", NULL },
-  { "e", NULL },    { "E", NULL },    { "f", NULL },    { "F", NULL },
-  { "g", NULL },    { "H", NULL },    { "i", NULL },    { "I", NULL },
-  { "J", NULL },    { "K", NULL },    { "l", index_l }, { "L", index_L },
-  { "m", NULL },    { "M", NULL },    { "n", NULL },    { "N", NULL },
-  { "O", NULL },    { "P", NULL },    { "q", NULL },    { "r", NULL },
-  { "R", NULL },    { "s", index_s }, { "S", NULL },    { "t", NULL },
-  { "T", NULL },    { "u", NULL },    { "v", NULL },    { "W", NULL },
-  { "x", NULL },    { "X", NULL },    { "y", NULL },    { "Y", NULL },
+  { "a", index_a }, { "A", index_A }, { "b", index_b }, { "B", index_B },
+  { "c", index_c }, { "C", index_C }, { "d", index_d }, { "D", index_D },
+  { "e", index_e }, { "E", index_E }, { "f", index_f }, { "F", index_F },
+  { "g", index_g }, { "H", index_H }, { "i", index_i }, { "I", index_I },
+  { "J", index_J }, { "K", index_K }, { "l", index_l }, { "L", index_L },
+  { "m", index_m }, { "M", index_M }, { "n", index_n }, { "N", index_N },
+  { "O", index_O }, { "P", index_P }, { "q", index_q }, { "r", index_r },
+  { "R", index_R }, { "s", index_s }, { "S", index_S }, { "t", index_t },
+  { "T", index_T }, { "u", index_u }, { "v", index_v }, { "W", index_W },
+  { "x", index_x }, { "X", index_X }, { "y", index_y }, { "Y", index_Y },
   { "Z", index_Z }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback index_2[] = {
-  { "cr", index_cr }, { "Fp", NULL }, { "Gx", NULL }, { "zc", NULL },
-  { "zs", NULL },     { "zt", NULL }, { NULL, NULL },
+  { "cr", index_cr }, { "Fp", index_Fp }, { "Gx", index_Gx },
+  { "zc", index_zc }, { "zs", index_zs }, { "zt", index_zt },
+  { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback mix_entry_1[] = {

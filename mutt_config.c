@@ -351,7 +351,7 @@ static struct ConfigDef MainVars[] = {
   { "message_cache_dir", DT_PATH|DT_PATH_DIR, 0, 0, NULL,
     "(imap/pop) Directory for the message cache"
   },
-  { "message_format", DT_STRING|DT_NOT_EMPTY, IP "%s", 0, NULL,
+  { "message_format", DT_EXPANDO|DT_NOT_EMPTY, IP "%s", 0, expando_validator,
     "printf-like format string for listing attached messages"
   },
   { "meta_key", DT_BOOL, false, 0, NULL,
