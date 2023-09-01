@@ -47,6 +47,7 @@
 #include "maillist.h"
 #include "mutt_thread.h"
 #include "muttlib.h"
+#include "mx.h"
 #include "sort.h"
 #include "subjectrx.h"
 #ifdef USE_NOTMUCH
@@ -476,7 +477,7 @@ int index_b(const struct ExpandoNode *self, char *buf, int buf_len,
         p = rel_path;
       }
     }
-#endif
+#endif /* USE_NOTMUCH */
 
     if (p)
     {
@@ -1023,9 +1024,9 @@ int index_q(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = NONULL(email->env->newsgroups);
   format_string_simple(fmt, sizeof(fmt), s, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else
+#else  /* USE_NNTP */
   return 0;
-#endif
+#endif /* USE_NNTP */
 }
 
 int index_r(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -1242,55 +1243,328 @@ int index_u(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_v(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  const struct Address *from = TAILQ_FIRST(&email->env->from);
+  const struct Address *to = TAILQ_FIRST(&email->env->to);
+  const struct Address *cc = TAILQ_FIRST(&email->env->cc);
+
+  char tmp[128], fmt[128];
+  char *p = NULL;
+
+  if (mutt_addr_is_user(from))
+  {
+    if (to)
+    {
+      const char *s = mutt_get_name(to);
+      format_string_simple(tmp, sizeof(tmp), s, format);
+    }
+    else if (cc)
+    {
+      const char *s = mutt_get_name(cc);
+      format_string_simple(tmp, sizeof(tmp), s, format);
+    }
+    else
+    {
+      tmp[0] = '\0';
+    }
+  }
+  else
+  {
+    const char *s = mutt_get_name(from);
+    format_string_simple(tmp, sizeof(tmp), s, format);
+  }
+  p = strpbrk(tmp, " %@");
+  if (p)
+  {
+    *p = '\0';
+  }
+
+  format_string_simple(fmt, sizeof(fmt), tmp, format);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_W(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  char fmt[128];
+
+  const char *s = NONULL(email->env->organization);
+  format_string_simple(fmt, sizeof(fmt), s, format);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_x(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+#ifdef USE_NNTP
+
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  char fmt[128];
+
+  const char *s = NONULL(email->env->x_comment_to);
+  format_string_simple(fmt, sizeof(fmt), s, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* USE_NNTP */
+  return 0;
+#endif /* USE_NNTP */
 }
 
 int index_X(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+  struct Mailbox *mailbox = hfi->mailbox;
+
+  char fmt[128];
+
+  struct Message *msg = mx_msg_open(mailbox, email);
+  if (msg)
+  {
+    const int num = mutt_count_body_parts(mailbox, email, msg->fp);
+    mx_msg_close(mailbox, &msg);
+
+    format_int_simple(fmt, sizeof(fmt), num, format);
+    return snprintf(buf, buf_len, "%s", fmt);
+  }
+  else
+  {
+    return 0;
+  }
 }
 
 int index_y(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  char fmt[128];
+
+  const char *s = NONULL(email->env->x_label);
+  format_string(fmt, sizeof(fmt), s, flags, MT_COLOR_INDEX_LABEL,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_Y(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  char fmt[128];
+
+  bool label = true;
+  if (email->env->x_label)
+  {
+    struct Email *email_tmp = NULL;
+    if (flags & MUTT_FORMAT_TREE && (email->thread->prev && email->thread->prev->message &&
+                                     email->thread->prev->message->env->x_label))
+    {
+      email_tmp = email->thread->prev->message;
+    }
+    else if (flags & MUTT_FORMAT_TREE &&
+             (email->thread->parent && email->thread->parent->message &&
+              email->thread->parent->message->env->x_label))
+    {
+      email_tmp = email->thread->parent->message;
+    }
+
+    if (email_tmp && mutt_istr_equal(email->env->x_label, email_tmp->env->x_label))
+    {
+      label = false;
+    }
+  }
+  else
+  {
+    label = false;
+  }
+
+  if (label)
+  {
+    const char *s = NONULL(email->env->x_label);
+    format_string(fmt, sizeof(fmt), s, flags, MT_COLOR_INDEX_LABEL,
+                  MT_COLOR_INDEX, format, NO_TREE);
+    return snprintf(buf, buf_len, "%s", fmt);
+  }
+  else
+  {
+    const char *s = "";
+    format_string(fmt, sizeof(fmt), s, flags, MT_COLOR_INDEX_LABEL,
+                  MT_COLOR_INDEX, format, NO_TREE);
+    return snprintf(buf, buf_len, "%s", fmt);
+  }
 }
 
 int index_zc(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  const struct MbTable *c_crypt_chars = cs_subset_mbtable(NeoMutt->sub, "crypt_chars");
+
+  char tmp[128], fmt[128];
+
+  const char *ch = NULL;
+  if ((WithCrypto != 0) && (email->security & SEC_GOODSIGN))
+  {
+    ch = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_GOOD_SIGN);
+  }
+  else if ((WithCrypto != 0) && (email->security & SEC_ENCRYPT))
+  {
+    ch = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_ENCRYPTED);
+  }
+  else if ((WithCrypto != 0) && (email->security & SEC_SIGN))
+  {
+    ch = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_SIGNED);
+  }
+  else if (((WithCrypto & APPLICATION_PGP) != 0) && ((email->security & PGP_KEY) == PGP_KEY))
+  {
+    ch = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_CONTAINS_KEY);
+  }
+  else
+  {
+    ch = mbtable_get_nth_wchar(c_crypt_chars, FLAG_CHAR_CRYPT_NO_CRYPTO);
+  }
+
+  snprintf(tmp, sizeof(tmp), "%s", ch);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_zs(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  const bool threads = mutt_using_threads();
+  const struct MbTable *c_flag_chars = cs_subset_mbtable(NeoMutt->sub, "flag_chars");
+  const int msg_in_pager = hfi->msg_in_pager;
+
+  char tmp[128], fmt[128];
+
+  const char *ch = NULL;
+  if (email->deleted)
+  {
+    ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_DELETED);
+  }
+  else if (email->attach_del)
+  {
+    ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_DELETED_ATTACH);
+  }
+  else if (threads && thread_is_new(email))
+  {
+    ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW_THREAD);
+  }
+  else if (threads && thread_is_old(email))
+  {
+    ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD_THREAD);
+  }
+  else if (email->read && (msg_in_pager != email->msgno))
+  {
+    if (email->replied)
+    {
+      ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_REPLIED);
+    }
+    else
+    {
+      ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_ZEMPTY);
+    }
+  }
+  else
+  {
+    if (email->old)
+    {
+      ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD);
+    }
+    else
+    {
+      ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW);
+    }
+  }
+
+  snprintf(tmp, sizeof(tmp), "%s", ch);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_zt(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  const struct MbTable *c_flag_chars = cs_subset_mbtable(NeoMutt->sub, "flag_chars");
+  const struct MbTable *c_to_chars = cs_subset_mbtable(NeoMutt->sub, "to_chars");
+
+  char tmp[128], fmt[128];
+
+  const char *ch = NULL;
+  if (email->tagged)
+  {
+    ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_TAGGED);
+  }
+  else if (email->flagged)
+  {
+    ch = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_IMPORTANT);
+  }
+  else
+  {
+    ch = mbtable_get_nth_wchar(c_to_chars, user_is_recipient(email));
+  }
+
+  snprintf(tmp, sizeof(tmp), "%s", ch);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -1302,7 +1576,7 @@ int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
 
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
   struct Email *e = hfi->email;
-  const size_t msg_in_pager = hfi->msg_in_pager;
+  const int msg_in_pager = hfi->msg_in_pager;
 
   const struct MbTable *c_crypt_chars = cs_subset_mbtable(NeoMutt->sub, "crypt_chars");
   const struct MbTable *c_flag_chars = cs_subset_mbtable(NeoMutt->sub, "flag_chars");
@@ -1323,16 +1597,24 @@ int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
   else if (e->read && (msg_in_pager != e->msgno))
   {
     if (e->replied)
+    {
       first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_REPLIED);
+    }
     else
+    {
       first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_ZEMPTY);
+    }
   }
   else
   {
     if (e->old)
+    {
       first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD);
+    }
     else
+    {
       first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW);
+    }
   }
 
   /* Marked for deletion; deleted attachments; crypto */
