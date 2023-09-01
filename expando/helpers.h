@@ -51,7 +51,7 @@ void format_string(char *buf, int buf_len, const char *s,
                    const struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree);
 
 void format_string_flags(char *buf, int buf_len, const char *s, MuttFormatFlags flags, const struct ExpandoFormatPrivate *format);
-void format_strings_simple(char *buf, int buf_len, const char *s, const struct ExpandoFormatPrivate *format);
+void format_string_simple(char *buf, int buf_len, const char *s, const struct ExpandoFormatPrivate *format);
 
 void format_int(char *buf, int buf_len, int number,
                 MuttFormatFlags flags, enum ColorId pre,

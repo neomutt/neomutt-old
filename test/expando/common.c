@@ -186,3 +186,8 @@ char *nm_email_get_folder_rel_db(struct Mailbox *m, struct Email *e)
 {
   return NULL;
 }
+
+int mutt_messages_in_thread(struct Mailbox *m, struct Email *e, int mit)
+{
+  return 0;
+}

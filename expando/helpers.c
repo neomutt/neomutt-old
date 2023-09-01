@@ -147,8 +147,8 @@ void format_string_flags(char *buf, int buf_len, const char *s, MuttFormatFlags 
   format_string(buf, buf_len, s, flags, 0, 0, format, NO_TREE);
 }
 
-void format_strings_simple(char *buf, int buf_len, const char *s,
-                           const struct ExpandoFormatPrivate *format)
+void format_string_simple(char *buf, int buf_len, const char *s,
+                          const struct ExpandoFormatPrivate *format)
 {
   format_string(buf, buf_len, s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
 }

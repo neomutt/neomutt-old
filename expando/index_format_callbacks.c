@@ -53,7 +53,7 @@
 #include "notmuch/lib.h"
 #endif
 
-static bool thread_is_new_2gmb(struct Email *e)
+static bool thread_is_new(struct Email *e)
 {
   return e->collapsed && (e->num_hidden > 1) && (mutt_thread_contains_unread(e) == 1);
 }
@@ -63,12 +63,12 @@ static bool thread_is_new_2gmb(struct Email *e)
  * @param e Email
  * @retval true Thread contains unread mail
  */
-static bool thread_is_old_2gmb(struct Email *e)
+static bool thread_is_old(struct Email *e)
 {
   return e->collapsed && (e->num_hidden > 1) && (mutt_thread_contains_unread(e) == 2);
 }
 
-static bool user_in_addr_2gmb(struct AddressList *al)
+static bool user_in_addr(struct AddressList *al)
 {
   struct Address *a = NULL;
   TAILQ_FOREACH(a, al, entries)
@@ -77,7 +77,7 @@ static bool user_in_addr_2gmb(struct AddressList *al)
   return false;
 }
 
-static enum ToChars user_is_recipient_2gmb(struct Email *e)
+static enum ToChars user_is_recipient(struct Email *e)
 {
   if (!e || !e->env)
     return FLAG_CHAR_TO_NOT_IN_THE_LIST;
@@ -92,14 +92,14 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
     {
       e->recipient = FLAG_CHAR_TO_ORIGINATOR;
     }
-    else if (user_in_addr_2gmb(&env->to))
+    else if (user_in_addr(&env->to))
     {
       if (TAILQ_NEXT(TAILQ_FIRST(&env->to), entries) || !TAILQ_EMPTY(&env->cc))
         e->recipient = FLAG_CHAR_TO_TO; /* non-unique recipient */
       else
         e->recipient = FLAG_CHAR_TO_UNIQUE; /* unique recipient */
     }
-    else if (user_in_addr_2gmb(&env->cc))
+    else if (user_in_addr(&env->cc))
     {
       e->recipient = FLAG_CHAR_TO_CC;
     }
@@ -111,7 +111,7 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
     {
       e->recipient = FLAG_CHAR_TO_SUBSCRIBED_LIST;
     }
-    else if (user_in_addr_2gmb(&env->reply_to))
+    else if (user_in_addr(&env->reply_to))
     {
       e->recipient = FLAG_CHAR_TO_REPLY_TO;
     }
@@ -122,6 +122,99 @@ static enum ToChars user_is_recipient_2gmb(struct Email *e)
   }
 
   return e->recipient;
+}
+
+/**
+ * make_from_prefix - Create a prefix for an author field
+ * @param disp   Type of field
+ * @retval ptr Prefix string (do not free it)
+ *
+ * If $from_chars is set, pick an appropriate character from it.
+ * If not, use the default prefix: "To", "Cc", etc
+ */
+static const char *make_from_prefix(enum FieldType disp)
+{
+  /* need 2 bytes at the end, one for the space, another for NUL */
+  static char padded[8];
+  static const char *long_prefixes[DISP_MAX] = {
+    [DISP_TO] = "To ", [DISP_CC] = "Cc ", [DISP_BCC] = "Bcc ",
+    [DISP_FROM] = "",  [DISP_PLAIN] = "",
+  };
+
+  const struct MbTable *c_from_chars = cs_subset_mbtable(NeoMutt->sub, "from_chars");
+
+  if (!c_from_chars || !c_from_chars->chars || (c_from_chars->len == 0))
+    return long_prefixes[disp];
+
+  const char *pchar = mbtable_get_nth_wchar(c_from_chars, disp);
+  if (mutt_str_len(pchar) == 0)
+    return "";
+
+  snprintf(padded, sizeof(padded), "%s ", pchar);
+  return padded;
+}
+
+/**
+ * make_from - Generate a From: field (with optional prefix)
+ * @param env      Envelope of the email
+ * @param buf      Buffer to store the result
+ * @param buflen   Size of the buffer
+ * @param do_lists Should we check for mailing lists?
+ * @param flags    Format flags, see #MuttFormatFlags
+ *
+ * Generate the %F or %L field in $index_format.
+ * This is the author, or recipient of the email.
+ *
+ * The field can optionally be prefixed by a character from $from_chars.
+ * If $from_chars is not set, the prefix will be, "To", "Cc", etc
+ */
+static void make_from(struct Envelope *env, char *buf, size_t buflen,
+                      bool do_lists, MuttFormatFlags flags)
+{
+  if (!env || !buf)
+    return;
+
+  bool me;
+  enum FieldType disp;
+  struct AddressList *name = NULL;
+
+  me = mutt_addr_is_user(TAILQ_FIRST(&env->from));
+
+  if (do_lists || me)
+  {
+    if (check_for_mailing_list(&env->to, make_from_prefix(DISP_TO), buf, buflen))
+      return;
+    if (check_for_mailing_list(&env->cc, make_from_prefix(DISP_CC), buf, buflen))
+      return;
+  }
+
+  if (me && !TAILQ_EMPTY(&env->to))
+  {
+    disp = (flags & MUTT_FORMAT_PLAIN) ? DISP_PLAIN : DISP_TO;
+    name = &env->to;
+  }
+  else if (me && !TAILQ_EMPTY(&env->cc))
+  {
+    disp = DISP_CC;
+    name = &env->cc;
+  }
+  else if (me && !TAILQ_EMPTY(&env->bcc))
+  {
+    disp = DISP_BCC;
+    name = &env->bcc;
+  }
+  else if (!TAILQ_EMPTY(&env->from))
+  {
+    disp = DISP_FROM;
+    name = &env->from;
+  }
+  else
+  {
+    *buf = '\0';
+    return;
+  }
+
+  snprintf(buf, buflen, "%s%s", make_from_prefix(disp), mutt_get_name(TAILQ_FIRST(name)));
 }
 
 int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -332,7 +425,6 @@ int index_b(const struct ExpandoNode *self, char *buf, int buf_len,
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
-  struct Email *email = hfi->email;
   struct Mailbox *mailbox = hfi->mailbox;
 
   char tmp[128], fmt[128];
@@ -343,9 +435,10 @@ int index_b(const struct ExpandoNode *self, char *buf, int buf_len,
     p = strrchr(mailbox_path(mailbox), '/');
 
 #ifdef USE_NOTMUCH
+    struct Email *email = hfi->email;
     if (mailbox->type == MUTT_NOTMUCH)
     {
-      char *rel_path = nm_email_get_folder_rel_db(mailbox, email);
+      char *rel_path = nm_email_get_folder_rel_db(mailbox, hfi->email);
       if (rel_path)
       {
         p = rel_path;
@@ -444,74 +537,175 @@ int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
 
   const int num = email->msgno + 1;
   format_int(fmt, sizeof(fmt), num, flags, MT_COLOR_INDEX_NUMBER, MT_COLOR_INDEX, format);
-
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_d(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_D(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_e(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+  struct Mailbox *mailbox = hfi->mailbox;
+
+  char fmt[128];
+
+  const int num = mutt_messages_in_thread(mailbox, email, MIT_POSITION);
+  format_int_simple(fmt, sizeof(fmt), num, format);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_E(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+  struct Mailbox *mailbox = hfi->mailbox;
+
+  char fmt[128];
+
+  const int num = mutt_messages_in_thread(mailbox, email, MIT_NUM_MESSAGES);
+  format_int_simple(fmt, sizeof(fmt), num, format);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_f(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  char tmp[128], fmt[128];
+
+  struct Buffer *tmpbuf = buf_pool_get();
+  mutt_addrlist_write(&email->env->from, tmpbuf, true);
+  mutt_str_copy(tmp, buf_string(tmpbuf), sizeof(tmp));
+  buf_pool_release(&tmpbuf);
+
+  format_string_simple(fmt, sizeof(fmt), tmp, format);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_F(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  char tmp[128], fmt[128];
+
+  make_from(email->env, tmp, sizeof(tmp), false, MUTT_FORMAT_NO_FLAGS);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_Fp(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  char tmp[128], fmt[128];
+
+  make_from(email->env, tmp, sizeof(tmp), false, MUTT_FORMAT_PLAIN);
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_g(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  char fmt[128];
+  char *tags = driver_tags_get_transformed(&email->tags);
+
+  const char *s = NONULL(tags);
+  format_string(fmt, sizeof(fmt), s, flags, MT_COLOR_INDEX_TAGS, MT_COLOR_INDEX,
+                format, NO_TREE);
+  const int n = snprintf(buf, buf_len, "%s", fmt);
+  FREE(&tags);
+  return n;
 }
 
 int index_Gx(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
+  // TODO(g0mb4): Strange, implement this
+  assert(0 && "TODO");
   return 0;
 }
 
 int index_H(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  char fmt[128];
+
+  const char *s = buf_string(&email->env->spam);
+  format_string_simple(fmt, sizeof(fmt), s, format);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_i(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  char fmt[128];
+
+  const char *s = email->env->message_id ? email->env->message_id : "<no.id>";
+  format_string_simple(fmt, sizeof(fmt), s, format);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_I(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -541,7 +735,48 @@ int index_I(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_J(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  char fmt[128];
+
+  bool have_tags = true;
+  char *tags = driver_tags_get_transformed(&email->tags);
+  if (tags)
+  {
+    if (flags & MUTT_FORMAT_TREE)
+    {
+      char *parent_tags = NULL;
+      if (email->thread->prev && email->thread->prev->message)
+      {
+        parent_tags = driver_tags_get_transformed(&email->thread->prev->message->tags);
+      }
+      if (!parent_tags && email->thread->parent && email->thread->parent->message)
+      {
+        parent_tags = driver_tags_get_transformed(
+            &email->thread->parent->message->tags);
+      }
+      if (parent_tags && mutt_istr_equal(tags, parent_tags))
+        have_tags = false;
+      FREE(&parent_tags);
+    }
+  }
+  else
+  {
+    have_tags = false;
+  }
+
+  const char *s = have_tags ? tags : "";
+  format_string(fmt, sizeof(fmt), s, flags, MT_COLOR_INDEX_TAGS, MT_COLOR_INDEX,
+                format, NO_TREE);
+  const int n = snprintf(buf, buf_len, "%s", fmt);
+  FREE(&tags);
+
+  return n;
 }
 
 int index_K(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -607,55 +842,55 @@ int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_m(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_M(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_n(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_N(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_O(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_P(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_q(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_r(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_R(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -704,79 +939,79 @@ int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_S(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_t(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_T(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_u(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_v(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_W(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_x(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_X(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_y(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_Y(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_zc(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_zs(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_zt(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  return 0;
+  /*TODO*/ return 0;
 }
 
 int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -798,11 +1033,11 @@ int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128], tmp[128];
 
   const char *first = NULL;
-  if (threads && thread_is_new_2gmb(e))
+  if (threads && thread_is_new(e))
   {
     first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_NEW_THREAD);
   }
-  else if (threads && thread_is_old_2gmb(e))
+  else if (threads && thread_is_old(e))
   {
     first = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_OLD_THREAD);
   }
@@ -845,7 +1080,7 @@ int index_Z(const struct ExpandoNode *self, char *buf, int buf_len,
   else if (e->flagged)
     third = mbtable_get_nth_wchar(c_flag_chars, FLAG_CHAR_IMPORTANT);
   else
-    third = mbtable_get_nth_wchar(c_to_chars, user_is_recipient_2gmb(e));
+    third = mbtable_get_nth_wchar(c_to_chars, user_is_recipient(e));
 
   snprintf(tmp, sizeof(tmp), "%s%s%s", first, second, third);
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_FLAGS,
