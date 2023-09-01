@@ -57,7 +57,7 @@ int nntp_a(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
     *p = '\0';
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -74,7 +74,7 @@ int nntp_p(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
   char fmt[128];
 
   const int num = (int) cac->port;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -93,7 +93,7 @@ int nntp_P(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
   if (cac->flags & MUTT_ACCT_PORT)
   {
     const int num = (int) cac->port;
-    format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+    format_int_flags(fmt, sizeof(fmt), num, flags, format);
     return snprintf(buf, buf_len, "%s", fmt);
   }
   else
@@ -117,7 +117,7 @@ int nntp_s(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
   mutt_str_copy(tmp, cac->host, sizeof(tmp));
   mutt_str_lower(tmp);
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -142,7 +142,7 @@ int nntp_S(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
     *p = '\0';
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -159,6 +159,6 @@ int nntp_u(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
   char fmt[128];
 
   const char *s = cac->user;
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

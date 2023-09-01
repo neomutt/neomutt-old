@@ -47,7 +47,7 @@ int autocrypt_a(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = buf_string(entry->addr->mailbox);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -63,7 +63,7 @@ int autocrypt_k(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = entry->account->keyid;
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -79,7 +79,7 @@ int autocrypt_n(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = entry->num;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -108,7 +108,7 @@ int autocrypt_p(const struct ExpandoNode *self, char *buf, int buf_len,
     mutt_str_copy(tmp, _("manual encrypt"), sizeof(tmp));
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -136,6 +136,6 @@ int autocrypt_s(const struct ExpandoNode *self, char *buf, int buf_len,
     mutt_str_copy(tmp, _("inactive"), sizeof(tmp));
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

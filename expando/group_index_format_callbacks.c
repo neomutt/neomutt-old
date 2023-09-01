@@ -47,7 +47,7 @@ int group_index_a(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = folder->ff->notify_user;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -63,7 +63,7 @@ int group_index_C(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = folder->num + 1;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -95,7 +95,7 @@ int group_index_d(const struct ExpandoNode *self, char *buf, int buf_len,
     tmp[0] = '\0';
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -111,7 +111,7 @@ int group_index_f(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = folder->ff->name;
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -137,7 +137,7 @@ int group_index_M(const struct ExpandoNode *self, char *buf, int buf_len,
     s = folder->ff->nd->allowed ? " " : "-";
   }
 
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -165,7 +165,7 @@ int group_index_n(const struct ExpandoNode *self, char *buf, int buf_len,
     num = folder->ff->nd->unread;
   }
 
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -191,7 +191,7 @@ int group_index_N(const struct ExpandoNode *self, char *buf, int buf_len,
     s = folder->ff->has_new_mail ? "N" : "u";
   }
 
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -207,7 +207,7 @@ int group_index_p(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = folder->ff->poll_new_mail;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -224,6 +224,6 @@ int group_index_s(const struct ExpandoNode *self, char *buf, int buf_len,
 
   // NOTE(g0mb4): is long required for unread?
   const int num = (int) folder->ff->nd->unread;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

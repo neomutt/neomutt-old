@@ -58,7 +58,7 @@ int query_a(const struct ExpandoNode *self, char *buf, int buf_len,
     tmp[len] = '>';
     tmp[len + 1] = '\0';
   }
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -74,7 +74,7 @@ int query_c(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = av->num + 1;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -91,7 +91,7 @@ int query_e(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(alias->comment);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -108,7 +108,7 @@ int query_n(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(alias->name);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -125,6 +125,6 @@ int query_t(const struct ExpandoNode *self, char *buf, int buf_len,
 
   // NOTE(g0mb4): use $flag_chars?
   const char *s = av->is_tagged ? "*" : " ";
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

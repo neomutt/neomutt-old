@@ -95,7 +95,7 @@ int mix_a(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
   char fmt[128];
 
   const char *s = NONULL(remailer->addr);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -111,7 +111,7 @@ int mix_c(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
   char fmt[128];
 
   const char *s = mix_format_caps(remailer);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -127,7 +127,7 @@ int mix_n(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
   char fmt[128];
 
   const int num = remailer->num;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -143,6 +143,6 @@ int mix_s(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
   char fmt[128];
 
   const char *s = NONULL(remailer->shortname);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

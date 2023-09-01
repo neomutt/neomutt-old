@@ -75,7 +75,7 @@ int status_r(const struct ExpandoNode *self, char *buf, int buf_len,
   else
     snprintf(tmp, sizeof(tmp), "%s", c_status_chars->chars[i]);
 
-  format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -96,7 +96,7 @@ int status_D(const struct ExpandoNode *self, char *buf, int buf_len,
   if (mailbox && mailbox->name)
   {
     mutt_str_copy(tmp, mailbox->name, sizeof(tmp));
-    format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+    format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
     return snprintf(buf, buf_len, "%s", fmt);
   }
 
@@ -137,7 +137,7 @@ int status_f(const struct ExpandoNode *self, char *buf, int buf_len,
     mutt_str_copy(tmp, _("(no mailbox)"), sizeof(tmp));
   }
 
-  format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -155,7 +155,7 @@ int status_M(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? mailbox->vcount : 0;
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -173,7 +173,7 @@ int status_m(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? mailbox->msg_count : 0;
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -191,7 +191,7 @@ int status_n(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? mailbox->msg_new : 0;
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -209,7 +209,7 @@ int status_o(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? (mailbox->msg_unread - mailbox->msg_new) : 0;
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -227,7 +227,7 @@ int status_d(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? mailbox->msg_deleted : 0;
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -245,7 +245,7 @@ int status_F(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? mailbox->msg_flagged : 0;
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -263,7 +263,7 @@ int status_t(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? mailbox->msg_tagged : 0;
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -281,7 +281,7 @@ int status_p(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mutt_num_postponed(mailbox, false);
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -299,7 +299,7 @@ int status_b(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mutt_mailbox_check(mailbox, MUTT_MAILBOX_CHECK_NO_FLAGS);
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -318,7 +318,7 @@ int status_l(const struct ExpandoNode *self, char *buf, int buf_len,
 
   const off_t num = mailbox ? mailbox->size : 0;
   mutt_str_pretty_size(tmp, sizeof(tmp), num);
-  format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -333,7 +333,7 @@ int status_T(const struct ExpandoNode *self, char *buf, int buf_len,
 
   const enum UseThreads c_use_threads = mutt_thread_style();
   const char *s = get_use_threads_str(c_use_threads);
-  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -363,7 +363,7 @@ int status_s(const struct ExpandoNode *self, char *buf, int buf_len,
 
   const enum SortType c_sort = cs_subset_sort(NeoMutt->sub, "sort");
   const char *s = get_sort_str(tmp, sizeof(tmp), c_sort);
-  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -378,7 +378,7 @@ int status_S(const struct ExpandoNode *self, char *buf, int buf_len,
 
   const enum SortType c_sort_aux = cs_subset_sort(NeoMutt->sub, "sort_aux");
   const char *s = get_sort_str(tmp, sizeof(tmp), c_sort_aux);
-  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -418,7 +418,7 @@ int status_P(const struct ExpandoNode *self, char *buf, int buf_len,
     cp = tmp;
   }
 
-  format_string(fmt, sizeof(fmt), cp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), cp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -432,7 +432,7 @@ int status_h(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(ShortHostname);
-  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -451,7 +451,7 @@ int status_L(const struct ExpandoNode *self, char *buf, int buf_len,
 
   const off_t num = mailbox_view ? mailbox_view->vsize : 0;
   mutt_str_pretty_size(tmp, sizeof(tmp), num);
-  format_string(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
 
   return snprintf(buf, buf_len, "%s", fmt);
 }
@@ -470,7 +470,7 @@ int status_R(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? (mailbox->msg_count - mailbox->msg_unread) : 0;
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -488,7 +488,7 @@ int status_u(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox ? mailbox->msg_unread : 0;
-  format_int(fmt, sizeof(fmt), num, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -502,7 +502,7 @@ int status_v(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[256]; // mutt_make_version() has a 256 bytes long buffer
 
   const char *s = mutt_make_version();
-  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -520,6 +520,6 @@ int status_V(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = mview_has_limit(mailbox_view) ? mailbox_view->pattern : "";
-  format_string(fmt, sizeof(fmt), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

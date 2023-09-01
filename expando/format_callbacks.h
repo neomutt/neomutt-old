@@ -26,39 +26,16 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "format_flags.h"
-#include "color/color.h"
 
 struct ExpandoNode;
 struct ExpandoFormatPrivate;
 
+// TODO(g0mb4): Remove unsued cols_len?
 typedef int (*expando_format_callback)(const struct ExpandoNode *self, char *buf,
                                         int buf_len, int cols_len,
                                         intptr_t data, MuttFormatFlags flags);
 
-
-/**
- * enum HasTreeChars - Signals if the string constains tree characters.
- *
- * Characters like: '┌', '┴'.
- * More readale than a simple true / false.
- */
-enum HasTreeChars
-{
-  NO_TREE = 0,
-  HAS_TREE
-};
-
-char *got_to_column(char **start, int col);
-
-void format_string(char *buf, int buf_len, const char *s,
-                   MuttFormatFlags flags, enum ColorId pre, enum ColorId post,
-                   const struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree);
-
-void format_int(char *buf, int buf_len, int number,
-                MuttFormatFlags flags, enum ColorId pre,
-                enum ColorId post, const struct ExpandoFormatPrivate *format);
-
-
+// TODO(g0mb4): Remove unsued start_col?
 void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len, int start_col, int max_col,
                  intptr_t data, MuttFormatFlags flags);
 

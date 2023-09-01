@@ -61,7 +61,7 @@ int compose_a(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = num_attachments(shared->adata);
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -75,7 +75,7 @@ int compose_h(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(ShortHostname);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -91,7 +91,7 @@ int compose_l(const struct ExpandoNode *self, char *buf, int buf_len,
   char tmp[128], fmt[128];
 
   mutt_str_pretty_size(tmp, sizeof(tmp), cum_attachs_size(shared->sub, shared->adata));
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -105,6 +105,6 @@ int compose_v(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = mutt_make_version();
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

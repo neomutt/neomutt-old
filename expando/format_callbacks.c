@@ -31,70 +31,8 @@
 #include <string.h>
 #include "mutt/lib.h"
 #include "expando/lib.h"
-#include "mutt_thread.h"
 
-static size_t add_index_color_2gmb(char *buf, int buflen, MuttFormatFlags flags,
-                                   enum ColorId color)
-{
-  /* only add color markers if we are operating on main index entries. */
-  if (!(flags & MUTT_FORMAT_INDEX))
-    return 0;
-
-  /* this item is going to be passed to an external filter */
-  if (flags & MUTT_FORMAT_NOFILTER)
-    return 0;
-
-  if (buflen <= 2)
-    return 0;
-
-  if (color == MT_COLOR_INDEX)
-  { /* buf might be uninitialized other cases */
-    // TODO(g0mb4): Investigate this
-    const size_t len = mutt_str_len(buf);
-    buf += len;
-    buflen -= len;
-  }
-
-  // TODO(g0mb4): Investigate this
-  buf[0] = MUTT_SPECIAL_INDEX;
-  buf[1] = color;
-  buf[2] = '\0';
-
-  return 2;
-}
-
-// NOTE(g0mb4): It cuts a long string, e.g. subject (%s) in $index_format
-// TODO(g0mb4): implement MuttFormatFlags
-void format_string(char *buf, int buf_len, const char *s, MuttFormatFlags flags,
-                   enum ColorId pre, enum ColorId post,
-                   const struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree)
-{
-  if (format)
-  {
-    const size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
-    mutt_simple_format(buf + colorlen1, buf_len - colorlen1, format->min,
-                       format->max, format->justification, format->leader, s,
-                       strlen(s), has_tree == HAS_TREE);
-    const int n = strlen(buf);
-    add_index_color_2gmb(buf + n, buf_len - n, flags, post);
-  }
-  else
-  {
-    const size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
-    const int n = snprintf(buf + colorlen1, buf_len - colorlen1, "%s", s);
-    add_index_color_2gmb(buf + colorlen1 + n, buf_len - colorlen1 - n, flags, post);
-  }
-}
-
-void format_int(char *buf, int buf_len, int number, MuttFormatFlags flags, enum ColorId pre,
-                enum ColorId post, const struct ExpandoFormatPrivate *format)
-{
-  char tmp[32]; // 64 bit INT_MAX has 20 digits
-  snprintf(tmp, sizeof(tmp), "%d", number);
-  format_string(buf, buf_len, tmp, flags, pre, post, format, NO_TREE);
-}
-
-// TODO(g0mb4): Implement this properly
+// TODO(g0mb4): Implement this properly or remove it is asways 0
 char *got_to_column(char **start, int col)
 {
   char *s = *start;

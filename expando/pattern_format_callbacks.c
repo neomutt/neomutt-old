@@ -45,7 +45,7 @@ int pattern_d(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(entry->desc);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -61,7 +61,7 @@ int pattern_e(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(entry->expr);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -77,6 +77,6 @@ int pattern_n(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = entry->num;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

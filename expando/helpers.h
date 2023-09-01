@@ -24,11 +24,41 @@
 #define MUTT_EXPANDO_HELPERS_H
 
 #include <stddef.h>
+#include "format_flags.h"
+#include "color/color.h"
 
 struct tm;
 
 int mb_strlen_nonnull(const char *start, const char *end);
 int mb_strwidth_nonnull(const char *start, const char *end);
+
+/**
+ * enum HasTreeChars - Signals if the string constains tree characters.
+ *
+ * Characters like: '┌', '┴'.
+ * More readale than a simple true / false.
+ */
+enum HasTreeChars
+{
+  NO_TREE = 0,
+  HAS_TREE
+};
+
+char *got_to_column(char **start, int col);
+
+void format_string(char *buf, int buf_len, const char *s,
+                   MuttFormatFlags flags, enum ColorId pre, enum ColorId post,
+                   const struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree);
+
+void format_string_flags(char *buf, int buf_len, const char *s, MuttFormatFlags flags, const struct ExpandoFormatPrivate *format);
+void format_strings_simple(char *buf, int buf_len, const char *s, const struct ExpandoFormatPrivate *format);
+
+void format_int(char *buf, int buf_len, int number,
+                MuttFormatFlags flags, enum ColorId pre,
+                enum ColorId post, const struct ExpandoFormatPrivate *format);
+
+void format_int_flags(char *buf, int buf_len, int number, MuttFormatFlags flags, const struct ExpandoFormatPrivate *format);
+void format_int_simple(char *buf, int buf_len, int number, const struct ExpandoFormatPrivate *format);
 
 void strftime_range(char *s, size_t max, const char *format_start,
                     const char *format_end, const struct tm *tm);

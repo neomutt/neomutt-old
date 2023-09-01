@@ -47,7 +47,7 @@ int greeting_n(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = mutt_get_name(to);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -77,7 +77,7 @@ int greeting_u(const struct ExpandoNode *self, char *buf, int buf_len,
     tmp[0] = '\0';
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -98,12 +98,12 @@ int greeting_v(const struct ExpandoNode *self, char *buf, int buf_len,
   if (to)
   {
     const char *s = mutt_get_name(to);
-    format_string(tmp, sizeof(tmp), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+    format_string_simple(tmp, sizeof(tmp), s, format);
   }
   else if (cc)
   {
     const char *s = mutt_get_name(cc);
-    format_string(tmp, sizeof(tmp), s, MUTT_FORMAT_NO_FLAGS, 0, 0, format, NO_TREE);
+    format_string_simple(tmp, sizeof(tmp), s, format);
   }
   else
   {
@@ -113,6 +113,6 @@ int greeting_v(const struct ExpandoNode *self, char *buf, int buf_len,
   if ((p = strpbrk(tmp, " %@")))
     *p = '\0';
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

@@ -83,7 +83,7 @@ int sidebar_bang(const struct ExpandoNode *self, char *buf, int buf_len,
     snprintf(tmp, sizeof(tmp), "%d!", mailbox->msg_flagged);
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -101,7 +101,7 @@ int sidebar_a(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox->notify_user;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -121,7 +121,7 @@ int sidebar_B(const struct ExpandoNode *self, char *buf, int buf_len,
   const size_t off = add_indent(tmp, ilen, sbe);
   snprintf(tmp + off, ilen - off, "%s", sbe->box);
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -143,7 +143,7 @@ int sidebar_d(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = c ? m_cur->msg_deleted : 0;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -171,7 +171,7 @@ int sidebar_D(const struct ExpandoNode *self, char *buf, int buf_len,
     snprintf(tmp + off, ilen - off, "%s", sbe->box);
   }
 
-  format_string(fmt, sizeof(fmt), tmp, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -189,7 +189,7 @@ int sidebar_F(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox->msg_flagged;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -211,7 +211,7 @@ int sidebar_L(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = c ? m_cur->vcount : mailbox->msg_count;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -230,7 +230,7 @@ int sidebar_n(const struct ExpandoNode *self, char *buf, int buf_len,
 
   // NOTE(g0mb4): use $flag_chars?
   const char *s = mailbox->has_new ? "N" : " ";
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -248,7 +248,7 @@ int sidebar_N(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox->msg_unread;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -266,7 +266,7 @@ int sidebar_o(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox->msg_unread - mailbox->msg_new;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -284,7 +284,7 @@ int sidebar_p(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox->poll_new_mail;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -302,7 +302,7 @@ int sidebar_r(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox->msg_count - mailbox->msg_unread;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -320,7 +320,7 @@ int sidebar_S(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox->msg_count;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -342,7 +342,7 @@ int sidebar_t(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = c ? m_cur->msg_tagged : 0;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -360,6 +360,6 @@ int sidebar_Z(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const int num = mailbox->msg_new;
-  format_int(fmt, sizeof(fmt), num, flags, 0, 0, format);
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }

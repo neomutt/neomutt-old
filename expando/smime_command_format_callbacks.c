@@ -49,7 +49,7 @@ int smime_command_a(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(cctx->cryptalg);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 #else  /* HAVE_SMIME */
   return 0;
@@ -69,7 +69,7 @@ int smime_command_c(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(cctx->certificates);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 #else  /* HAVE_SMIME */
   return 0;
@@ -107,7 +107,7 @@ int smime_command_C(const struct ExpandoNode *self, char *buf, int buf_len,
   }
 
   const char *s = buf_string(buf2);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   int n = snprintf(buf, buf_len, "%s", fmt);
 
   buf_pool_release(&path);
@@ -133,7 +133,7 @@ int smime_command_d(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(cctx->digestalg);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 #else  /* HAVE_SMIME */
   return 0;
@@ -153,7 +153,7 @@ int smime_command_f(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(cctx->fname);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 #else  /* HAVE_SMIME */
   return 0;
@@ -173,7 +173,7 @@ int smime_command_i(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(cctx->intermediates);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 #else  /* HAVE_SMIME */
   return 0;
@@ -193,7 +193,7 @@ int smime_command_k(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(cctx->key);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 #else  /* HAVE_SMIME */
   return 0;
@@ -213,7 +213,7 @@ int smime_command_s(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = NONULL(cctx->sig_fname);
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 #else  /* HAVE_SMIME */
   return 0;

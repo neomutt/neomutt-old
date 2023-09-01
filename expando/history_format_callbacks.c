@@ -42,6 +42,6 @@ int history_s(const struct ExpandoNode *self, char *buf, int buf_len,
   char fmt[128];
 
   const char *s = (const char *) data;
-  format_string(fmt, sizeof(fmt), s, flags, 0, 0, format, NO_TREE);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 }
