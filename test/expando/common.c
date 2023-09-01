@@ -191,3 +191,8 @@ int mutt_messages_in_thread(struct Mailbox *m, struct Email *e, int mit)
 {
   return 0;
 }
+
+bool check_for_mailing_list_addr(struct AddressList *al, char *buf, int buflen)
+{
+  return false;
+}
