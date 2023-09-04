@@ -76,7 +76,34 @@ int index_Fp(const struct ExpandoNode *self, char *buf,
 int index_g(const struct ExpandoNode *self, char *buf,
              int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int index_Gx(const struct ExpandoNode *self, char *buf,
+int index_G0(const struct ExpandoNode *self, char *buf,
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int index_G1(const struct ExpandoNode *self, char *buf,
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int index_G2(const struct ExpandoNode *self, char *buf,
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int index_G3(const struct ExpandoNode *self, char *buf,
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int index_G4(const struct ExpandoNode *self, char *buf,
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int index_G5(const struct ExpandoNode *self, char *buf,
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int index_G6(const struct ExpandoNode *self, char *buf,
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int index_G7(const struct ExpandoNode *self, char *buf,
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int index_G8(const struct ExpandoNode *self, char *buf,
+             int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int index_G9(const struct ExpandoNode *self, char *buf,
              int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int index_H(const struct ExpandoNode *self, char *buf,

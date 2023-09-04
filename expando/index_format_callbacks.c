@@ -699,12 +699,98 @@ int index_g(const struct ExpandoNode *self, char *buf, int buf_len,
   return n;
 }
 
-int index_Gx(const struct ExpandoNode *self, char *buf, int buf_len,
+static int index_Gx(char x, const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+
+  char fmt[128];
+  char tag_format[3];
+
+  tag_format[0] = 'G';
+  tag_format[1] = x;
+  tag_format[2] = '\0';
+
+  char *tag = mutt_hash_find(TagFormats, tag_format);
+  if (tag)
+  {
+    char *tags = driver_tags_get_transformed_for(&email->tags, tag);
+    const char *s = NONULL(tags);
+    format_string(fmt, sizeof(fmt), s, flags, MT_COLOR_INDEX_TAG,
+                  MT_COLOR_INDEX, format, NO_TREE);
+    const int n = snprintf(buf, buf_len, "%s", fmt);
+    FREE(&tags);
+    return n;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+int index_G0(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  // TODO(g0mb4): Strange, implement this
-  assert(0 && "TODO");
-  return 0;
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
+}
+
+int index_G1(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
+}
+
+int index_G2(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
+}
+
+int index_G3(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
+}
+
+int index_G4(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
+}
+
+int index_G5(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
+}
+
+int index_G6(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
+}
+
+int index_G7(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
+}
+
+int index_G8(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
+}
+
+int index_G9(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  return index_Gx('0', self, buf, buf_len, cols_len, data, flags);
 }
 
 int index_H(const struct ExpandoNode *self, char *buf, int buf_len,

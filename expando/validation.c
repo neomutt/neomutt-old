@@ -33,8 +33,8 @@
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/neomutt.h"
-#include "validation.h"
 #include "expando/lib.h"
+#include "validation.h"
 
 static const struct ExpandoFormatCallback alias_1[] = {
   { "a", alias_a }, { "c", alias_c }, { "f", alias_f }, { "n", alias_n },
@@ -106,7 +106,10 @@ static const struct ExpandoFormatCallback index_1[] = {
 };
 
 static const struct ExpandoFormatCallback index_2[] = {
-  { "cr", index_cr }, { "Fp", index_Fp }, { "Gx", index_Gx },
+  { "cr", index_cr }, { "Fp", index_Fp }, { "G0", index_G0 },
+  { "G1", index_G1 }, { "G2", index_G2 }, { "G3", index_G3 },
+  { "G4", index_G4 }, { "G5", index_G5 }, { "G6", index_G6 },
+  { "G7", index_G7 }, { "G8", index_G8 }, { "G9", index_G9 },
   { "zc", index_zc }, { "zs", index_zs }, { "zt", index_zt },
   { NULL, NULL },
 };
