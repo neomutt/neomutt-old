@@ -302,7 +302,6 @@ int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
 
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE,
                 MT_COLOR_INDEX, NULL, NO_TREE);
-
   return snprintf(buf, buf_len, "%s", fmt);
 }
 
@@ -575,13 +574,82 @@ int index_C(const struct ExpandoNode *self, char *buf, int buf_len,
 int index_d(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  // NOTE(g0mb4): $date_format as expando?
+  const char *c_date_format = cs_subset_string(NeoMutt->sub, "date_format");
+  const char *cp = NONULL(c_date_format);
+  bool use_c_locale = false;
+  if (*cp == '!')
+  {
+    use_c_locale = true;
+    cp++;
+  }
+
+  /* restore sender's time zone */
+  time_t now = email->date_sent;
+  if (email->zoccident)
+    now -= (email->zhours * 3600 + email->zminutes * 60);
+  else
+    now += (email->zhours * 3600 + email->zminutes * 60);
+
+  struct tm tm = mutt_date_gmtime(now);
+  char fmt[128], tmp[128];
+
+  if (use_c_locale)
+  {
+    strftime_l(tmp, sizeof(tmp), cp, &tm, NeoMutt->time_c_locale);
+  }
+  else
+  {
+    strftime(tmp, sizeof(tmp), cp, &tm);
+  }
+
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_D(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)
 {
-  /* TODO(g0mb4) */ return 0;
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  const struct Email *email = hfi->email;
+
+  // NOTE(g0mb4): $date_format as expando?
+  const char *c_date_format = cs_subset_string(NeoMutt->sub, "date_format");
+  const char *cp = NONULL(c_date_format);
+  bool use_c_locale = false;
+  if (*cp == '!')
+  {
+    use_c_locale = true;
+    cp++;
+  }
+
+  struct tm tm = mutt_date_localtime(email->date_sent);
+  char fmt[128], tmp[128];
+
+  if (use_c_locale)
+  {
+    strftime_l(tmp, sizeof(tmp), cp, &tm, NeoMutt->time_c_locale);
+  }
+  else
+  {
+    strftime(tmp, sizeof(tmp), cp, &tm);
+  }
+
+  format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE,
+                MT_COLOR_INDEX, format, NO_TREE);
+  return snprintf(buf, buf_len, "%s", fmt);
 }
 
 int index_e(const struct ExpandoNode *self, char *buf, int buf_len,
