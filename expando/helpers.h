@@ -60,7 +60,4 @@ void format_int(char *buf, int buf_len, int number,
 void format_int_flags(char *buf, int buf_len, int number, MuttFormatFlags flags, const struct ExpandoFormatPrivate *format);
 void format_int_simple(char *buf, int buf_len, int number, const struct ExpandoFormatPrivate *format);
 
-void strftime_range(char *s, size_t max, const char *format_start,
-                    const char *format_end, const struct tm *tm);
-
 #endif /* MUTT_EXPANDO_HELPERS_H */

@@ -261,7 +261,8 @@ int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct Email *email = hfi->email;
 
   struct tm tm = { 0 };
-  char fmt[128], tmp[128];
+  char fmt[128], tmp[128] = { 0 }, tmp2[128] = { 0 };
+  const int len = self->end - self->start;
 
   switch (dp->date_type)
   {
@@ -289,16 +290,14 @@ int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
       assert(0 && "Unknown date type.");
   }
 
-  if (dp->ingnore_locale)
+  memcpy(tmp2, self->start, len);
+  if (dp->use_c_locale)
   {
-    setlocale(LC_TIME, "C");
+    strftime_l(tmp, sizeof(tmp), tmp2, &tm, NeoMutt->time_c_locale);
   }
-
-  strftime_range(tmp, sizeof(tmp), self->start, self->end, &tm);
-
-  if (dp->ingnore_locale)
+  else
   {
-    setlocale(LC_TIME, "");
+    strftime(tmp, sizeof(tmp), tmp2, &tm);
   }
 
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE,

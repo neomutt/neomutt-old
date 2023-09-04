@@ -172,16 +172,3 @@ void format_int_simple(char *buf, int buf_len, int number,
 {
   format_int(buf, buf_len, number, MUTT_FORMAT_NO_FLAGS, 0, 0, format);
 }
-
-void strftime_range(char *s, size_t max, const char *format_start,
-                    const char *format_end, const struct tm *tm)
-{
-  char tmp[256] = { 0 };
-  const int len = format_end - format_start;
-
-  assert(len < sizeof(tmp) - 1);
-  assert(max < sizeof(tmp) - 1);
-
-  memcpy(tmp, format_start, len);
-  strftime(s, max, tmp, tm);
-}

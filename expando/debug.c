@@ -79,8 +79,8 @@ static void print_date_node(FILE *fp, const struct ExpandoNode *n, int indent)
       assert(0 && "Unknown date type.");
   }
 
-  fprintf(fp, "%*sDATE: `%.*s` (type=%s, ignore_locale=%d)\n", indent, "", len,
-          n->start, dt, d->ingnore_locale);
+  fprintf(fp, "%*sDATE: `%.*s` (type=%s, use_c_locale=%d)\n", indent, "", len,
+          n->start, dt, d->use_c_locale);
 }
 
 static void print_pad_node(FILE *fp, const struct ExpandoNode *n, int indent)

@@ -73,7 +73,7 @@ enum ExpandoDateType
 struct ExpandoDatePrivate
 {
   enum ExpandoDateType date_type;
-  bool ingnore_locale;
+  bool use_c_locale;
 };
 
 enum ExpandoPadType

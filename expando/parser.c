@@ -93,7 +93,7 @@ static struct ExpandoNode *new_expando_node(const char *start, const char *end,
 
 static struct ExpandoNode *new_date_node(const char *start, const char *end,
                                          enum ExpandoDateType date_type,
-                                         bool ingnore_locale, expando_format_callback cb)
+                                         bool use_c_locale, expando_format_callback cb)
 {
   struct ExpandoNode *node = mutt_mem_calloc(1, sizeof(struct ExpandoNode));
 
@@ -105,7 +105,7 @@ static struct ExpandoNode *new_date_node(const char *start, const char *end,
 
   struct ExpandoDatePrivate *dp = mutt_mem_calloc(1, sizeof(struct ExpandoDatePrivate));
   dp->date_type = date_type;
-  dp->ingnore_locale = ingnore_locale;
+  dp->use_c_locale = use_c_locale;
 
   node->ndata = (void *) dp;
   node->ndata_free = free_expando_private;
