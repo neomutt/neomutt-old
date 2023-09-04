@@ -44,6 +44,7 @@
 #include "ncrypt/lib.h"
 #include "hdrline.h"
 #include "helpers.h"
+#include "hook.h"
 #include "maillist.h"
 #include "mutt_thread.h"
 #include "muttlib.h"
@@ -303,6 +304,37 @@ int index_date(const struct ExpandoNode *self, char *buf, int buf_len,
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_DATE,
                 MT_COLOR_INDEX, NULL, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);
+}
+
+int index_format_hook_callback(const struct ExpandoNode *self, char *buf, int buf_len,
+                               int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_INDEX_FORMAT_HOOK);
+
+  const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
+  struct Email *email = hfi->email;
+  struct Mailbox *mailbox = hfi->mailbox;
+
+  char tmp[128] = { 0 }, tmp2[128] = { 0 }, fmt[128];
+  const int len = self->end - self->start;
+  memcpy(tmp2, self->start, len);
+
+  // FIXME(g0mb4): save parsed expando records somewhere
+  const char *fmt_str = NONULL(mutt_idxfmt_hook(tmp2, mailbox, email));
+  struct ExpandoParseError error = { 0 };
+  struct ExpandoNode *root = NULL;
+  expando_tree_parse(&root, &fmt_str, EFMTI_INDEX_FORMAT, &error);
+
+  int n = 0;
+  if (error.position == NULL)
+  {
+    mutt_expando_format_2gmb(tmp, sizeof(tmp), 0, sizeof(tmp), &root, data, flags);
+    format_string_simple(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS);
+    n = snprintf(buf, buf_len, "%s", fmt);
+  }
+
+  expando_tree_free(&root);
+  return n;
 }
 
 /**

@@ -143,7 +143,7 @@ const char *get_use_threads_str(int value)
 
 const char *mutt_make_version(void)
 {
-  return "";
+  return NULL;
 }
 
 struct ConfigSubset;
@@ -195,4 +195,9 @@ int mutt_messages_in_thread(struct Mailbox *m, struct Email *e, int mit)
 bool check_for_mailing_list_addr(struct AddressList *al, char *buf, int buflen)
 {
   return false;
+}
+
+const char *mutt_idxfmt_hook(const char *name, struct Mailbox *m, struct Email *e)
+{
+  return NULL;
 }

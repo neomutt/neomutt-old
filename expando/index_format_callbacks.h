@@ -31,6 +31,9 @@ struct ExpandoNode;
 int index_date(const struct ExpandoNode *self, char *buf,
                 int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 
+int index_format_hook_callback(const struct ExpandoNode *self, char *buf,
+                int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
+
 int index_a(const struct ExpandoNode *self, char *buf,
              int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);
 

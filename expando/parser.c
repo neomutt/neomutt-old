@@ -163,6 +163,7 @@ static struct ExpandoNode *new_index_format_hook_node(const char *start, const c
   node->type = ENT_INDEX_FORMAT_HOOK;
   node->start = start;
   node->end = end;
+  node->format_cb = index_format_hook_callback;
 
   return node;
 }
