@@ -67,6 +67,7 @@
 #include "gui/lib.h"
 #include "attach/lib.h"
 #include "convert/lib.h"
+#include "expando/lib.h"
 #include "menu/lib.h"
 #include "attach_data.h"
 #include "format_flags.h"
@@ -222,10 +223,11 @@ static void compose_make_entry(struct Menu *menu, char *buf, size_t buflen, int 
   struct ComposeSharedData *shared = menu->win->parent->wdata;
   struct ConfigSubset *sub = shared->sub;
 
-  const char *const c_attach_format = cs_subset_string(sub, "attach_format");
-  mutt_expando_format(buf, buflen, 0, menu->win->state.cols, NONULL(c_attach_format),
-                      attach_format_str, (intptr_t) (actx->idx[actx->v2r[line]]),
-                      MUTT_FORMAT_STAT_FILE | MUTT_FORMAT_ARROWCURSOR);
+  const struct ExpandoRecord *c_attach_format = cs_subset_expando(sub, "attach_format");
+  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
+                           &c_attach_format->tree,
+                           (intptr_t) (actx->idx[actx->v2r[line]]),
+                           MUTT_FORMAT_STAT_FILE | MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

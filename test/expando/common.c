@@ -201,3 +201,16 @@ const char *mutt_idxfmt_hook(const char *name, struct Mailbox *m, struct Email *
 {
   return NULL;
 }
+
+struct Body;
+bool mutt_is_text_part(struct Body *b)
+{
+  return false;
+}
+
+void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
+                           const struct ExpandoRecord *record,
+                           struct Mailbox *m, int inpgr, struct Email *e,
+                           MuttFormatFlags flags, const char *progress)
+{
+}

@@ -42,10 +42,11 @@ static const struct ExpandoFormatCallback alias_1[] = {
 };
 
 static const struct ExpandoFormatCallback attach_1[] = {
-  { "c", NULL }, { "C", NULL }, { "d", NULL },  { "D", NULL }, { "e", NULL },
-  { "f", NULL }, { "F", NULL }, { "I", NULL },  { "m", NULL }, { "M", NULL },
-  { "n", NULL }, { "Q", NULL }, { "s", NULL },  { "t", NULL }, { "T", NULL },
-  { "u", NULL }, { "X", NULL }, { NULL, NULL },
+  { "c", attach_c }, { "C", attach_C }, { "d", attach_d }, { "D", attach_D },
+  { "e", attach_e }, { "f", attach_f }, { "F", attach_F }, { "I", attach_I },
+  { "m", attach_m }, { "M", attach_M }, { "n", attach_n }, { "Q", attach_Q },
+  { "s", attach_s }, { "t", attach_t }, { "T", attach_T }, { "u", attach_u },
+  { "X", attach_X }, { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback autocrypt_acct_1[] = {
