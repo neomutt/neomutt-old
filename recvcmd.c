@@ -438,9 +438,9 @@ static void include_header(bool quote, FILE *fp_in, struct Email *e, FILE *fp_ou
     else if (!c_text_flowed)
     {
       const char *const c_attribution_locale = cs_subset_string(NeoMutt->sub, "attribution_locale");
-      const char *const c_indent_string = cs_subset_string(NeoMutt->sub, "indent_string");
+      const struct ExpandoRecord* c_indent_string = cs_subset_expando(NeoMutt->sub, "indent_string");
       setlocale(LC_TIME, NONULL(c_attribution_locale));
-      mutt_make_string(prefix2, sizeof(prefix2), 0, NONULL(c_indent_string),
+      mutt_make_string_2gmb(prefix2, sizeof(prefix2), 0, c_indent_string,
                        NULL, -1, e, MUTT_FORMAT_NO_FLAGS, NULL);
       setlocale(LC_TIME, "");
     }
@@ -544,9 +544,9 @@ static void attach_forward_bodies(FILE *fp, struct Email *e, struct AttachCtx *a
     else
     {
       const char *const c_attribution_locale = cs_subset_string(NeoMutt->sub, "attribution_locale");
-      const char *const c_indent_string = cs_subset_string(NeoMutt->sub, "indent_string");
+      const struct ExpandoRecord *c_indent_string = cs_subset_expando(NeoMutt->sub, "indent_string");
       setlocale(LC_TIME, NONULL(c_attribution_locale));
-      mutt_make_string(prefix, sizeof(prefix), 0, NONULL(c_indent_string), NULL,
+      mutt_make_string_2gmb(prefix, sizeof(prefix), 0, c_indent_string, NULL,
                        -1, e_parent, MUTT_FORMAT_NO_FLAGS, NULL);
       setlocale(LC_TIME, "");
     }
@@ -1053,9 +1053,9 @@ void mutt_attach_reply(FILE *fp, struct Mailbox *m, struct Email *e,
     else
     {
       const char *const c_attribution_locale = cs_subset_string(NeoMutt->sub, "attribution_locale");
-      const char *const c_indent_string = cs_subset_string(NeoMutt->sub, "indent_string");
+      const struct ExpandoRecord* c_indent_string = cs_subset_expando(NeoMutt->sub, "indent_string");
       setlocale(LC_TIME, NONULL(c_attribution_locale));
-      mutt_make_string(prefix, sizeof(prefix), 0, NONULL(c_indent_string), m,
+      mutt_make_string_2gmb(prefix, sizeof(prefix), 0, c_indent_string, m,
                        -1, e_parent, MUTT_FORMAT_NO_FLAGS, NULL);
       setlocale(LC_TIME, "");
     }

@@ -718,7 +718,8 @@ static int addr_hook(char *path, size_t pathlen, HookFlags type,
       if ((mutt_pattern_exec(SLIST_FIRST(hook->pattern), 0, m, e, &cache) > 0) ^
           hook->regex.pat_not)
       {
-        mutt_make_string(path, pathlen, 0, hook->command, m, -1, e, MUTT_FORMAT_PLAIN, NULL);
+        // TODO(g0mb4): replace mutt_make_string_2gmb
+        mutt_make_string(path, pathlen, 0, hook->command, m, -1, e, MUTT_FORMAT_PLAIN, NULL, 0);
         return 0;
       }
     }

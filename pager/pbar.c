@@ -130,8 +130,8 @@ static int pbar_recalc(struct MuttWindow *win)
   {
     int msg_in_pager = shared->mailbox_view ? shared->mailbox_view->msg_in_pager : -1;
 
-    const char *c_pager_format = cs_subset_string(shared->sub, "pager_format");
-    mutt_make_string(buf, sizeof(buf), win->state.cols, NONULL(c_pager_format),
+    const struct ExpandoRecord * c_pager_format = cs_subset_expando(shared->sub, "pager_format");
+    mutt_make_string_2gmb(buf, sizeof(buf), win->state.cols, c_pager_format,
                      shared->mailbox, msg_in_pager, shared->email,
                      MUTT_FORMAT_NO_FLAGS, pager_progress_str);
   }

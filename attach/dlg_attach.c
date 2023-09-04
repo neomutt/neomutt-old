@@ -194,7 +194,7 @@ const char *attach_format_str(char *buf, size_t buflen, size_t col, int cols, ch
       break;
     case 'd':
     {
-      const char *const c_message_format = cs_subset_string(NeoMutt->sub, "message_format");
+      const struct ExpandoRecord *c_message_format = cs_subset_expando(NeoMutt->sub, "message_format");
       if (!optional)
       {
         if (aptr->body->description)
@@ -206,9 +206,9 @@ const char *attach_format_str(char *buf, size_t buflen, size_t col, int cols, ch
             c_message_format && aptr->body->email)
         {
           char s[128] = { 0 };
-          mutt_make_string(s, sizeof(s), cols, c_message_format, NULL, -1,
-                           aptr->body->email,
-                           MUTT_FORMAT_FORCESUBJ | MUTT_FORMAT_ARROWCURSOR, NULL);
+          mutt_make_string_2gmb(s, sizeof(s), cols, c_message_format, NULL, -1,
+                                aptr->body->email,
+                                MUTT_FORMAT_FORCESUBJ | MUTT_FORMAT_ARROWCURSOR, NULL);
           if (*s)
           {
             mutt_format_s(buf, buflen, prec, s);

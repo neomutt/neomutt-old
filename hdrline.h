@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include "format_flags.h"
+#include "expando/lib.h"
 
 struct Email;
 struct Mailbox;
@@ -102,7 +103,7 @@ enum FieldType
 
 void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
                       struct Mailbox *m, int inpgr, struct Email *e,
-                      MuttFormatFlags flags, const char *progress);
+                      MuttFormatFlags flags, const char *progress, int compile_error);
 
 void mutt_make_string_2gmb(char *buf, size_t buflen, int cols, const struct ExpandoRecord *r,
                            struct Mailbox *m, int inpgr, struct Email *e,

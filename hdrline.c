@@ -75,10 +75,12 @@
  * @param progress Pager progress string
  *
  * @sa index_format_str()
+ * 
+ * compile_error is there to trigger compilation errors
  */
 void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
                       struct Mailbox *m, int inpgr, struct Email *e,
-                      MuttFormatFlags flags, const char *progress)
+                      MuttFormatFlags flags, const char *progress, int compile_error)
 {
   assert(0 && "Remove mutt_make_string");
 }

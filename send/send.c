@@ -43,7 +43,6 @@
 #include "alias/lib.h"
 #include "gui/lib.h"
 #include "mutt.h"
-#include "send.h"
 #include "attach/lib.h"
 #include "browser/lib.h"
 #include "compose/lib.h"
@@ -72,6 +71,7 @@
 #include "muttlib.h"
 #include "protos.h"
 #include "rfc3676.h"
+#include "send.h"
 #include "sendlib.h"
 #include "sendmail.h"
 #include "smtp.h"
@@ -453,7 +453,7 @@ static void process_user_header(struct Envelope *env)
  */
 void mutt_forward_intro(struct Email *e, FILE *fp, struct ConfigSubset *sub)
 {
-  const char *const c_forward_attribution_intro = cs_subset_string(sub, "forward_attribution_intro");
+  const struct ExpandoRecord *c_forward_attribution_intro = cs_subset_expando(sub, "forward_attribution_intro");
   if (!c_forward_attribution_intro || !fp)
     return;
 
@@ -461,8 +461,8 @@ void mutt_forward_intro(struct Email *e, FILE *fp, struct ConfigSubset *sub)
 
   char buf[1024] = { 0 };
   setlocale(LC_TIME, NONULL(c_attribution_locale));
-  mutt_make_string(buf, sizeof(buf), 0, c_forward_attribution_intro, NULL, -1,
-                   e, MUTT_FORMAT_NO_FLAGS, NULL);
+  mutt_make_string_2gmb(buf, sizeof(buf), 0, c_forward_attribution_intro, NULL,
+                        -1, e, MUTT_FORMAT_NO_FLAGS, NULL);
   setlocale(LC_TIME, "");
   fputs(buf, fp);
   fputs("\n\n", fp);
@@ -476,7 +476,7 @@ void mutt_forward_intro(struct Email *e, FILE *fp, struct ConfigSubset *sub)
  */
 void mutt_forward_trailer(struct Email *e, FILE *fp, struct ConfigSubset *sub)
 {
-  const char *const c_forward_attribution_trailer = cs_subset_string(sub, "forward_attribution_trailer");
+  const struct ExpandoRecord *c_forward_attribution_trailer = cs_subset_expando(sub, "forward_attribution_trailer");
   if (!c_forward_attribution_trailer || !fp)
     return;
 
@@ -484,8 +484,8 @@ void mutt_forward_trailer(struct Email *e, FILE *fp, struct ConfigSubset *sub)
 
   char buf[1024] = { 0 };
   setlocale(LC_TIME, NONULL(c_attribution_locale));
-  mutt_make_string(buf, sizeof(buf), 0, c_forward_attribution_trailer, NULL, -1,
-                   e, MUTT_FORMAT_NO_FLAGS, NULL);
+  mutt_make_string_2gmb(buf, sizeof(buf), 0, c_forward_attribution_trailer,
+                        NULL, -1, e, MUTT_FORMAT_NO_FLAGS, NULL);
   setlocale(LC_TIME, "");
   fputc('\n', fp);
   fputs(buf, fp);
@@ -636,17 +636,17 @@ cleanup:
  * @param fp_out File to write to
  * @param sub    Config Subset
  */
-static void format_attribution(const char *s, struct Email *e, FILE *fp_out,
-                               struct ConfigSubset *sub)
+static void format_attribution(const struct ExpandoRecord *r, struct Email *e,
+                               FILE *fp_out, struct ConfigSubset *sub)
 {
-  if (!s || !fp_out)
+  if (!r || !fp_out)
     return;
 
   const char *const c_attribution_locale = cs_subset_string(sub, "attribution_locale");
 
   char buf[1024] = { 0 };
   setlocale(LC_TIME, NONULL(c_attribution_locale));
-  mutt_make_string(buf, sizeof(buf), 0, s, NULL, -1, e, MUTT_FORMAT_NO_FLAGS, NULL);
+  mutt_make_string_2gmb(buf, sizeof(buf), 0, r, NULL, -1, e, MUTT_FORMAT_NO_FLAGS, NULL);
   setlocale(LC_TIME, "");
   fputs(buf, fp_out);
   fputc('\n', fp_out);
@@ -660,7 +660,7 @@ static void format_attribution(const char *s, struct Email *e, FILE *fp_out,
  */
 void mutt_make_attribution_intro(struct Email *e, FILE *fp_out, struct ConfigSubset *sub)
 {
-  format_attribution(cs_subset_string(sub, "attribution_intro"), e, fp_out, sub);
+  format_attribution(cs_subset_expando(sub, "attribution_intro"), e, fp_out, sub);
 }
 
 /**
@@ -671,7 +671,7 @@ void mutt_make_attribution_intro(struct Email *e, FILE *fp_out, struct ConfigSub
  */
 void mutt_make_attribution_trailer(struct Email *e, FILE *fp_out, struct ConfigSubset *sub)
 {
-  format_attribution(cs_subset_string(sub, "attribution_trailer"), e, fp_out, sub);
+  format_attribution(cs_subset_expando(sub, "attribution_trailer"), e, fp_out, sub);
 }
 
 /**
@@ -991,12 +991,12 @@ void mutt_make_forward_subject(struct Envelope *env, struct Email *e, struct Con
   if (!env)
     return;
 
-  const char *const c_forward_format = cs_subset_string(sub, "forward_format");
+  const struct ExpandoRecord *c_forward_format = cs_subset_expando(sub, "forward_format");
 
   char buf[256] = { 0 };
   /* set the default subject for the message. */
-  mutt_make_string(buf, sizeof(buf), 0, NONULL(c_forward_format), NULL, -1, e,
-                   MUTT_FORMAT_NO_FLAGS, NULL);
+  mutt_make_string_2gmb(buf, sizeof(buf), 0, c_forward_format, NULL, -1, e,
+                        MUTT_FORMAT_NO_FLAGS, NULL);
   mutt_str_replace(&env->subject, buf);
 }
 
