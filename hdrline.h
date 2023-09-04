@@ -104,9 +104,6 @@ void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
                       struct Mailbox *m, int inpgr, struct Email *e,
                       MuttFormatFlags flags, const char *progress);
 
-/* merging hdrline and index_format_callbacks */
-// NOTE(g0mb4): suffix function with `_2gmb` to be easily grep-able
-//              they will drop this suffix after the total merge
 void mutt_make_string_2gmb(char *buf, size_t buflen, int cols, const struct ExpandoRecord *r,
                            struct Mailbox *m, int inpgr, struct Email *e,
                            MuttFormatFlags flags, const char *progress);
