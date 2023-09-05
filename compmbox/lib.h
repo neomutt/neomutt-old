@@ -38,6 +38,8 @@
 #include <stdio.h>
 #include "core/lib.h"
 
+struct ExpandoRecord;
+
 /**
  * struct CompressInfo - Private data for compress
  *
@@ -45,13 +47,13 @@
  */
 struct CompressInfo
 {
-  const char *cmd_append;        ///< append-hook command
-  const char *cmd_close;         ///< close-hook  command
-  const char *cmd_open;          ///< open-hook   command
-  long size;                     ///< size of the compressed file
-  const struct MxOps *child_ops; ///< callbacks of de-compressed file
-  bool locked;                   ///< if realpath is locked
-  FILE *fp_lock;                 ///< fp used for locking
+  struct ExpandoRecord *cmd_append;        ///< append-hook command
+  struct ExpandoRecord *cmd_close;         ///< close-hook  command
+  struct ExpandoRecord *cmd_open;          ///< open-hook   command
+  long size;                               ///< size of the compressed file
+  const struct MxOps *child_ops;           ///< callbacks of de-compressed file
+  bool locked;                             ///< if realpath is locked
+  FILE *fp_lock;                           ///< fp used for locking
 };
 
 void mutt_comp_init(void);

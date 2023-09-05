@@ -47,6 +47,7 @@
 #include "attach_format_callbacks.h"
 #include "autocrypt_format_callbacks.h"
 #include "compose_format_callbacks.h"
+#include "compress_format_callbacks.h"
 #include "format_callbacks.h"
 #include "greeting_format_callbacks.h"
 #include "group_index_format_callbacks.h"

@@ -47,6 +47,7 @@
 #include "core/lib.h"
 #include "gui/lib.h"
 #include "lib.h"
+#include "expando/lib.h"s
 #include "format_flags.h"
 #include "globals.h"
 #include "hook.h"
@@ -191,6 +192,37 @@ static void store_size(const struct Mailbox *m)
   ci->size = mutt_file_get_size(m->realpath);
 }
 
+static void free_expando_record(struct ExpandoRecord *record)
+{
+  if (!record)
+  {
+    return;
+  }
+
+  expando_tree_free(&record->tree);
+  FREE(&record->string);
+  FREE(&record);
+}
+
+static struct ExpandoRecord *validate_compress_expando(const char *s)
+{
+  struct ExpandoRecord *record = mutt_mem_calloc(1, sizeof(struct ExpandoRecord));
+  struct ExpandoParseError error = { 0 };
+
+  record->string = mutt_str_dup(s);
+
+  expando_tree_parse(&record->tree, &record->string, EFMTI_COMPRESS_FORMAT, &error);
+
+  if (error.position != NULL)
+  {
+    mutt_error(_("Expando parse error: %s"), error.message);
+    free_expando_record(record);
+    return NULL;
+  }
+
+  return record;
+}
+
 /**
  * set_compress_info - Find the compress hooks for a mailbox
  * @param m Mailbox to examine
@@ -218,9 +250,9 @@ static struct CompressInfo *set_compress_info(struct Mailbox *m)
   struct CompressInfo *ci = mutt_mem_calloc(1, sizeof(struct CompressInfo));
   m->compress_info = ci;
 
-  ci->cmd_open = mutt_str_dup(o);
-  ci->cmd_close = mutt_str_dup(c);
-  ci->cmd_append = mutt_str_dup(a);
+  ci->cmd_open = validate_compress_expando(o);
+  ci->cmd_close = validate_compress_expando(c);
+  ci->cmd_append = validate_compress_expando(a);
 
   return ci;
 }
@@ -235,54 +267,12 @@ static void compress_info_free(struct Mailbox *m)
     return;
 
   struct CompressInfo *ci = m->compress_info;
-  FREE(&ci->cmd_open);
-  FREE(&ci->cmd_close);
-  FREE(&ci->cmd_append);
-
+  free_expando_record(ci->cmd_open);
+  free_expando_record(ci->cmd_close);
+  free_expando_record(ci->cmd_append);
   unlock_realpath(m);
 
   FREE(&m->compress_info);
-}
-
-/**
- * compress_format_str - Expand the filenames in a command string - Implements ::format_t - @ingroup expando_api
- *
- * | Expando | Description
- * | :------ | :-------------------------------------------------------
- * | \%f     | Compressed file
- * | \%t     | Plaintext, temporary file
- */
-static const char *compress_format_str(char *buf, size_t buflen, size_t col, int cols,
-                                       char op, const char *src, const char *prec,
-                                       const char *if_str, const char *else_str,
-                                       intptr_t data, MuttFormatFlags flags)
-{
-  if (!buf || (data == 0))
-    return src;
-
-  struct Mailbox *m = (struct Mailbox *) data;
-
-  /* NOTE the compressed file config vars expect %f and %t to be
-   * surrounded by '' (unlike other NeoMutt config vars, which add the
-   * outer quotes for the user).  This is why we use the
-   * buf_quote_filename() form with add_outer of false. */
-  struct Buffer *quoted = buf_pool_get();
-  switch (op)
-  {
-    case 'f':
-      /* Compressed file */
-      buf_quote_filename(quoted, m->realpath, false);
-      snprintf(buf, buflen, "%s", buf_string(quoted));
-      break;
-    case 't':
-      /* Plaintext, temporary file */
-      buf_quote_filename(quoted, mailbox_path(m), false);
-      snprintf(buf, buflen, "%s", buf_string(quoted));
-      break;
-  }
-
-  buf_pool_release(&quoted);
-  return src;
 }
 
 /**
@@ -304,13 +294,13 @@ static const char *compress_format_str(char *buf, size_t buflen, size_t col, int
  *
  * @sa compress_format_str()
  */
-static void expand_command_str(const struct Mailbox *m, const char *cmd, char *buf, int buflen)
+static void expand_command_str(const struct Mailbox *m,
+                               const struct ExpandoRecord *r, char *buf, int buflen)
 {
-  if (!m || !cmd || !buf)
+  if (!m || !r || !buf)
     return;
 
-  mutt_expando_format(buf, buflen, 0, buflen, cmd, compress_format_str,
-                      (intptr_t) m, MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format_2gmb(buf, buflen, 0, buflen, &r->tree, (intptr_t) m, MUTT_FORMAT_NO_FLAGS);
 }
 
 /**
@@ -324,9 +314,9 @@ static void expand_command_str(const struct Mailbox *m, const char *cmd, char *b
  * Run the supplied command, taking care of all the NeoMutt requirements,
  * such as locking files and blocking signals.
  */
-static bool execute_command(struct Mailbox *m, const char *command, const char *progress)
+static bool execute_command(struct Mailbox *m, struct ExpandoRecord *r, const char *progress)
 {
-  if (!m || !command || !progress)
+  if (!m || !r || !progress)
     return false;
 
   if (m->verbose)
@@ -339,7 +329,7 @@ static bool execute_command(struct Mailbox *m, const char *command, const char *
   endwin();
   fflush(stdout);
 
-  expand_command_str(m, command, sys_cmd, sizeof(sys_cmd));
+  expand_command_str(m, r, sys_cmd, sizeof(sys_cmd));
 
   if (mutt_system(sys_cmd) != 0)
   {

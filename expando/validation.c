@@ -59,6 +59,12 @@ static const struct ExpandoFormatCallback compose_1[] = {
   { "v", compose_v }, { NULL, NULL },
 };
 
+static const struct ExpandoFormatCallback compress_1[] = {
+  { "f", compress_f },
+  { "t", compress_t },
+  { NULL, NULL },
+};
+
 static const struct ExpandoFormatCallback pgp_entry_1[] = {
   { "n", pgp_entry_n }, { "t", pgp_entry_t }, { "u", pgp_entry_u },
   { "a", pgp_entry_a }, { "A", pgp_entry_A }, { "c", pgp_entry_c },
@@ -174,6 +180,7 @@ const struct ExpandoValidation expando_validation[EFMTI_FORMAT_COUNT_OR_DEBUG] =
   [EFMTI_ATTRIBUTION_TRAILER]           = { "attribution_trailer",           index_1,          index_2, NULL },
   [EFMTI_AUTOCRYPT_ACCT_FORMAT]         = { "autocrypt_acct_format",         autocrypt_acct_1, NULL,    NULL },
   [EFMTI_COMPOSE_FORMAT]                = { "compose_format",                compose_1,        NULL,    NULL },
+  [EFMTI_COMPRESS_FORMAT]               = { "",                              compress_1,       NULL,    NULL },
   [EFMTI_FOLDER_FORMAT]                 = { "folder_format",                 folder_1,         NULL,    NULL },
   [EFMTI_FORWARD_ATTRIBUTION_INTRO]     = { "forward_attribution_intro",     index_1,          index_2, NULL },
   [EFMTI_FORWARD_ATTRIBUTION_TRAILER]   = { "forward_attribution_trailer",   index_1,          index_2, NULL },
