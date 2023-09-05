@@ -282,7 +282,7 @@ static struct ConfigDef NcryptVarsSmime[] = {
   { "smime_sign_command", DT_EXPANDO|DT_COMMAND, 0, 0, expando_validator,
     "(smime) External command to sign a message"
   },
-  { "smime_sign_digest_alg", DT_EXPANDO, IP "sha256", 0, expando_validator,
+  { "smime_sign_digest_alg", DT_STRING, IP "sha256", 0, NULL,
     "Digest algorithm"
   },
   { "smime_timeout", DT_NUMBER|DT_NOT_NEGATIVE, 300, 0, NULL,
