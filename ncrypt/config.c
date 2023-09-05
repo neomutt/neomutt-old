@@ -114,7 +114,7 @@ static struct ConfigDef NcryptVars[] = {
   { "smime_default_key", DT_STRING, 0, 0, NULL,
     "Default key for SMIME operations"
   },
-  { "smime_encrypt_with", DT_EXPANDO, IP "aes256", 0, expando_validator,
+  { "smime_encrypt_with", DT_STRING, IP "aes256", 0, NULL,
     "Algorithm for encryption"
   },
   { "smime_self_encrypt", DT_BOOL, true, 0, NULL,
