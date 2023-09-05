@@ -47,7 +47,7 @@
 #include "core/lib.h"
 #include "gui/lib.h"
 #include "lib.h"
-#include "expando/lib.h"s
+#include "expando/lib.h"
 #include "format_flags.h"
 #include "globals.h"
 #include "hook.h"
@@ -314,7 +314,8 @@ static void expand_command_str(const struct Mailbox *m,
  * Run the supplied command, taking care of all the NeoMutt requirements,
  * such as locking files and blocking signals.
  */
-static bool execute_command(struct Mailbox *m, struct ExpandoRecord *r, const char *progress)
+static bool execute_command(struct Mailbox *m, const struct ExpandoRecord *r,
+                            const char *progress)
 {
   if (!m || !r || !progress)
     return false;
@@ -523,7 +524,7 @@ static bool comp_mbox_open_append(struct Mailbox *m, OpenMailboxFlags flags)
   {
     if (!execute_command(m, ci->cmd_open, _("Decompressing %s")))
     {
-      mutt_error(_("Compress command failed: %s"), ci->cmd_open);
+      mutt_error(_("Compress command failed: %s"), ci->cmd_open->string);
       goto cmoa_fail2;
     }
     m->type = mx_path_probe(mailbox_path(m));
@@ -678,7 +679,7 @@ static enum MxStatus comp_mbox_close(struct Mailbox *m)
   /* sync has already been called, so we only need to delete some files */
   if (m->append)
   {
-    const char *append = NULL;
+    const struct ExpandoRecord *append = NULL;
     const char *msg = NULL;
 
     /* The file exists and we can append */
