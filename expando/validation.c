@@ -74,10 +74,11 @@ static const struct ExpandoFormatCallback pgp_entry_1[] = {
 };
 
 static const struct ExpandoFormatCallback folder_1[] = {
-  { "C", folder_C }, { "d", folder_d }, { "D", folder_D }, { "f", folder_f },
-  { "F", folder_F }, { "g", folder_g }, { "i", folder_i }, { "l", folder_l },
-  { "m", folder_m }, { "n", folder_n }, { "N", folder_N }, { "s", folder_s },
-  { "t", folder_t }, { "u", folder_u }, { NULL, NULL },
+  { "a", folder_a }, { "C", folder_C }, { "d", folder_d }, { "D", folder_D },
+  { "f", folder_f }, { "F", folder_F }, { "g", folder_g }, { "i", folder_i },
+  { "l", folder_l }, { "m", folder_m }, { "n", folder_n }, { "N", folder_N },
+  { "p", folder_p }, { "s", folder_s }, { "t", folder_t }, { "u", folder_u },
+  { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback greeting_1[] = {

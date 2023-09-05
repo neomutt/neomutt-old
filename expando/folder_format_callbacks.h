@@ -31,6 +31,9 @@ struct ExpandoNode;
 int folder_date(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
+int folder_a(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags);
+
 int folder_C(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags);
 
@@ -62,6 +65,9 @@ int folder_n(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int folder_N(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int folder_p(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
 int folder_s(const struct ExpandoNode *self, char *buf, int buf_len,

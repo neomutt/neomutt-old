@@ -59,13 +59,13 @@ static struct ConfigDef BrowserVars[] = {
   { "browser_abbreviate_mailboxes", DT_BOOL, true, 0, NULL,
     "Abbreviate mailboxes using '~' and '=' in the browser"
   },
-  { "folder_format", DT_STRING|DT_NOT_EMPTY, IP "%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %i", 0, NULL,
+  { "folder_format", DT_EXPANDO|DT_NOT_EMPTY, IP "%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %i", 0, expando_validator,
     "printf-like format string for the browser's display of folders"
   },
   { "group_index_format", DT_EXPANDO|DT_NOT_EMPTY|R_INDEX, IP "%4C %M%N %5s  %-45.45f %d", 0, expando_validator,
     "(nntp) printf-like format string for the browser's display of newsgroups"
   },
-  { "mailbox_folder_format", DT_STRING|DT_NOT_EMPTY, IP "%2C %<n?%6n&      > %6m %i", 0, NULL,
+  { "mailbox_folder_format", DT_EXPANDO|DT_NOT_EMPTY, IP "%2C %<n?%6n&      > %6m %i", 0, expando_validator,
     "printf-like format string for the browser's display of mailbox folders"
   },
   { "mask", DT_REGEX|DT_REGEX_MATCH_CASE|DT_REGEX_ALLOW_NOT|DT_REGEX_NOSUB, IP "!^\\.[^.]", 0, NULL,
