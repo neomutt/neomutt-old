@@ -436,7 +436,8 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
       if (*s == '{' || *s == '[' || *s == '(')
       {
         if (!(index == EFMTI_FORMAT_COUNT_OR_DEBUG || index == EFMTI_INDEX_FORMAT ||
-              index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT))
+              index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT ||
+              index == EFMTI_MAILBOX_FOLDER_FORMAT))
         {
           error->position = s;
           snprintf(error->message, sizeof(error->message), "Date is not allowed.");
@@ -458,7 +459,8 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
 
         if (*s == '{')
         {
-          if (index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT)
+          if (index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT ||
+              index == EFMTI_MAILBOX_FOLDER_FORMAT)
           {
             error->position = s;
             snprintf(error->message, sizeof(error->message), "Invalid date format.");
@@ -490,7 +492,8 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         // '('
         else
         {
-          if (index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT)
+          if (index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT ||
+              index == EFMTI_MAILBOX_FOLDER_FORMAT)
           {
             error->position = s;
             snprintf(error->message, sizeof(error->message), "Invalid date format.");
@@ -515,6 +518,14 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         else if (index == EFMTI_PGP_ENTRY_FORMAT)
         {
           date_cb = pgp_entry_date;
+        }
+        else if (index == EFMTI_FOLDER_FORMAT || index == EFMTI_MAILBOX_FOLDER_FORMAT)
+        {
+          date_cb = folder_date;
+        }
+        else
+        {
+          /* do nothing */
         }
 
         *parsed_until = end + 1;

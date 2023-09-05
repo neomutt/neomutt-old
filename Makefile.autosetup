@@ -422,7 +422,7 @@ $(PWD)/envelope:
 LIBEXPANDO=	libexpando.a
 LIBEXPANDOOBJS=	expando/alias_format_callbacks.o expando/attach_format_callbacks.o \
 		expando/autocrypt_format_callbacks.o expando/compose_format_callbacks.o \
-		expando/compress_format_callbacks.o \
+		expando/compress_format_callbacks.o expando/folder_format_callbacks.o \
 		expando/format_callbacks.o expando/greeting_format_callbacks.o \
 		expando/group_index_format_callbacks.o expando/helpers.o \
 		expando/history_format_callbacks.o expando/index_format_callbacks.o \
