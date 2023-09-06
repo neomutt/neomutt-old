@@ -505,7 +505,7 @@ int pgp_entry_gpgme_date(const struct ExpandoNode *self, char *buf, int buf_len,
 
   struct ExpandoDatePrivate *dp = (struct ExpandoDatePrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   const struct CryptKeyInfo *key = entry->key;
 
@@ -537,9 +537,9 @@ int pgp_entry_gpgme_date(const struct ExpandoNode *self, char *buf, int buf_len,
 
   format_string_simple(fmt, sizeof(fmt), tmp, NULL);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_n(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -549,7 +549,7 @@ int pgp_entry_gpgme_n(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
 
   char fmt[128];
@@ -557,9 +557,9 @@ int pgp_entry_gpgme_n(const struct ExpandoNode *self, char *buf, int buf_len,
   const int num = entry->num;
   format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_p(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -569,7 +569,7 @@ int pgp_entry_gpgme_p(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   const struct CryptKeyInfo *key = entry->key;
 
@@ -578,9 +578,9 @@ int pgp_entry_gpgme_p(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = gpgme_get_protocol_name(key->kobj->protocol);
   format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_t(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -590,7 +590,7 @@ int pgp_entry_gpgme_t(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   const struct CryptKeyInfo *key = entry->key;
 
@@ -629,9 +629,9 @@ int pgp_entry_gpgme_t(const struct ExpandoNode *self, char *buf, int buf_len,
 
   format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_u(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -641,7 +641,7 @@ int pgp_entry_gpgme_u(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   const struct CryptKeyInfo *key = entry->key;
 
@@ -650,9 +650,9 @@ int pgp_entry_gpgme_u(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = key->uid;
   format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_a(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -662,7 +662,7 @@ int pgp_entry_gpgme_a(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   const struct CryptKeyInfo *key = entry->key;
 
@@ -676,9 +676,9 @@ int pgp_entry_gpgme_a(const struct ExpandoNode *self, char *buf, int buf_len,
 
   format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_A(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -695,7 +695,7 @@ int pgp_entry_gpgme_c(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   const struct CryptKeyInfo *key = entry->key;
 
@@ -704,9 +704,9 @@ int pgp_entry_gpgme_c(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = crypt_key_abilities(key->flags);
   format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_C(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -723,7 +723,7 @@ int pgp_entry_gpgme_f(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   const struct CryptKeyInfo *key = entry->key;
 
@@ -732,9 +732,9 @@ int pgp_entry_gpgme_f(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = crypt_flags(key->flags);
   format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_F(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -751,7 +751,7 @@ int pgp_entry_gpgme_i(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   struct CryptKeyInfo *key = entry->key;
 
@@ -762,9 +762,9 @@ int pgp_entry_gpgme_i(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = crypt_fpr_or_lkeyid(key);
   format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_I(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -781,7 +781,7 @@ int pgp_entry_gpgme_k(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   struct CryptKeyInfo *key = entry->key;
 
@@ -792,9 +792,9 @@ int pgp_entry_gpgme_k(const struct ExpandoNode *self, char *buf, int buf_len,
   const char *s = crypt_keyid(key);
   format_string_flags(fmt, sizeof(fmt), s, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_K(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -811,7 +811,7 @@ int pgp_entry_gpgme_l(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_PGP
+#ifdef HAVE_PKG_GPGME
   const struct CryptEntry *entry = (const struct CryptEntry *) data;
   const struct CryptKeyInfo *key = entry->key;
 
@@ -821,9 +821,9 @@ int pgp_entry_gpgme_l(const struct ExpandoNode *self, char *buf, int buf_len,
   snprintf(tmp, sizeof(tmp), "%lu", val);
   format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
-#else  /* HAVE_PGP */
+#else  /* HAVE_PKG_GPGME */
   return 0;
-#endif /* HAVE_PGP */
+#endif /* HAVE_PKG_GPGME */
 }
 
 int pgp_entry_gpgme_L(const struct ExpandoNode *self, char *buf, int buf_len,
