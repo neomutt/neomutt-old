@@ -40,10 +40,11 @@ int smime_command_a(const struct ExpandoNode *self, char *buf, int buf_len,
                     int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
+
+#ifdef HAVE_SMIME
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_SMIME
   const struct SmimeCommandContext *cctx = (const struct SmimeCommandContext *) data;
 
   char fmt[128];
@@ -60,10 +61,11 @@ int smime_command_c(const struct ExpandoNode *self, char *buf, int buf_len,
                     int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
+
+#ifdef HAVE_SMIME
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_SMIME
   const struct SmimeCommandContext *cctx = (const struct SmimeCommandContext *) data;
 
   char fmt[128];
@@ -80,10 +82,11 @@ int smime_command_C(const struct ExpandoNode *self, char *buf, int buf_len,
                     int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
+
+#ifdef HAVE_SMIME
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_SMIME
   const char *const c_smime_ca_location = cs_subset_path(NeoMutt->sub, "smime_ca_location");
 
   char fmt[128];
@@ -124,12 +127,13 @@ int smime_command_d(const struct ExpandoNode *self, char *buf, int buf_len,
                     int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
+
+#ifdef HAVE_SMIME
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct SmimeCommandContext *cctx = (const struct SmimeCommandContext *) data;
 
-#ifdef HAVE_SMIME
   char fmt[128];
 
   const char *s = NONULL(cctx->digestalg);
@@ -144,12 +148,13 @@ int smime_command_f(const struct ExpandoNode *self, char *buf, int buf_len,
                     int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
+
+#ifdef HAVE_SMIME
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct SmimeCommandContext *cctx = (const struct SmimeCommandContext *) data;
 
-#ifdef HAVE_SMIME
   char fmt[128];
 
   const char *s = NONULL(cctx->fname);
@@ -164,12 +169,13 @@ int smime_command_i(const struct ExpandoNode *self, char *buf, int buf_len,
                     int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
+
+#ifdef HAVE_SMIME
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct SmimeCommandContext *cctx = (const struct SmimeCommandContext *) data;
 
-#ifdef HAVE_SMIME
   char fmt[128];
 
   const char *s = NONULL(cctx->intermediates);
@@ -184,12 +190,13 @@ int smime_command_k(const struct ExpandoNode *self, char *buf, int buf_len,
                     int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
+
+#ifdef HAVE_SMIME
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
   const struct SmimeCommandContext *cctx = (const struct SmimeCommandContext *) data;
 
-#ifdef HAVE_SMIME
   char fmt[128];
 
   const char *s = NONULL(cctx->key);
@@ -204,10 +211,11 @@ int smime_command_s(const struct ExpandoNode *self, char *buf, int buf_len,
                     int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
+
+#ifdef HAVE_SMIME
   const struct ExpandoFormatPrivate *format =
       (const struct ExpandoFormatPrivate *) self->ndata;
 
-#ifdef HAVE_SMIME
   const struct SmimeCommandContext *cctx = (const struct SmimeCommandContext *) data;
 
   char fmt[128];
