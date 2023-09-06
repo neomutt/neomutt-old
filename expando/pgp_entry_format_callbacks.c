@@ -33,6 +33,7 @@
 #include "ncrypt/lib.h"
 #include "format_flags.h"
 #include "locale.h"
+#include "ncrypt/crypt_gpgme.h"
 #include "ncrypt/pgp.h"
 #include "ncrypt/pgpkey.h"
 #include "ncrypt/pgplib.h"
@@ -86,8 +87,8 @@ static char pgp_flags(KeyFlags flags)
   return ' ';
 }
 
-int pgp_entry_date(const struct ExpandoNode *self, char *buf, int buf_len,
-                   int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_date(const struct ExpandoNode *self, char *buf, int buf_len,
+                       int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_DATE);
   assert(self->ndata != NULL);
@@ -123,8 +124,8 @@ int pgp_entry_date(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_n(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_n(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -139,12 +140,19 @@ int pgp_entry_n(const struct ExpandoNode *self, char *buf, int buf_len,
   format_int_flags(fmt, sizeof(fmt), num, flags, format);
   return snprintf(buf, buf_len, "%s", fmt);
 #else  /* HAVE_PGP */
-  return 0;
+  c
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_t(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_p(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  /* only used in ncrypt/dlg_gpgme.c */
+  return 0;
+}
+
+int pgp_entry_pgp_t(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -168,8 +176,8 @@ int pgp_entry_t(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_u(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_u(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -189,8 +197,8 @@ int pgp_entry_u(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_a(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_a(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -211,8 +219,8 @@ int pgp_entry_a(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_A(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_A(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -234,8 +242,8 @@ int pgp_entry_A(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_c(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_c(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -258,8 +266,8 @@ int pgp_entry_c(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_C(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_C(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -283,8 +291,8 @@ int pgp_entry_C(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_f(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_f(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -307,8 +315,8 @@ int pgp_entry_f(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_F(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_F(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -332,8 +340,22 @@ int pgp_entry_F(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_k(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_i(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  /* only used in ncrypt/dlg_gpgme.c*/
+  return 0;
+}
+
+int pgp_entry_pgp_I(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  /* only used in ncrypt/dlg_gpgme.c*/
+  return 0;
+}
+
+int pgp_entry_pgp_k(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -354,8 +376,8 @@ int pgp_entry_k(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_K(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_K(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -377,8 +399,8 @@ int pgp_entry_K(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_l(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_l(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -399,8 +421,8 @@ int pgp_entry_l(const struct ExpandoNode *self, char *buf, int buf_len,
 #endif /* HAVE_PGP */
 }
 
-int pgp_entry_L(const struct ExpandoNode *self, char *buf, int buf_len,
-                int cols_len, intptr_t data, MuttFormatFlags flags)
+int pgp_entry_pgp_L(const struct ExpandoNode *self, char *buf, int buf_len,
+                    int cols_len, intptr_t data, MuttFormatFlags flags)
 {
   assert(self->type == ENT_EXPANDO);
   const struct ExpandoFormatPrivate *format =
@@ -420,4 +442,393 @@ int pgp_entry_L(const struct ExpandoNode *self, char *buf, int buf_len,
 #else  /* HAVE_PGP */
   return 0;
 #endif /* HAVE_PGP */
+}
+
+/* -------------------------------------------------  */
+
+/**
+ * crypt_key_abilities - Parse key flags into a string
+ * @param flags Flags, see #KeyFlags
+ * @retval ptr Flag string
+ *
+ * @note The string is statically allocated.
+ */
+static char *crypt_key_abilities(KeyFlags flags)
+{
+  static char buf[3];
+
+  if (!(flags & KEYFLAG_CANENCRYPT))
+    buf[0] = '-';
+  else if (flags & KEYFLAG_PREFER_SIGNING)
+    buf[0] = '.';
+  else
+    buf[0] = 'e';
+
+  if (!(flags & KEYFLAG_CANSIGN))
+    buf[1] = '-';
+  else if (flags & KEYFLAG_PREFER_ENCRYPTION)
+    buf[1] = '.';
+  else
+    buf[1] = 's';
+
+  buf[2] = '\0';
+
+  return buf;
+}
+
+/**
+ * crypt_flags - Parse the key flags into a single character
+ * @param flags Flags, see #KeyFlags
+ * @retval char Flag character
+ *
+ * The returned character describes the most important flag.
+ */
+static char *crypt_flags(KeyFlags flags)
+{
+  if (flags & KEYFLAG_REVOKED)
+    return "R";
+  if (flags & KEYFLAG_EXPIRED)
+    return "X";
+  if (flags & KEYFLAG_DISABLED)
+    return "d";
+  if (flags & KEYFLAG_CRITICAL)
+    return "c";
+
+  return " ";
+}
+
+int pgp_entry_gpgme_date(const struct ExpandoNode *self, char *buf, int buf_len,
+                         int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_DATE);
+  assert(self->ndata != NULL);
+
+  struct ExpandoDatePrivate *dp = (struct ExpandoDatePrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  const struct CryptKeyInfo *key = entry->key;
+
+  char tmp[128], fmt[128];
+  char datestr[128];
+
+  const int size = self->end - self->start;
+  assert(size < sizeof(datestr));
+  mutt_strn_copy(datestr, self->start, size, sizeof(datestr));
+
+  struct tm tm = { 0 };
+  if (key->kobj->subkeys && (key->kobj->subkeys->timestamp > 0))
+  {
+    tm = mutt_date_localtime(key->kobj->subkeys->timestamp);
+  }
+  else
+  {
+    tm = mutt_date_localtime(0); // Default to 1970-01-01
+  }
+
+  if (dp->use_c_locale)
+  {
+    strftime_l(tmp, sizeof(tmp), datestr, &tm, NeoMutt->time_c_locale);
+  }
+  else
+  {
+    strftime(tmp, sizeof(tmp), datestr, &tm);
+  }
+
+  format_string_simple(fmt, sizeof(fmt), tmp, NULL);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_n(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+
+  char fmt[128];
+
+  const int num = entry->num;
+  format_int_flags(fmt, sizeof(fmt), num, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_p(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  const struct CryptKeyInfo *key = entry->key;
+
+  char fmt[128];
+
+  const char *s = gpgme_get_protocol_name(key->kobj->protocol);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_t(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  const struct CryptKeyInfo *key = entry->key;
+
+  char fmt[128];
+
+  const char *s = "";
+  if ((key->flags & KEYFLAG_ISX509))
+  {
+    s = "x";
+  }
+  else
+  {
+    switch (key->validity)
+    {
+      case GPGME_VALIDITY_FULL:
+        s = "f";
+        break;
+      case GPGME_VALIDITY_MARGINAL:
+        s = "m";
+        break;
+      case GPGME_VALIDITY_NEVER:
+        s = "n";
+        break;
+      case GPGME_VALIDITY_ULTIMATE:
+        s = "u";
+        break;
+      case GPGME_VALIDITY_UNDEFINED:
+        s = "q";
+        break;
+      case GPGME_VALIDITY_UNKNOWN:
+      default:
+        s = "?";
+        break;
+    }
+  }
+
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_u(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  const struct CryptKeyInfo *key = entry->key;
+
+  char fmt[128];
+
+  const char *s = key->uid;
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_a(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  const struct CryptKeyInfo *key = entry->key;
+
+  char fmt[128];
+
+  const char *s = NULL;
+  if (key->kobj->subkeys)
+    s = gpgme_pubkey_algo_name(key->kobj->subkeys->pubkey_algo);
+  else
+    s = "?";
+
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_A(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  /* only used in ncrypt/dlg_pgp.c */
+  return 0;
+}
+
+int pgp_entry_gpgme_c(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  const struct CryptKeyInfo *key = entry->key;
+
+  char fmt[128];
+
+  const char *s = crypt_key_abilities(key->flags);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_C(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  /* only used in ncrypt/dlg_pgp.c */
+  return 0;
+}
+
+int pgp_entry_gpgme_f(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  const struct CryptKeyInfo *key = entry->key;
+
+  char fmt[128];
+
+  const char *s = crypt_flags(key->flags);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_F(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  /* only used in ncrypt/dlg_pgp.c */
+  return 0;
+}
+
+int pgp_entry_gpgme_i(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  struct CryptKeyInfo *key = entry->key;
+
+  char fmt[128];
+
+  /* fixme: we need a way to distinguish between main and subkeys.
+   * Store the idx in entry? */
+  const char *s = crypt_fpr_or_lkeyid(key);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_I(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  /* only used in ncrypt/dlg_pgp.c */
+  return 0;
+}
+
+int pgp_entry_gpgme_k(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  struct CryptKeyInfo *key = entry->key;
+
+  char fmt[128];
+
+  /* fixme: we need a way to distinguish between main and subkeys.
+   * Store the idx in entry? */
+  const char *s = crypt_keyid(key);
+  format_string_flags(fmt, sizeof(fmt), s, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_K(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  /* only used in ncrypt/dlg_pgp.c */
+  return 0;
+}
+
+int pgp_entry_gpgme_l(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  assert(self->type == ENT_EXPANDO);
+  const struct ExpandoFormatPrivate *format =
+      (const struct ExpandoFormatPrivate *) self->ndata;
+
+#ifdef HAVE_PGP
+  const struct CryptEntry *entry = (const struct CryptEntry *) data;
+  const struct CryptKeyInfo *key = entry->key;
+
+  char tmp[128], fmt[128];
+
+  const unsigned long val = key->kobj->subkeys ? key->kobj->subkeys->length : 0;
+  snprintf(tmp, sizeof(tmp), "%lu", val);
+  format_string_flags(fmt, sizeof(fmt), tmp, flags, format);
+  return snprintf(buf, buf_len, "%s", fmt);
+#else  /* HAVE_PGP */
+  return 0;
+#endif /* HAVE_PGP */
+}
+
+int pgp_entry_gpgme_L(const struct ExpandoNode *self, char *buf, int buf_len,
+                      int cols_len, intptr_t data, MuttFormatFlags flags)
+{
+  /* only used in ncrypt/dlg_pgp.c */
+  return 0;
 }

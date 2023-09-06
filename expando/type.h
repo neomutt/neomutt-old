@@ -32,6 +32,7 @@
  */
 struct ExpandoRecord
 {
+  int index;                ///< Internal index
   const char *string;       ///< Pointer to the parsed string
   struct ExpandoNode *tree; ///< Parsed tree
 };

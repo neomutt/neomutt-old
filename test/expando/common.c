@@ -214,3 +214,14 @@ void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
                            MuttFormatFlags flags, const char *progress)
 {
 }
+
+struct CryptKeyInfo;
+const char *crypt_fpr_or_lkeyid(struct CryptKeyInfo *k)
+{
+  return NULL;
+}
+
+const char *crypt_keyid(struct CryptKeyInfo *k)
+{
+  return NULL;
+}

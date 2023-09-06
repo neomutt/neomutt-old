@@ -192,31 +192,20 @@ static void store_size(const struct Mailbox *m)
   ci->size = mutt_file_get_size(m->realpath);
 }
 
-static void free_expando_record(struct ExpandoRecord *record)
-{
-  if (!record)
-  {
-    return;
-  }
-
-  expando_tree_free(&record->tree);
-  FREE(&record->string);
-  FREE(&record);
-}
-
 static struct ExpandoRecord *validate_compress_expando(const char *s)
 {
   struct ExpandoRecord *record = mutt_mem_calloc(1, sizeof(struct ExpandoRecord));
   struct ExpandoParseError error = { 0 };
 
   record->string = mutt_str_dup(s);
+  record->index = EFMTI_COMPRESS_FORMAT;
 
-  expando_tree_parse(&record->tree, &record->string, EFMTI_COMPRESS_FORMAT, &error);
+  expando_tree_parse(&record->tree, &record->string, record->index, &error);
 
   if (error.position != NULL)
   {
     mutt_error(_("Expando parse error: %s"), error.message);
-    free_expando_record(record);
+    expando_free(&record);
     return NULL;
   }
 
@@ -267,9 +256,9 @@ static void compress_info_free(struct Mailbox *m)
     return;
 
   struct CompressInfo *ci = m->compress_info;
-  free_expando_record(ci->cmd_open);
-  free_expando_record(ci->cmd_close);
-  free_expando_record(ci->cmd_append);
+  expando_free(&ci->cmd_open);
+  expando_free(&ci->cmd_close);
+  expando_free(&ci->cmd_append);
   unlock_realpath(m);
 
   FREE(&m->compress_info);

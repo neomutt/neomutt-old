@@ -317,6 +317,7 @@ int index_format_hook_callback(const struct ExpandoNode *self, char *buf, int bu
 
   char tmp[128] = { 0 }, tmp2[128] = { 0 }, fmt[128];
   const int len = self->end - self->start;
+  assert(len < sizeof(tmp));
   memcpy(tmp2, self->start, len);
 
   // FIXME(g0mb4): save parsed expando records somewhere

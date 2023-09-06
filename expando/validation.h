@@ -67,7 +67,8 @@ enum ExpandoFormatIndex
   EFMTI_PGP_DECRYPT_COMMAND,
   EFMTI_PGP_ENCRYPT_ONLY_COMMAND,
   EFMTI_PGP_ENCRYPT_SIGN_COMMAND,
-  EFMTI_PGP_ENTRY_FORMAT,
+  EFMTI_PGP_ENTRY_FORMAT_DLG_GPGME,
+  EFMTI_PGP_ENTRY_FORMAT_DLG_PGP,
   EFMTI_PGP_EXPORT_COMMAND,
   EFMTI_PGP_GET_KEYS_COMMAND,
   EFMTI_PGP_IMPORT_COMMAND,
@@ -102,6 +103,9 @@ struct ExpandoValidation
   const struct ExpandoFormatCallback *valid_long_expandos;
 };
 
+struct ExpandoRecord;
+
 int expando_validator(const struct ConfigSet *cs, const struct ConfigDef *cdef, intptr_t value, struct Buffer *err);
+bool expando_revalidate(struct ExpandoRecord *record, int index);
 
 #endif /* MUTT_EXPANDO_VALIDATION_H */

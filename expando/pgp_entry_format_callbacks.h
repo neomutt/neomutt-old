@@ -28,46 +28,108 @@
 
 struct ExpandoNode;
 
-int pgp_entry_date(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_date(const struct ExpandoNode *self, char *buf, int buf_len,
                    int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_n(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_n(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_t(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_p(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_pgp_t(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_u(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_u(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_a(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_a(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_A(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_A(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_c(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_c(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_C(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_C(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_f(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_f(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_F(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_F(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_k(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_i(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_pgp_I(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_pgp_k(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_K(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_K(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_l(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_l(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
-int pgp_entry_L(const struct ExpandoNode *self, char *buf, int buf_len,
+int pgp_entry_pgp_L(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+/* ------------------------------------------------------------------------  */
+
+int pgp_entry_gpgme_date(const struct ExpandoNode *self, char *buf, int buf_len,
+                   int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_n(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_p(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_t(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_u(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_a(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_A(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_c(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_C(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_f(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_F(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_i(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_I(const struct ExpandoNode *self, char *buf, int buf_len,
+             int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_k(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_K(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_l(const struct ExpandoNode *self, char *buf, int buf_len,
+              int cols_len, intptr_t data, MuttFormatFlags flags);
+
+int pgp_entry_gpgme_L(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags);
 
 #endif /* MUTT_EXPANDO_PGP_ENTRY_FORMAT_CALLBACKS_H */

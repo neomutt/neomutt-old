@@ -34,7 +34,6 @@
 #include "config/lib.h"
 #include "core/neomutt.h"
 #include "expando/lib.h"
-#include "validation.h"
 
 static const struct ExpandoFormatCallback alias_1[] = {
   { "a", alias_a }, { "c", alias_c }, { "f", alias_f }, { "n", alias_n },
@@ -65,12 +64,33 @@ static const struct ExpandoFormatCallback compress_1[] = {
   { NULL, NULL },
 };
 
-static const struct ExpandoFormatCallback pgp_entry_1[] = {
-  { "n", pgp_entry_n }, { "t", pgp_entry_t }, { "u", pgp_entry_u },
-  { "a", pgp_entry_a }, { "A", pgp_entry_A }, { "c", pgp_entry_c },
-  { "C", pgp_entry_C }, { "f", pgp_entry_f }, { "F", pgp_entry_F },
-  { "k", pgp_entry_k }, { "K", pgp_entry_K }, { "l", pgp_entry_l },
-  { "L", pgp_entry_L }, { NULL, NULL },
+static const struct ExpandoFormatCallback pgp_entry_pgp_1[] = {
+  { "n", pgp_entry_pgp_n }, { "p", pgp_entry_pgp_p }, { "t", pgp_entry_pgp_t },
+  { "u", pgp_entry_pgp_u }, { "a", pgp_entry_pgp_a }, { "A", pgp_entry_pgp_A },
+  { "c", pgp_entry_pgp_c }, { "C", pgp_entry_pgp_C }, { "f", pgp_entry_pgp_f },
+  { "F", pgp_entry_pgp_F }, { "i", pgp_entry_pgp_i }, { "I", pgp_entry_pgp_I },
+  { "k", pgp_entry_pgp_k }, { "K", pgp_entry_pgp_K }, { "l", pgp_entry_pgp_l },
+  { "L", pgp_entry_pgp_L }, { NULL, NULL },
+};
+
+static const struct ExpandoFormatCallback pgp_entry_gpgme_1[] = {
+  { "n", pgp_entry_gpgme_n },
+  { "p", pgp_entry_gpgme_p },
+  { "t", pgp_entry_gpgme_t },
+  { "u", pgp_entry_gpgme_u },
+  { "a", pgp_entry_gpgme_a },
+  { "A", pgp_entry_gpgme_A },
+  { "c", pgp_entry_gpgme_c },
+  { "C", pgp_entry_gpgme_C },
+  { "f", pgp_entry_gpgme_f },
+  { "F", pgp_entry_gpgme_F },
+  { "i", pgp_entry_gpgme_i },
+  { "I", pgp_entry_gpgme_I },
+  { "k", pgp_entry_gpgme_k },
+  { "K", pgp_entry_gpgme_K },
+  { "l", pgp_entry_gpgme_l },
+  { "L", pgp_entry_gpgme_L },
+  { NULL, NULL },
 };
 
 static const struct ExpandoFormatCallback folder_1[] = {
@@ -205,7 +225,8 @@ const struct ExpandoValidation expando_validation[EFMTI_FORMAT_COUNT_OR_DEBUG] =
   [EFMTI_PGP_DECRYPT_COMMAND]           = { "pgp_decrypt_command",           pgp_command_1,    NULL,    NULL },
   [EFMTI_PGP_ENCRYPT_ONLY_COMMAND]      = { "pgp_encrypt_only_command",      pgp_command_1,    NULL,    NULL },
   [EFMTI_PGP_ENCRYPT_SIGN_COMMAND]      = { "pgp_encrypt_sign_command",      pgp_command_1,    NULL,    NULL },
-  [EFMTI_PGP_ENTRY_FORMAT]              = { "pgp_entry_format",              pgp_entry_1,      NULL,    NULL },
+  [EFMTI_PGP_ENTRY_FORMAT_DLG_GPGME]    = { "pgp_entry_format",              pgp_entry_gpgme_1,NULL,    NULL }, // used in ncrypt/dlg_gpgme.c
+  [EFMTI_PGP_ENTRY_FORMAT_DLG_PGP]      = { "pgp_entry_format",              pgp_entry_pgp_1,  NULL,    NULL }, // used in ncrypt/dlg_pgp.c
   [EFMTI_PGP_EXPORT_COMMAND]            = { "pgp_export_command",            pgp_command_1,    NULL,    NULL },
   [EFMTI_PGP_GET_KEYS_COMMAND]          = { "pgp_get_keys_command",          pgp_command_1,    NULL,    NULL },
   [EFMTI_PGP_IMPORT_COMMAND]            = { "pgp_import_command",            pgp_command_1,    NULL,    NULL },
@@ -252,13 +273,46 @@ int expando_validator(const struct ConfigSet *cs, const struct ConfigDef *cdef,
         buf_printf(err, _("$%s: %s\nDefault value will be used."), cdef->name,
                    error.message);
         expando_tree_free(&root);
+        r->index = -1;
         return CSR_ERR_INVALID;
       }
 
+      r->index = index;
       r->tree = root;
       return CSR_SUCCESS;
     }
   }
 
   return CSR_ERR_INVALID;
+}
+
+bool expando_revalidate(struct ExpandoRecord *record, int index)
+{
+  assert(record);
+  assert(record->string);
+
+  /* no need for revalidation */
+  if (record->index == index)
+  {
+    return true;
+  }
+
+  struct ExpandoParseError error = { 0 };
+  struct ExpandoNode *root = NULL;
+
+  expando_tree_free(&record->tree);
+  expando_tree_parse(&root, &record->string, index, &error);
+
+  if (error.position != NULL)
+  {
+    mutt_error(_("expando_revalidate: %s\n"), error.message);
+    expando_tree_free(&root);
+    record->index = -1;
+    return false;
+  }
+
+  record->index = index;
+  record->tree = root;
+
+  return true;
 }

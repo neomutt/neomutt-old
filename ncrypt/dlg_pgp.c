@@ -212,9 +212,18 @@ static void pgp_make_entry(struct Menu *menu, char *buf, size_t buflen, int line
   entry.num = line + 1;
 
   const struct ExpandoRecord *c_pgp_entry_format = cs_subset_expando(NeoMutt->sub, "pgp_entry_format");
-  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
-                           &c_pgp_entry_format->tree, (intptr_t) &entry,
-                           MUTT_FORMAT_ARROWCURSOR);
+
+  /* $pgp_entry_format is used in ncrypt/dlg_gpgme.c with differnet callbacks 
+     so we need to check if it is validated for ncrypt/dlg_pgp.c */
+  const bool ok = expando_revalidate((struct ExpandoRecord *) c_pgp_entry_format,
+                                     EFMTI_PGP_ENTRY_FORMAT_DLG_PGP);
+
+  if (ok)
+  {
+    mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
+                             &c_pgp_entry_format->tree, (intptr_t) &entry,
+                             MUTT_FORMAT_ARROWCURSOR);
+  }
 }
 
 /**

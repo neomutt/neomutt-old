@@ -436,8 +436,8 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
       if (*s == '{' || *s == '[' || *s == '(')
       {
         if (!(index == EFMTI_FORMAT_COUNT_OR_DEBUG || index == EFMTI_INDEX_FORMAT ||
-              index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT ||
-              index == EFMTI_MAILBOX_FOLDER_FORMAT))
+              index == EFMTI_PGP_ENTRY_FORMAT_DLG_PGP || index == EFMTI_PGP_ENTRY_FORMAT_DLG_GPGME ||
+              index == EFMTI_FOLDER_FORMAT || index == EFMTI_MAILBOX_FOLDER_FORMAT))
         {
           error->position = s;
           snprintf(error->message, sizeof(error->message), "Date is not allowed.");
@@ -459,8 +459,8 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
 
         if (*s == '{')
         {
-          if (index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT ||
-              index == EFMTI_MAILBOX_FOLDER_FORMAT)
+          if (index == EFMTI_PGP_ENTRY_FORMAT_DLG_PGP || index == EFMTI_FOLDER_FORMAT ||
+              index == EFMTI_PGP_ENTRY_FORMAT_DLG_GPGME || index == EFMTI_MAILBOX_FOLDER_FORMAT)
           {
             error->position = s;
             snprintf(error->message, sizeof(error->message), "Invalid date format.");
@@ -492,8 +492,8 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         // '('
         else
         {
-          if (index == EFMTI_PGP_ENTRY_FORMAT || index == EFMTI_FOLDER_FORMAT ||
-              index == EFMTI_MAILBOX_FOLDER_FORMAT)
+          if (index == EFMTI_PGP_ENTRY_FORMAT_DLG_PGP || index == EFMTI_FOLDER_FORMAT ||
+              index == EFMTI_PGP_ENTRY_FORMAT_DLG_GPGME || index == EFMTI_MAILBOX_FOLDER_FORMAT)
           {
             error->position = s;
             snprintf(error->message, sizeof(error->message), "Invalid date format.");
@@ -515,9 +515,13 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
         {
           date_cb = index_date;
         }
-        else if (index == EFMTI_PGP_ENTRY_FORMAT)
+        else if (index == EFMTI_PGP_ENTRY_FORMAT_DLG_PGP)
         {
-          date_cb = pgp_entry_date;
+          date_cb = pgp_entry_pgp_date;
+        }
+        else if (index == EFMTI_PGP_ENTRY_FORMAT_DLG_GPGME)
+        {
+          date_cb = pgp_entry_gpgme_date;
         }
         else if (index == EFMTI_FOLDER_FORMAT || index == EFMTI_MAILBOX_FOLDER_FORMAT)
         {
