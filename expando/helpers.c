@@ -42,6 +42,8 @@
  * @param start      Start of the string
  * @param end        End of the string
  * @return int       Number of characters
+ * 
+ * TODO(g0mb4): Remove this function.
  */
 int mb_strlen_nonnull(const char *start, const char *end)
 {
