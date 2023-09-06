@@ -152,8 +152,8 @@ static void query_make_entry(struct Menu *menu, char *buf, size_t buflen, int li
 
   const struct ExpandoRecord *c_query_format = cs_subset_expando(mdata->sub, "query_format");
 
-  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
-                           &c_query_format->tree, (intptr_t) av, MUTT_FORMAT_ARROWCURSOR);
+  mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_query_format,
+                           (intptr_t) av, MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

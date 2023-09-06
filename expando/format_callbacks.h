@@ -30,14 +30,12 @@
 struct ExpandoNode;
 struct ExpandoFormatPrivate;
 
-// TODO(g0mb4): Remove unsued cols_len?
 typedef int (*expando_format_callback)(const struct ExpandoNode *self, char *buf,
                                         int buf_len, int cols_len,
                                         intptr_t data, MuttFormatFlags flags);
 
-// TODO(g0mb4): Remove unsued start_col?
-void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len, int start_col, int max_col,
-                 intptr_t data, MuttFormatFlags flags);
+void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
+                 size_t col_len, intptr_t data, MuttFormatFlags flags);
 
 int text_format_callback(const struct ExpandoNode *self, char *buf,
                          int buf_len, int cols_len, intptr_t data, MuttFormatFlags flags);

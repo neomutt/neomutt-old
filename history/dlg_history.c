@@ -94,10 +94,8 @@ static void history_make_entry(struct Menu *menu, char *buf, size_t buflen, int 
   char *entry = ((char **) menu->mdata)[line];
 
   const struct ExpandoRecord *c_history_format = cs_subset_expando(NeoMutt->sub, "history_format");
-
-  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
-                           &c_history_format->tree, (intptr_t) entry,
-                           MUTT_FORMAT_ARROWCURSOR);
+  mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_history_format,
+                           (intptr_t) entry, MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

@@ -40,12 +40,12 @@
 #include "config/lib.h"
 #include "core/lib.h"
 #include "gui/lib.h"
-#include "pgpinvoke.h"
 #include "lib.h"
 #include "expando/lib.h"
 #include "format_flags.h"
 #include "mutt_logging.h"
 #include "muttlib.h"
+#include "pgpinvoke.h"
 #include "pgpkey.h"
 #include "protos.h"
 #ifdef CRYPT_BACKEND_CLASSIC_PGP
@@ -62,10 +62,9 @@
  * @sa pgp_command_format_str()
  */
 static void mutt_pgp_command(char *buf, size_t buflen, struct PgpCommandContext *cctx,
-                             const struct ExpandoRecord *r)
+                             const struct ExpandoRecord *record)
 {
-  mutt_expando_format_2gmb(buf, buflen, 0, buflen, &r->tree, (intptr_t) cctx,
-                           MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format_2gmb(buf, buflen, buflen, record, (intptr_t) cctx, MUTT_FORMAT_NO_FLAGS);
   mutt_debug(LL_DEBUG2, "%s\n", buf);
 }
 

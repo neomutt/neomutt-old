@@ -682,7 +682,7 @@ void mutt_make_attribution_trailer(struct Email *e, FILE *fp_out, struct ConfigS
  *
  * @sa $greeting, greeting_format_str()
  */
-static void mutt_make_greeting(struct Email *e, FILE *fp_out, struct ConfigSubset *sub)
+static void mutt_make_greeting(struct Email *email, FILE *fp_out, struct ConfigSubset *sub)
 {
   const struct ExpandoRecord *c_greeting = cs_subset_expando(sub, "greeting");
   if (!c_greeting || !fp_out)
@@ -690,8 +690,8 @@ static void mutt_make_greeting(struct Email *e, FILE *fp_out, struct ConfigSubse
 
   char buf[1024] = { 0 };
 
-  mutt_expando_format_2gmb(buf, sizeof(buf), 0, sizeof(buf), &c_greeting->tree,
-                           (intptr_t) e, TOKEN_NO_FLAGS);
+  mutt_expando_format_2gmb(buf, sizeof(buf), sizeof(buf), c_greeting,
+                           (intptr_t) email, TOKEN_NO_FLAGS);
 
   fputs(buf, fp_out);
   fputc('\n', fp_out);

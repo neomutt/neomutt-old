@@ -111,5 +111,5 @@ void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
   hfi.msg_in_pager = inpgr;
   hfi.pager_progress = progress;
 
-  mutt_expando_format_2gmb(buf, buflen, 0, cols, &record->tree, (intptr_t) &hfi, flags);
+  mutt_expando_format_2gmb(buf, buflen, cols, record, (intptr_t) &hfi, flags);
 }

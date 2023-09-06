@@ -32,32 +32,22 @@
 #include "mutt/lib.h"
 #include "expando/lib.h"
 
-// TODO(g0mb4): Implement this properly or remove it is asways 0
-char *got_to_column(char **start, int col)
-{
-  char *s = *start;
-  assert(col == 0);
-  return (char *) s;
-}
-
 void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
-                 int start_col, int max_col, intptr_t data, MuttFormatFlags flags)
+                 size_t col_len, intptr_t data, MuttFormatFlags flags)
 {
   const struct ExpandoNode *n = *tree;
-  char *buffer = got_to_column(&buf, start_col);
-  int buffer_len = buf_len - (buffer - buf);
-
-  assert(max_col >= start_col);
-  int col_len = max_col - start_col + 1;
+  char *buffer = buf;
+  int buffer_len = (int) buf_len;
+  int columns_len = (int) col_len;
 
   int printed = 0;
-  while (n && buffer_len > 0 && col_len > 0)
+  while (n && buffer_len > 0 && columns_len > 0)
   {
     if (n->format_cb)
     {
-      printed = n->format_cb(n, buffer, buffer_len, col_len, data, flags);
+      printed = n->format_cb(n, buffer, buffer_len, columns_len, data, flags);
 
-      col_len -= mb_strwidth_nonnull(buffer, buffer + printed);
+      columns_len -= mb_strwidth_nonnull(buffer, buffer + printed);
       buffer_len -= printed;
       buffer += printed;
     }
@@ -70,7 +60,7 @@ void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
   {
     if (n->type == ENT_PAD && n->format_cb)
     {
-      n->format_cb(n, buffer, buffer_len, col_len, data, flags);
+      n->format_cb(n, buffer, buffer_len, columns_len, data, flags);
     }
     n = n->next;
   }
@@ -125,7 +115,7 @@ int conditional_format_callback(const struct ExpandoNode *self, char *buf, int b
   if (printed > 0 && !mutt_str_equal(tmp, "0"))
   {
     memset(tmp, 0, sizeof(tmp));
-    format_tree(&cp->if_true_tree, tmp, sizeof(tmp), 0, sizeof(tmp), data, flags);
+    format_tree(&cp->if_true_tree, tmp, sizeof(tmp), sizeof(tmp), data, flags);
 
     int copylen = strlen(tmp);
     if (copylen > buf_len)
@@ -141,7 +131,7 @@ int conditional_format_callback(const struct ExpandoNode *self, char *buf, int b
     if (cp->if_false_tree)
     {
       memset(tmp, 0, sizeof(tmp));
-      format_tree(&cp->if_false_tree, tmp, sizeof(tmp), 0, sizeof(tmp), data, flags);
+      format_tree(&cp->if_false_tree, tmp, sizeof(tmp), sizeof(tmp), data, flags);
 
       // FIXME(g0mb4): handle cols_len
       int copylen = strlen(tmp);
@@ -191,8 +181,7 @@ static int pad_format_hard_fill(const struct ExpandoNode *self, char *buf, int b
   const int pad_width = mb_strwidth_nonnull(self->start, self->end);
 
   char tmp[128] = { 0 };
-  format_tree((struct ExpandoNode **) &self->next, tmp, sizeof(tmp), 0,
-              sizeof(tmp), data, flags);
+  format_tree((struct ExpandoNode **) &self->next, tmp, sizeof(tmp), sizeof(tmp), data, flags);
   const int right_len = mutt_str_len(tmp);
   const int right_width = mutt_strwidth(tmp);
 
@@ -226,8 +215,7 @@ static int pad_format_soft_fill(const struct ExpandoNode *self, char *buf, int b
   const int pad_width = mb_strwidth_nonnull(self->start, self->end);
 
   char tmp[128] = { 0 };
-  format_tree((struct ExpandoNode **) &self->next, tmp, sizeof(tmp), 0,
-              sizeof(tmp), data, flags);
+  format_tree((struct ExpandoNode **) &self->next, tmp, sizeof(tmp), sizeof(tmp), data, flags);
 
   const int right_len = mutt_str_len(tmp);
 

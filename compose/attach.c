@@ -224,8 +224,7 @@ static void compose_make_entry(struct Menu *menu, char *buf, size_t buflen, int 
   struct ConfigSubset *sub = shared->sub;
 
   const struct ExpandoRecord *c_attach_format = cs_subset_expando(sub, "attach_format");
-  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
-                           &c_attach_format->tree,
+  mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_attach_format,
                            (intptr_t) (actx->idx[actx->v2r[line]]),
                            MUTT_FORMAT_STAT_FILE | MUTT_FORMAT_ARROWCURSOR);
 }

@@ -34,10 +34,10 @@
 struct Address;
 struct Body;
 struct Buffer;
-struct ExpandoNode;
 struct ListHead;
 struct passwd;
 struct stat;
+struct ExpandoRecord;
 
 void        mutt_adv_mktemp(struct Buffer *buf);
 void        buf_expand_path(struct Buffer *buf);
@@ -67,8 +67,8 @@ void        mutt_str_pretty_size(char *buf, size_t buflen, size_t num);
 void add_to_stailq     (struct ListHead *head, const char *str);
 void remove_from_stailq(struct ListHead *head, const char *str);
 
-void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
-                              struct ExpandoNode *const *tree, intptr_t data,
+void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t cols,
+                              const struct ExpandoRecord *record, intptr_t data,
                               MuttFormatFlags flags);
 
 #endif /* MUTT_MUTTLIB_H */

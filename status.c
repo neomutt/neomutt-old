@@ -34,12 +34,12 @@
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/lib.h"
-#include "status.h"
 #include "index/lib.h"
 #include "menu/lib.h"
 #include "postpone/lib.h"
 #include "format_flags.h"
 #include "muttlib.h"
+#include "status.h"
 
 /**
  * menu_status_line - Create the status line
@@ -57,6 +57,5 @@ void menu_status_line(char *buf, size_t buflen, struct IndexSharedData *shared,
   assert(record);
   struct MenuStatusLineData data = { shared, menu };
 
-  mutt_expando_format_2gmb(buf, buflen, 0, cols, &record->tree,
-                           (intptr_t) &data, MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format_2gmb(buf, buflen, cols, record, (intptr_t) &data, MUTT_FORMAT_NO_FLAGS);
 }

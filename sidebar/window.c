@@ -328,7 +328,7 @@ static void make_sidebar_entry(char *buf, size_t buflen, int width,
   struct SidebarFormatData data = { sbe, shared };
 
   const struct ExpandoRecord *c_sidebar_format = cs_subset_expando(NeoMutt->sub, "sidebar_format");
-  mutt_expando_format_2gmb(buf, buflen, 0, width, &c_sidebar_format->tree,
+  mutt_expando_format_2gmb(buf, buflen, width, c_sidebar_format,
                            (intptr_t) &data, MUTT_FORMAT_NO_FLAGS);
 
   /* Force string to be exactly the right width */

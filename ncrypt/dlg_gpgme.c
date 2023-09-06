@@ -252,9 +252,8 @@ static void crypt_make_entry(struct Menu *menu, char *buf, size_t buflen, int li
                                      EFMTI_PGP_ENTRY_FORMAT_DLG_GPGME);
   if (ok)
   {
-    mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
-                             &c_pgp_entry_format->tree, (intptr_t) &entry,
-                             MUTT_FORMAT_ARROWCURSOR);
+    mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_pgp_entry_format,
+                             (intptr_t) &entry, MUTT_FORMAT_ARROWCURSOR);
   }
 }
 

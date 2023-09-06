@@ -322,19 +322,26 @@ int index_format_hook_callback(const struct ExpandoNode *self, char *buf, int bu
 
   // FIXME(g0mb4): save parsed expando records somewhere
   const char *fmt_str = NONULL(mutt_idxfmt_hook(tmp2, mailbox, email));
+  struct ExpandoRecord *record = mutt_mem_calloc(1, sizeof(struct ExpandoRecord));
+  record->index = EFMTI_INDEX_FORMAT;
+  record->string = fmt_str;
+
   struct ExpandoParseError error = { 0 };
-  struct ExpandoNode *root = NULL;
-  expando_tree_parse(&root, &fmt_str, EFMTI_INDEX_FORMAT, &error);
+  expando_tree_parse(&record->tree, &record->string, record->index, &error);
 
   int n = 0;
   if (error.position == NULL)
   {
-    mutt_expando_format_2gmb(tmp, sizeof(tmp), 0, sizeof(tmp), &root, data, flags);
+    mutt_expando_format_2gmb(tmp, sizeof(tmp), sizeof(tmp), record, data, flags);
     format_string_simple(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS);
     n = snprintf(buf, buf_len, "%s", fmt);
   }
+  else
+  {
+    mutt_error(_("index_format_hook: %s"), error.message);
+  }
 
-  expando_tree_free(&root);
+  expando_free(&record);
   return n;
 }
 

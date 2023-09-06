@@ -42,12 +42,12 @@
 #include "config/lib.h"
 #include "core/lib.h"
 #include "gui/lib.h"
-#include "sendmail.h"
 #include "expando/lib.h"
 #include "pager/lib.h"
 #include "format_flags.h"
 #include "globals.h"
 #include "muttlib.h"
+#include "sendmail.h"
 #ifdef USE_NNTP
 #include "nntp/lib.h"
 #endif
@@ -311,8 +311,7 @@ int mutt_invoke_sendmail(struct Mailbox *m, struct AddressList *from,
     char cmd[1024] = { 0 };
 
     const struct ExpandoRecord *c_inews = cs_subset_expando(sub, "inews");
-    mutt_expando_format_2gmb(cmd, sizeof(cmd), 0, sizeof(cmd), &c_inews->tree,
-                             0, MUTT_FORMAT_NO_FLAGS);
+    mutt_expando_format_2gmb(cmd, sizeof(cmd), sizeof(cmd), c_inews, 0, MUTT_FORMAT_NO_FLAGS);
     if (*cmd == '\0')
     {
       i = nntp_post(m, msg);

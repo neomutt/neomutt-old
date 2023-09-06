@@ -541,9 +541,8 @@ static void folder_make_entry(struct Menu *menu, char *buf, size_t buflen, int l
   if (OptNews)
   {
     const struct ExpandoRecord *c_group_index_format = cs_subset_expando(NeoMutt->sub, "group_index_format");
-    mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
-                             &c_group_index_format->tree, (intptr_t) &folder,
-                             MUTT_FORMAT_ARROWCURSOR);
+    mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_group_index_format,
+                             (intptr_t) &folder, MUTT_FORMAT_ARROWCURSOR);
   }
   else
 #endif
@@ -551,16 +550,14 @@ static void folder_make_entry(struct Menu *menu, char *buf, size_t buflen, int l
   {
     const struct ExpandoRecord *c_mailbox_folder_format =
         cs_subset_expando(NeoMutt->sub, "mailbox_folder_format");
-    mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
-                             &c_mailbox_folder_format->tree, (intptr_t) &folder,
-                             MUTT_FORMAT_ARROWCURSOR);
+    mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_mailbox_folder_format,
+                             (intptr_t) &folder, MUTT_FORMAT_ARROWCURSOR);
   }
   else
   {
     const struct ExpandoRecord *c_folder_format = cs_subset_expando(NeoMutt->sub, "folder_format");
-    mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
-                             &c_folder_format->tree, (intptr_t) &folder,
-                             MUTT_FORMAT_ARROWCURSOR);
+    mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_folder_format,
+                             (intptr_t) &folder, MUTT_FORMAT_ARROWCURSOR);
   }
 }
 

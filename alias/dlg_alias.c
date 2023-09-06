@@ -122,8 +122,8 @@ static void alias_make_entry(struct Menu *menu, char *buf, size_t buflen, int li
 
   const struct ExpandoRecord *c_alias_format = cs_subset_expando(mdata->sub, "alias_format");
 
-  mutt_expando_format_2gmb(buf, buflen, 0, menu->win->state.cols,
-                           &c_alias_format->tree, (intptr_t) av, MUTT_FORMAT_ARROWCURSOR);
+  mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_alias_format,
+                           (intptr_t) av, MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

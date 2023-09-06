@@ -203,10 +203,9 @@ bool smime_class_valid_passphrase(void)
  * @sa smime_command_format_str()
  */
 static void smime_command(char *buf, size_t buflen, struct SmimeCommandContext *cctx,
-                          const struct ExpandoRecord *r)
+                          const struct ExpandoRecord *record)
 {
-  mutt_expando_format_2gmb(buf, buflen, 0, buflen, &r->tree, (intptr_t) cctx,
-                           MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format_2gmb(buf, buflen, buflen, record, (intptr_t) cctx, MUTT_FORMAT_NO_FLAGS);
   mutt_debug(LL_DEBUG2, "%s\n", buf);
 }
 

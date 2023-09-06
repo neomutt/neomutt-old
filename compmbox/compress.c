@@ -283,13 +283,13 @@ static void compress_info_free(struct Mailbox *m)
  *
  * @sa compress_format_str()
  */
-static void expand_command_str(const struct Mailbox *m,
-                               const struct ExpandoRecord *r, char *buf, int buflen)
+static void expand_command_str(const struct Mailbox *mailbox,
+                               const struct ExpandoRecord *record, char *buf, int buflen)
 {
-  if (!m || !r || !buf)
+  if (!mailbox || !record || !buf)
     return;
 
-  mutt_expando_format_2gmb(buf, buflen, 0, buflen, &r->tree, (intptr_t) m, MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format_2gmb(buf, buflen, buflen, record, (intptr_t) mailbox, MUTT_FORMAT_NO_FLAGS);
 }
 
 /**
