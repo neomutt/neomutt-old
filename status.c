@@ -57,5 +57,5 @@ void menu_status_line(char *buf, size_t buflen, struct IndexSharedData *shared,
   assert(record);
   struct MenuStatusLineData data = { shared, menu };
 
-  mutt_expando_format_2gmb(buf, buflen, cols, record, (intptr_t) &data, MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format(buf, buflen, cols, record, (intptr_t) &data, MUTT_FORMAT_NO_FLAGS);
 }

@@ -1031,8 +1031,8 @@ struct NntpAccountData *nntp_select_server(struct Mailbox *m, const char *server
   if (rc >= 0)
   {
     const struct ExpandoRecord *c_newsrc = cs_subset_expando(NeoMutt->sub, "newsrc");
-    mutt_expando_format_2gmb(file, sizeof(file), sizeof(file), c_newsrc,
-                             (intptr_t) adata, MUTT_FORMAT_NO_FLAGS);
+    mutt_expando_format(file, sizeof(file), sizeof(file), c_newsrc,
+                        (intptr_t) adata, MUTT_FORMAT_NO_FLAGS);
     mutt_expand_path(file, sizeof(file));
     adata->newsrc_file = mutt_str_dup(file);
     rc = nntp_newsrc_parse(adata);

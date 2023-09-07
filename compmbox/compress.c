@@ -289,7 +289,7 @@ static void expand_command_str(const struct Mailbox *mailbox,
   if (!mailbox || !record || !buf)
     return;
 
-  mutt_expando_format_2gmb(buf, buflen, buflen, record, (intptr_t) mailbox, MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format(buf, buflen, buflen, record, (intptr_t) mailbox, MUTT_FORMAT_NO_FLAGS);
 }
 
 /**

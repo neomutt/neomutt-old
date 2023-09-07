@@ -311,7 +311,7 @@ int mutt_invoke_sendmail(struct Mailbox *m, struct AddressList *from,
     char cmd[1024] = { 0 };
 
     const struct ExpandoRecord *c_inews = cs_subset_expando(sub, "inews");
-    mutt_expando_format_2gmb(cmd, sizeof(cmd), sizeof(cmd), c_inews, 0, MUTT_FORMAT_NO_FLAGS);
+    mutt_expando_format(cmd, sizeof(cmd), sizeof(cmd), c_inews, 0, MUTT_FORMAT_NO_FLAGS);
     if (*cmd == '\0')
     {
       i = nntp_post(m, msg);

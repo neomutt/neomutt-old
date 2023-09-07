@@ -40,8 +40,8 @@
 #include "email/lib.h"
 #include "core/lib.h"
 #include "alias/lib.h"
-#include "hook.h"
 #include "attach/lib.h"
+#include "expando/lib.h"
 #include "index/lib.h"
 #include "ncrypt/lib.h"
 #include "parse/lib.h"
@@ -50,6 +50,7 @@
 #include "format_flags.h"
 #include "globals.h" // IWYU pragma: keep
 #include "hdrline.h"
+#include "hook.h"
 #include "muttlib.h"
 #include "mx.h"
 #ifdef USE_COMP_MBOX
@@ -706,6 +707,7 @@ static int addr_hook(char *path, size_t pathlen, HookFlags type,
 {
   struct Hook *hook = NULL;
   struct PatternCache cache = { 0 };
+  int ret = -1;
 
   /* determine if a matching hook exists */
   TAILQ_FOREACH(hook, &Hooks, entries)
@@ -718,14 +720,32 @@ static int addr_hook(char *path, size_t pathlen, HookFlags type,
       if ((mutt_pattern_exec(SLIST_FIRST(hook->pattern), 0, m, e, &cache) > 0) ^
           hook->regex.pat_not)
       {
-        // TODO(g0mb4): replace mutt_make_string_2gmb
-        mutt_make_string(path, pathlen, 0, hook->command, m, -1, e, MUTT_FORMAT_PLAIN, NULL, 0);
-        return 0;
+        // TODO(g0mb4): Save parsed hooks
+        struct ExpandoRecord *r = mutt_mem_calloc(1, sizeof(struct ExpandoRecord));
+        struct ExpandoParseError error = { 0 };
+        r->string = mutt_str_dup(hook->command);
+        r->index = EFMTI_INDEX_FORMAT;
+        expando_tree_parse(&r->tree, &r->string, r->index, &error);
+
+        if (error.position != NULL)
+        {
+          mutt_error(_("$index hook: %s"), error.message);
+          ret = -1;
+        }
+        else
+        {
+          mutt_make_string(path, pathlen, pathlen, r, m, -1, e, MUTT_FORMAT_PLAIN, NULL);
+          ret = 0;
+        }
+
+        expando_free(&r);
+
+        return ret;
       }
     }
   }
 
-  return -1;
+  return ret;
 }
 
 /**

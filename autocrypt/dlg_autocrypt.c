@@ -122,8 +122,8 @@ static void autocrypt_make_entry(struct Menu *menu, char *buf, size_t buflen, in
 
   const struct ExpandoRecord *c_autocrypt_acct_format =
       cs_subset_expando(NeoMutt->sub, "autocrypt_acct_format");
-  mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_autocrypt_acct_format,
-                           (intptr_t) entry, MUTT_FORMAT_ARROWCURSOR);
+  mutt_expando_format(buf, buflen, menu->win->state.cols, c_autocrypt_acct_format,
+                      (intptr_t) entry, MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

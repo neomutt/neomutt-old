@@ -101,9 +101,9 @@ int attach_d(const struct ExpandoNode *self, char *buf, int buf_len,
       c_message_format && aptr->body->email)
   {
     char tmp[128] = { 0 };
-    mutt_make_string_2gmb(tmp, sizeof(tmp), cols_len, c_message_format, NULL,
-                          -1, aptr->body->email,
-                          MUTT_FORMAT_FORCESUBJ | MUTT_FORMAT_ARROWCURSOR, NULL);
+    mutt_make_string(tmp, sizeof(tmp), cols_len, c_message_format, NULL, -1,
+                     aptr->body->email,
+                     MUTT_FORMAT_FORCESUBJ | MUTT_FORMAT_ARROWCURSOR, NULL);
     if (*tmp)
     {
       format_string_simple(fmt, sizeof(fmt), tmp, format);

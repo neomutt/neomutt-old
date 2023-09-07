@@ -461,8 +461,8 @@ void mutt_forward_intro(struct Email *e, FILE *fp, struct ConfigSubset *sub)
 
   char buf[1024] = { 0 };
   setlocale(LC_TIME, NONULL(c_attribution_locale));
-  mutt_make_string_2gmb(buf, sizeof(buf), 0, c_forward_attribution_intro, NULL,
-                        -1, e, MUTT_FORMAT_NO_FLAGS, NULL);
+  mutt_make_string(buf, sizeof(buf), 0, c_forward_attribution_intro, NULL, -1,
+                   e, MUTT_FORMAT_NO_FLAGS, NULL);
   setlocale(LC_TIME, "");
   fputs(buf, fp);
   fputs("\n\n", fp);
@@ -484,8 +484,8 @@ void mutt_forward_trailer(struct Email *e, FILE *fp, struct ConfigSubset *sub)
 
   char buf[1024] = { 0 };
   setlocale(LC_TIME, NONULL(c_attribution_locale));
-  mutt_make_string_2gmb(buf, sizeof(buf), 0, c_forward_attribution_trailer,
-                        NULL, -1, e, MUTT_FORMAT_NO_FLAGS, NULL);
+  mutt_make_string(buf, sizeof(buf), 0, c_forward_attribution_trailer, NULL, -1,
+                   e, MUTT_FORMAT_NO_FLAGS, NULL);
   setlocale(LC_TIME, "");
   fputc('\n', fp);
   fputs(buf, fp);
@@ -646,7 +646,7 @@ static void format_attribution(const struct ExpandoRecord *r, struct Email *e,
 
   char buf[1024] = { 0 };
   setlocale(LC_TIME, NONULL(c_attribution_locale));
-  mutt_make_string_2gmb(buf, sizeof(buf), 0, r, NULL, -1, e, MUTT_FORMAT_NO_FLAGS, NULL);
+  mutt_make_string(buf, sizeof(buf), 0, r, NULL, -1, e, MUTT_FORMAT_NO_FLAGS, NULL);
   setlocale(LC_TIME, "");
   fputs(buf, fp_out);
   fputc('\n', fp_out);
@@ -690,8 +690,8 @@ static void mutt_make_greeting(struct Email *email, FILE *fp_out, struct ConfigS
 
   char buf[1024] = { 0 };
 
-  mutt_expando_format_2gmb(buf, sizeof(buf), sizeof(buf), c_greeting,
-                           (intptr_t) email, TOKEN_NO_FLAGS);
+  mutt_expando_format(buf, sizeof(buf), sizeof(buf), c_greeting,
+                      (intptr_t) email, TOKEN_NO_FLAGS);
 
   fputs(buf, fp_out);
   fputc('\n', fp_out);
@@ -995,8 +995,8 @@ void mutt_make_forward_subject(struct Envelope *env, struct Email *e, struct Con
 
   char buf[256] = { 0 };
   /* set the default subject for the message. */
-  mutt_make_string_2gmb(buf, sizeof(buf), 0, c_forward_format, NULL, -1, e,
-                        MUTT_FORMAT_NO_FLAGS, NULL);
+  mutt_make_string(buf, sizeof(buf), 0, c_forward_format, NULL, -1, e,
+                   MUTT_FORMAT_NO_FLAGS, NULL);
   mutt_str_replace(&env->subject, buf);
 }
 

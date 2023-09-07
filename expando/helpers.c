@@ -90,8 +90,7 @@ int mb_strwidth_nonnull(const char *start, const char *end)
   return width;
 }
 
-static size_t add_index_color_2gmb(char *buf, int buflen, MuttFormatFlags flags,
-                                   enum ColorId color)
+static size_t add_index_color(char *buf, int buflen, MuttFormatFlags flags, enum ColorId color)
 {
   /* only add color markers if we are operating on main index entries. */
   if (!(flags & MUTT_FORMAT_INDEX))
@@ -128,18 +127,18 @@ void format_string(char *buf, int buf_len, const char *s, MuttFormatFlags flags,
 {
   if (format)
   {
-    const size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
+    const size_t colorlen1 = add_index_color(buf, buf_len, flags, pre);
     mutt_simple_format(buf + colorlen1, buf_len - colorlen1, format->min,
                        format->max, format->justification, format->leader, s,
                        strlen(s), has_tree == HAS_TREE);
     const int n = strlen(buf);
-    add_index_color_2gmb(buf + n, buf_len - n, flags, post);
+    add_index_color(buf + n, buf_len - n, flags, post);
   }
   else
   {
-    const size_t colorlen1 = add_index_color_2gmb(buf, buf_len, flags, pre);
+    const size_t colorlen1 = add_index_color(buf, buf_len, flags, pre);
     const int n = snprintf(buf + colorlen1, buf_len - colorlen1, "%s", s);
-    add_index_color_2gmb(buf + colorlen1 + n, buf_len - colorlen1 - n, flags, post);
+    add_index_color(buf + colorlen1 + n, buf_len - colorlen1 - n, flags, post);
   }
 }
 

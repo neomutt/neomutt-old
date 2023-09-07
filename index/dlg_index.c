@@ -883,8 +883,8 @@ void index_make_entry(struct Menu *menu, char *buf, size_t buflen, int line)
 
   const struct ExpandoRecord *c_index_format = cs_subset_expando(shared->sub, "index_format");
   int msg_in_pager = shared->mailbox_view ? shared->mailbox_view->msg_in_pager : 0;
-  mutt_make_string_2gmb(buf, buflen, menu->win->state.cols, c_index_format, m,
-                        msg_in_pager, e, flags, NULL);
+  mutt_make_string(buf, buflen, menu->win->state.cols, c_index_format, m,
+                   msg_in_pager, e, flags, NULL);
 }
 
 /**

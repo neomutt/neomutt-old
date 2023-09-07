@@ -205,11 +205,6 @@ int mutt_rfc822_write_header(FILE *fp, struct Envelope *env, struct Body *attach
   return 0;
 }
 
-void mutt_expando_format(char *buf, size_t buflen, size_t col, int cols, const char *src,
-                         format_t *callback, intptr_t data, MuttFormatFlags flags)
-{
-}
-
 void menu_pop_current(struct Menu *menu)
 {
 }

@@ -332,7 +332,7 @@ int index_format_hook_callback(const struct ExpandoNode *self, char *buf, int bu
   int n = 0;
   if (error.position == NULL)
   {
-    mutt_expando_format_2gmb(tmp, sizeof(tmp), sizeof(tmp), record, data, flags);
+    mutt_expando_format(tmp, sizeof(tmp), sizeof(tmp), record, data, flags);
     format_string_simple(fmt, sizeof(fmt), tmp, MUTT_FORMAT_NO_FLAGS);
     n = snprintf(buf, buf_len, "%s", fmt);
   }
@@ -343,100 +343,6 @@ int index_format_hook_callback(const struct ExpandoNode *self, char *buf, int bu
 
   expando_free(&record);
   return n;
-}
-
-/**
- * make_from_prefix - Create a prefix for an author field
- * @param disp   Type of field
- * @retval ptr Prefix string (do not free it)
- *
- * If $from_chars is set, pick an appropriate character from it.
- * If not, use the default prefix: "To", "Cc", etc
- */
-static const char *make_from_prefix_2gmb(enum FieldType disp)
-{
-  /* need 2 bytes at the end, one for the space, another for NUL */
-  static char padded[8];
-  static const char *long_prefixes[DISP_MAX] = {
-    [DISP_TO] = "To ", [DISP_CC] = "Cc ", [DISP_BCC] = "Bcc ",
-    [DISP_FROM] = "",  [DISP_PLAIN] = "",
-  };
-
-  const struct MbTable *c_from_chars = cs_subset_mbtable(NeoMutt->sub, "from_chars");
-
-  if (!c_from_chars || !c_from_chars->chars || (c_from_chars->len == 0))
-    return long_prefixes[disp];
-
-  const char *pchar = mbtable_get_nth_wchar(c_from_chars, disp);
-  if (mutt_str_len(pchar) == 0)
-    return "";
-
-  snprintf(padded, sizeof(padded), "%s ", pchar);
-  return padded;
-}
-
-/**
- * make_from - Generate a From: field (with optional prefix)
- * @param env      Envelope of the email
- * @param buf      Buffer to store the result
- * @param buflen   Size of the buffer
- * @param do_lists Should we check for mailing lists?
- * @param flags    Format flags, see #MuttFormatFlags
- *
- * Generate the %F or %L field in $index_format.
- * This is the author, or recipient of the email.
- *
- * The field can optionally be prefixed by a character from $from_chars.
- * If $from_chars is not set, the prefix will be, "To", "Cc", etc
- */
-static void make_from_2gmb(struct Envelope *env, char *buf, size_t buflen,
-                           bool do_lists, MuttFormatFlags flags)
-{
-  if (!env || !buf)
-    return;
-
-  bool me;
-  enum FieldType disp;
-  struct AddressList *name = NULL;
-
-  me = mutt_addr_is_user(TAILQ_FIRST(&env->from));
-
-  if (do_lists || me)
-  {
-    if (check_for_mailing_list(&env->to, make_from_prefix_2gmb(DISP_TO), buf, buflen))
-      return;
-    if (check_for_mailing_list(&env->cc, make_from_prefix_2gmb(DISP_CC), buf, buflen))
-      return;
-  }
-
-  if (me && !TAILQ_EMPTY(&env->to))
-  {
-    disp = (flags & MUTT_FORMAT_PLAIN) ? DISP_PLAIN : DISP_TO;
-    name = &env->to;
-  }
-  else if (me && !TAILQ_EMPTY(&env->cc))
-  {
-    disp = DISP_CC;
-    name = &env->cc;
-  }
-  else if (me && !TAILQ_EMPTY(&env->bcc))
-  {
-    disp = DISP_BCC;
-    name = &env->bcc;
-  }
-  else if (!TAILQ_EMPTY(&env->from))
-  {
-    disp = DISP_FROM;
-    name = &env->from;
-  }
-  else
-  {
-    *buf = '\0';
-    return;
-  }
-
-  snprintf(buf, buflen, "%s%s", make_from_prefix_2gmb(disp),
-           mutt_get_name(TAILQ_FIRST(name)));
 }
 
 int index_a(const struct ExpandoNode *self, char *buf, int buf_len,
@@ -1059,7 +965,7 @@ int index_L(const struct ExpandoNode *self, char *buf, int buf_len,
 
   char fmt[128], tmp[128];
 
-  make_from_2gmb(email->env, tmp, sizeof(tmp), true, flags);
+  make_from(email->env, tmp, sizeof(tmp), true, flags);
   format_string(fmt, sizeof(fmt), tmp, flags, MT_COLOR_INDEX_AUTHOR,
                 MT_COLOR_INDEX, format, NO_TREE);
   return snprintf(buf, buf_len, "%s", fmt);

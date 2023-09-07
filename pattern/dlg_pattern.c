@@ -106,8 +106,8 @@ static void make_pattern_entry(struct Menu *menu, char *buf, size_t buflen, int 
   struct PatternEntry *entry = &((struct PatternEntry *) menu->mdata)[num];
 
   const struct ExpandoRecord *c_pattern_format = cs_subset_expando(NeoMutt->sub, "pattern_format");
-  mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_pattern_format,
-                           (intptr_t) entry, MUTT_FORMAT_ARROWCURSOR);
+  mutt_expando_format(buf, buflen, menu->win->state.cols, c_pattern_format,
+                      (intptr_t) entry, MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

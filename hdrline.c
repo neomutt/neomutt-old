@@ -67,29 +67,6 @@
  * @param buf      Buffer for the result
  * @param buflen   Buffer length
  * @param cols     Number of screen columns (OPTIONAL)
- * @param s        printf-line format string
- * @param m        Mailbox
- * @param inpgr    Message shown in the pager
- * @param e        Email
- * @param flags    Flags, see #MuttFormatFlags
- * @param progress Pager progress string
- *
- * @sa index_format_str()
- * 
- * compile_error is there to trigger compilation errors
- */
-void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
-                      struct Mailbox *m, int inpgr, struct Email *e,
-                      MuttFormatFlags flags, const char *progress, int compile_error)
-{
-  assert(0 && "Remove mutt_make_string");
-}
-
-/**
- * mutt_make_string - Create formatted strings using mailbox expandos
- * @param buf      Buffer for the result
- * @param buflen   Buffer length
- * @param cols     Number of screen columns (OPTIONAL)
  * @param record   ExpandoRecord containing expando tree
  * @param m        Mailbox
  * @param inpgr    Message shown in the pager
@@ -99,10 +76,9 @@ void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
  *
  * @sa index_format_str()
  */
-void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
-                           const struct ExpandoRecord *record,
-                           struct Mailbox *m, int inpgr, struct Email *e,
-                           MuttFormatFlags flags, const char *progress)
+void mutt_make_string(char *buf, size_t buflen, size_t cols,
+                      const struct ExpandoRecord *record, struct Mailbox *m, int inpgr,
+                      struct Email *e, MuttFormatFlags flags, const char *progress)
 {
   struct HdrFormatInfo hfi = { 0 };
 
@@ -111,5 +87,5 @@ void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
   hfi.msg_in_pager = inpgr;
   hfi.pager_progress = progress;
 
-  mutt_expando_format_2gmb(buf, buflen, cols, record, (intptr_t) &hfi, flags);
+  mutt_expando_format(buf, buflen, cols, record, (intptr_t) &hfi, flags);
 }

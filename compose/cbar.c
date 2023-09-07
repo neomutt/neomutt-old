@@ -91,8 +91,8 @@ static int cbar_recalc(struct MuttWindow *win)
   struct ComposeSharedData *shared = win->parent->wdata;
 
   const struct ExpandoRecord *c_compose_format = cs_subset_expando(shared->sub, "compose_format");
-  mutt_expando_format_2gmb(buf, sizeof(buf), win->state.cols, c_compose_format,
-                           (intptr_t) shared, MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format(buf, sizeof(buf), win->state.cols, c_compose_format,
+                      (intptr_t) shared, MUTT_FORMAT_NO_FLAGS);
 
   struct ComposeBarData *cbar_data = win->wdata;
   if (!mutt_str_equal(buf, cbar_data->compose_format))

@@ -101,12 +101,8 @@ enum FieldType
   DISP_MAX,
 };
 
-void mutt_make_string(char *buf, size_t buflen, int cols, const char *s,
+void mutt_make_string(char *buf, size_t buflen, size_t cols, const struct ExpandoRecord *r,
                       struct Mailbox *m, int inpgr, struct Email *e,
-                      MuttFormatFlags flags, const char *progress, int compile_error);
-
-void mutt_make_string_2gmb(char *buf, size_t buflen, int cols, const struct ExpandoRecord *r,
-                           struct Mailbox *m, int inpgr, struct Email *e,
-                           MuttFormatFlags flags, const char *progress);
+                      MuttFormatFlags flags, const char *progress);
 
 #endif /* MUTT_HDRLINE_H */

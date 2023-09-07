@@ -71,8 +71,8 @@ static void mix_make_entry(struct Menu *menu, char *buf, size_t buflen, int num)
     return;
 
   const struct ExpandoRecord *c_mix_entry_format = cs_subset_expando(NeoMutt->sub, "mix_entry_format");
-  mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_mix_entry_format,
-                           (intptr_t) *r, MUTT_FORMAT_ARROWCURSOR);
+  mutt_expando_format(buf, buflen, menu->win->state.cols, c_mix_entry_format,
+                      (intptr_t) *r, MUTT_FORMAT_ARROWCURSOR);
 }
 
 /**

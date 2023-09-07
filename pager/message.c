@@ -320,10 +320,10 @@ int external_pager(struct MailboxView *mv, struct Email *e, const char *command)
     return -1;
 
   char buf[1024] = { 0 };
-  const struct ExpandoRecord * c_pager_format = cs_subset_expando(NeoMutt->sub, "pager_format");
+  const struct ExpandoRecord *c_pager_format = cs_subset_expando(NeoMutt->sub, "pager_format");
   const int screen_width = RootWindow->state.cols;
-  mutt_make_string_2gmb(buf, sizeof(buf), screen_width, c_pager_format, m,
-                   -1, e, MUTT_FORMAT_NO_FLAGS, _(ExtPagerProgress));
+  mutt_make_string(buf, sizeof(buf), screen_width, c_pager_format, m, -1, e,
+                   MUTT_FORMAT_NO_FLAGS, _(ExtPagerProgress));
 
   struct Buffer *tempfile = buf_pool_get();
 

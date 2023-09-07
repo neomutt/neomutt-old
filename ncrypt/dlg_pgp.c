@@ -220,8 +220,8 @@ static void pgp_make_entry(struct Menu *menu, char *buf, size_t buflen, int line
 
   if (ok)
   {
-    mutt_expando_format_2gmb(buf, buflen, menu->win->state.cols, c_pgp_entry_format,
-                             (intptr_t) &entry, MUTT_FORMAT_ARROWCURSOR);
+    mutt_expando_format(buf, buflen, menu->win->state.cols, c_pgp_entry_format,
+                        (intptr_t) &entry, MUTT_FORMAT_ARROWCURSOR);
   }
 }
 

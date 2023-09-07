@@ -64,7 +64,7 @@
 static void mutt_pgp_command(char *buf, size_t buflen, struct PgpCommandContext *cctx,
                              const struct ExpandoRecord *record)
 {
-  mutt_expando_format_2gmb(buf, buflen, buflen, record, (intptr_t) cctx, MUTT_FORMAT_NO_FLAGS);
+  mutt_expando_format(buf, buflen, buflen, record, (intptr_t) cctx, MUTT_FORMAT_NO_FLAGS);
   mutt_debug(LL_DEBUG2, "%s\n", buf);
 }
 

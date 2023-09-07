@@ -160,9 +160,8 @@ void mutt_account_tourl(struct ConnAccount *cac, struct Url *url)
 }
 
 typedef uint8_t MuttFormatFlags;
-void mutt_expando_format_2gmb(char *buf, size_t buflen, size_t col, int cols,
-                              struct ExpandoNode *const *tree, intptr_t data,
-                              MuttFormatFlags flags)
+void mutt_expando_format(char *buf, size_t buflen, size_t col, int cols,
+                         struct ExpandoNode *const *tree, intptr_t data, MuttFormatFlags flags)
 {
 }
 
@@ -208,10 +207,9 @@ bool mutt_is_text_part(struct Body *b)
   return false;
 }
 
-void mutt_make_string_2gmb(char *buf, size_t buflen, int cols,
-                           const struct ExpandoRecord *record,
-                           struct Mailbox *m, int inpgr, struct Email *e,
-                           MuttFormatFlags flags, const char *progress)
+void mutt_make_string(char *buf, size_t buflen, int cols,
+                      const struct ExpandoRecord *record, struct Mailbox *m, int inpgr,
+                      struct Email *e, MuttFormatFlags flags, const char *progress)
 {
 }
 
