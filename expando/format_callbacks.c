@@ -101,8 +101,7 @@ int conditional_format_callback(const struct ExpandoNode *self, char *buf, int b
   assert(cp->condition);
   assert(cp->if_true_tree);
 
-  // TODO(g0mb4): Activate assert and remove if(), as soon as the global table is filled.
-  //assert(cp->condition->format_cb);
+  assert(cp->condition->format_cb);
   if (!cp->condition->format_cb)
   {
     return 0;
@@ -112,7 +111,10 @@ int conditional_format_callback(const struct ExpandoNode *self, char *buf, int b
   int printed = cp->condition->format_cb(cp->condition, tmp, sizeof(tmp),
                                          sizeof(tmp), data, MUTT_FORMAT_NO_FLAGS);
 
-  if (printed > 0 && !mutt_str_equal(tmp, "0"))
+  // expression is true if it is not 0 (for numbers) and it is not " "(for flags)
+  // NOTE(g0mb4): if $to_chars is used for flags this condition must contain the natrual
+  //              char for that flag
+  if (printed > 0 && !mutt_str_equal(tmp, "0") && !mutt_str_equal(tmp, " "))
   {
     memset(tmp, 0, sizeof(tmp));
     format_tree(&cp->if_true_tree, tmp, sizeof(tmp), sizeof(tmp), data, flags);

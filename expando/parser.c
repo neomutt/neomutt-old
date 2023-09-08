@@ -358,8 +358,7 @@ static expando_format_callback check_if_expando_is_valid(const char *start, cons
       const int len = strlen(valid_short_expandos[i].name);
       if (strncmp(start, valid_short_expandos[i].name, len) == 0)
       {
-        // TODO(g0mb4): Activate assert as soon as the global table is filled.
-        // assert(valid_short_expandos[i].callback);
+        assert(valid_short_expandos[i].callback);
         return valid_short_expandos[i].callback;
       }
     }
@@ -377,8 +376,7 @@ static expando_format_callback check_if_expando_is_valid(const char *start, cons
       const int len = strlen(valid_two_char_expandos[i].name);
       if (strncmp(start, valid_two_char_expandos[i].name, len) == 0)
       {
-        // TODO(g0mb4): Activate assert as soon as the global table is filled.
-        // assert(valid_two_char_expandos[i].callback);
+        assert(valid_two_char_expandos[i].callback);
         return valid_two_char_expandos[i].callback;
       }
     }
@@ -396,8 +394,7 @@ static expando_format_callback check_if_expando_is_valid(const char *start, cons
       const int len = strlen(valid_long_expandos[i].name);
       if (strncmp(start, valid_long_expandos[i].name, len) == 0)
       {
-        // TODO(g0mb4): Activate assert as soon as the global table is filled.
-        // assert(valid_long_expandos[i].callback);
+        assert(valid_long_expandos[i].callback);
         return valid_long_expandos[i].callback;
       }
     }

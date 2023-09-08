@@ -119,7 +119,6 @@ static size_t add_index_color(char *buf, int buflen, MuttFormatFlags flags, enum
   return 2;
 }
 
-// NOTE(g0mb4): It cuts a long string, e.g. subject (%s) in $index_format
 // TODO(g0mb4): implement MuttFormatFlags
 void format_string(char *buf, int buf_len, const char *s, MuttFormatFlags flags,
                    enum ColorId pre, enum ColorId post,

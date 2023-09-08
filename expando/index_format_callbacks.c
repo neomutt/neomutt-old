@@ -1180,7 +1180,7 @@ int index_s(const struct ExpandoNode *self, char *buf, int buf_len,
   const struct HdrFormatInfo *hfi = (const struct HdrFormatInfo *) data;
   const struct Email *email = hfi->email;
 
-  char fmt[128], tmp[128];
+  char fmt[512], tmp[512];
 
   subjrx_apply_mods(email->env);
   char *subj = NULL;
