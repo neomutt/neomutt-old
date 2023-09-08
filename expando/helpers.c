@@ -100,21 +100,24 @@ static size_t add_index_color(char *buf, int buflen, MuttFormatFlags flags, enum
   if (flags & MUTT_FORMAT_NOFILTER)
     return 0;
 
+  /* handle negative buflen */
   if (buflen <= 2)
     return 0;
 
   if (color == MT_COLOR_INDEX)
-  { /* buf might be uninitialized other cases */
-    // TODO(g0mb4): Investigate this
+  {
+    /* buf might be uninitialized other cases */
     const size_t len = mutt_str_len(buf);
     buf += len;
     buflen -= len;
   }
 
-  // TODO(g0mb4): Investigate this
+  if (buflen <= 2)
+    return 0;
+
   buf[0] = MUTT_SPECIAL_INDEX;
   buf[1] = color;
-  buf[2] = '\0';
+  buf[2] = '\0'; // NOTE(g0mb4): is this right?
 
   return 2;
 }

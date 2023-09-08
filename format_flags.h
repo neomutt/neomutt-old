@@ -30,7 +30,7 @@ typedef uint8_t MuttFormatFlags;         ///< Flags for mutt_expando_format(), e
 #define MUTT_FORMAT_NO_FLAGS          0  ///< No flags are set
 #define MUTT_FORMAT_FORCESUBJ   (1 << 0) ///< Print the subject even if unchanged
 #define MUTT_FORMAT_TREE        (1 << 1) ///< Draw the thread tree
-#define MUTT_FORMAT_OPTIONAL    (1 << 2) ///< Allow optional field processing
+// #define MUTT_FORMAT_OPTIONAL    (1 << 2) ///< Allow optional field processing /* obsolete */
 #define MUTT_FORMAT_STAT_FILE   (1 << 3) ///< Used by attach_format_str
 #define MUTT_FORMAT_ARROWCURSOR (1 << 4) ///< Reserve space for arrow_cursor
 #define MUTT_FORMAT_INDEX       (1 << 5) ///< This is a main index entry
@@ -61,6 +61,7 @@ typedef uint8_t MuttFormatFlags;         ///< Flags for mutt_expando_format(), e
  * | :------ | :----------
  * | \%t     | Title
  */
+// TODO(g0mb4): Remove this. 
 typedef const char *(*format_t)(char *buf, size_t buflen, size_t col, int cols,
                                 char op, const char *src, const char *prec,
                                 const char *if_str, const char *else_str,
