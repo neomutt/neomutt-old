@@ -324,7 +324,7 @@ int index_format_hook_callback(const struct ExpandoNode *self, char *buf, int bu
   const char *fmt_str = NONULL(mutt_idxfmt_hook(tmp2, mailbox, email));
   struct ExpandoRecord *record = mutt_mem_calloc(1, sizeof(struct ExpandoRecord));
   record->index = EFMTI_INDEX_FORMAT;
-  record->string = fmt_str;
+  record->string = mutt_str_dup(fmt_str);
 
   struct ExpandoParseError error = { 0 };
   expando_tree_parse(&record->tree, &record->string, record->index, &error);
