@@ -28,17 +28,11 @@
 
 #include "config.h"
 #include <assert.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "mutt/lib.h"
-#include "config/lib.h"
-#include "core/lib.h"
-#include "index/lib.h"
-#include "menu/lib.h"
-#include "postpone/lib.h"
-#include "muttlib.h"
 #include "status.h"
+#include "expando/lib.h"
+#include "muttlib.h"
 
 /**
  * menu_status_line - Create the status line

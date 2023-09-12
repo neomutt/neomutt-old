@@ -38,8 +38,6 @@
 #include <stdio.h>
 #include "core/lib.h"
 
-struct ExpandoRecord;
-
 /**
  * struct CompressInfo - Private data for compress
  *

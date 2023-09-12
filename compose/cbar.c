@@ -59,23 +59,17 @@
  */
 
 #include "config.h"
-#include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
-#include "private.h"
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "email/lib.h"
 #include "core/lib.h"
 #include "gui/lib.h"
+#include "cbar.h"
 #include "color/lib.h"
 #include "expando/lib.h"
 #include "index/lib.h"
-#include "menu/lib.h"
-#include "attach_data.h"
-#include "cbar.h"
 #include "cbar_data.h"
-
 #include "globals.h" // IWYU pragma: keep
 #include "muttlib.h"
 #include "shared_data.h"

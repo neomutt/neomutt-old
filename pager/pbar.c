@@ -67,14 +67,14 @@
 #include "config/lib.h"
 #include "core/lib.h"
 #include "gui/lib.h"
+#include "pbar.h"
 #include "lib.h"
 #include "color/lib.h"
+#include "expando/lib.h"
 #include "index/lib.h"
 #include "display.h"
-
 #include "hdrline.h"
 #include "mview.h"
-#include "pbar.h"
 #include "private_data.h"
 
 /**

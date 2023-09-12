@@ -40,6 +40,7 @@
 #include "email/lib.h"
 #include "core/lib.h"
 #include "alias/lib.h"
+#include "hook.h"
 #include "attach/lib.h"
 #include "expando/lib.h"
 #include "index/lib.h"
@@ -47,10 +48,8 @@
 #include "parse/lib.h"
 #include "pattern/lib.h"
 #include "commands.h"
-
 #include "globals.h" // IWYU pragma: keep
 #include "hdrline.h"
-#include "hook.h"
 #include "muttlib.h"
 #include "mx.h"
 #ifdef USE_COMP_MBOX

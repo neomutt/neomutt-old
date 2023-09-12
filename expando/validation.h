@@ -24,6 +24,7 @@
 #define MUTT_EXPANDO_VALIDATION_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "format_callbacks.h"
 
 struct Buffer;

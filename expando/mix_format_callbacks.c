@@ -28,10 +28,14 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "mutt/lib.h"
-#include "expando/lib.h"
-
+#include "mix_format_callbacks.h"
+#include "format_callbacks.h"
+#include "helpers.h"
 #include "mixmaster/remailer.h"
+#include "node.h"
 
 /**
  * mix_format_caps - Turn flags into a MixMaster capability string

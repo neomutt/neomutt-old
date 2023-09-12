@@ -28,9 +28,14 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include "mutt/lib.h"
-#include "expando/lib.h"
+#include "gui/lib.h"
+#include "format_callbacks.h"
+#include "helpers.h"
+#include "node.h"
 
 void format_tree(struct ExpandoNode **tree, char *buf, size_t buf_len,
                  size_t col_len, intptr_t data, MuttFormatFlags flags)

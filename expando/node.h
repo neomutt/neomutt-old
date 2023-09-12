@@ -24,7 +24,7 @@
 #define MUTT_EXPANDO_NODE_H
 
 #include <stdbool.h>
-#include "gui/curs_lib.h"
+#include "gui/lib.h"
 #include "format_callbacks.h"
 
 enum ExpandoNodeType

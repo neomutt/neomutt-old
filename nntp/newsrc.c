@@ -50,7 +50,6 @@
 #include "expando/lib.h"
 #include "adata.h"
 #include "edata.h"
-
 #include "mdata.h"
 #include "mutt_account.h"
 #include "mutt_logging.h"

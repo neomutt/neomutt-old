@@ -42,7 +42,7 @@
 #ifndef MUTT_EXPANDO_LIB_H
 #define MUTT_EXPANDO_LIB_H
 
-// IWYU pragma: begin_exports
+// IWYU pragma: begin_keep
 #include "alias_format_callbacks.h"
 #include "attach_format_callbacks.h"
 #include "autocrypt_format_callbacks.h"
@@ -68,6 +68,6 @@
 #include "status_format_callbacks.h"
 #include "type.h"
 #include "validation.h"
-// IWYU pragma: end_exports
+// IWYU pragma: end_keep
 
 #endif /* MUTT_EXPANDO_LIB_H */

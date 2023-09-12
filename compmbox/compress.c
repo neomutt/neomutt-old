@@ -48,7 +48,6 @@
 #include "gui/lib.h"
 #include "lib.h"
 #include "expando/lib.h"
-
 #include "globals.h"
 #include "hook.h"
 #include "muttlib.h"

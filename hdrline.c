@@ -30,37 +30,11 @@
  */
 
 #include "config.h"
-#include <assert.h>
-#include <locale.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include "mutt/lib.h"
-#include "address/lib.h"
-#include "config/lib.h"
-#include "email/lib.h"
-#include "core/lib.h"
-#include "alias/lib.h"
-#include "gui/lib.h"
-#include "attach/lib.h"
-#include "color/lib.h"
-#include "expando/lib.h"
-#include "ncrypt/lib.h"
-
 #include "hdrline.h"
-#include "hook.h"
-#include "maillist.h"
-#include "mutt_thread.h"
+#include "expando/lib.h"
 #include "muttlib.h"
-#include "mx.h"
-#include "sort.h"
-#include "subjectrx.h"
-#ifdef USE_NOTMUCH
-#include "notmuch/lib.h"
-#endif
 
 /**
  * mutt_make_string - Create formatted strings using mailbox expandos

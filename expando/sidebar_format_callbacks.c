@@ -28,11 +28,18 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "mutt/lib.h"
-#include "expando/lib.h"
+#include "config/lib.h"
+#include "core/lib.h"
+#include "sidebar_format_callbacks.h"
 #include "index/lib.h"
 #include "sidebar/lib.h"
-
+#include "format_callbacks.h"
+#include "helpers.h"
+#include "node.h"
 #include "sidebar/private.h"
 
 /**

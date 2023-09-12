@@ -28,14 +28,16 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <wchar.h>
 #include "mutt/lib.h"
-#include "lib.h"
+#include "gui/lib.h"
 #include "helpers.h"
+#include "format_callbacks.h"
 #include "mutt_thread.h"
+#include "node.h"
 
 /**
  * mb_strlen_nonnull - Measure a non null-terminated string's length (number of characters)

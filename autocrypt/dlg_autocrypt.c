@@ -77,7 +77,6 @@
 #include "lib.h"
 #include "expando/lib.h"
 #include "menu/lib.h"
-
 #include "functions.h"
 #include "keymap.h"
 #include "mutt_logging.h"

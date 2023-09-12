@@ -28,11 +28,16 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "mutt/lib.h"
-#include "address/address.h"
+#include "address/lib.h"
+#include "autocrypt_format_callbacks.h"
 #include "autocrypt/lib.h"
-#include "expando/lib.h"
 #include "autocrypt/private.h"
+#include "format_callbacks.h"
+#include "helpers.h"
+#include "node.h"
 
 int autocrypt_a(const struct ExpandoNode *self, char *buf, int buf_len,
                 int cols_len, intptr_t data, MuttFormatFlags flags)

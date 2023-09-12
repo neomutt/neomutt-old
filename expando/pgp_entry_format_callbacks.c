@@ -28,15 +28,23 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <time.h>
 #include "mutt/lib.h"
-#include "expando/lib.h"
+#include "core/lib.h"
+#include "pgp_entry_format_callbacks.h"
 #include "ncrypt/lib.h"
-
-#include "locale.h"
-#include "ncrypt/crypt_gpgme.h"
+#include "format_callbacks.h"
+#include "helpers.h"
 #include "ncrypt/pgp.h"
 #include "ncrypt/pgpkey.h"
 #include "ncrypt/pgplib.h"
+#include "node.h"
+#ifdef HAVE_PKG_GPGME
+#include <gpgme.h>
+#include "ncrypt/crypt_gpgme.h"
+#endif
 
 #ifdef HAVE_PGP
 

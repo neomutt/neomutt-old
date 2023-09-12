@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "attach/lib.h"
+#include "expando/lib.h"
 
 struct Address;
 struct Body;
@@ -36,7 +37,6 @@ struct Buffer;
 struct ListHead;
 struct passwd;
 struct stat;
-struct ExpandoRecord;
 
 void        mutt_adv_mktemp(struct Buffer *buf);
 void        buf_expand_path(struct Buffer *buf);

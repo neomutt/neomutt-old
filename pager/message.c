@@ -39,12 +39,12 @@
 #include "mutt.h"
 #include "lib.h"
 #include "attach/lib.h"
+#include "expando/lib.h"
 #include "index/lib.h"
 #include "menu/lib.h"
 #include "ncrypt/lib.h"
 #include "question/lib.h"
 #include "copy.h"
-
 #include "globals.h" // IWYU pragma: keep
 #include "hdrline.h"
 #include "hook.h"

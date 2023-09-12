@@ -28,9 +28,14 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "mutt/lib.h"
-#include "expando/lib.h"
-
+#include "pattern_format_callbacks.h"
+#include "pattern/lib.h"
+#include "format_callbacks.h"
+#include "helpers.h"
+#include "node.h"
 #include "pattern/private.h"
 
 int pattern_d(const struct ExpandoNode *self, char *buf, int buf_len,

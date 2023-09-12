@@ -67,7 +67,6 @@
 #include "gui/lib.h"
 #include "lib.h"
 #include "color/lib.h"
-#include "expando/lib.h"
 #include "private_data.h"
 #include "shared_data.h"
 #include "status.h"

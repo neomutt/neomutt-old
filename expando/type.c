@@ -30,8 +30,9 @@
 #include <stdint.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
-#include "expando/lib.h"
+#include "type.h"
 #include "assert.h"
+#include "parser.h"
 
 /**
  * expando_destroy - Destroy an ExpandoRecord object - Implements ConfigSetType::destroy() - @ingroup cfg_type_destroy

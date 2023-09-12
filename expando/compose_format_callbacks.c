@@ -28,14 +28,19 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "mutt/lib.h"
-#include "expando/lib.h"
+#include "compose_format_callbacks.h"
+#include "menu/lib.h"
 #include "compose/attach_data.h"
 #include "compose/private.h"
 #include "compose/shared_data.h"
-
+#include "format_callbacks.h"
 #include "globals.h"
+#include "helpers.h"
 #include "muttlib.h"
+#include "node.h"
 
 /**
  * num_attachments - Count the number of attachments

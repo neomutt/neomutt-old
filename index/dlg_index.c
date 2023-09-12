@@ -65,10 +65,10 @@
 #include "gui/lib.h"
 #include "lib.h"
 #include "color/lib.h"
+#include "expando/lib.h"
 #include "menu/lib.h"
 #include "pager/lib.h"
 #include "pattern/lib.h"
-
 #include "functions.h"
 #include "globals.h" // IWYU pragma: keep
 #include "hdrline.h"

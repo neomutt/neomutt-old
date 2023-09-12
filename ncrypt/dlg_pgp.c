@@ -66,7 +66,6 @@
  */
 
 #include "config.h"
-#include <ctype.h>
 #include <locale.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -80,14 +79,12 @@
 #include "lib.h"
 #include "expando/lib.h"
 #include "menu/lib.h"
-
 #include "keymap.h"
 #include "mutt_logging.h"
 #include "muttlib.h"
 #include "opcodes.h"
 #include "pgp.h"
 #include "pgp_functions.h"
-#include "pgpkey.h"
 #include "pgplib.h"
 #include "sort.h"
 

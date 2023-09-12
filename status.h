@@ -24,8 +24,8 @@
 #define MUTT_STATUS_H
 
 #include <stdio.h>
-#include "expando/lib.h"
 
+struct ExpandoRecord;
 struct IndexSharedData;
 struct Menu;
 

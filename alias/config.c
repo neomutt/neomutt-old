@@ -30,8 +30,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "mutt/lib.h"
-#include "expando/lib.h"
 #include "config/lib.h"
+#include "expando/lib.h"
 
 /**
  * SortAliasMethods - Sort methods for email aliases

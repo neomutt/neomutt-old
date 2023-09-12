@@ -30,13 +30,21 @@
 #include <assert.h>
 #include <grp.h>
 #include <pwd.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <time.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
+#include "core/lib.h"
+#include "folder_format_callbacks.h"
 #include "browser/lib.h"
-#include "expando/lib.h"
-
+#include "format_callbacks.h"
+#include "helpers.h"
 #include "muttlib.h"
+#include "node.h"
 
 int folder_date(const struct ExpandoNode *self, char *buf, int buf_len,
                 int cols_len, intptr_t data, MuttFormatFlags flags)

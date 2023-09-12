@@ -29,8 +29,8 @@
 #include "config.h"
 #include <stddef.h>
 #include <stdbool.h>
-#include "expando/lib.h"
 #include "config/lib.h"
+#include "expando/lib.h"
 
 // clang-format off
 char *AutocryptSignAs = NULL;     ///< Autocrypt Key id to sign as

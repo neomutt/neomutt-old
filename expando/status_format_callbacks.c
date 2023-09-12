@@ -28,16 +28,24 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "mutt/lib.h"
 #include "config/lib.h"
-#include "core/neomutt.h"
-#include "expando/lib.h"
+#include "core/lib.h"
+#include "status_format_callbacks.h"
+#include "index/lib.h"
+#include "menu/lib.h"
 #include "postpone/lib.h"
+#include "format_callbacks.h"
 #include "globals.h"
-#include "index/shared_data.h"
+#include "helpers.h"
 #include "mutt_mailbox.h"
 #include "mutt_thread.h"
 #include "muttlib.h"
 #include "mview.h"
+#include "node.h"
 #include "status.h"
 
 int status_r(const struct ExpandoNode *self, char *buf, int buf_len,

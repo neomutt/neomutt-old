@@ -28,11 +28,14 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "mutt/lib.h"
-#include "expando/lib.h"
-
+#include "pgp_command_format_callbacks.h"
+#include "format_callbacks.h"
+#include "helpers.h"
 #include "ncrypt/pgpinvoke.h"
-#include "pattern/private.h"
+#include "node.h"
 
 int pgp_command_a(const struct ExpandoNode *self, char *buf, int buf_len,
                   int cols_len, intptr_t data, MuttFormatFlags flags)

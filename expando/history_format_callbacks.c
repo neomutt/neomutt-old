@@ -28,8 +28,12 @@
 
 #include "config.h"
 #include <assert.h>
-#include "mutt/lib.h"
-#include "expando/lib.h"
+#include <stdint.h>
+#include <stdio.h>
+#include "history_format_callbacks.h"
+#include "format_callbacks.h"
+#include "helpers.h"
+#include "node.h"
 
 int history_s(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags)

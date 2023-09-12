@@ -28,13 +28,18 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include "mutt/lib.h"
 #include "email/lib.h"
 #include "conn/lib.h"
-#include "expando/lib.h"
-
+#include "nntp_format_callbacks.h"
+#include "format_callbacks.h"
+#include "helpers.h"
 #include "mutt_account.h"
 #include "nntp/adata.h"
+#include "node.h"
 
 int nntp_a(const struct ExpandoNode *self, char *buf, int buf_len, int cols_len,
            intptr_t data, MuttFormatFlags flags)

@@ -45,18 +45,15 @@
 
 #include "config.h"
 #include <stddef.h>
-#include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/lib.h"
 #include "gui/lib.h"
 #include "expando/lib.h"
 #include "menu/lib.h"
-
 #include "muttlib.h"
-#include "remailer.h"
+#include "remailer.h" // IWYU pragma: keep
 
 /**
  * mix_make_entry - Format a menu item for the mixmaster chain list - Implements Menu::make_entry() - @ingroup menu_make_entry

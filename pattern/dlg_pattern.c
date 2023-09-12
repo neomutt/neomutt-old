@@ -70,7 +70,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include "private.h"
 #include "mutt/lib.h"
 #include "config/lib.h"
@@ -79,7 +78,6 @@
 #include "lib.h"
 #include "expando/lib.h"
 #include "menu/lib.h"
-
 #include "functions.h"
 #include "keymap.h"
 #include "mutt_logging.h"

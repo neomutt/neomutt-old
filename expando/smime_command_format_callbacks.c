@@ -28,13 +28,22 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
-#include "expando/lib.h"
-
+#include "core/lib.h"
+#include "smime_command_format_callbacks.h"
+#include "ncrypt/lib.h"
+#include "format_callbacks.h"
+#include "helpers.h"
 #include "muttlib.h"
+#include "node.h"
+#ifdef CRYPT_BACKEND_CLASSIC_SMIME
 #include "ncrypt/smime.h"
+#endif
 
 int smime_command_a(const struct ExpandoNode *self, char *buf, int buf_len,
                     int cols_len, intptr_t data, MuttFormatFlags flags)

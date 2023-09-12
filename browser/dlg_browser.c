@@ -69,16 +69,13 @@
 #include "config.h"
 #include <dirent.h>
 #include <errno.h>
-#include <grp.h>
 #include <limits.h>
 #include <locale.h>
-#include <pwd.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <time.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "core/lib.h"
@@ -87,7 +84,6 @@
 #include "lib.h"
 #include "expando/lib.h"
 #include "menu/lib.h"
-
 #include "functions.h"
 #include "globals.h"
 #include "keymap.h"

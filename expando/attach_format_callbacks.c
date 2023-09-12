@@ -28,14 +28,19 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "email/lib.h"
+#include "core/lib.h"
+#include "attach_format_callbacks.h"
 #include "attach/lib.h"
-#include "expando/lib.h"
-
+#include "format_callbacks.h"
 #include "hdrline.h"
+#include "helpers.h"
 #include "muttlib.h"
+#include "node.h"
 
 int attach_c(const struct ExpandoNode *self, char *buf, int buf_len,
              int cols_len, intptr_t data, MuttFormatFlags flags)

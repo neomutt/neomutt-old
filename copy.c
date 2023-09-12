@@ -40,12 +40,12 @@
 #include "core/lib.h"
 #include "gui/lib.h"
 #include "mutt.h"
+#include "copy.h"
+#include "expando/lib.h"
 #include "index/lib.h"
 #include "ncrypt/lib.h"
 #include "pager/lib.h"
 #include "send/lib.h"
-#include "copy.h"
-
 #include "globals.h" // IWYU pragma: keep
 #include "handler.h"
 #include "hdrline.h"

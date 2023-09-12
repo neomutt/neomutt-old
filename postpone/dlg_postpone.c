@@ -75,6 +75,7 @@
 #include "email/lib.h"
 #include "core/lib.h"
 #include "gui/lib.h"
+#include "expando/lib.h"
 #include "index/lib.h"
 #include "menu/lib.h"
 #include "pattern/lib.h"

@@ -28,11 +28,17 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "mutt/lib.h"
-#include "address/address.h"
+#include "address/lib.h"
 #include "alias/alias.h"
 #include "alias/gui.h"
-#include "expando/lib.h"
+#include "alias_format_callbacks.h"
+#include "format_callbacks.h"
+#include "helpers.h"
+#include "node.h"
 
 int alias_a(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)

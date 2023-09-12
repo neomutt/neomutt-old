@@ -42,12 +42,11 @@
 #include "config/lib.h"
 #include "core/lib.h"
 #include "gui/lib.h"
+#include "sendmail.h"
 #include "expando/lib.h"
 #include "pager/lib.h"
-
 #include "globals.h"
 #include "muttlib.h"
-#include "sendmail.h"
 #ifdef USE_NNTP
 #include "nntp/lib.h"
 #endif

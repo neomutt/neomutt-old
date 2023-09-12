@@ -43,6 +43,7 @@
 #include "alias/lib.h"
 #include "gui/lib.h"
 #include "mutt.h"
+#include "send.h"
 #include "attach/lib.h"
 #include "browser/lib.h"
 #include "compose/lib.h"
@@ -57,7 +58,6 @@
 #include "question/lib.h"
 #include "body.h"
 #include "copy.h"
-
 #include "globals.h"
 #include "handler.h"
 #include "hdrline.h"
@@ -71,7 +71,6 @@
 #include "muttlib.h"
 #include "protos.h"
 #include "rfc3676.h"
-#include "send.h"
 #include "sendlib.h"
 #include "sendmail.h"
 #include "smtp.h"

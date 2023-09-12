@@ -54,9 +54,7 @@
 #include "expando/lib.h"
 #include "history/lib.h"
 #include "ncrypt/lib.h"
-#include "parse/lib.h"
 #include "question/lib.h"
-
 #include "globals.h" // IWYU pragma: keep
 #include "hook.h"
 #include "mx.h"

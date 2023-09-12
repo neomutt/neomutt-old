@@ -28,7 +28,7 @@
 
 #include "config.h"
 #include <stddef.h>
-#include "mutt/memory.h"
+#include "mutt/lib.h"
 #include "node.h"
 
 void free_node(struct ExpandoNode *node)

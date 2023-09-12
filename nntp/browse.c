@@ -27,16 +27,7 @@
  */
 
 #include "config.h"
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include "mutt/lib.h"
-#include "config/lib.h"
-#include "core/lib.h"
-#include "lib.h"
-#include "browser/lib.h"
 
-#include "mdata.h"
-#include "muttlib.h"
+int dummy;
 
 // TODO(g0mb4): remove this file

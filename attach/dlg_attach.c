@@ -75,12 +75,11 @@
 #include "email/lib.h"
 #include "core/lib.h"
 #include "gui/lib.h"
+#include "expando/lib.h"
 #include "menu/lib.h"
 #include "attach.h"
 #include "attachments.h"
-
 #include "functions.h"
-#include "hdrline.h"
 #include "hook.h"
 #include "keymap.h"
 #include "mutt_logging.h"

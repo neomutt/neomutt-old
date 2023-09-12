@@ -1,4 +1,41 @@
+/**
+ * @file
+ * Common code for file tests
+ *
+ * @authors
+ * Copyright (C) 2023 Richard Russon <rich@flatcap.org>
+ *
+ * @copyright
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#define TEST_NO_MAIN
+#include "config.h"
+#include "acutest.h"
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include "common.h"
+#include "mutt_thread.h"
+
+struct Address;
+struct AddressList;
+struct Email;
+struct Envelope;
+struct ExpandoNode;
+struct ExpandoRecord;
+struct Mailbox;
 
 struct ExpandoNode *get_nth_node(struct ExpandoNode **root, int n)
 {
@@ -85,7 +122,7 @@ void check_pad_node(struct ExpandoNode *node, const char *pad_char, enum Expando
 }
 
 void check_date_node(struct ExpandoNode *node, const char *inner_text,
-                     enum ExpandoDateType date_type, bool ingnore_locale)
+                     enum ExpandoDateType date_type, bool use_c_locale)
 {
   TEST_CHECK(node != NULL);
   TEST_CHECK(node->type == ENT_DATE);
@@ -97,7 +134,7 @@ void check_date_node(struct ExpandoNode *node, const char *inner_text,
 
   struct ExpandoDatePrivate *d = (struct ExpandoDatePrivate *) node->ndata;
   TEST_CHECK(d->date_type == date_type);
-  TEST_CHECK(d->ingnore_locale == ingnore_locale);
+  TEST_CHECK(d->use_c_locale == use_c_locale);
 }
 
 void check_condition_node_head(struct ExpandoNode *node)
@@ -136,7 +173,7 @@ int mutt_mailbox_check(struct Mailbox *m_cur, CheckStatsFlags flags)
   return 0;
 }
 
-const char *get_use_threads_str(int value)
+const char *get_use_threads_str(enum UseThreads value)
 {
   return NULL;
 }
@@ -186,7 +223,7 @@ char *nm_email_get_folder_rel_db(struct Mailbox *m, struct Email *e)
   return NULL;
 }
 
-int mutt_messages_in_thread(struct Mailbox *m, struct Email *e, int mit)
+int mutt_messages_in_thread(struct Mailbox *m, struct Email *e, enum MessageInThread mit)
 {
   return 0;
 }

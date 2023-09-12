@@ -40,17 +40,13 @@
 #include "config/lib.h"
 #include "core/lib.h"
 #include "gui/lib.h"
+#include "pgpinvoke.h"
 #include "lib.h"
 #include "expando/lib.h"
-
 #include "mutt_logging.h"
 #include "muttlib.h"
-#include "pgpinvoke.h"
 #include "pgpkey.h"
 #include "protos.h"
-#ifdef CRYPT_BACKEND_CLASSIC_PGP
-#include "pgp.h"
-#endif
 
 /**
  * mutt_pgp_command - Prepare a PGP Command

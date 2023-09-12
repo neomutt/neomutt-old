@@ -30,10 +30,31 @@
 #include <stddef.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
-#include "core/neomutt.h"
-#include "expando/lib.h"
+#include "validation.h"
+#include "alias_format_callbacks.h"
+#include "attach_format_callbacks.h"
+#include "autocrypt_format_callbacks.h"
+#include "compose_format_callbacks.h"
+#include "compress_format_callbacks.h"
+#include "folder_format_callbacks.h"
+#include "greeting_format_callbacks.h"
+#include "group_index_format_callbacks.h"
+#include "history_format_callbacks.h"
+#include "index_format_callbacks.h"
+#include "mix_format_callbacks.h"
+#include "nntp_format_callbacks.h"
+#include "parser.h"
+#include "pattern_format_callbacks.h"
+#include "pgp_command_format_callbacks.h"
+#include "pgp_entry_format_callbacks.h"
+#include "query_format_callbacks.h"
+#include "sidebar_format_callbacks.h"
+#include "smime_command_format_callbacks.h"
+#include "status_format_callbacks.h"
+#include "type.h"
 
 static const struct ExpandoFormatCallback alias_1[] = {
   { "a", alias_a }, { "c", alias_c }, { "f", alias_f }, { "n", alias_n },

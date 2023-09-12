@@ -23,12 +23,10 @@
 #ifndef MUTT_EXPANDO_HELPERS_H
 #define MUTT_EXPANDO_HELPERS_H
 
-#include <stddef.h>
-
-#include "color/color.h"
+#include "color/lib.h"
 #include "format_callbacks.h"
 
-struct tm;
+struct ExpandoFormatPrivate;
 
 int mb_strlen_nonnull(const char *start, const char *end);
 int mb_strwidth_nonnull(const char *start, const char *end);

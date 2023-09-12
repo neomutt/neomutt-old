@@ -39,20 +39,20 @@
 #include "alias/lib.h"
 #include "gui/lib.h"
 #include "mutt.h"
+#include "recvcmd.h"
 #include "attach/lib.h"
 #include "enter/lib.h"
+#include "expando/lib.h"
 #include "history/lib.h"
 #include "question/lib.h"
 #include "send/lib.h"
 #include "copy.h"
-
 #include "globals.h" // IWYU pragma: keep
 #include "handler.h"
 #include "hdrline.h"
 #include "mutt_body.h"
 #include "mutt_logging.h"
 #include "protos.h"
-#include "recvcmd.h"
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #endif

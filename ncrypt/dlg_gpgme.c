@@ -66,13 +66,11 @@
  */
 
 #include "config.h"
-#include <ctype.h>
 #include <gpgme.h>
 #include <locale.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <time.h>
 #include "private.h"
 #include "mutt/lib.h"
 #include "address/lib.h"
@@ -83,7 +81,6 @@
 #include "expando/lib.h"
 #include "menu/lib.h"
 #include "crypt_gpgme.h"
-
 #include "gpgme_functions.h"
 #include "keymap.h"
 #include "mutt_logging.h"

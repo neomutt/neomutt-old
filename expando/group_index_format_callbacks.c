@@ -28,12 +28,18 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "mutt/lib.h"
 #include "config/lib.h"
+#include "core/lib.h"
+#include "group_index_format_callbacks.h"
 #include "browser/lib.h"
-#include "expando/lib.h"
-
+#include "format_callbacks.h"
+#include "helpers.h"
 #include "nntp/mdata.h"
+#include "node.h"
 
 int group_index_a(const struct ExpandoNode *self, char *buf, int buf_len,
                   int cols_len, intptr_t data, MuttFormatFlags flags)

@@ -28,10 +28,16 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include "mutt/lib.h"
+#include "address/lib.h"
 #include "email/lib.h"
-#include "expando/lib.h"
-
+#include "greeting_format_callbacks.h"
+#include "format_callbacks.h"
+#include "helpers.h"
+#include "node.h"
 #include "sort.h"
 
 int greeting_n(const struct ExpandoNode *self, char *buf, int buf_len,
