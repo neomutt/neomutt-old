@@ -56,7 +56,7 @@
 #include "ncrypt/lib.h"
 #include "parse/lib.h"
 #include "question/lib.h"
-#include "format_flags.h"
+
 #include "globals.h" // IWYU pragma: keep
 #include "hook.h"
 #include "mx.h"
@@ -746,8 +746,6 @@ void mutt_expando_format(char *buf, size_t buflen, size_t cols,
                          const struct ExpandoRecord *record, intptr_t data,
                          MuttFormatFlags flags)
 {
-  // TODO(g0mb4): Remove cast.
-  // TODO(g0mb4): Handle format flags
   format_tree((struct ExpandoNode **) &record->tree, buf, buflen, cols, data, flags);
 }
 

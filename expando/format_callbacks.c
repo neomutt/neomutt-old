@@ -81,7 +81,6 @@ int text_format_callback(const struct ExpandoNode *self, char *buf, int buf_len,
     copylen = buf_len;
   }
 
-  // FIXME(g0mb4): handle cols_len
   memcpy(buf, self->start, copylen);
 
   return copylen;
@@ -124,7 +123,7 @@ int conditional_format_callback(const struct ExpandoNode *self, char *buf, int b
     {
       copylen = buf_len;
     }
-    // FIXME(g0mb4): handle cols_len
+
     memcpy(buf, tmp, copylen);
     return copylen;
   }
@@ -135,7 +134,6 @@ int conditional_format_callback(const struct ExpandoNode *self, char *buf, int b
       memset(tmp, 0, sizeof(tmp));
       format_tree(&cp->if_false_tree, tmp, sizeof(tmp), sizeof(tmp), data, flags);
 
-      // FIXME(g0mb4): handle cols_len
       int copylen = strlen(tmp);
       if (copylen > buf_len)
       {

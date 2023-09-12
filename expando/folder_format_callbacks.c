@@ -35,7 +35,7 @@
 #include "config/lib.h"
 #include "browser/lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
+
 #include "muttlib.h"
 
 int folder_date(const struct ExpandoNode *self, char *buf, int buf_len,

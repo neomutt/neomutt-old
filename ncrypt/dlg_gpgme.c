@@ -83,7 +83,7 @@
 #include "expando/lib.h"
 #include "menu/lib.h"
 #include "crypt_gpgme.h"
-#include "format_flags.h"
+
 #include "gpgme_functions.h"
 #include "keymap.h"
 #include "mutt_logging.h"

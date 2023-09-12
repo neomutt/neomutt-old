@@ -78,7 +78,6 @@
 #include "index/lib.h"
 #include "menu/lib.h"
 #include "pattern/lib.h"
-#include "format_flags.h"
 #include "functions.h"
 #include "hdrline.h"
 #include "keymap.h"

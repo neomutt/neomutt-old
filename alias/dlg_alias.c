@@ -87,7 +87,7 @@
 #include "pattern/lib.h"
 #include "send/lib.h"
 #include "alias.h"
-#include "format_flags.h"
+
 #include "functions.h"
 #include "gui.h"
 #include "keymap.h"

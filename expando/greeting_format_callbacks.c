@@ -31,7 +31,7 @@
 #include "mutt/lib.h"
 #include "email/lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
+
 #include "sort.h"
 
 int greeting_n(const struct ExpandoNode *self, char *buf, int buf_len,

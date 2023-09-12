@@ -79,7 +79,7 @@
 #include "color/lib.h"
 #include "expando/lib.h"
 #include "index/lib.h"
-#include "format_flags.h"
+
 #include "muttlib.h"
 
 /**

@@ -47,7 +47,7 @@
 #include "parse/lib.h"
 #include "pattern/lib.h"
 #include "commands.h"
-#include "format_flags.h"
+
 #include "globals.h" // IWYU pragma: keep
 #include "hdrline.h"
 #include "hook.h"

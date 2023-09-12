@@ -262,75 +262,64 @@ parse_format(const char *start, const char *end, struct ExpandoParseError *error
   format->min = 0;
   format->max = INT_MAX;
 
-  bool is_min = true;
-
-  while (start < end)
+  if (*start == '-')
   {
-    switch (*start)
+    format->justification = JUSTIFY_LEFT;
+    ++start;
+  }
+  else if (*start == '=')
+  {
+    format->justification = JUSTIFY_CENTER;
+    ++start;
+  }
+
+  if (*start == '0')
+  {
+    format->leader = '0';
+    ++start;
+  }
+
+  if (isdigit(*start))
+  {
+    char *end_ptr;
+    int number = strtol(start, &end_ptr, 10);
+
+    // NOTE(g0mb4): start is NOT null-terminated
+    if (end_ptr > end)
     {
-      case '-':
-        format->justification = JUSTIFY_LEFT;
-        ++start;
-        break;
-
-      case '=':
-        format->justification = JUSTIFY_CENTER;
-        ++start;
-        break;
-
-      // NOTE(gmb): multibyte leader?
-      case '0':
-        format->leader = '0';
-        ++start;
-        break;
-
-      case '.':
-      {
-        if (!isdigit(*(start + 1)))
-        {
-          error->position = start + 1;
-          snprintf(error->message, sizeof(error->message), "Wrong number.");
-          return NULL;
-        }
-        is_min = false;
-        ++start;
-      }
-
-      break;
-
-      // number
-      default:
-      {
-        if (!isdigit(*start))
-        {
-          error->position = start;
-          snprintf(error->message, sizeof(error->message), "Wrong number.");
-          return NULL;
-        }
-
-        char *end_ptr;
-        int number = strtol(start, &end_ptr, 10);
-
-        // NOTE: start is NOT null-terminated
-        if (end_ptr > end)
-        {
-          error->position = start;
-          snprintf(error->message, sizeof(error->message), "Wrong number.");
-          return NULL;
-        }
-
-        if (is_min)
-        {
-          format->min = number;
-        }
-        else
-        {
-          format->max = number;
-        }
-
-        start = end_ptr;
-      }
+      error->position = start;
+      snprintf(error->message, sizeof(error->message), "Wrong number.");
+      return NULL;
     }
+
+    format->min = number;
+    start = end_ptr;
+  };
+
+  if (*start == '.')
+  {
+    ++start;
+
+    if (!isdigit(*start))
+    {
+      error->position = start;
+      snprintf(error->message, sizeof(error->message), "Number is expected.");
+      return NULL;
+    }
+
+    char *end_ptr;
+    int number = strtol(start, &end_ptr, 10);
+
+    // NOTE(g0mb4): start is NOT null-terminated
+    if (end_ptr > end)
+    {
+      error->position = start;
+      snprintf(error->message, sizeof(error->message), "Wrong number.");
+      return NULL;
+    }
+
+    format->max = number;
+    start = end_ptr;
   }
 
   return format;
@@ -430,7 +419,7 @@ static struct ExpandoNode *parse_node(const char *s, enum ExpandoConditionStart 
           return NULL;
         }
 
-        // TODO(g0mb4): handle {name} expandos!
+        // NOTE(g0mb4): handle {name} expandos here
         expando_format_callback date_cb = NULL;
         bool ignore_locale = false;
         const char *start = s + 1;

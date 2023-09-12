@@ -57,7 +57,7 @@
 #include "question/lib.h"
 #include "body.h"
 #include "copy.h"
-#include "format_flags.h"
+
 #include "globals.h"
 #include "handler.h"
 #include "hdrline.h"

@@ -31,7 +31,6 @@
 #include "mutt/lib.h"
 #include "core/lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
 
 int compress_f(const struct ExpandoNode *self, char *buf, int buf_len,
                int cols_len, intptr_t data, MuttFormatFlags flags)

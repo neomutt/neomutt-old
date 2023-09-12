@@ -28,7 +28,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "format_flags.h"
+#include "expando/lib.h"
 
 struct AttachCtx;
 struct Body;

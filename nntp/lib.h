@@ -46,7 +46,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "core/lib.h"
-#include "format_flags.h"
 
 struct Buffer;
 struct ConnAccount;

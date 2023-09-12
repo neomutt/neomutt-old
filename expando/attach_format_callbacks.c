@@ -33,7 +33,7 @@
 #include "email/lib.h"
 #include "attach/lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
+
 #include "hdrline.h"
 #include "muttlib.h"
 

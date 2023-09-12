@@ -54,7 +54,7 @@
 #include "gui/lib.h"
 #include "expando/lib.h"
 #include "menu/lib.h"
-#include "format_flags.h"
+
 #include "muttlib.h"
 #include "remailer.h"
 

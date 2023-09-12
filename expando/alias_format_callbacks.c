@@ -33,7 +33,6 @@
 #include "alias/alias.h"
 #include "alias/gui.h"
 #include "expando/lib.h"
-#include "format_flags.h"
 
 int alias_a(const struct ExpandoNode *self, char *buf, int buf_len,
             int cols_len, intptr_t data, MuttFormatFlags flags)

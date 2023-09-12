@@ -35,7 +35,7 @@
 #include "core/lib.h"
 #include "lib.h"
 #include "browser/lib.h"
-#include "format_flags.h"
+
 #include "mdata.h"
 #include "muttlib.h"
 

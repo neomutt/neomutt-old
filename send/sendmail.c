@@ -44,7 +44,7 @@
 #include "gui/lib.h"
 #include "expando/lib.h"
 #include "pager/lib.h"
-#include "format_flags.h"
+
 #include "globals.h"
 #include "muttlib.h"
 #include "sendmail.h"

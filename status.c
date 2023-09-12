@@ -37,7 +37,6 @@
 #include "index/lib.h"
 #include "menu/lib.h"
 #include "postpone/lib.h"
-#include "format_flags.h"
 #include "muttlib.h"
 #include "status.h"
 

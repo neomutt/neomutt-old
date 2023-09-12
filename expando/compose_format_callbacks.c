@@ -33,7 +33,7 @@
 #include "compose/attach_data.h"
 #include "compose/private.h"
 #include "compose/shared_data.h"
-#include "format_flags.h"
+
 #include "globals.h"
 #include "muttlib.h"
 

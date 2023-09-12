@@ -32,7 +32,7 @@
 #include "expando/lib.h"
 #include "index/lib.h"
 #include "sidebar/lib.h"
-#include "format_flags.h"
+
 #include "sidebar/private.h"
 
 /**

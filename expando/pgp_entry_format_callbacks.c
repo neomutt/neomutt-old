@@ -31,7 +31,7 @@
 #include "mutt/lib.h"
 #include "expando/lib.h"
 #include "ncrypt/lib.h"
-#include "format_flags.h"
+
 #include "locale.h"
 #include "ncrypt/crypt_gpgme.h"
 #include "ncrypt/pgp.h"

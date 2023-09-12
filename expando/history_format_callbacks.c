@@ -30,7 +30,6 @@
 #include <assert.h>
 #include "mutt/lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
 
 int history_s(const struct ExpandoNode *self, char *buf, int buf_len,
               int cols_len, intptr_t data, MuttFormatFlags flags)

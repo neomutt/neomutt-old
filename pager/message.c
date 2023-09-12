@@ -44,7 +44,7 @@
 #include "ncrypt/lib.h"
 #include "question/lib.h"
 #include "copy.h"
-#include "format_flags.h"
+
 #include "globals.h" // IWYU pragma: keep
 #include "hdrline.h"
 #include "hook.h"

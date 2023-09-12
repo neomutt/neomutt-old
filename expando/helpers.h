@@ -24,8 +24,9 @@
 #define MUTT_EXPANDO_HELPERS_H
 
 #include <stddef.h>
-#include "format_flags.h"
+
 #include "color/color.h"
+#include "format_callbacks.h"
 
 struct tm;
 

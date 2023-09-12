@@ -25,7 +25,6 @@
 #define MUTT_HDRLINE_H
 
 #include <stdio.h>
-#include "format_flags.h"
 #include "expando/lib.h"
 
 struct Email;

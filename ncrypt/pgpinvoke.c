@@ -42,7 +42,7 @@
 #include "gui/lib.h"
 #include "lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
+
 #include "mutt_logging.h"
 #include "muttlib.h"
 #include "pgpinvoke.h"

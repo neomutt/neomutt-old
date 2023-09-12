@@ -24,7 +24,7 @@
 #define MUTT_EXPANDO_ALIAS_FORMAT_CALLBACKS_H
 
 #include <stdint.h>
-#include "format_flags.h"
+#include "format_callbacks.h"
 
 struct ExpandoNode;
 

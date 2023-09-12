@@ -32,7 +32,7 @@
 #include "email/lib.h"
 #include "conn/lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
+
 #include "mutt_account.h"
 #include "nntp/adata.h"
 

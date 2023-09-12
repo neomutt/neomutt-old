@@ -25,11 +25,40 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "format_flags.h"
 
 struct ExpandoNode;
 struct ExpandoFormatPrivate;
 
+typedef uint8_t MuttFormatFlags;         ///< Flags for mutt_expando_format(), e.g. #MUTT_FORMAT_FORCESUBJ
+#define MUTT_FORMAT_NO_FLAGS          0  ///< No flags are set
+#define MUTT_FORMAT_FORCESUBJ   (1 << 0) ///< Print the subject even if unchanged
+#define MUTT_FORMAT_TREE        (1 << 1) ///< Draw the thread tree
+//#define MUTT_FORMAT_OPTIONAL    (1 << 2) ///< Allow optional field processing (obsolete)
+#define MUTT_FORMAT_STAT_FILE   (1 << 3) ///< Used by attach_format_str
+#define MUTT_FORMAT_ARROWCURSOR (1 << 4) ///< Reserve space for arrow_cursor
+#define MUTT_FORMAT_INDEX       (1 << 5) ///< This is a main index entry
+//#define MUTT_FORMAT_NOFILTER    (1 << 6) ///< Do not allow filtering on this pass (never used)
+#define MUTT_FORMAT_PLAIN       (1 << 7) ///< Do not prepend DISP_TO, DISP_CC ...
+
+/**
+ * @defgroup expando_api Expando API
+ *
+ * Prototype for a mutt_expando_format() Callback Function
+ *
+ * @param[in]  self     ExpandoNode containing the callback
+ * @param[out] buf      Buffer in which to save string
+ * @param[in]  buf_len  Buffer length
+ * @param[in]  cols_len Number of screen columnss
+ * @param[in]  data     Private data
+ * @param[in]  flags    Flags, see #MuttFormatFlags
+ * @retval ptr src (unchanged)
+ *
+ * Each callback function implements some expandos, e.g.
+ *
+ * | Expando | Description
+ * | :------ | :----------
+ * | \%t     | Title
+ */
 typedef int (*expando_format_callback)(const struct ExpandoNode *self, char *buf,
                                         int buf_len, int cols_len,
                                         intptr_t data, MuttFormatFlags flags);

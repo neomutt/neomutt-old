@@ -70,7 +70,7 @@
 #include "expando/lib.h"
 #include "menu/lib.h"
 #include "attach_data.h"
-#include "format_flags.h"
+
 #include "muttlib.h"
 #include "shared_data.h"
 

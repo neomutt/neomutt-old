@@ -48,7 +48,7 @@
 #include "gui/lib.h"
 #include "lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
+
 #include "globals.h"
 #include "hook.h"
 #include "muttlib.h"

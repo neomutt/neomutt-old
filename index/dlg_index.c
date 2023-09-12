@@ -68,7 +68,7 @@
 #include "menu/lib.h"
 #include "pager/lib.h"
 #include "pattern/lib.h"
-#include "format_flags.h"
+
 #include "functions.h"
 #include "globals.h" // IWYU pragma: keep
 #include "hdrline.h"

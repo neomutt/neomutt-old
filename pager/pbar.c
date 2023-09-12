@@ -71,7 +71,7 @@
 #include "color/lib.h"
 #include "index/lib.h"
 #include "display.h"
-#include "format_flags.h"
+
 #include "hdrline.h"
 #include "mview.h"
 #include "pbar.h"

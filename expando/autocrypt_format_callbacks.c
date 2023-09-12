@@ -33,7 +33,6 @@
 #include "autocrypt/lib.h"
 #include "expando/lib.h"
 #include "autocrypt/private.h"
-#include "format_flags.h"
 
 int autocrypt_a(const struct ExpandoNode *self, char *buf, int buf_len,
                 int cols_len, intptr_t data, MuttFormatFlags flags)

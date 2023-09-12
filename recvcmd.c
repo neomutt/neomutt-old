@@ -45,7 +45,7 @@
 #include "question/lib.h"
 #include "send/lib.h"
 #include "copy.h"
-#include "format_flags.h"
+
 #include "globals.h" // IWYU pragma: keep
 #include "handler.h"
 #include "hdrline.h"

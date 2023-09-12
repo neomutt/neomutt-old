@@ -55,7 +55,7 @@
 #include "copy.h"
 #include "crypt.h"
 #include "cryptglue.h"
-#include "format_flags.h"
+
 #include "handler.h"
 #include "mutt_logging.h"
 #include "muttlib.h"

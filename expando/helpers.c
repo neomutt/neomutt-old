@@ -38,27 +38,31 @@
 #include "mutt_thread.h"
 
 /**
- * mb_strlen_nonnull - Measure a non null-terminated string's length (number of characers)
+ * mb_strlen_nonnull - Measure a non null-terminated string's length (number of characters)
  * @param start      Start of the string
  * @param end        End of the string
  * @return int       Number of characters
  * 
- * TODO(g0mb4): Remove this function.
  */
 int mb_strlen_nonnull(const char *start, const char *end)
 {
+  assert(end >= start);
+
   int len = 0;
+  int total_len = 0;
   const char *s = start;
   while (*s && s < end)
   {
-    if ((*s & 0xC0) != 0x80)
+    len = mblen(s, MB_CUR_MAX);
+    if (len == 0 || len < 0)
     {
-      len++;
+      break;
     }
 
-    s++;
+    s += len;
+    ++total_len;
   }
-  return len;
+  return total_len;
 }
 
 /**
@@ -69,6 +73,8 @@ int mb_strlen_nonnull(const char *start, const char *end)
  */
 int mb_strwidth_nonnull(const char *start, const char *end)
 {
+  assert(end >= start);
+
   wchar_t wc = 0;
   int len = 0;
   int width = 0;
@@ -96,10 +102,6 @@ static size_t add_index_color(char *buf, int buflen, MuttFormatFlags flags, enum
   if (!(flags & MUTT_FORMAT_INDEX))
     return 0;
 
-  /* this item is going to be passed to an external filter */
-  if (flags & MUTT_FORMAT_NOFILTER)
-    return 0;
-
   /* handle negative buflen */
   if (buflen <= 2)
     return 0;
@@ -117,12 +119,11 @@ static size_t add_index_color(char *buf, int buflen, MuttFormatFlags flags, enum
 
   buf[0] = MUTT_SPECIAL_INDEX;
   buf[1] = color;
-  buf[2] = '\0'; // NOTE(g0mb4): is this right?
+  buf[2] = '\0';
 
   return 2;
 }
 
-// TODO(g0mb4): implement MuttFormatFlags
 void format_string(char *buf, int buf_len, const char *s, MuttFormatFlags flags,
                    enum ColorId pre, enum ColorId post,
                    const struct ExpandoFormatPrivate *format, enum HasTreeChars has_tree)
@@ -147,6 +148,7 @@ void format_string(char *buf, int buf_len, const char *s, MuttFormatFlags flags,
 void format_string_flags(char *buf, int buf_len, const char *s, MuttFormatFlags flags,
                          const struct ExpandoFormatPrivate *format)
 {
+  assert((flags & MUTT_FORMAT_INDEX) == 0);
   format_string(buf, buf_len, s, flags, 0, 0, format, NO_TREE);
 }
 
@@ -167,6 +169,7 @@ void format_int(char *buf, int buf_len, int number, MuttFormatFlags flags, enum 
 void format_int_flags(char *buf, int buf_len, int number, MuttFormatFlags flags,
                       const struct ExpandoFormatPrivate *format)
 {
+  assert((flags & MUTT_FORMAT_INDEX) == 0);
   format_int(buf, buf_len, number, flags, 0, 0, format);
 }
 

@@ -32,7 +32,7 @@
 #include "mutt/lib.h"
 #include "config/lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
+
 #include "muttlib.h"
 #include "ncrypt/smime.h"
 

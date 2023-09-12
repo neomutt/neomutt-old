@@ -30,7 +30,7 @@
 #include <assert.h>
 #include "mutt/lib.h"
 #include "expando/lib.h"
-#include "format_flags.h"
+
 #include "mixmaster/remailer.h"
 
 /**

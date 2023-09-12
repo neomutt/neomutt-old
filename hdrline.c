@@ -49,7 +49,7 @@
 #include "color/lib.h"
 #include "expando/lib.h"
 #include "ncrypt/lib.h"
-#include "format_flags.h"
+
 #include "hdrline.h"
 #include "hook.h"
 #include "maillist.h"

@@ -78,7 +78,7 @@
 #include "menu/lib.h"
 #include "attach.h"
 #include "attachments.h"
-#include "format_flags.h"
+
 #include "functions.h"
 #include "hdrline.h"
 #include "hook.h"
