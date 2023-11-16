@@ -5,6 +5,11 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2023-11-03
+
+- [attribution](https://github.com/neomutt/neomutt-old/tree/attribution)  
+  [@nabijaczleweli](https://github.com/nabijaczleweli)'s plan to cache the attribution_locale (see [#3963](https://github.com/neomutt/neomutt/pull/3963))
+
 ## NeoMutt 2023-05-17
 
 - [neomutt-object](https://github.com/neomutt/neomutt-old/tree/neomutt-object)  
