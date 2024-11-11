@@ -7,6 +7,9 @@ They have simply been moved to keep the main repository tidier.
 
 ## NeoMutt 2024-10-02
 
+- [buffer-string](https://github.com/neomutt/neomutt-old/tree/buffer-string)  
+  Refactor: Buffer vs string comparison functions
+
 - [expando-arrow](https://github.com/neomutt/neomutt-old/tree/expando-arrow)  
   Refactor to create an arrow cursor expando
 
