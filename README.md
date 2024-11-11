@@ -5,6 +5,11 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2024-10-02
+
+- [expando-arrow](https://github.com/neomutt/neomutt-old/tree/expando-arrow)  
+  Refactor to create an arrow cursor expando
+
 ## NeoMutt 2023-11-03
 
 - [attribution](https://github.com/neomutt/neomutt-old/tree/attribution)  
