@@ -170,7 +170,7 @@ These NeoMutt branches have been archived since NeoMutt 2019-11-02
   Convert Keymaps to use STAILQ
 
 - [issue-1663](https://github.com/neomutt/neomutt-old/tree/issue-1663)  
-  Neomutt fails to work with multiple imap accounts
+  NeoMutt fails to work with multiple imap accounts
 
 - [prompt-close-with-esc](https://github.com/neomutt/neomutt-old/tree/prompt-close-with-esc)  
   Cancel prompts using \<Escape\>
