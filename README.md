@@ -5,6 +5,11 @@ This repository contains old NeoMutt branches.
 They have the same root as the [NeoMutt repo](https://github.com/neomutt/neomutt).
 They have simply been moved to keep the main repository tidier.
 
+## NeoMutt 2025-12-11
+
+- [email-custom](https://github.com/neomutt/neomutt-old/tree/email-custom)  
+  Add a custom field to Email and a matching Expando
+
 ## NeoMutt 2024-10-02
 
 - [buffer-string](https://github.com/neomutt/neomutt-old/tree/buffer-string)  
